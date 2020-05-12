@@ -2,16 +2,16 @@
 
 namespace Particular.TimeoutMigrationTool
 {
-    class SqlDialect
+    public class SqlDialect
     {
-        internal static SqlDialect Parse(string v)
+        public static SqlDialect Parse(string dialectString)
         {
             return new MsSqlServer();
         }
     }
 
-    class MsSqlServer : SqlDialect { }
-    class Oracle : SqlDialect { }
-    class MySql : SqlDialect { }
-    class PostgreSql : SqlDialect { }
+    public class MsSqlServer : SqlDialect { }
+    public class Oracle : SqlDialect { }
+    public class MySql : SqlDialect { }
+    public class PostgreSql : SqlDialect { }
 }
