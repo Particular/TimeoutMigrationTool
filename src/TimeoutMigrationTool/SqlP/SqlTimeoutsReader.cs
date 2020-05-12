@@ -8,9 +8,9 @@ namespace Particular.TimeoutMigrationTool.SqlP
 {
     class SqlTimeoutsReader
     {
-        public Task<List<TimeoutData>> ReadTimeoutsFrom(string connectionString, CancellationToken cancellationToken)
+        public Task<List<TimeoutData>> ReadTimeoutsFrom(string connectionString, SqlDialect dialect, CancellationToken cancellationToken)
         {
-
+            throw new NotImplementedException();
         }
     }
 }
