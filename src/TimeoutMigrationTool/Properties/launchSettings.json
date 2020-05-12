@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TimeoutMigrationTool": {
+      "commandName": "Project",
+      "commandLineArgs": "preview -s=\"meow\" -t=\"woof\""
+    }
+  }
+}

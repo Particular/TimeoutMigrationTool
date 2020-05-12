@@ -7,18 +7,17 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>NServiceBus.AmazonSQS.CommandLine</PackageId>
-    <Description>.NET Core global tool to manage SQS, S3 and SNS entities for NServiceBus endpoints</Description>
-    <ToolCommandName>sqs-transport</ToolCommandName>
+    <PackageId>Particular.TimeoutMigration</PackageId>
+    <Description>.NET Core tool to migrate timeouts from RavenDB or SqlP or NH to RabbitMQ native timeouts for NServiceBus endpoints</Description>
+    <ToolCommandName>timeout-migration</ToolCommandName>
     <PackAsTool>True</PackAsTool>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.110.62" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.102.104" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.160" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.2" />
     <PackageReference Include="Particular.Packaging" Version="0.7.0" PrivateAssets="All" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.0.0" />
   </ItemGroup>
 
 </Project>
