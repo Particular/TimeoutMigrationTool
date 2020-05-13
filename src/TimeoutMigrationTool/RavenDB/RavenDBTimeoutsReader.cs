@@ -12,7 +12,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             throw new NotImplementedException();
         }
 
-        public async Task<List<TimeoutData>> ReadTimeoutsFrom(string connectionString, CancellationToken cancellationToken)
+        public Task<List<TimeoutData>> ReadTimeoutsFrom(string connectionString, CancellationToken cancellationToken)
         {
             //this needs to be paged so Task<List<TimeoutData>> is not enough
             throw new NotImplementedException();
