@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Particular.TimeoutMigration</PackageId>
+    <Description>.NET Core tool to migrate timeouts from RavenDB or SqlP or NH to RabbitMQ native timeouts for NServiceBus endpoints</Description>
+    <ToolCommandName>timeout-migration</ToolCommandName>
+    <PackAsTool>True</PackAsTool>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Particular.Packaging" Version="0.7.0" PrivateAssets="All" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.0.0" />
+  </ItemGroup>
+
+</Project>
