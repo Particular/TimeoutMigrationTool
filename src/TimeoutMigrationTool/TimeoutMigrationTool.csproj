@@ -9,7 +9,7 @@
   <PropertyGroup>
     <PackageId>Particular.TimeoutMigration</PackageId>
     <Description>.NET Core tool to migrate timeouts from RavenDB or SqlP or NH to RabbitMQ native timeouts for NServiceBus endpoints</Description>
-    <ToolCommandName>timeout-migration</ToolCommandName>
+    <ToolCommandName>migrate-timeouts</ToolCommandName>
     <PackAsTool>True</PackAsTool>
   </PropertyGroup>
 
