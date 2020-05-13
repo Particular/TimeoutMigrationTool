@@ -10,7 +10,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
     {
         public Task<bool> WriteTimeoutsTo(string rabbitMqBroker, List<TimeoutData> timeouts, CancellationToken cancellationToken)
         {
-
+            throw new NotImplementedException();
         }
     }
 }
