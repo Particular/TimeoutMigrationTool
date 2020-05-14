@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-
-namespace TimeoutMigrationTool.Raven4.Tests
+namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System;
+    using System.Collections.Generic;
+    
     class TimeoutData
     {
-        public TimeoutData()
-        {
-        }
-        
         /// <summary>
         ///     The address of the client who requested the timeout.
         /// </summary>
