@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Particular.TimeoutMigrationTool
 {
-    class TimeoutData
+    public class TimeoutData
     {
         //
         // Summary:

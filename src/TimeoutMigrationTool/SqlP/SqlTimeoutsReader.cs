@@ -8,15 +8,14 @@ using System.Threading.Tasks;
 
 namespace Particular.TimeoutMigrationTool.SqlP
 {
-    class SqlTimeoutsReader
+    public class SqlTimeoutsReader
     {
-        public async Task<List<TimeoutData>> ReadTimeoutsFrom(string connectionString, SqlDialect dialect, CancellationToken cancellationToken)
+        public async Task<List<TimeoutData>> ReadTimeoutsFrom(string connectionString, string tableName, SqlDialect dialect, CancellationToken cancellationToken)
         {
             using (var connection = dialect.Connect(connectionString))
             {
                 using (var command = connection.CreateCommand())
                 {
-                    var tableName = "TimeoutData"; // [{schema}].[{prefix}TimeoutData]
                     command.CommandText = $@"SELECT Destination,
     SagaId,
     State,
@@ -34,7 +33,7 @@ from {tableName}";
                 }
             }
 
-            throw new NotImplementedException();
+            return null;
         }
 
         IEnumerable<TimeoutData> ReadRows(DbDataReader reader)
@@ -43,7 +42,7 @@ from {tableName}";
             {
                 yield return new TimeoutData
                 {
-                    Id = reader.GetGuid(0).ToString(),
+                    Id = reader.GetString(0),
                     SagaId = reader.GetGuid(1),
                     State = GetBytes(reader, 2),
                     Time = reader.GetFieldValue<DateTime>(3),
