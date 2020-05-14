@@ -32,7 +32,8 @@
             transport.UseNativeDelayedDelivery(false);
 
             var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
-            var connection = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Initial Catalog=Test;";
+            var connection = MsSqlMicrosoftDataClientConnectionBuilder.GetConnectionString();
+
             persistence.SqlDialect<SqlDialect.MsSqlServer>();
             persistence.ConnectionBuilder(
                 connectionBuilder: () =>
