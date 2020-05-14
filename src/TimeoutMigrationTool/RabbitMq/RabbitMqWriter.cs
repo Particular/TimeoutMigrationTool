@@ -24,6 +24,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     }
                 }
             }
+            return Task<bool>.FromResult(true);
         }
 
         private void PublishTimeout(IModel model, TimeoutData timeout)
@@ -50,19 +51,26 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             return factory.CreateConnection();
         }
 
-        public static void Fill(this IBasicProperties properties, TimeoutData timeout, TimeSpan delay)
+        public void Fill(IBasicProperties properties, TimeoutData timeout, TimeSpan delay)
         {
-            properties.MessageId = timeout.Id; //TODO: pull from the header first 
+            var messageHeaders = timeout.Headers ?? new Dictionary<string, string>();
+            
+            if (messageHeaders.TryGetValue(NServiceBus.Headers.MessageId, out var originalMessageId) && !string.IsNullOrEmpty(originalMessageId))
+            {
+                properties.MessageId = originalMessageId
+            }
+            else
+            {
+                properties.MessageId = timeout.Id;
+            }
 
             properties.Persistent = true;
-
-            var messageHeaders = timeout.Headers ?? new Dictionary<string, string>();            
 
             properties.Headers = messageHeaders.ToDictionary(p => p.Key, p => (object)p.Value);
                         
             properties.Headers["NServiceBus.Transport.RabbitMQ.DelayInSeconds"] = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
 
-            properties.Expiration = delay.TotalMilliseconds.ToString(CultureInfo.InvariantCulture);
+            properties.Expiration = Convert.ToInt32(delay.TotalMilliseconds).ToString(CultureInfo.InvariantCulture);
             
             if (messageHeaders.TryGetValue("NServiceBus.CorrelationId", out var correlationId) && correlationId != null)
             {
