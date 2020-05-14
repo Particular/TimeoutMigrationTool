@@ -45,11 +45,33 @@ from {tableName}";
                 {
                     Id = reader.GetGuid(0).ToString(),
                     SagaId = reader.GetGuid(1),
-                    //State = reader.GetBytes(2, 0, ..)
+                    State = GetBytes(reader, 2),
                     Time = reader.GetFieldValue<DateTime>(3),
                     Headers = GetHeaders(reader)
                 };
             }
+        }
+
+        byte[] GetBytes(DbDataReader reader, int ordinal)
+        {
+            byte[] result = null;
+
+            if (!reader.IsDBNull(ordinal))
+            {
+                long size = reader.GetBytes(ordinal, 0, null, 0, 0);
+                result = new byte[size];
+                int bufferSize = 1024;
+                long bytesRead = 0;
+                int curPos = 0;
+
+                while (bytesRead < size)
+                {
+                    bytesRead += reader.GetBytes(ordinal, curPos, result, curPos, bufferSize);
+                    curPos += bufferSize;
+                }
+            }
+
+            return result;
         }
 
         private Dictionary<string, string> GetHeaders(DbDataReader reader)
@@ -58,15 +80,15 @@ from {tableName}";
             {
                 using (var jsonReader = new JsonTextReader(stream))
                 {
-                    var serializer = JsonSerializer.Create(new JsonSerializerSettings
-                    {
-                        Formatting = Formatting.Indented,
-                        DefaultValueHandling = DefaultValueHandling.Ignore
-                    });
-
                     return serializer.Deserialize<Dictionary<string, string>>(jsonReader);
                 }
             }
         }
+
+        static JsonSerializer serializer = JsonSerializer.Create(new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented,
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        });
     }
 }
