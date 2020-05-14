@@ -1,106 +1,54 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
 
 namespace TimeoutMigrationTool.Raven4.Tests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Net.Http;
+    using System.Threading;
     using System.Threading.Tasks;
-    using Newtonsoft.Json;
     using NUnit.Framework;
-    using TimeoutMigrationTool.Tests;
     using Particular.TimeoutMigrationTool.RavenDB;
-
-    public class RavenDBTests //: RavenTestDriver
+    
+    public class RavenDBTests : RavenTimeoutStorageTestSuite
     {
-        private const string ServerName = "http://localhost:8080";
-        string databaseName;
-        int nrOfTimeoutsInStore = 250;
-
-        [SetUp]
-        public async Task Setup()
+        [Test]
+        public async Task WhenReadingTimeouts()
         {
-            var testId = Guid.NewGuid().ToString("N");
-            databaseName = $"ravendb-{testId}";
+            var reader = new RavenDBTimeoutsReader();
 
-            var createDbUrl = $"{ServerName}/admin/databases?name={databaseName}";
-            
+            var timeouts =
+                await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(-1), CancellationToken.None);
 
-            using (var httpClient = new HttpClient())
-            {
-                // Create the db
-                var db = new DatabaseRecord
-                {
-                    Disabled = false,
-                    DatabaseName = databaseName
-                };
-
-                var stringContent = new StringContent(JsonConvert.SerializeObject(db));
-                var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
-                Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-                
-                Random rnd = new Random();
-                var timeoutsPrefix = "TimeoutDatas";
-                
-                for (var i = 0; i < nrOfTimeoutsInStore; i++)
-                {
-                    var insertTimeoutUrl = $"{ServerName}/databases/{databaseName}/docs?id={timeoutsPrefix}/{i}";
-                    
-                    // Insert the timeout data
-                    var timeoutData = new TimeoutData
-                    {
-                        Destination = "fakeEndpoint",
-                        SagaId = Guid.NewGuid(),
-                        OwningTimeoutManager = "FakeOwningTimeoutManager",
-                        Time = DateTime.Now.AddDays(rnd.Next(1, 30)),
-                        Headers = new Dictionary<string, string>(),
-                        State = new byte[0]
-                    };
-
-                    var serializeObject = JsonConvert.SerializeObject(timeoutData);
-                    var httpContent = new StringContent(serializeObject);
-
-                    var result = await httpClient.PutAsync(insertTimeoutUrl, httpContent);
-                    Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-                }
-            }
+            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeoutsInStore));
+        }
+        
+        [Test]
+        public async Task WhenReadingTimeoutsWithCutoffDateNextWeek()
+        {
+            var reader = new RavenDBTimeoutsReader();
+        
+            var timeouts =
+                await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(10), CancellationToken.None);
+        
+            Assert.That(timeouts.Count, Is.EqualTo(125));
         }
 
         [Test]
-        public async Task Foo()
+        public async Task WhenListingEndpoints()
         {
             
-            RavenDBTimeoutsReader reader = new RavenDBTimeoutsReader();
-
-            var timeouts = await reader.ReadTimeoutsFrom($"{ServerName}/databases/{databaseName}", CancellationToken.None);
-            
-            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeoutsInStore));
-
-            await Task.CompletedTask;
+            var reader = new RavenDBTimeoutsReader();
+            var endpoints = await reader.ListDestinationEndpoints(ServerName, databaseName, "TimeoutDatas", CancellationToken.None);
+            Assert.That(endpoints.Length, Is.EqualTo(3));
+            Assert.That(endpoints.Contains("A"), Is.EqualTo(true));
+            Assert.That(endpoints.Contains("B"), Is.EqualTo(true));
+            Assert.That(endpoints.Contains("C"), Is.EqualTo(true));
         }
 
-        [TearDown]
-        public async Task Teardown()
+        [Test]
+        public async Task WhenArchivingTimeouts()
         {
-            var killDb = $"{ServerName}/admin/databases";
-            var deleteDb = new DeleteDbParams
-            {
-                DatabaseNames = new[] {databaseName},
-                HardDelete = true
-            };
-            var httpRequest = new HttpRequestMessage
-            {
-                Method = HttpMethod.Delete,
-                Content = new StringContent(JsonConvert.SerializeObject(deleteDb)),
-                RequestUri = new Uri(killDb)
-            };
-
-            using (var httpClient = new HttpClient())
-            {
-                var killDbResult = await httpClient.SendAsync(httpRequest);
-                Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-            }
+            var writer = new RavenDBTimeoutsArchiver();
+            await writer.ArchiveTimeout(ServerName, databaseName, "TimeoutDatas/5", CancellationToken.None);
         }
     }
 }

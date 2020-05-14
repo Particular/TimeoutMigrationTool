@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
@@ -13,19 +14,21 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     class RavenDBTimeoutsReader
     {
-        public Task<string[]> ListEndpoints(string connectionString, CancellationToken cancellationToken)
+        public async Task<string[]> ListDestinationEndpoints(string serverName, string databaseName, string prefix, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var timeouts = await ReadTimeoutsFrom(serverName, databaseName, prefix, DateTime.Now.AddDays(-1), cancellationToken).ConfigureAwait(false);
+            return timeouts.Select(x => x.Destination).Distinct().ToArray();
         }
 
-        public async Task<List<TimeoutData>> ReadTimeoutsFrom(string connectionString, CancellationToken cancellationToken)
+        public async Task<List<TimeoutData>> ReadTimeoutsFrom(string serverUrl, string databaseName, string prefix,
+            DateTime maxCutoffTime,
+            CancellationToken cancellationToken)
         {
-            //this needs to be paged so Task<List<TimeoutData>> is not enough
             var timeouts = new List<TimeoutData>();
             var pageSize = 100;
             using (var client = new HttpClient())
             {
-                var url = $"{connectionString}/docs?startsWith=TimeoutDatas&pageSize={pageSize}";
+                var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={prefix}&pageSize={pageSize}";
                 var checkForMoreResults = true;
                 var iteration = 0;
 
@@ -44,8 +47,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                         
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize) 
                             checkForMoreResults = false;
-                        
-                        timeouts.AddRange(pagedTimeouts);
+
+                        var elegibleTimeouts = pagedTimeouts.Where(x => x.Time >= maxCutoffTime);
+                        timeouts.AddRange(elegibleTimeouts);
                         iteration++;
                     }
                 }
