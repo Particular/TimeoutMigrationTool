@@ -55,9 +55,9 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         {
             var messageHeaders = timeout.Headers ?? new Dictionary<string, string>();
             
-            if (messageHeaders.TryGetValue(NServiceBus.Headers.MessageId, out var originalMessageId) && !string.IsNullOrEmpty(originalMessageId))
+            if (messageHeaders.TryGetValue("NServiceBus.MessageId", out var originalMessageId) && !string.IsNullOrEmpty(originalMessageId))
             {
-                properties.MessageId = originalMessageId
+                properties.MessageId = originalMessageId;
             }
             else
             {
