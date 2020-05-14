@@ -80,6 +80,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await Task.CompletedTask;
         }
 
+        [TearDown]
         public async Task Teardown()
         {
             var killDb = $"{ServerName}/admin/databases";
@@ -98,7 +99,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             using (var httpClient = new HttpClient())
             {
                 var killDbResult = await httpClient.SendAsync(httpRequest);
-                Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+                Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             }
         }
     }
