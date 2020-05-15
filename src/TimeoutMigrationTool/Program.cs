@@ -22,6 +22,11 @@
                 Description = "Prefix to prepend before all queues and topics"
             };
 
+            var timeoutTableOption = new CommandOption("-t|--tableName", CommandOptionType.SingleValue)
+            {
+                Description = "Prefix to prepend before all queues and topics"
+            };
+
             var sourceDialect = new CommandOption("-d|--dialect", CommandOptionType.SingleValue)
             {
                 Description = "Prefix to prepend before all queues and topics"
@@ -37,6 +42,7 @@
             app.Command("run", endpointCommand =>
             {
                 endpointCommand.Options.Add(sourceOption);
+                endpointCommand.Options.Add(timeoutTableOption); 
                 endpointCommand.Options.Add(sourceDialect);
                 endpointCommand.Options.Add(targetOption);
 
@@ -44,10 +50,11 @@
                 {
                     var sourceConnectionString = sourceOption.Value();
                     var targetConnectionString = targetOption.Value();
+                    var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
                     var reader = new SqlTimeoutsReader();
-                    var timeoutsFromSql = await reader.ReadTimeoutsFrom(sourceConnectionString, dialect, cancellationToken).ConfigureAwait(false);
+                    var timeoutsFromSql = await reader.ReadTimeoutsFrom(sourceConnectionString, timeoutTableName, dialect, cancellationToken).ConfigureAwait(false);
 
                     var writer = new RabbitMqWriter();
                     await writer.WriteTimeoutsTo(targetConnectionString, timeoutsFromSql, cancellationToken).ConfigureAwait(false);

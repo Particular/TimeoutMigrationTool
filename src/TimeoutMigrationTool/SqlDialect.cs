@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
 using System.Data.Common;
 
 namespace Particular.TimeoutMigrationTool
@@ -17,7 +18,10 @@ namespace Particular.TimeoutMigrationTool
     {
         public override DbConnection Connect(string connectionString)
         {
-            throw new NotImplementedException();
+            var connection = new SqlConnection(connectionString);
+            connection.Open();
+
+            return connection;
         }
     }
 
