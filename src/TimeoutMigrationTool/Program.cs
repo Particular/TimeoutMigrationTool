@@ -75,7 +75,7 @@
 
                 var prefixOption = new CommandOption("--prefix", CommandOptionType.SingleValue)
                 {
-                    Description = "The prefix used for the document collection containing the timeouts"
+                    Description = "The prefix used for the document collection containing the timeouts",
                 };
 
                 ravenDBCommand.Options.Add(serverUrlOption);
@@ -87,9 +87,10 @@
                 {
                     var serverUrl = serverUrlOption.Value();
                     var databaseName = databaseNameOption.Value();
-                    var prefix = prefixOption.Value();
+                    var prefix = prefixOption.Value(); // TODO: make value "TimeoutDatas" the default for the prefix
                     var targetConnectionString = targetOption.Value();
 
+                    // TODO: Default value for cut off time should be maybe 1 week ahead
                     var reader = new RavenDBTimeoutsReader();
                     var timeouts = await reader.ReadTimeoutsFrom(serverUrl, databaseName, prefix,
             DateTime.MinValue, cancellationToken).ConfigureAwait(false);

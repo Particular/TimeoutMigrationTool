@@ -7,7 +7,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool.RavenDB;
-    
+
     public class RavenDBTests : RavenTimeoutStorageTestSuite
     {
         [Test]
@@ -20,22 +20,22 @@ namespace TimeoutMigrationTool.Raven4.Tests
 
             Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeoutsInStore));
         }
-        
+
         [Test]
         public async Task WhenReadingTimeoutsWithCutoffDateNextWeek()
         {
             var reader = new RavenDBTimeoutsReader();
-        
+
             var timeouts =
                 await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(10), CancellationToken.None);
-        
+
             Assert.That(timeouts.Count, Is.EqualTo(125));
         }
 
         [Test]
         public async Task WhenListingEndpoints()
         {
-            
+
             var reader = new RavenDBTimeoutsReader();
             var endpoints = await reader.ListDestinationEndpoints(ServerName, databaseName, "TimeoutDatas", CancellationToken.None);
             Assert.That(endpoints.Length, Is.EqualTo(3));
@@ -50,5 +50,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var writer = new RavenDBTimeoutsArchiver();
             await writer.ArchiveTimeout(ServerName, databaseName, "TimeoutDatas/5", CancellationToken.None);
         }
+
+        // ravendb-d2c02b94530943c587b3108113797a5e
     }
 }
