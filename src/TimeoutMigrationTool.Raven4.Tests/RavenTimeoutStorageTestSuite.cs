@@ -8,6 +8,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
     using System.Threading.Tasks;
     using Newtonsoft.Json;
     using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
     using TimeoutMigrationTool.Tests;
 
@@ -28,7 +29,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             databaseName = $"ravendb-{testId}";
 
             var createDbUrl = $"{ServerName}/admin/databases?name={databaseName}";
-            
+
 
             using (var httpClient = new HttpClient())
             {
@@ -42,15 +43,15 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 var stringContent = new StringContent(JsonConvert.SerializeObject(db));
                 var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
                 Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-                
+
                 Random rnd = new Random();
                 var timeoutsPrefix = "TimeoutDatas";
-                
-                
+
+
                 for (var i = 0; i < nrOfTimeoutsInStore; i++)
                 {
                     var insertTimeoutUrl = $"{ServerName}/databases/{databaseName}/docs?id={timeoutsPrefix}/{i}";
-                    
+
                     // Insert the timeout data
                     var timeoutData = new TimeoutData
                     {
@@ -70,7 +71,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 }
             }
         }
-        
+
         [TearDown]
         public async Task Teardown()
         {
