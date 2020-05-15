@@ -5,9 +5,6 @@
     using TimeoutMigrationTool.SqlP;
     using TimeoutMigrationTool.RabbitMq;
 
-    // usage:
-    // migrate-timeouts run -s = "sqlconnectionstring" -t = "rabbitconnectionstring"
-
     class Program
     {
         static int Main(string[] args)
@@ -19,22 +16,22 @@
 
             var sourceOption = new CommandOption("-s|--source", CommandOptionType.SingleValue)
             {
-                Description = "Prefix to prepend before all queues and topics"
+                Description = "Connection string for source storage"
             };
 
-            var timeoutTableOption = new CommandOption("-t|--tableName", CommandOptionType.SingleValue)
+            var timeoutTableOption = new CommandOption("--tableName", CommandOptionType.SingleValue)
             {
-                Description = "Prefix to prepend before all queues and topics"
+                Description = "The table name where timeouts are stored"
             };
 
             var sourceDialect = new CommandOption("-d|--dialect", CommandOptionType.SingleValue)
             {
-                Description = "Prefix to prepend before all queues and topics"
+                Description = "The sql dialect to use"
             };
 
             var targetOption = new CommandOption("-t|--target", CommandOptionType.SingleValue)
             {
-                Description = "Prefix to prepend before all queues and topics"
+                Description = "The connection string for the target transport"
             };
 
             app.HelpOption(inherited: true);
@@ -42,7 +39,7 @@
             app.Command("run", endpointCommand =>
             {
                 endpointCommand.Options.Add(sourceOption);
-                endpointCommand.Options.Add(timeoutTableOption); 
+                endpointCommand.Options.Add(timeoutTableOption);
                 endpointCommand.Options.Add(sourceDialect);
                 endpointCommand.Options.Add(targetOption);
 
