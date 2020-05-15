@@ -1,6 +1,8 @@
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -22,7 +24,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                         ChangeVector = (string)null,
                         Patch = new
                         {
-                            Script = "this.OwningTimeoutManager = 'Archived_'+ this.OwningTimeoutManager",
+                            Script = "this.OwningTimeoutManager = 'Archived_' + this.OwningTimeoutManager;",
                             Values = new {}
                         }
                     },
@@ -33,7 +35,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             using (var httpClient = new HttpClient())
             {
                 var serializedCommands = JsonConvert.SerializeObject(command);
-                var result = await httpClient.PostAsync(url, new StringContent(serializedCommands), cancellationToken).ConfigureAwait(false);
+
+                var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
                 result.EnsureSuccessStatusCode();
             }
         }
