@@ -11,6 +11,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.AcceptanceTests", "TimeoutMigrationTool.AcceptanceTests\TimeoutMigrationTool.AcceptanceTests.csproj", "{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.Raven.FakeData", "TimeoutMigrationTool.Raven.FakeData\TimeoutMigrationTool.Raven.FakeData.csproj", "{3C486002-36D6-42E8-A2A5-E5B28D6E7317}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.RabbitMq.FakeTarget", "TimeoutMigrationTool.RabbitMq.FakeTarget\TimeoutMigrationTool.RabbitMq.FakeTarget.csproj", "{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C486002-36D6-42E8-A2A5-E5B28D6E7317}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C486002-36D6-42E8-A2A5-E5B28D6E7317}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C486002-36D6-42E8-A2A5-E5B28D6E7317}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C486002-36D6-42E8-A2A5-E5B28D6E7317}.Release|Any CPU.Build.0 = Release|Any CPU
+		{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

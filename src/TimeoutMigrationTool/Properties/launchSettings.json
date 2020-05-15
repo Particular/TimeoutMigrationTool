@@ -2,7 +2,7 @@
   "profiles": {
     "TimeoutMigrationTool": {
       "commandName": "Project",
-      "commandLineArgs": "ravendb --serverUrl=\"http://localhost:8080\" --databaseName=\"demo\" --prefix=\"\" -t=\"amqp://guest:guest@localhost:5672\""
+      "commandLineArgs": "ravendb --serverUrl=\"http://localhost:8080\" --databaseName=\"raven-timeout-test\" --prefix=\"TimeoutDatas\" -t=\"amqp://guest:guest@localhost:5672\""
     }
   }
 }
