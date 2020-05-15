@@ -1,6 +1,4 @@
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -11,25 +9,26 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     class RavenDBTimeoutsArchiver
     {
-        public async Task ArchiveTimeout(string serverName, string databaseName, string timeoutId, CancellationToken cancellationToken)
+        public async Task ArchiveTimeouts(string serverName, string databaseName, string[] timeoutIds, CancellationToken cancellationToken)
         {
             string url = $"{serverName}/databases/{databaseName}/bulk_docs";
+
             var command = new
             {
-                Commands = new[]
+                Commands = timeoutIds.Select(timeoutId =>
                 {
-                    new {
-                        Id = timeoutId, 
-                        Type="PATCH",
-                        ChangeVector = (string)null,
-                        Patch = new
+                    return new PatchCommand
+                    {
+                        Id = timeoutId,
+                        Type = "PATCH",
+                        ChangeVector = null,
+                        Patch = new Patch()
                         {
                             Script = "this.OwningTimeoutManager = 'Archived_' + this.OwningTimeoutManager;",
-                            Values = new {}
+                            Values = new { }
                         }
-                    },
-                    
-                }
+                    };
+                }).ToArray()
             };
             
             using (var httpClient = new HttpClient())
@@ -40,5 +39,19 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 result.EnsureSuccessStatusCode();
             }
         }
+    }
+
+    class PatchCommand
+    {
+        public string Id { get; set; }
+        public string Type { get; set; }
+        public string ChangeVector { get; set; }
+        public Patch Patch { get; set; }
+    }
+
+    class Patch
+    {
+        public string Script { get; set; }
+        public object Values { get; set; }
     }
 }
