@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven4.Tests", "TimeoutMigrationTool.Raven4.Tests\TimeoutMigrationTool.Raven4.Tests.csproj", "{7976D47B-24DD-4F76-B745-562E46F30E21}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.AcceptanceTests", "TimeoutMigrationTool.AcceptanceTests\TimeoutMigrationTool.AcceptanceTests.csproj", "{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{7976D47B-24DD-4F76-B745-562E46F30E21}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7976D47B-24DD-4F76-B745-562E46F30E21}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7976D47B-24DD-4F76-B745-562E46F30E21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
