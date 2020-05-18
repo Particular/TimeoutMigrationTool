@@ -107,14 +107,16 @@
                 });
             });
 
+            app.OnExecute(() =>
+            {
+                Console.WriteLine("Specify a subcommand");
+                app.ShowHelp();
+                return 1;
+            });
+
             try
             {
-                app.OnExecute(() =>
-                {
-                    Console.WriteLine("Specify a subcommand");
-                    app.ShowHelp();
-                    return 1;
-                });
+
 
                 app.Execute(args);
 
