@@ -30,7 +30,7 @@
 
             IsPrepared = true;
 
-            //todo store
+            //TODO: store, need to figure out how to get the storage interface in here
 
             return Task.CompletedTask;
         }
@@ -39,7 +39,7 @@
         {
             CurrentBatch.State = BatchState.Staged;
 
-            //todo store
+            //TODO: store, need to figure out how to get the storage interface in here
             return Task.CompletedTask;
         }
 
@@ -52,7 +52,7 @@
                 State = BatchState.Pending
             };
 
-            //todo store
+            //TODO: store, need to figure out how to get the storage interface in here
             return Task.CompletedTask;
         }
     }

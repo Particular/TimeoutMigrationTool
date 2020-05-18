@@ -12,6 +12,7 @@
 
         public async Task Run()
         {
+            //TODO: Not happy with this, I think we just need to get some DTO instead?
             var toolState = await timeoutStorage.GetOrCreateToolState().ConfigureAwait(false);
 
             if (!toolState.IsPrepared)
@@ -31,7 +32,7 @@
 
                     await transportAdapter.StageBatch(timeouts).ConfigureAwait(false);
 
-                    //Do we need to tell the storage that the batch is staged?
+                    //TODO: do we need to tell the storage that the batch is staged?
 
                     await toolState.MarkCurrentBatchAsStaged().ConfigureAwait(false);
                 }
