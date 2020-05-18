@@ -78,10 +78,16 @@
                     Description = "The prefix used for the document collection containing the timeouts",
                 };
 
+                var ravenDbVersion = new CommandOption("--ravenVersion", CommandOptionType.SingleValue)
+                {
+                    Description = "The version of RavenDB being used in your environment. Only 3.5 and 4 are supported",
+                };
+
                 ravenDBCommand.Options.Add(serverUrlOption);
                 ravenDBCommand.Options.Add(databaseNameOption);
                 ravenDBCommand.Options.Add(prefixOption);
                 ravenDBCommand.Options.Add(targetOption);
+                ravenDBCommand.Options.Add(ravenDbVersion);
 
                 ravenDBCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
@@ -89,11 +95,14 @@
                     var databaseName = databaseNameOption.Value();
                     var prefix = prefixOption.Value(); // TODO: make value "TimeoutDatas" the default for the prefix
                     var targetConnectionString = targetOption.Value();
+                    var ravenVersion = ravenDbVersion.Value() == "3.5"
+                        ? RavenDbVersion.ThreeDotFive
+                        : RavenDbVersion.Four;
 
                     // TODO: Default value for cut off time should be maybe 1 week ahead
                     var reader = new RavenDBTimeoutsReader();
                     var timeouts = await reader.ReadTimeoutsFrom(serverUrl, databaseName, prefix,
-            DateTime.MinValue, cancellationToken).ConfigureAwait(false);
+                        DateTime.MinValue, ravenVersion, cancellationToken).ConfigureAwait(false);
 
                     var writer = new RabbitMqWriter();
                     await writer.WriteTimeoutsTo(targetConnectionString, timeouts, cancellationToken).ConfigureAwait(false);
