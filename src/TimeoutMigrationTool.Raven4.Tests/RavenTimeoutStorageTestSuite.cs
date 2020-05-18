@@ -2,11 +2,13 @@ namespace TimeoutMigrationTool.Raven4.Tests
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Text;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
@@ -93,6 +95,35 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 var killDbResult = await httpClient.SendAsync(httpRequest);
                 Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             }
+        }
+
+        protected async Task<TimeoutData> GetTimeout(string timeoutId)
+        {
+            var list = await GetTimeouts(new[] { timeoutId });
+            return list.SingleOrDefault();
+        }
+
+        protected async Task<List<TimeoutData>> GetTimeouts(string[] timeoutIds)
+        {
+            var timeouts = new List<TimeoutData>();
+
+            foreach (var timeoutId in timeoutIds) 
+            {
+                var url = $"{ServerName}/databases/{databaseName}/docs?id={timeoutId}";
+                using (var httpClient = new HttpClient())
+                {
+                    var response = await httpClient.GetAsync(url);
+                    var contentString = await response.Content.ReadAsStringAsync();
+
+                    var jObject = JObject.Parse(contentString);
+                    var resultSet = jObject.SelectToken("Results");
+
+                    var timeout = JsonConvert.DeserializeObject<TimeoutData[]>(resultSet.ToString()).SingleOrDefault();
+                    timeouts.Add(timeout);
+                }
+            }
+
+            return timeouts;
         }
     }
 }
