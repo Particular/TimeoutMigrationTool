@@ -99,28 +99,26 @@
                         ? RavenDbVersion.ThreeDotFive
                         : RavenDbVersion.Four;
 
-                    // TODO: Default value for cut off time should be maybe 1 week ahead
-                    var reader = new RavenDBTimeoutsReader();
-                    var timeouts = await reader.ReadTimeoutsFrom(serverUrl, databaseName, prefix,
-                        DateTime.MinValue, ravenVersion, cancellationToken).ConfigureAwait(false);
+                    var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
+                    var transportAdapter = new RabbitMqTransportAdapter(targetConnectionString);
+                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    var writer = new RabbitMqWriter();
-                    await writer.WriteTimeoutsTo(targetConnectionString, timeouts, cancellationToken).ConfigureAwait(false);
-
-                    return 0;
+                    await migrationRunner.Run().ConfigureAwait(false);
                 });
-            });
-
-            app.OnExecute(() =>
-            {
-                Console.WriteLine("Specify a subcommand");
-                app.ShowHelp();
-                return 1;
             });
 
             try
             {
-                return app.Execute(args);
+                app.OnExecute(() =>
+                {
+                    Console.WriteLine("Specify a subcommand");
+                    app.ShowHelp();
+                    return 1;
+                });
+
+                app.Execute(args);
+
+                return 0;
             }
             catch (Exception exception)
             {
