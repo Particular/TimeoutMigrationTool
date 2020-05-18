@@ -47,7 +47,7 @@
             var original = await GetTimeout(timeoutId);
 
             var writer = new RavenDBTimeoutsArchiver();
-            await writer.ArchiveTimeouts(ServerName, databaseName, new[] { timeoutId }, CancellationToken.None);
+            await writer.ArchiveTimeouts(ServerName, databaseName, new[] { timeoutId }, RavenDbVersion.Four, CancellationToken.None);
 
             var archived = await GetTimeout(timeoutId);
 
@@ -62,7 +62,7 @@
             var original = await GetTimeouts(timeoutIds);
 
             var writer = new RavenDBTimeoutsArchiver();
-            await writer.ArchiveTimeouts(ServerName, databaseName, timeoutIds, CancellationToken.None);
+            await writer.ArchiveTimeouts(ServerName, databaseName, timeoutIds, RavenDbVersion.Four, CancellationToken.None);
 
             var archived = await GetTimeouts(timeoutIds);
 

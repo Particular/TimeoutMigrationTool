@@ -47,7 +47,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         public async Task WhenArchivingTimeouts()
         {
             var writer = new RavenDBTimeoutsArchiver();
-            await writer.ArchiveTimeout(ServerName, databaseName, "TimeoutDatas/5", CancellationToken.None);
+            await writer.ArchiveTimeouts(ServerName, databaseName, new[] { "TimeoutDatas/5" }, RavenDbVersion.ThreeDotFive, CancellationToken.None);
         }
 
         // ravendb-d2c02b94530943c587b3108113797a5e
