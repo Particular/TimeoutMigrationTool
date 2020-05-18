@@ -116,11 +116,7 @@
 
             try
             {
-
-
-                app.Execute(args);
-
-                return 0;
+                return app.Execute(args);
             }
             catch (Exception exception)
             {
