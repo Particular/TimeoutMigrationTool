@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
-
-namespace TimeoutMigrationTool.Raven4.Tests
+﻿namespace TimeoutMigrationTool.Raven4.Tests
 {
+    using System;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
@@ -15,8 +14,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             var reader = new RavenDBTimeoutsReader();
 
-            var timeouts =
-                await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(-1), CancellationToken.None);
+            var timeouts = await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(-1), CancellationToken.None);
 
             Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeoutsInStore));
         }
@@ -26,8 +24,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             var reader = new RavenDBTimeoutsReader();
 
-            var timeouts =
-                await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(10), CancellationToken.None);
+            var timeouts = await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(10), CancellationToken.None);
 
             Assert.That(timeouts.Count, Is.EqualTo(125));
         }
@@ -45,12 +42,34 @@ namespace TimeoutMigrationTool.Raven4.Tests
         }
 
         [Test]
-        public async Task WhenArchivingTimeouts()
+        public async Task WhenArchivingOneTimeout()
         {
+            var timeoutId = "TimeoutDatas/5";
+            var original = await GetTimeout(timeoutId);
+
             var writer = new RavenDBTimeoutsArchiver();
-            await writer.ArchiveTimeout(ServerName, databaseName, "TimeoutDatas/5", CancellationToken.None);
+            await writer.ArchiveTimeouts(ServerName, databaseName, new[] { timeoutId }, CancellationToken.None);
+
+            var archived = await GetTimeout(timeoutId);
+
+            Assert.That(original.OwningTimeoutManager, Is.Not.EqualTo(archived.OwningTimeoutManager));
+            Assert.IsTrue(archived.OwningTimeoutManager.StartsWith("archived_", StringComparison.OrdinalIgnoreCase));
         }
 
-        // ravendb-d2c02b94530943c587b3108113797a5e
+        [Test]
+        public async Task WhenArchivingMultipleTimeouts()
+        {
+            var timeoutIds = new[] { "TimeoutDatas/5", "TimeoutDatas/125", "TimeoutDatas/197" };
+            var original = await GetTimeouts(timeoutIds);
+
+            var writer = new RavenDBTimeoutsArchiver();
+            await writer.ArchiveTimeouts(ServerName, databaseName, timeoutIds, CancellationToken.None);
+
+            var archived = await GetTimeouts(timeoutIds);
+
+            Assert.That(archived.Count, Is.EqualTo(3));
+            Assert.That(archived.All(a => a.OwningTimeoutManager.StartsWith("archived_", StringComparison.OrdinalIgnoreCase)));
+            Assert.That(archived.All(a => a.OwningTimeoutManager.StartsWith("archived_", StringComparison.OrdinalIgnoreCase)));
+        }
     }
 }
