@@ -23,7 +23,7 @@ namespace Particular.TimeoutMigrationTool
                 await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
             }
 
-            while (toolState.HasMoreBatches)
+            while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
                 if (batch.State == BatchState.Pending)
