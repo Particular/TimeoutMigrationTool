@@ -51,11 +51,11 @@
                     var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
-                    var reader = new SqlTimeoutsReader();
-                    var timeoutsFromSql = await reader.ReadTimeoutsFrom(sourceConnectionString, timeoutTableName, dialect, cancellationToken).ConfigureAwait(false);
+                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName);
+                    var transportAdapter = new RabbitMqTransportAdapter(targetConnectionString);
+                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    var writer = new RabbitMqWriter();
-                    await writer.WriteTimeoutsTo(targetConnectionString, timeoutsFromSql, cancellationToken).ConfigureAwait(false);
+                    await migrationRunner.Run().ConfigureAwait(false);
 
                     return 0;
                 });
