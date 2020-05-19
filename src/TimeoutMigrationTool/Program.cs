@@ -56,8 +56,6 @@
                     var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
                     await migrationRunner.Run().ConfigureAwait(false);
-
-                    return 0;
                 });
             });
 
