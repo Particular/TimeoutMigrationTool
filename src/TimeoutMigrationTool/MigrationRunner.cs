@@ -15,11 +15,11 @@
             //TODO: Not happy with this, I think we just need to get some DTO instead?
             var toolState = await timeoutStorage.GetOrCreateToolState().ConfigureAwait(false);
 
-            if (!toolState.IsPrepared)
+            if (!toolState.IsStoragePrepared)
             {
                 var storageInfo = await timeoutStorage.Prepare().ConfigureAwait(false);
 
-                await toolState.MarkAsPrepared(storageInfo).ConfigureAwait(false);
+                await toolState.MarkStorageAsPrepared(storageInfo).ConfigureAwait(false);
             }
 
             while (toolState.HasMoreBatches)

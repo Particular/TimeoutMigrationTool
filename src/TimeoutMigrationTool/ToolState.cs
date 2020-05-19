@@ -5,7 +5,7 @@
 
     public class ToolState
     {
-        public bool IsPrepared { get; private set; }
+        public bool IsStoragePrepared { get; private set; }
 
         public StorageInfo StorageInfo { get; private set; }
 
@@ -18,7 +18,7 @@
             }
         }
 
-        public Task MarkAsPrepared(StorageInfo storageInfo)
+        public Task MarkStorageAsPrepared(StorageInfo storageInfo)
         {
             StorageInfo = storageInfo;
 
@@ -28,7 +28,7 @@
                 State = BatchState.Pending
             };
 
-            IsPrepared = true;
+            IsStoragePrepared = true;
 
             //TODO: store, need to figure out how to get the storage interface in here
 
