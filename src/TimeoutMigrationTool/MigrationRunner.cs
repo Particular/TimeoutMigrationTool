@@ -1,13 +1,15 @@
-﻿namespace Particular.TimeoutMigrationTool
+﻿using System.Collections.Generic;
+
+namespace Particular.TimeoutMigrationTool
 {
     using System.Threading.Tasks;
 
     public class MigrationRunner
     {
-        public MigrationRunner(ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportAdapter)
+        public MigrationRunner(ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutsCreator)
         {
             this.timeoutStorage = timeoutStorage;
-            this.transportAdapter = transportAdapter;
+            this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
 
         public async Task Run()
@@ -16,67 +18,46 @@
 
             if (!toolState.IsStoragePrepared)
             {
-                var storageInfo = await timeoutStorage.Prepare().ConfigureAwait(false);
-
-                await MarkStorageAsPrepared(toolState, storageInfo).ConfigureAwait(false);
+                IEnumerable<BatchInfo> batches = await timeoutStorage.Prepare().ConfigureAwait(false);
+                toolState.InitBatches(batches);
+                await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
             }
 
             while (toolState.HasMoreBatches)
             {
-                var batch = toolState.CurrentBatch;
-
+                var batch = toolState.GetCurrentBatch();
                 if (batch.State == BatchState.Pending)
                 {
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number).ConfigureAwait(false);
 
-                    await transportAdapter.StageBatch(timeouts).ConfigureAwait(false);
-
+                    await transportTimeoutsCreator.StageBatch(timeouts).ConfigureAwait(false);
                     await MarkCurrentBatchAsStaged(toolState).ConfigureAwait(false);
                 }
 
-                await transportAdapter.CompleteBatch(batch.Number).ConfigureAwait(false);
-
-                await timeoutStorage.CompleteBatch(batch.Number).ConfigureAwait(false);
-
+                await transportTimeoutsCreator.CompleteBatch(batch.Number).ConfigureAwait(false);
                 await CompleteCurrentBatch(toolState).ConfigureAwait(false);
             }
         }
 
-        async Task MarkStorageAsPrepared(ToolState toolState, StorageInfo storageInfo)
+        async Task MarkStorageAsPrepared(ToolState toolState)
         {
-            toolState.StorageInfo = storageInfo;
-
-            toolState.CurrentBatch = new BatchInfo
-            {
-                Number = 0,
-                State = BatchState.Pending
-            };
-
             toolState.IsStoragePrepared = true;
-
             await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
         }
 
         async Task MarkCurrentBatchAsStaged(ToolState toolState)
         {
-            toolState.CurrentBatch.State = BatchState.Staged;
-
+            toolState.GetCurrentBatch().State = BatchState.Staged;
             await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
         }
 
         async Task CompleteCurrentBatch(ToolState toolState)
         {
-            var newBatch = toolState.CurrentBatch.Number++;
-            toolState.CurrentBatch = new BatchInfo
-            {
-                Number = newBatch,
-                State = BatchState.Pending
-            };
-
+            toolState.GetCurrentBatch().State = BatchState.Completed;
             await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
         }
 
         readonly ITimeoutStorage timeoutStorage;
-        readonly ICreateTransportTimeouts transportAdapter;
+        readonly ICreateTransportTimeouts transportTimeoutsCreator;
     }
 }

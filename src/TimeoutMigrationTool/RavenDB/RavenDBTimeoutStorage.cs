@@ -18,7 +18,7 @@
             throw new System.NotImplementedException();
         }
 
-        public Task<StorageInfo> Prepare()
+        public Task<List<BatchInfo>> Prepare()
         {
             throw new System.NotImplementedException();
         }
