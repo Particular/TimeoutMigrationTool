@@ -5,13 +5,9 @@
 
     public class DemoStorage : ITimeoutStorage
     {
-        public DemoStorage()
-        {
-        }
-
         public Task CompleteBatch(int number)
         {
-            return Task.CompletedTask;
+            return Task.Delay(3000);
         }
 
         public Task<ToolState> GetOrCreateToolState()
@@ -21,14 +17,18 @@
             return Task.FromResult(toolState);
         }
 
-        public Task<List<BatchInfo>> Prepare()
+        public async Task<List<BatchInfo>> Prepare()
         {
-            return Task.FromResult(new List<BatchInfo> { new BatchInfo { Number = 1 }, new BatchInfo { Number = 2 }, new BatchInfo { Number = 3 } });
+            await Task.Delay(3000).ConfigureAwait(false);
+
+            return new List<BatchInfo> { new BatchInfo { Number = 1 }, new BatchInfo { Number = 2 }, new BatchInfo { Number = 3 } };
         }
 
-        public Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
-            return Task.FromResult(new List<TimeoutData> { new TimeoutData(), new TimeoutData() });
+            await Task.Delay(3000).ConfigureAwait(false);
+
+            return new List<TimeoutData> { new TimeoutData(), new TimeoutData() };
         }
 
         public Task StoreToolState(ToolState newToolState)

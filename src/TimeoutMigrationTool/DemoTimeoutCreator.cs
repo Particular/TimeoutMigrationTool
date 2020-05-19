@@ -7,12 +7,12 @@
     {
         public Task CompleteBatch(int number)
         {
-            return Task.CompletedTask;
+            return Task.Delay(3000);
         }
 
         public Task StageBatch(List<TimeoutData> timeouts)
         {
-            return Task.CompletedTask;
+            return Task.Delay(3000);
         }
     }
 }
