@@ -12,7 +12,7 @@
             this.timeoutTableName = timeoutTableName;
         }
 
-        public Task<ToolState> GetOrCreateToolState()
+        public Task<ToolState> GetToolState()
         {
             throw new System.NotImplementedException();
         }
@@ -23,6 +23,16 @@
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task CompleteBatch(int number)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task StoreToolState(ToolState toolState)
         {
             throw new System.NotImplementedException();
         }

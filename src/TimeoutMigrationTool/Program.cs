@@ -52,7 +52,7 @@
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName);
-                    var transportAdapter = new RabbitMqTransportAdapter(targetConnectionString);
+                    var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
                     var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
                     await migrationRunner.Run().ConfigureAwait(false);
@@ -98,7 +98,7 @@
                         : RavenDbVersion.Four;
 
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
-                    var transportAdapter = new RabbitMqTransportAdapter(targetConnectionString);
+                    var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
                     var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
                     await migrationRunner.Run().ConfigureAwait(false);

@@ -3,19 +3,19 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public class RabbitMqTransportAdapter : ITransportAdapter
+    public class RabbitMqTimeoutCreator : ICreateTransportTimeouts
     {
-        public RabbitMqTransportAdapter(string targetConnectionString)
+        public RabbitMqTimeoutCreator(string targetConnectionString)
         {
             this.targetConnectionString = targetConnectionString;
         }
 
-        public Task CompleteBatch()
+        public Task StageBatch(List<TimeoutData> timeouts)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task StageBatch(List<TimeoutData> timeouts)
+        public Task CompleteBatch(int number)
         {
             throw new System.NotImplementedException();
         }

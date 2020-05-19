@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace Particular.TimeoutMigrationTool
 {
-    public interface ITransportAdapter
+    public interface ICreateTransportTimeouts
     {
         Task StageBatch(List<TimeoutData> timeouts);
-        Task CompleteBatch();
+        Task CompleteBatch(int number);
     }
 }
