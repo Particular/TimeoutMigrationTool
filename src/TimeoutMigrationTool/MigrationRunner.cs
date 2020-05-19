@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool
 {
     using System.Threading.Tasks;
+    using System.Collections.Generic;
 
     public class MigrationRunner
     {

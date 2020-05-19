@@ -7,7 +7,8 @@
     public class ToolState
     {
         public bool IsStoragePrepared { get; set; }
-        public IEnumerable<BatchInfo> Batches { get; private set; }
+
+        public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
 
         public bool HasMoreBatches => Batches.Any(x => x.State != BatchState.Completed);
 
