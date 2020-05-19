@@ -5,7 +5,7 @@
 
     public interface ITimeoutStorage
     {
-        Task<ToolState> GetToolState();
+        Task<ToolState> GetOrCreateToolState();
         Task<StorageInfo> Prepare();
         Task<List<TimeoutData>> ReadBatch(int batchNumber);
         Task CompleteBatch(int number);

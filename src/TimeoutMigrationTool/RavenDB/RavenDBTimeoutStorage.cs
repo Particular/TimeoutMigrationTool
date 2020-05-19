@@ -13,7 +13,7 @@
             this.ravenVersion = ravenVersion;
         }
 
-        public Task<ToolState> GetToolState()
+        public Task<ToolState> GetOrCreateToolState()
         {
             throw new System.NotImplementedException();
         }

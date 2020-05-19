@@ -12,7 +12,7 @@
 
         public async Task Run()
         {
-            var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
+            var toolState = await timeoutStorage.GetOrCreateToolState().ConfigureAwait(false);
 
             if (!toolState.IsStoragePrepared)
             {
