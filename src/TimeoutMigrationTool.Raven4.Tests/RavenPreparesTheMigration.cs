@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -10,7 +11,6 @@ namespace TimeoutMigrationTool.Raven4.Tests
 {
     public class RavenPreparesTheMigration : RavenTimeoutStorageTestSuite
     {
-
         [Test]
         public async Task WhenGettingTimeoutStateAndNoneIsFoundWeCreateOne()
         {
@@ -54,11 +54,13 @@ namespace TimeoutMigrationTool.Raven4.Tests
             Assert.IsEmpty(retrievedToolState.Batches);
         }
 
-        // [Test]
-        // public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
-        // {
-        //     var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-        //     var batches = await timeoutStorage.Prepare();
-        // }
+        [Test]
+        public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
+        {
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await timeoutStorage.Prepare();
+
+            Assert.That(batches.Count, Is.EqualTo(2));
+        }
     }
 }

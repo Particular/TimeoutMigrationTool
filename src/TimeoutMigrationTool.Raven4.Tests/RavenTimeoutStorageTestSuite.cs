@@ -18,7 +18,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
     {
         protected const string ServerName = "http://localhost:8080";
         protected string databaseName;
-        protected int nrOfTimeoutsInStore = 250;
+        protected int nrOfTimeoutsInStore = 1500;
         protected List<string> destinations = new List<string>()
         {
             "A", "B", "C"
@@ -107,7 +107,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             var timeouts = new List<TimeoutData>();
 
-            foreach (var timeoutId in timeoutIds) 
+            foreach (var timeoutId in timeoutIds)
             {
                 var url = $"{ServerName}/databases/{databaseName}/docs?id={timeoutId}";
                 using (var httpClient = new HttpClient())

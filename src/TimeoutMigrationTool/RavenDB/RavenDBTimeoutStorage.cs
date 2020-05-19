@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
@@ -14,7 +17,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         private readonly string databaseName;
         private readonly string prefix;
         private readonly RavenDbVersion ravenVersion;
-
         private readonly string serverUrl;
 
         public RavenDBTimeoutStorage(string serverUrl, string databaseName, string prefix, RavenDbVersion ravenVersion)
@@ -60,9 +62,37 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        public Task<List<BatchInfo>> Prepare()
+        public async Task<List<BatchInfo>> Prepare()
         {
-            throw new NotImplementedException();
+            var ravenDbReader = new RavenDBTimeoutsReader();
+            var timeouts = await ravenDbReader.ReadTimeoutsFrom(serverUrl, databaseName, prefix, DateTime.Now, ravenVersion,
+                CancellationToken.None).ConfigureAwait(false);
+
+            var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal)RavenConstants.DefaultPagingSize);
+            var batches = new List<BatchInfo>();
+            for (int i = 0; i < nrOfBatches; i++)
+            {
+                batches.Add(new BatchInfo
+                {
+                    Number = i+1,
+                    State = BatchState.Pending,
+                    TimeoutIds = timeouts.Skip(i*RavenConstants.DefaultPagingSize).Take(RavenConstants.DefaultPagingSize).Select(t => t.Id).ToArray()
+                });
+            }
+
+            using (var httpClient = new HttpClient())
+            {
+                var bulkInsertUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
+                foreach (var batch in batches)
+                {
+                    var bulkCreateBatchAndUpdateTimeoutsCommand = GetBatchInsertCommand(batch, ravenVersion);
+                    var serializedCommands = JsonConvert.SerializeObject(bulkCreateBatchAndUpdateTimeoutsCommand);
+                    var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                    result.EnsureSuccessStatusCode();
+                }
+            }
+
+            return batches;
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
@@ -78,6 +108,43 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public Task StoreToolState(ToolState toolState)
         {
             throw new NotImplementedException();
+        }
+
+        private static object GetBatchInsertCommand(BatchInfo batch, RavenDbVersion version)
+        {
+            if (version == RavenDbVersion.Four)
+            {
+                var insertCommand = new PutCommand
+                {
+                    Id = $"batch/{batch.Number}",
+                    Type = "PUT",
+                    ChangeVector = (object)null,
+                    Document = batch
+                };
+
+                var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
+                {
+                    Id = timeoutId,
+                    Type = "PATCH",
+                    ChangeVector = null,
+                    Patch = new Patch()
+                    {
+                        Script = "this.OwningTimeoutManager = 'Archived_' + this.OwningTimeoutManager;",
+                        Values = new { }
+                    }
+                }).ToList();
+
+                List<object> commands = new List<object>();
+                commands.Add(insertCommand);
+                commands.AddRange(timeoutUpdateCommands);
+
+                return new
+                {
+                    Commands = commands.ToArray()
+                };
+            }
+
+            return null;
         }
     }
 }

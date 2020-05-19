@@ -26,9 +26,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         }
 
         public async Task<List<TimeoutData>> ReadTimeoutsFrom(string serverUrl, string databaseName, string prefix,
-            DateTime maxCutoffTime,
-            RavenDbVersion version,
-            CancellationToken cancellationToken)
+            DateTime maxCutoffTime, RavenDbVersion version, CancellationToken cancellationToken)
         {
             var timeouts = new List<TimeoutData>();
             var pageSize = 100;
@@ -46,7 +44,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                     if (result.StatusCode == HttpStatusCode.OK)
                     {
-                        var pagedTimeouts = await GetDocumentsFromResponse(version, result.Content).ConfigureAwait(false);
+                        var pagedTimeouts =
+                            await GetDocumentsFromResponse(version, result.Content).ConfigureAwait(false);
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                             checkForMoreResults = false;
 
@@ -60,7 +59,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        private async Task<List<TimeoutData>> GetDocumentsFromResponse(RavenDbVersion version, HttpContent resultContent)
+        private async Task<List<TimeoutData>> GetDocumentsFromResponse(RavenDbVersion version,
+            HttpContent resultContent)
         {
             var contentString = await resultContent.ReadAsStringAsync().ConfigureAwait(false);
             if (version == RavenDbVersion.Four)
