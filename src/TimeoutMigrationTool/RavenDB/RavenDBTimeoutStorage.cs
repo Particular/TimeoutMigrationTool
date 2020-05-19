@@ -1,6 +1,5 @@
-﻿namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    using Particular.TimeoutMigrationTool.RavenDB;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 

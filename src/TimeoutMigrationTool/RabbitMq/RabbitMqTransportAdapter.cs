@@ -1,4 +1,4 @@
-﻿namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool.RabbitMq
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
