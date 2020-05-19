@@ -14,7 +14,16 @@ namespace Particular.TimeoutMigrationTool
         public BatchInfo GetCurrentBatch()
         {
             if (Batches.All(x => x.State == BatchState.Completed))
+            {
                 return null;
+            }
+
+            var stagedBatch = Batches.SingleOrDefault(x => x.State == BatchState.Staged);
+
+            if (stagedBatch != null)
+            {
+                return stagedBatch;
+            }
 
             return Batches.First(x => x.State != BatchState.Completed);
         }
@@ -22,7 +31,9 @@ namespace Particular.TimeoutMigrationTool
         public void InitBatches(IEnumerable<BatchInfo> batches)
         {
             if (Batches.Any() && IsStoragePrepared)
+            {
                 throw new InvalidOperationException("Batches have already been initialized");
+            }
 
             Batches = batches;
         }

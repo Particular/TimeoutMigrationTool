@@ -18,19 +18,23 @@ namespace Particular.TimeoutMigrationTool
 
             if (!toolState.IsStoragePrepared)
             {
-                IEnumerable<BatchInfo> batches = await timeoutStorage.Prepare().ConfigureAwait(false);
+                var batches = await timeoutStorage.Prepare().ConfigureAwait(false);
+
                 toolState.InitBatches(batches);
+
                 await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
             }
 
             while (toolState.HasMoreBatches)
             {
                 var batch = toolState.GetCurrentBatch();
+
                 if (batch.State == BatchState.Pending)
                 {
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number).ConfigureAwait(false);
 
                     await transportTimeoutsCreator.StageBatch(timeouts).ConfigureAwait(false);
+
                     await MarkCurrentBatchAsStaged(toolState).ConfigureAwait(false);
                 }
 
