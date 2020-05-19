@@ -51,13 +51,11 @@
                     var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
-                    var reader = new SqlTimeoutsReader();
-                    var timeoutsFromSql = await reader.ReadTimeoutsFrom(sourceConnectionString, timeoutTableName, dialect, cancellationToken).ConfigureAwait(false);
+                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName);
+                    var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    var writer = new RabbitMqWriter();
-                    await writer.WriteTimeoutsTo(targetConnectionString, timeoutsFromSql, cancellationToken).ConfigureAwait(false);
-
-                    return 0;
+                    await migrationRunner.Run().ConfigureAwait(false);
                 });
             });
 
@@ -99,15 +97,11 @@
                         ? RavenDbVersion.ThreeDotFive
                         : RavenDbVersion.Four;
 
-                    // TODO: Default value for cut off time should be maybe 1 week ahead
-                    var reader = new RavenDBTimeoutsReader();
-                    var timeouts = await reader.ReadTimeoutsFrom(serverUrl, databaseName, prefix,
-                        DateTime.MinValue, ravenVersion, cancellationToken).ConfigureAwait(false);
+                    var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
+                    var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    var writer = new RabbitMqWriter();
-                    await writer.WriteTimeoutsTo(targetConnectionString, timeouts, cancellationToken).ConfigureAwait(false);
-
-                    return 0;
+                    await migrationRunner.Run().ConfigureAwait(false);
                 });
             });
 
