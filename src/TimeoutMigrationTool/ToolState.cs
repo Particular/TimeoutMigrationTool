@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class ToolState
     {
         public bool IsStoragePrepared { get; set; }
