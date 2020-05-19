@@ -14,7 +14,7 @@
         public bool HasMoreBatches {
             get
             {
-                return CurrentBatch.Number == StorageInfo.NumberOfBatches;
+                return CurrentBatch.Number < StorageInfo.NumberOfBatches;
             }
         }
 
