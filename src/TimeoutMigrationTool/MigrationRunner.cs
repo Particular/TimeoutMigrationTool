@@ -75,15 +75,6 @@
             await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
         }
 
-        async Task ExecuteWithStatusReport(string description, Func<Task> action)
-        {
-            await Console.Out.WriteAsync(description).ConfigureAwait(false);
-
-            await action().ConfigureAwait(false);
-
-            await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false); ;
-        }
-
         readonly ITimeoutStorage timeoutStorage;
         readonly ICreateTransportTimeouts transportTimeoutsCreator;
     }
