@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Particular.TimeoutMigrationTool
 {
     using System.Threading.Tasks;
+    using System;
 
     public class MigrationRunner
     {
@@ -16,13 +17,17 @@ namespace Particular.TimeoutMigrationTool
         public async Task Run(IDictionary<string, string> runParameters)
         {
             var forceMigration = runParameters.ContainsKey(ApplicationOptions.ForceMigration);
-            //if (forceMigration) 
-            //{
-            //    TODO: is this approach any better?
-            //    await timeoutStorage.ResetState().ConfigureAwait(false);
-            //}
+            if (forceMigration) 
+            {
+                await Console.Out.WriteAsync("Migration will be forced.").ConfigureAwait(false);
+                //TODO: is this approach any better?
+                await timeoutStorage.ResetState().ConfigureAwait(false);
+            }
 
+            await Console.Out.WriteAsync("Checking for existing tool state").ConfigureAwait(false);
             var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
+            await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false);  
+
             if (toolState == null || toolState.Status == MigrationStatus.Completed || forceMigration)
             {
                 toolState = new ToolState(runParameters);
@@ -45,24 +50,40 @@ namespace Particular.TimeoutMigrationTool
                     }
                 }
 
-                IEnumerable<BatchInfo> batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
+                await Console.Out.WriteAsync("Preparing storage").ConfigureAwait(false);
+                var batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
+              
                 toolState.InitBatches(batches);
+
                 await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false); ;
             }
 
             while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
+
+                await Console.Out.WriteAsync($"Migrating batch {batch.Number}").ConfigureAwait(false);
+
                 if (batch.State == BatchState.Pending)
                 {
+                    await Console.Out.WriteAsync($" - reading").ConfigureAwait(false);
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number).ConfigureAwait(false);
 
+                    await Console.Out.WriteAsync($" - staging").ConfigureAwait(false);
+
                     await transportTimeoutsCreator.StageBatch(timeouts).ConfigureAwait(false);
+
                     await MarkCurrentBatchAsStaged(toolState).ConfigureAwait(false);
+
+                    await Console.Out.WriteAsync($" - staged").ConfigureAwait(false);
                 }
 
+                await Console.Out.WriteAsync($" - completing").ConfigureAwait(false);
                 await transportTimeoutsCreator.CompleteBatch(batch.Number).ConfigureAwait(false);
                 await CompleteCurrentBatch(toolState).ConfigureAwait(false);
+
+                await Console.Out.WriteLineAsync($" - done").ConfigureAwait(false);
             }
         }
 

@@ -86,6 +86,18 @@ namespace Particular.TimeoutMigrationTool
                 });
             });
 
+            app.Command("demo", demoCommand =>
+            {
+                demoCommand.OnExecuteAsync(async (cancellationToken) =>
+                {
+                    var timeoutStorage = new DemoStorage();
+                    var transportAdapter = new DemoTimeoutCreator();
+                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
+
+                    await migrationRunner.Run().ConfigureAwait(false);
+                });
+            });
+
             app.Command("ravendb", ravenDBCommand =>
             {
                 var serverUrlOption = new CommandOption($"--{ApplicationOptions.RavenServerUrl}", CommandOptionType.SingleValue)

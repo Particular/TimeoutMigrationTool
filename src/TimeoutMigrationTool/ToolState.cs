@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,7 +25,16 @@ namespace Particular.TimeoutMigrationTool
         public BatchInfo GetCurrentBatch()
         {
             if (Batches.All(x => x.State == BatchState.Completed))
+            {
                 return null;
+            }
+
+            var stagedBatch = Batches.SingleOrDefault(x => x.State == BatchState.Staged);
+
+            if (stagedBatch != null)
+            {
+                return stagedBatch;
+            }
 
             return Batches.First(x => x.State != BatchState.Completed);
         }
@@ -33,7 +42,9 @@ namespace Particular.TimeoutMigrationTool
         public void InitBatches(IEnumerable<BatchInfo> batches)
         {
             if (Batches.Any() && (Status != MigrationStatus.NeverRun || Status != MigrationStatus.StoragePrepared))
+            {
                 throw new InvalidOperationException("Batches have already been initialized");
+            }
 
             Batches = batches;
         }
