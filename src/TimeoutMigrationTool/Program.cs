@@ -145,7 +145,7 @@ namespace Particular.TimeoutMigrationTool
                         ? RavenDbVersion.ThreeDotFive
                         : RavenDbVersion.Four;
 
-                    if (forceMigrationOption.HasValue())
+                    if (forceMigrationOption.HasValue()) //TODO: double check if this is the way to check if an argument with no value is on the command line
                     {
                         runParameters.Add(ApplicationOptions.ForceMigration, "");
                     }
