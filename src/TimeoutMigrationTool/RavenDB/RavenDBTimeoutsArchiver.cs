@@ -41,7 +41,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                             ChangeVector = null,
                             Patch = new Patch()
                             {
-                                Script = "this.OwningTimeoutManager = 'Archived_' + this.OwningTimeoutManager;",
+                                Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
                                 Values = new { }
                             }
                         };
@@ -58,7 +58,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     DebugMode = false,
                     Patch = new Patch()
                     {
-                        Script = "this.OwningTimeoutManager = 'Archived_' + this.OwningTimeoutManager;",
+                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
                         Values = new { }
                     }
                 };

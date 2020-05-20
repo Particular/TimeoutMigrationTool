@@ -1,4 +1,6 @@
-﻿namespace Particular.TimeoutMigrationTool
+﻿using System.Collections.Generic;
+
+namespace Particular.TimeoutMigrationTool
 {
     using System;
     using McMaster.Extensions.CommandLineUtils;
@@ -15,34 +17,43 @@
                 Name = "migrate-timeouts"
             };
 
-            var targetOption = new CommandOption("-t|--target", CommandOptionType.SingleValue)
+            var targetOption = new CommandOption($"-t|--{ApplicationOptions.RabbitMqTargetConnectionString}", CommandOptionType.SingleValue)
             {
                 Description = "The connection string for the target transport"
             };
 
+            var cutoffTimeOption = new CommandOption($"-c|--{ApplicationOptions.CutoffTime}", CommandOptionType.SingleValue)
+            {
+                Description = "The cut off time to apply when finding elegible timeouts"
+            };
+
             app.HelpOption(inherited: true);
+            Dictionary<string, string> runParameters = new Dictionary<string, string>();
 
             app.Command("sqlp", sqlpCommand =>
             {
-                var sourceOption = new CommandOption("-s|--source", CommandOptionType.SingleValue)
+                var sourceOption = new CommandOption($"-s|--{ApplicationOptions.SqlSourceConnectionString}", CommandOptionType.SingleValue)
                 {
-                    Description = "Connection string for source storage"
+                    Description = "Connection string for source storage",
                 };
 
-                var timeoutTableOption = new CommandOption("--tableName", CommandOptionType.SingleValue)
+                var timeoutTableOption = new CommandOption($"--{ApplicationOptions.SqlTimeoutTableName}", CommandOptionType.SingleValue)
                 {
                     Description = "The table name where timeouts are stored"
                 };
 
-                var sourceDialect = new CommandOption("-d|--dialect", CommandOptionType.SingleValue)
+                var sourceDialect = new CommandOption($"-d|--{ApplicationOptions.SqlSourceDialect}", CommandOptionType.SingleValue)
                 {
                     Description = "The sql dialect to use"
                 };
 
+                sqlpCommand.Options.Add(targetOption);
+                sqlpCommand.Options.Add(cutoffTimeOption);
+
                 sqlpCommand.Options.Add(sourceOption);
                 sqlpCommand.Options.Add(timeoutTableOption);
                 sqlpCommand.Options.Add(sourceDialect);
-                sqlpCommand.Options.Add(targetOption);
+
 
                 sqlpCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
@@ -51,40 +62,49 @@
                     var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
+                    runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
+                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
+
+                    runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
+                    runParameters.Add(ApplicationOptions.SqlTimeoutTableName, timeoutTableName);
+                    runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
+
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName);
                     var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
                     var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    await migrationRunner.Run().ConfigureAwait(false);
+                    await migrationRunner.Run(runParameters).ConfigureAwait(false);
                 });
             });
 
             app.Command("ravendb", ravenDBCommand =>
             {
-                var serverUrlOption = new CommandOption("--serverUrl", CommandOptionType.SingleValue)
+                var serverUrlOption = new CommandOption($"--{ApplicationOptions.RavenServerUrl}", CommandOptionType.SingleValue)
                 {
                     Description = "The url to the ravendb server"
                 };
 
-                var databaseNameOption = new CommandOption("--databaseName", CommandOptionType.SingleValue)
+                var databaseNameOption = new CommandOption($"--{ApplicationOptions.RavenDatabaseName}", CommandOptionType.SingleValue)
                 {
                     Description = "The name of the ravendb database"
                 };
 
-                var prefixOption = new CommandOption("--prefix", CommandOptionType.SingleValue)
+                var prefixOption = new CommandOption($"--{ApplicationOptions.RavenTimeoutPrefix}", CommandOptionType.SingleValue)
                 {
                     Description = "The prefix used for the document collection containing the timeouts",
                 };
 
-                var ravenDbVersion = new CommandOption("--ravenVersion", CommandOptionType.SingleValue)
+                var ravenDbVersion = new CommandOption($"--{ApplicationOptions.RavenVersion}", CommandOptionType.SingleValue)
                 {
                     Description = "The version of RavenDB being used in your environment. Only 3.5 and 4 are supported",
                 };
 
+                ravenDBCommand.Options.Add(targetOption);
+                ravenDBCommand.Options.Add(cutoffTimeOption);
+
                 ravenDBCommand.Options.Add(serverUrlOption);
                 ravenDBCommand.Options.Add(databaseNameOption);
                 ravenDBCommand.Options.Add(prefixOption);
-                ravenDBCommand.Options.Add(targetOption);
                 ravenDBCommand.Options.Add(ravenDbVersion);
 
                 ravenDBCommand.OnExecuteAsync(async (cancellationToken) =>
@@ -97,11 +117,19 @@
                         ? RavenDbVersion.ThreeDotFive
                         : RavenDbVersion.Four;
 
+                    runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
+                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
+
+                    runParameters.Add(ApplicationOptions.RavenServerUrl, serverUrl);
+                    runParameters.Add(ApplicationOptions.RavenDatabaseName, databaseName);
+                    runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
+                    runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
+
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
                     var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    await migrationRunner.Run().ConfigureAwait(false);
+                    await migrationRunner.Run(runParameters).ConfigureAwait(false);
                 });
             });
 

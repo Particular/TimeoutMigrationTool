@@ -8,6 +8,7 @@ namespace Particular.TimeoutMigrationTool
     {
         public bool IsStoragePrepared { get; set; }
         public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
+        public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
 
         public bool HasMoreBatches() => Batches.Any(x => x.State != BatchState.Completed);
 

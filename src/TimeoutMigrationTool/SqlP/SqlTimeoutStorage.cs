@@ -1,4 +1,6 @@
-﻿namespace Particular.TimeoutMigrationTool.SqlP
+﻿using System;
+
+namespace Particular.TimeoutMigrationTool.SqlP
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -17,7 +19,7 @@
             throw new System.NotImplementedException();
         }
 
-        public Task<List<BatchInfo>> Prepare()
+        public Task<List<BatchInfo>> Prepare(ToolState toolState)
         {
             throw new System.NotImplementedException();
         }

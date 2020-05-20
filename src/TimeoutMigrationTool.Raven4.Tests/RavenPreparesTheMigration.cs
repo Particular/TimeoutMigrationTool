@@ -1,14 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.RavenDB;
-using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace TimeoutMigrationTool.Raven4.Tests
 {
@@ -43,7 +43,8 @@ namespace TimeoutMigrationTool.Raven4.Tests
         [Test]
         public async Task WhenGettingTimeoutStateAndOneIsFoundWeReturnIt()
         {
-            await SetupExistingToolStateInDatabase(false);
+            var toolState = SetupToolState(DateTime.Now.AddDays(-1));
+            await SaveToolState(toolState);
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
@@ -56,9 +57,11 @@ namespace TimeoutMigrationTool.Raven4.Tests
         [Test]
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
         {
+            var toolState = SetupToolState(DateTime.Now.AddDays(-1));
+
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.Prepare();
+            var batches = await timeoutStorage.Prepare(toolState);
 
             Assert.That(batches.Count, Is.EqualTo(2));
             Assert.That(batches.First().TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
@@ -69,39 +72,65 @@ namespace TimeoutMigrationTool.Raven4.Tests
         [Test]
         public async Task WhenTheStorageHasNotBeenPreparedButWeFindBatchInfoWeClearItAndStartOver()
         {
+            var toolState = SetupToolState(DateTime.Now.AddDays(-1));
+            var item = await GetTimeout("TimeoutDatas/1").ConfigureAwait(false);
+            var originalTimeoutManager = item.OwningTimeoutManager;
+
             await SetupExistingBatchInfoInDatabase();
 
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await timeoutStorage.Prepare();
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            await sut.CleanupAnyExistingBatchesIfNeeded(new ToolState
+            {
+                IsStoragePrepared = false
+            });
 
             var ravenDbReader = new RavenDbReader<BatchInfo>(ServerName, databaseName, RavenDbVersion.Four);
             var savedBatches = await ravenDbReader.GetItems(x => true, "batch", CancellationToken.None);
-            Assert.That(savedBatches.Count, Is.EqualTo(2));
+            var modifiedItem = await GetTimeout("TimeoutDatas/1").ConfigureAwait(false);
+            Assert.That(savedBatches.Count, Is.EqualTo(0));
+            Assert.That(modifiedItem.OwningTimeoutManager, Is.EqualTo(originalTimeoutManager));
         }
 
         [Test]
         public async Task WhenTheStorageHasBeenPreparedWeReturnStoredBatches()
         {
-            await SetupExistingToolStateInDatabase(true);
+            var toolState = SetupToolState(DateTime.Now.AddDays(-1), true);
+            await SaveToolState(toolState);
             await SetupExistingBatchInfoInDatabase();
 
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.Prepare();
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await sut.Prepare(toolState);
 
-            Assert.That(batches.Count, Is.EqualTo(1));
+            Assert.That(batches.Count, Is.EqualTo(2));
         }
 
-        private async Task SetupExistingToolStateInDatabase(bool isStoragePrepared)
+        private ToolState SetupToolState(DateTime cutoffTime, bool isStoragePrepared = false)
+        {
+            var toolState = new ToolState
+            {
+                IsStoragePrepared = isStoragePrepared,
+                Parameters = new Dictionary<string, string>
+                {
+                    {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
+                    {ApplicationOptions.RavenServerUrl, ServerName},
+                    {ApplicationOptions.RavenDatabaseName, databaseName},
+                    {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
+                }
+            };
+            return toolState;
+        }
+
+        private async Task SetupExistingBatchInfoInDatabase()
+        {
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
+        }
+
+        private async Task SaveToolState(ToolState toolState)
         {
             using (var httpClient = new HttpClient())
             {
                 var insertStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-
-                // Insert the tool state data
-                var toolState = new ToolState
-                {
-                    IsStoragePrepared = isStoragePrepared
-                };
 
                 var serializeObject = JsonConvert.SerializeObject(toolState);
                 var httpContent = new StringContent(serializeObject);
@@ -111,41 +140,5 @@ namespace TimeoutMigrationTool.Raven4.Tests
             }
         }
 
-        private async Task SetupExistingBatchInfoInDatabase()
-        {
-            // setup some batchdata
-            var batch = new BatchInfo
-            {
-                Number = 5,
-                State = BatchState.Pending,
-                TimeoutIds = new[]
-                {
-                    "TimeoutDatas/1", "TimeoutDatas/2"
-                }
-            };
-
-            using (var httpClient = new HttpClient())
-            {
-                var bulkInsertUrl = $"{ServerName}/databases/{databaseName}/bulk_docs";
-                var bulkCreateBatchAndUpdateTimeoutsCommand = new
-                {
-                    Commands = new[]
-                    {
-                        new PutCommand
-                        {
-                            Id = $"batch/{batch.Number}",
-                            Type = "PUT",
-                            ChangeVector = (object) null,
-                            Document = batch
-                        }
-                    }
-                };
-
-                var serializedCommands = JsonConvert.SerializeObject(bulkCreateBatchAndUpdateTimeoutsCommand);
-                var result = await httpClient.PostAsync(bulkInsertUrl,
-                    new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
-                result.EnsureSuccessStatusCode();
-            }
-        }
     }
 }

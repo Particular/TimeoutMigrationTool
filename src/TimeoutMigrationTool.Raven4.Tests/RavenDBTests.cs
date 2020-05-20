@@ -59,7 +59,7 @@
             var archived = await GetTimeout(timeoutId);
 
             Assert.That(original.OwningTimeoutManager, Is.Not.EqualTo(archived.OwningTimeoutManager));
-            Assert.IsTrue(archived.OwningTimeoutManager.StartsWith("archived_", StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(archived.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase));
         }
 
         [Test]
@@ -73,8 +73,8 @@
             var archived = await GetTimeouts(timeoutIds);
 
             Assert.That(archived.Count, Is.EqualTo(3));
-            Assert.That(archived.All(a => a.OwningTimeoutManager.StartsWith("archived_", StringComparison.OrdinalIgnoreCase)));
-            Assert.That(archived.All(a => a.OwningTimeoutManager.StartsWith("archived_", StringComparison.OrdinalIgnoreCase)));
+            Assert.That(archived.All(a => a.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase)));
+            Assert.That(archived.All(a => a.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase)));
         }
     }
 }

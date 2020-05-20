@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Particular.TimeoutMigrationTool
 {
@@ -12,13 +13,13 @@ namespace Particular.TimeoutMigrationTool
             this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
 
-        public async Task Run()
+        public async Task Run(Dictionary<string, string> runParameters)
         {
             var toolState = await timeoutStorage.GetOrCreateToolState().ConfigureAwait(false);
 
             if (!toolState.IsStoragePrepared)
             {
-                IEnumerable<BatchInfo> batches = await timeoutStorage.Prepare().ConfigureAwait(false);
+                IEnumerable<BatchInfo> batches = await timeoutStorage.Prepare(toolState).ConfigureAwait(false);
                 toolState.InitBatches(batches);
                 await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
             }
