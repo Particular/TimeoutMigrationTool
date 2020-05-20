@@ -11,6 +11,14 @@ namespace TimeoutMigrationTool.Raven4.Tests
 {
     public class RavenPreparesTheMigration : RavenTimeoutStorageTestSuite
     {
+        private int nrOfTimeouts = 1500;
+
+        [SetUp]
+        public async Task Setup()
+        {
+            await InitTimeouts(nrOfTimeouts);
+        }
+
         [Test]
         public async Task WhenGettingTimeoutStateAndNoneIsFoundWeCreateOne()
         {
@@ -62,7 +70,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
 
             Assert.That(batches.Count, Is.EqualTo(2));
             Assert.That(batches.First().TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
-            Assert.That(batches.Skip(1).First().TimeoutIds.Length, Is.EqualTo( nrOfTimeoutsInStore - RavenConstants.DefaultPagingSize));
+            Assert.That(batches.Skip(1).First().TimeoutIds.Length, Is.EqualTo( nrOfTimeouts - RavenConstants.DefaultPagingSize));
         }
 
         [Test]

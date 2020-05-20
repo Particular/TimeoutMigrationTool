@@ -9,31 +9,38 @@
 
     public class RavenDBTests : RavenTimeoutStorageTestSuite
     {
+        private int nrOfTimeouts = 250;
+
+        [SetUp]
+        public async Task Setup()
+        {
+            await InitTimeouts(nrOfTimeouts);
+        }
+
         [Test]
         public async Task WhenReadingTimeouts()
         {
             var reader = new RavenDBTimeoutsReader();
-
             var timeouts = await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(-1), RavenDbVersion.Four, CancellationToken.None);
 
-            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeoutsInStore));
+            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts));
         }
 
         [Test]
         public async Task WhenReadingTimeoutsWithCutoffDateNextWeek()
         {
             var reader = new RavenDBTimeoutsReader();
-
             var timeouts = await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(10), RavenDbVersion.Four, CancellationToken.None);
-            Assert.That(timeouts.Count, Is.EqualTo(1375));
+
+            Assert.That(timeouts.Count, Is.EqualTo(125));
         }
 
         [Test]
         public async Task WhenListingEndpoints()
         {
-
             var reader = new RavenDBTimeoutsReader();
             var endpoints = await reader.ListDestinationEndpoints(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four, CancellationToken.None);
+
             Assert.That(endpoints.Length, Is.EqualTo(3));
             Assert.That(endpoints.Contains("A"), Is.EqualTo(true));
             Assert.That(endpoints.Contains("B"), Is.EqualTo(true));
@@ -59,7 +66,6 @@
         public async Task WhenArchivingMultipleTimeouts()
         {
             var timeoutIds = new[] { "TimeoutDatas/5", "TimeoutDatas/125", "TimeoutDatas/197" };
-            var original = await GetTimeouts(timeoutIds);
 
             var writer = new RavenDBTimeoutsArchiver();
             await writer.ArchiveTimeouts(ServerName, databaseName, timeoutIds, RavenDbVersion.Four, CancellationToken.None);
