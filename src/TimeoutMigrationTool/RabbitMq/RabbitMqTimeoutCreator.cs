@@ -18,26 +18,24 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             Init();
         }
 
-        private Task Init()
+        private void Init()
         {
             this.factory = new ConnectionFactory();
             factory.Uri = new Uri(this.targetConnectionString);
 
-            return CreateStagingQueue();
+            CreateStagingQueue();
         }
 
-        private Task CreateStagingQueue()
+        private void CreateStagingQueue()
         {
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
                 channel.QueueDeclare("TimeoutMigrationTool_Staging", true, false, false, null);
+                channel.QueuePurge("TimeoutMigrationTool_Staging");
                 channel.ExchangeDeclare("TimeoutMigrationTool_Staging", ExchangeType.Fanout, true);
                 channel.QueueBind("TimeoutMigrationTool_Staging", "TimeoutMigrationTool_Staging", string.Empty);
             }
-
-            return Task.FromResult(true);
-
         }
 
         public Task StageBatch(List<TimeoutData> timeouts)
@@ -61,13 +59,14 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
     {
         public RabbitStagePump(string targetConnectionString)
         {
-            factory = new ConnectionFactory($"{targetConnectionString} - stage message pump");
+            factory = new ConnectionFactory();
+            factory.Uri = new Uri(targetConnectionString);
         }
 
 
         public Task CompleteBatch(int number)
         {
-
+            return Task.CompletedTask;
         }
 
         private ConnectionFactory factory;

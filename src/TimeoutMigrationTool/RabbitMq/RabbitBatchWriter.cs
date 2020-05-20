@@ -53,7 +53,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         private IConnection GetConnection(string rabbitMqBroker)
         {
-            var factory = new ConnectionFactory();
+            this.factory = new ConnectionFactory();
             factory.Uri = new Uri(rabbitMqBroker);
             return factory.CreateConnection();
         }
