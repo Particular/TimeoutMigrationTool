@@ -13,13 +13,39 @@ namespace Particular.TimeoutMigrationTool
             this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
 
-        public async Task Run(Dictionary<string, string> runParameters)
+        public async Task Run(IDictionary<string, string> runParameters)
         {
-            var toolState = await timeoutStorage.GetOrCreateToolState().ConfigureAwait(false);
+            var forceMigration = runParameters.ContainsKey(ApplicationOptions.ForceMigration);
+            //if (forceMigration) 
+            //{
+            //    TODO: is this approach any better?
+            //    await timeoutStorage.ResetState().ConfigureAwait(false);
+            //}
 
-            if (!toolState.IsStoragePrepared)
+            var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
+            if (toolState == null || toolState.Status == MigrationStatus.Completed || forceMigration)
             {
-                IEnumerable<BatchInfo> batches = await timeoutStorage.Prepare(toolState).ConfigureAwait(false);
+                toolState = new ToolState(runParameters);
+                await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+            }
+            else 
+            {
+                //TODO: check if run parameters are all the same, then we're safe to continue
+            }
+
+
+            if (toolState.Status == MigrationStatus.NeverRun)
+            {
+                DateTime cutOffTime = DateTime.Now.AddDays(-1);
+                if (runParameters.TryGetValue(ApplicationOptions.CutoffTime, out var cutOffTimeValue)) 
+                {
+                    if (!DateTime.TryParse(cutOffTimeValue, out cutOffTime)) 
+                    {
+                        throw new ArgumentException($"{ApplicationOptions.CutoffTime} is not a valid System.DateTime value.");
+                    }
+                }
+
+                IEnumerable<BatchInfo> batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
                 toolState.InitBatches(batches);
                 await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
             }
@@ -42,7 +68,7 @@ namespace Particular.TimeoutMigrationTool
 
         async Task MarkStorageAsPrepared(ToolState toolState)
         {
-            toolState.IsStoragePrepared = true;
+            toolState.Status = MigrationStatus.StoragePrepared;
             await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
         }
 

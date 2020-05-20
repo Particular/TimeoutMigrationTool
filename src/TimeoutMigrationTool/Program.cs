@@ -27,6 +27,11 @@ namespace Particular.TimeoutMigrationTool
                 Description = "The cut off time to apply when finding eligible timeouts"
             };
 
+            var forceMigrationOption = new CommandOption($"-c|--{ApplicationOptions.ForceMigration}", CommandOptionType.NoValue)
+            {
+                Description = "To force the migration and start over."
+            };
+
             app.HelpOption(inherited: true);
             Dictionary<string, string> runParameters = new Dictionary<string, string>();
 
@@ -62,6 +67,10 @@ namespace Particular.TimeoutMigrationTool
                     var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
+                    if (forceMigrationOption.HasValue())
+                    {
+                        runParameters.Add(ApplicationOptions.ForceMigration, "");
+                    }
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
 
@@ -116,6 +125,11 @@ namespace Particular.TimeoutMigrationTool
                     var ravenVersion = ravenDbVersion.Value() == "3.5"
                         ? RavenDbVersion.ThreeDotFive
                         : RavenDbVersion.Four;
+
+                    if (forceMigrationOption.HasValue())
+                    {
+                        runParameters.Add(ApplicationOptions.ForceMigration, "");
+                    }
 
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());

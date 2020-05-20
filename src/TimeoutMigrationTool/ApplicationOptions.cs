@@ -11,5 +11,6 @@ namespace Particular.TimeoutMigrationTool
         public const string SqlSourceConnectionString = "source";
         public const string SqlTimeoutTableName = "tableName";
         public const string SqlSourceDialect = "dialect";
+        public const string ForceMigration = "forceMigration";
     }
 }

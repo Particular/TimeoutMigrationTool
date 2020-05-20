@@ -23,45 +23,33 @@ namespace TimeoutMigrationTool.Raven4.Tests
         }
 
         [Test]
-        public async Task WhenGettingTimeoutStateAndNoneIsFoundWeCreateOne()
+        public async Task WhenGettingTimeoutStateAndNoneIsFoundNullIsReturned()
         {
-            using (var httpClient = new HttpClient())
-            {
-                var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-                var result = await httpClient.GetAsync(getStateUrl);
-                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
-            }
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var toolState = await timeoutStorage.GetToolState();
 
-            var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var toolState = await timeoutStorage.GetOrCreateToolState();
-
-            Assert.That(toolState.IsStoragePrepared, Is.False);
-            Assert.IsEmpty(toolState.Batches);
+            Assert.That(toolState, Is.Null);
         }
 
         [Test]
         public async Task WhenGettingTimeoutStateAndOneIsFoundWeReturnIt()
         {
-            var toolState = SetupToolState(DateTime.Now.AddDays(-1));
-            await SaveToolState(toolState);
+            await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1)));
 
-            var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var retrievedToolState = await timeoutStorage.GetOrCreateToolState();
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var retrievedToolState = await timeoutStorage.GetToolState();
 
-            Assert.That(retrievedToolState.IsStoragePrepared, Is.False);
+            Assert.That(retrievedToolState, Is.Not.Null);
+            Assert.That(retrievedToolState.Status, Is.EqualTo(MigrationStatus.NeverRun));
             Assert.IsEmpty(retrievedToolState.Batches);
         }
 
         [Test]
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
         {
-            var toolState = SetupToolState(DateTime.Now.AddDays(-1));
-
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.Prepare(toolState);
+            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1));
 
             Assert.That(batches.Count, Is.EqualTo(2));
             Assert.That(batches.First().TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
@@ -79,10 +67,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await SetupExistingBatchInfoInDatabase();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CleanupAnyExistingBatchesIfNeeded(new ToolState
-            {
-                IsStoragePrepared = false
-            });
+            await sut.CleanupAnyExistingBatchesIfNeeded();
 
             var ravenDbReader = new RavenDbReader<BatchInfo>(ServerName, databaseName, RavenDbVersion.Four);
             var savedBatches = await ravenDbReader.GetItems(x => true, "batch", CancellationToken.None);
@@ -94,29 +79,30 @@ namespace TimeoutMigrationTool.Raven4.Tests
         [Test]
         public async Task WhenTheStorageHasBeenPreparedWeReturnStoredBatches()
         {
-            var toolState = SetupToolState(DateTime.Now.AddDays(-1), true);
-            await SaveToolState(toolState);
+            await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1), MigrationStatus.StoragePrepared));
             await SetupExistingBatchInfoInDatabase();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await sut.Prepare(toolState);
+            var batches = await sut.Prepare(DateTime.Now.AddDays(-1));
 
             Assert.That(batches.Count, Is.EqualTo(2));
         }
 
-        private ToolState SetupToolState(DateTime cutoffTime, bool isStoragePrepared = false)
+        private ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
         {
-            var toolState = new ToolState
+            var runParameters = new Dictionary<string, string>
             {
-                IsStoragePrepared = isStoragePrepared,
-                Parameters = new Dictionary<string, string>
-                {
-                    {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
-                    {ApplicationOptions.RavenServerUrl, ServerName},
-                    {ApplicationOptions.RavenDatabaseName, databaseName},
-                    {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
-                }
+                {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
+                {ApplicationOptions.RavenServerUrl, ServerName},
+                {ApplicationOptions.RavenDatabaseName, databaseName},
+                {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
             };
+
+            var toolState = new ToolState(runParameters)
+            {
+                Status = status
+            };
+
             return toolState;
         }
 

@@ -27,29 +27,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.ravenVersion = ravenVersion;
         }
 
-        public async Task<ToolState> GetOrCreateToolState()
+        public async Task<ToolState> GetToolState()
         {
             ToolState toolState;
             using (var httpClient = new HttpClient())
             {
                 var getStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
                 var result = await httpClient.GetAsync(getStateUrl).ConfigureAwait(false);
-                if (result.StatusCode == HttpStatusCode.NotFound)
+                if (result.StatusCode == HttpStatusCode.NotFound) 
                 {
-                    var insertStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-
-                    // Insert the tool state data
-                    toolState = new ToolState
-                    {
-                        IsStoragePrepared = false
-                    };
-
-                    var serializeObject = JsonConvert.SerializeObject(toolState);
-                    var httpContent = new StringContent(serializeObject);
-
-                    var insertResult = await httpClient.PutAsync(insertStateUrl, httpContent).ConfigureAwait(false);
-                    insertResult.EnsureSuccessStatusCode();
-                    return toolState;
+                    return null;
                 }
 
                 var content = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -62,18 +49,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        public async Task<List<BatchInfo>> Prepare(ToolState toolState)
+        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
         {
-            if (toolState.IsStoragePrepared)
-            {
-                var ravenBatchReader = new RavenDbReader<BatchInfo>(serverUrl, databaseName, ravenVersion);
-                return await ravenBatchReader.GetItems(info => true, "batch", CancellationToken.None).ConfigureAwait(false);
-            }
+            await CleanupAnyExistingBatchesIfNeeded().ConfigureAwait(false);
 
-            await CleanupAnyExistingBatchesIfNeeded(toolState).ConfigureAwait(false);
-
-            var ravenStoreParameters = toolState.Parameters.ToRavenParams();
-            var batches = await PrepareBatchesAndTimeouts(ravenStoreParameters.MaxCutoffTime).ConfigureAwait(false);
+            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime).ConfigureAwait(false);
             return batches;
         }
 
@@ -113,11 +93,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return batches;
         }
 
-        internal async Task CleanupAnyExistingBatchesIfNeeded(ToolState toolState)
+        internal async Task CleanupAnyExistingBatchesIfNeeded()
         {
-            if (toolState.IsStoragePrepared)
-                return;
-
             RavenDbReader<BatchInfo> batchReader = new RavenDbReader<BatchInfo>(serverUrl, databaseName, ravenVersion);
             var existingBatches = await batchReader.GetItems(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
 
@@ -144,9 +121,18 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             throw new NotImplementedException();
         }
 
-        public Task StoreToolState(ToolState toolState)
+        public async Task StoreToolState(ToolState toolState)
         {
-            throw new NotImplementedException();
+            using (var httpClient = new HttpClient())
+            {
+                var insertStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+
+                var serializeObject = JsonConvert.SerializeObject(toolState);
+                var httpContent = new StringContent(serializeObject);
+
+                var insertResult = await httpClient.PutAsync(insertStateUrl, httpContent).ConfigureAwait(false);
+                insertResult.EnsureSuccessStatusCode();
+            }
         }
 
         private static object GetBatchInsertCommand(BatchInfo batch, RavenDbVersion version)
