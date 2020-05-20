@@ -28,49 +28,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<TimeoutData>> ReadTimeoutsFrom(string serverUrl, string databaseName, string prefix,
             DateTime maxCutoffTime, RavenDbVersion version, CancellationToken cancellationToken)
         {
-            var timeouts = new List<TimeoutData>();
             var pageSize = 100;
-            using (var client = new HttpClient())
-            {
-                var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={prefix}&pageSize={pageSize}";
-                var checkForMoreResults = true;
-                var iteration = 0;
+            var ravenDbReader = new RavenDbReader<TimeoutData>(serverUrl, databaseName, version, pageSize);
+            var timeouts = await ravenDbReader.GetItems(data => data.Time >= maxCutoffTime, prefix, cancellationToken).ConfigureAwait(false);
 
-                while (checkForMoreResults)
-                {
-                    var skipFirst = $"&start={iteration * pageSize}";
-                    var getUrl = iteration == 0 ? url : url + skipFirst;
-                    var result = await client.GetAsync(getUrl, cancellationToken).ConfigureAwait(false);
+            return timeouts;
 
-                    if (result.StatusCode == HttpStatusCode.OK)
-                    {
-                        var pagedTimeouts =
-                            await GetDocumentsFromResponse(version, result.Content).ConfigureAwait(false);
-                        if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
-                            checkForMoreResults = false;
-
-                        var elegibleTimeouts = pagedTimeouts.Where(x => x.Time >= maxCutoffTime);
-                        timeouts.AddRange(elegibleTimeouts);
-                        iteration++;
-                    }
-                }
-
-                return timeouts;
-            }
-        }
-
-        private async Task<List<TimeoutData>> GetDocumentsFromResponse(RavenDbVersion version,
-            HttpContent resultContent)
-        {
-            var contentString = await resultContent.ReadAsStringAsync().ConfigureAwait(false);
-            if (version == RavenDbVersion.Four)
-            {
-                var jObject = JObject.Parse(contentString);
-                var resultSet = jObject.SelectToken("Results");
-                contentString = resultSet.ToString();
-            }
-
-            return JsonConvert.DeserializeObject<List<TimeoutData>>(contentString);
         }
     }
 }

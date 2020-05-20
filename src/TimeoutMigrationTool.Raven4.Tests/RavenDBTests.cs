@@ -25,7 +25,7 @@
             var reader = new RavenDBTimeoutsReader();
 
             var timeouts = await reader.ReadTimeoutsFrom(ServerName, databaseName, "TimeoutDatas", DateTime.Now.AddDays(10), RavenDbVersion.Four, CancellationToken.None);
-            Assert.That(timeouts.Count, Is.EqualTo(125));
+            Assert.That(timeouts.Count, Is.EqualTo(1375));
         }
 
         [Test]
