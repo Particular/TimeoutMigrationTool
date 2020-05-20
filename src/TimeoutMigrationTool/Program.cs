@@ -90,11 +90,18 @@ namespace Particular.TimeoutMigrationTool
             {
                 demoCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
+                    if (forceMigrationOption.HasValue())
+                    {
+                        runParameters.Add(ApplicationOptions.ForceMigration, "");
+                    }
+
+                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
+
                     var timeoutStorage = new DemoStorage();
                     var transportAdapter = new DemoTimeoutCreator();
                     var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    await migrationRunner.Run().ConfigureAwait(false);
+                    await migrationRunner.Run(runParameters).ConfigureAwait(false);
                 });
             });
 

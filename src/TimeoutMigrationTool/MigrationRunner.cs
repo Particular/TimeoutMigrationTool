@@ -21,7 +21,7 @@ namespace Particular.TimeoutMigrationTool
             {
                 await Console.Out.WriteAsync("Migration will be forced.").ConfigureAwait(false);
                 //TODO: is this approach any better?
-                await timeoutStorage.ResetState().ConfigureAwait(false);
+                //await timeoutStorage.ResetState().ConfigureAwait(false);
             }
 
             await Console.Out.WriteAsync("Checking for existing tool state").ConfigureAwait(false);

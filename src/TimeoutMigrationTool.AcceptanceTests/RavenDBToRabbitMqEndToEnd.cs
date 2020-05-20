@@ -7,6 +7,7 @@
     using Particular.TimeoutMigrationTool.RabbitMq;
     using Particular.TimeoutMigrationTool.RavenDB;
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     [TestFixture]
@@ -33,11 +34,29 @@
             .Done(c => c.TimeoutSet)
             .Run();
 
-            var timeoutStorage = new RavenDBTimeoutStorage("http://localhost:8080", "TimeoutMigrationTests", "TimeoutDatas", RavenDbVersion.Four);
-            var transportAdapter = new RabbitMqTimeoutCreator("amqp://guest:guest@localhost:5672");
+
+            var serverUrl = "http://localhost:8080";
+            var datebaseName = "TimeoutMigrationTests";
+            var ravenTimeoutPrefix = "TimeoutDatas";
+            var ravenVersion = RavenDbVersion.Four;
+
+            var targetConnectionString = "amqp://guest:guest@localhost:5672";
+
+            var runParameters = new Dictionary<string, string>
+            {
+                { ApplicationOptions.CutoffTime, DateTime.Now.AddDays(-1).ToString() },
+                { ApplicationOptions.RavenServerUrl, serverUrl },
+                { ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString },
+                { ApplicationOptions.RavenDatabaseName, datebaseName },
+                { ApplicationOptions.RavenTimeoutPrefix, ravenTimeoutPrefix },
+                { ApplicationOptions.RavenVersion, ravenVersion.ToString() }
+            };
+
+            var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, datebaseName, ravenTimeoutPrefix, ravenVersion);
+            var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-            await migrationRunner.Run();
+            await migrationRunner.Run(runParameters);
 
             context = await Scenario.Define<Context>()
              .WithEndpoint<NewRabbitMqEndpoint>()

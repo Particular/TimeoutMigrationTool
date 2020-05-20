@@ -1,5 +1,6 @@
 ﻿namespace Particular.TimeoutMigrationTool
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
@@ -10,14 +11,12 @@
             return Task.Delay(3000);
         }
 
-        public Task<ToolState> GetOrCreateToolState()
+        public Task<ToolState> GetToolState()
         {
-            toolState = new ToolState();
-
-            return Task.FromResult(toolState);
+            return Task.FromResult((ToolState)null);
         }
 
-        public async Task<List<BatchInfo>> Prepare()
+        public async Task<List<BatchInfo>> Prepare(DateTime cutOffDate)
         {
             await Task.Delay(3000).ConfigureAwait(false);
 
@@ -35,7 +34,5 @@
         {
             return Task.CompletedTask;
         }
-
-        ToolState toolState;
     }
 }
