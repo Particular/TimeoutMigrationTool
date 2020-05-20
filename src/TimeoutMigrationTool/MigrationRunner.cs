@@ -1,4 +1,7 @@
-﻿namespace Particular.TimeoutMigrationTool
+using System;
+using System.Collections.Generic;
+
+namespace Particular.TimeoutMigrationTool
 {
     using System.Threading.Tasks;
     using System;
@@ -11,25 +14,52 @@
             this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
 
-        public async Task Run()
+        public async Task Run(IDictionary<string, string> runParameters)
         {
-            await Console.Out.WriteAsync("Creating tool state").ConfigureAwait(false);
-            var toolState = await timeoutStorage.GetOrCreateToolState().ConfigureAwait(false);
-            await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false);
-
-            if (!toolState.IsStoragePrepared)
+            var forceMigration = runParameters.ContainsKey(ApplicationOptions.ForceMigration);
+            if (forceMigration) 
             {
-                await Console.Out.WriteAsync("Preparing storage").ConfigureAwait(false);
-                var batches = await timeoutStorage.Prepare().ConfigureAwait(false);
+                await Console.Out.WriteAsync("Migration will be forced.").ConfigureAwait(false);
+                //TODO: is this approach any better?
+                //await timeoutStorage.ResetState().ConfigureAwait(false);
+            }
 
+            await Console.Out.WriteAsync("Checking for existing tool state").ConfigureAwait(false);
+            var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
+            await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false);  
+
+            if (toolState == null || toolState.Status == MigrationStatus.Completed || forceMigration)
+            {
+                toolState = new ToolState(runParameters);
+                await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+            }
+            else 
+            {
+                //TODO: check if run parameters are all the same, then we're safe to continue
+            }
+
+
+            if (toolState.Status == MigrationStatus.NeverRun)
+            {
+                DateTime cutOffTime = DateTime.Now.AddDays(-1);
+                if (runParameters.TryGetValue(ApplicationOptions.CutoffTime, out var cutOffTimeValue)) 
+                {
+                    if (!DateTime.TryParse(cutOffTimeValue, out cutOffTime)) 
+                    {
+                        throw new ArgumentException($"{ApplicationOptions.CutoffTime} is not a valid System.DateTime value.");
+                    }
+                }
+
+                await Console.Out.WriteAsync("Preparing storage").ConfigureAwait(false);
+                var batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
+              
                 toolState.InitBatches(batches);
 
                 await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
-
                 await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false); ;
             }
 
-            while (toolState.HasMoreBatches)
+            while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
 
@@ -59,7 +89,7 @@
 
         async Task MarkStorageAsPrepared(ToolState toolState)
         {
-            toolState.IsStoragePrepared = true;
+            toolState.Status = MigrationStatus.StoragePrepared;
             await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
         }
 

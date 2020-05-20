@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
@@ -15,7 +16,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             string url = $"{serverName}/databases/{databaseName}/bulk_docs";
 
             var command = GetPatchCommand(timeoutIds, version);
-            
+
             using (var httpClient = new HttpClient())
             {
                 var serializedCommands = JsonConvert.SerializeObject(command);
@@ -28,7 +29,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         private static object GetPatchCommand(string[] timeoutIds, RavenDbVersion version)
         {
             if (version == RavenDbVersion.Four)
-            { 
+            {
                 return new
                 {
                     Commands = timeoutIds.Select(timeoutId =>
@@ -40,7 +41,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                             ChangeVector = null,
                             Patch = new Patch()
                             {
-                                Script = "this.OwningTimeoutManager = 'Archived_' + this.OwningTimeoutManager;",
+                                Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
                                 Values = new { }
                             }
                         };
@@ -57,25 +58,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     DebugMode = false,
                     Patch = new Patch()
                     {
-                        Script = "this.OwningTimeoutManager = 'Archived_' + this.OwningTimeoutManager;",
+                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
                         Values = new { }
                     }
                 };
             }).ToArray();
         }
-    }
-
-    class PatchCommand
-    {
-        public string Id { get; set; }
-        public string Type { get; set; }
-        public string ChangeVector { get; set; }
-        public Patch Patch { get; set; }
-    }
-
-    class Patch
-    {
-        public string Script { get; set; }
-        public object Values { get; set; }
     }
 }

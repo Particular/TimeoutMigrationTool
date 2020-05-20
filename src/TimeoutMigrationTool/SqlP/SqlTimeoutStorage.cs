@@ -1,4 +1,6 @@
-﻿namespace Particular.TimeoutMigrationTool.SqlP
+﻿using System;
+
+namespace Particular.TimeoutMigrationTool.SqlP
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -12,12 +14,12 @@
             this.timeoutTableName = timeoutTableName;
         }
 
-        public Task<ToolState> GetOrCreateToolState()
+        public Task<ToolState> GetToolState()
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<List<BatchInfo>> Prepare()
+        public Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
         {
             throw new System.NotImplementedException();
         }

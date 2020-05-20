@@ -18,20 +18,14 @@ namespace TimeoutMigrationTool.Raven4.Tests
     {
         protected const string ServerName = "http://localhost:8080";
         protected string databaseName;
-        protected int nrOfTimeoutsInStore = 250;
-        protected List<string> destinations = new List<string>()
-        {
-            "A", "B", "C"
-        };
 
         [SetUp]
-        public async Task Setup()
+        public async Task SetupDatabase()
         {
             var testId = Guid.NewGuid().ToString("N");
             databaseName = $"ravendb-{testId}";
 
             var createDbUrl = $"{ServerName}/admin/databases?name={databaseName}";
-
 
             using (var httpClient = new HttpClient())
             {
@@ -45,19 +39,23 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 var stringContent = new StringContent(JsonConvert.SerializeObject(db));
                 var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
                 Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+            }
+        }
 
-                Random rnd = new Random();
+        protected async Task InitTimeouts(int nrOfTimeouts)
+        {
+            using (var httpClient = new HttpClient())
+            {
                 var timeoutsPrefix = "TimeoutDatas";
-
-
-                for (var i = 0; i < nrOfTimeoutsInStore; i++)
+                for (var i = 0; i < nrOfTimeouts; i++)
                 {
                     var insertTimeoutUrl = $"{ServerName}/databases/{databaseName}/docs?id={timeoutsPrefix}/{i}";
 
                     // Insert the timeout data
                     var timeoutData = new TimeoutData
                     {
-                        Destination = i <100 ? "A" : i== 100 ? "B" : "C",
+                        Id = $"{timeoutsPrefix}/{i}",
+                        Destination = i < 100 ? "A" : i == 100 ? "B" : "C",
                         SagaId = Guid.NewGuid(),
                         OwningTimeoutManager = "FakeOwningTimeoutManager",
                         Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
@@ -75,7 +73,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         }
 
         [TearDown]
-        public async Task Teardown()
+        public async Task TeardownDatabase()
         {
             var killDb = $"{ServerName}/admin/databases";
             var deleteDb = new DeleteDbParams
@@ -107,7 +105,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             var timeouts = new List<TimeoutData>();
 
-            foreach (var timeoutId in timeoutIds) 
+            foreach (var timeoutId in timeoutIds)
             {
                 var url = $"{ServerName}/databases/{databaseName}/docs?id={timeoutId}";
                 using (var httpClient = new HttpClient())

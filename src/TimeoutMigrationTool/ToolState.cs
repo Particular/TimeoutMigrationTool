@@ -1,16 +1,26 @@
-﻿namespace Particular.TimeoutMigrationTool
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
+namespace Particular.TimeoutMigrationTool
+{
     public class ToolState
     {
-        public bool IsStoragePrepared { get; set; }
+        public ToolState(IDictionary<string, string> runParameters)
+        {
+            this.RunParameters = runParameters;
+        }
+
+        private ToolState()
+        {
+            //TEMP: this constructor is required by RavenDB to deserialize the stored document
+        }
 
         public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
+        public IDictionary<string, string> RunParameters { get; private set; } = new Dictionary<string, string>();
+        public MigrationStatus Status { get; set; }
 
-        public bool HasMoreBatches => Batches.Any(x => x.State != BatchState.Completed);
+        public bool HasMoreBatches() => Batches.Any(x => x.State != BatchState.Completed);
 
         public BatchInfo GetCurrentBatch()
         {
@@ -31,7 +41,7 @@
 
         public void InitBatches(IEnumerable<BatchInfo> batches)
         {
-            if (Batches.Any() && IsStoragePrepared)
+            if (Batches.Any() && (Status != MigrationStatus.NeverRun || Status != MigrationStatus.StoragePrepared))
             {
                 throw new InvalidOperationException("Batches have already been initialized");
             }

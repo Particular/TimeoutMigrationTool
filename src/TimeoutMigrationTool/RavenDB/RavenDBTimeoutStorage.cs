@@ -1,10 +1,24 @@
-﻿namespace Particular.TimeoutMigrationTool.RavenDB
-{
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
+namespace Particular.TimeoutMigrationTool.RavenDB
+{
     public class RavenDBTimeoutStorage : ITimeoutStorage
     {
+        private readonly string databaseName;
+        private readonly string prefix;
+        private readonly RavenDbVersion ravenVersion;
+        private readonly string serverUrl;
+
         public RavenDBTimeoutStorage(string serverUrl, string databaseName, string prefix, RavenDbVersion ravenVersion)
         {
             this.serverUrl = serverUrl;
@@ -13,34 +27,187 @@
             this.ravenVersion = ravenVersion;
         }
 
-        public Task<ToolState> GetOrCreateToolState()
+        public async Task<ToolState> GetToolState()
         {
-            throw new System.NotImplementedException();
+            ToolState toolState;
+            using (var httpClient = new HttpClient())
+            {
+                var getStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+                var result = await httpClient.GetAsync(getStateUrl).ConfigureAwait(false);
+                if (result.StatusCode == HttpStatusCode.NotFound) 
+                {
+                    return null;
+                }
+
+                var content = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var jObject = JObject.Parse(content);
+                var resultSet = jObject.SelectToken("Results");
+                content = resultSet.ToString();
+
+                toolState = JsonConvert.DeserializeObject<List<ToolState>>(content).Single();
+                return toolState;
+            }
         }
 
-        public Task<List<BatchInfo>> Prepare()
+        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
         {
-            throw new System.NotImplementedException();
+            await CleanupAnyExistingBatchesIfNeeded().ConfigureAwait(false);
+
+            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime).ConfigureAwait(false);
+            return batches;
+        }
+
+        internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime)
+        {
+            var ravenDbReader = new RavenDBTimeoutsReader();
+            var timeouts = await ravenDbReader.ReadTimeoutsFrom(serverUrl, databaseName, prefix, maxCutoffTime, ravenVersion,
+                CancellationToken.None).ConfigureAwait(false);
+
+            var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal) RavenConstants.DefaultPagingSize);
+            var batches = new List<BatchInfo>();
+            for (int i = 0; i < nrOfBatches; i++)
+            {
+                batches.Add(new BatchInfo
+                {
+                    Number = i + 1,
+                    State = BatchState.Pending,
+                    TimeoutIds = timeouts.Skip(i * RavenConstants.DefaultPagingSize).Take(RavenConstants.DefaultPagingSize)
+                        .Select(t => t.Id).ToArray()
+                });
+            }
+
+            using (var httpClient = new HttpClient())
+            {
+                var bulkInsertUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
+                foreach (var batch in batches)
+                {
+                    var bulkCreateBatchAndUpdateTimeoutsCommand = GetBatchInsertCommand(batch, ravenVersion);
+                    var serializedCommands = JsonConvert.SerializeObject(bulkCreateBatchAndUpdateTimeoutsCommand);
+                    var result = await httpClient
+                        .PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"))
+                        .ConfigureAwait(false);
+                    result.EnsureSuccessStatusCode();
+                }
+            }
+
+            return batches;
+        }
+
+        internal async Task CleanupAnyExistingBatchesIfNeeded()
+        {
+            RavenDbReader<BatchInfo> batchReader = new RavenDbReader<BatchInfo>(serverUrl, databaseName, ravenVersion);
+            var existingBatches = await batchReader.GetItems(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
+
+            using (var httpClient = new HttpClient())
+            {
+                var bulkInsertUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
+                foreach (var batch in existingBatches)
+                {
+                    var bulkDeleteBatchAndUpdateTimeoutsCommand = GetBatchDeleteCommand(batch, ravenVersion);
+                    var serializedCommands = JsonConvert.SerializeObject(bulkDeleteBatchAndUpdateTimeoutsCommand);
+                    var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                    result.EnsureSuccessStatusCode();
+                }
+            }
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Task CompleteBatch(int number)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        public Task StoreToolState(ToolState toolState)
+        public async Task StoreToolState(ToolState toolState)
         {
-            throw new System.NotImplementedException();
+            using (var httpClient = new HttpClient())
+            {
+                var insertStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+
+                var serializeObject = JsonConvert.SerializeObject(toolState);
+                var httpContent = new StringContent(serializeObject);
+
+                var insertResult = await httpClient.PutAsync(insertStateUrl, httpContent).ConfigureAwait(false);
+                insertResult.EnsureSuccessStatusCode();
+            }
         }
 
-        readonly string serverUrl;
-        readonly string databaseName;
-        readonly string prefix;
-        readonly RavenDbVersion ravenVersion;
+        private static object GetBatchInsertCommand(BatchInfo batch, RavenDbVersion version)
+        {
+            if (version == RavenDbVersion.Four)
+            {
+                var insertCommand = new PutCommand
+                {
+                    Id = $"batch/{batch.Number}",
+                    Type = "PUT",
+                    ChangeVector = (object)null,
+                    Document = batch
+                };
+
+                var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
+                {
+                    Id = timeoutId,
+                    Type = "PATCH",
+                    ChangeVector = null,
+                    Patch = new Patch()
+                    {
+                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
+                        Values = new { }
+                    }
+                }).ToList();
+
+                List<object> commands = new List<object>();
+                commands.Add(insertCommand);
+                commands.AddRange(timeoutUpdateCommands);
+
+                return new
+                {
+                    Commands = commands.ToArray()
+                };
+            }
+
+            return null;
+        }
+
+        private static object GetBatchDeleteCommand(BatchInfo batch, RavenDbVersion version)
+        {
+            if (version == RavenDbVersion.Four)
+            {
+                var deleteCommand = new
+                {
+                    Id = $"batch/{batch.Number}",
+                    ChangeVector = (object)null,
+                    Type = "DELETE"
+                };
+
+                var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
+                {
+                    Id = timeoutId,
+                    Type = "PATCH",
+                    ChangeVector = null,
+                    Patch = new Patch()
+                    {
+                        Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationPrefix.Length});",
+                        Values = new { }
+                    }
+                }).ToList();
+
+                List<object> commands = new List<object>();
+                commands.Add(deleteCommand);
+                commands.AddRange(timeoutUpdateCommands);
+
+                return new
+                {
+                    Commands = commands.ToArray()
+                };
+            }
+
+            return null;
+        }
+
+
     }
 }
