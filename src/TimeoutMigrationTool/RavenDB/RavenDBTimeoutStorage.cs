@@ -18,6 +18,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         private readonly string prefix;
         private readonly RavenDbVersion ravenVersion;
         private readonly string serverUrl;
+        private readonly RavenDbReader reader;
 
         public RavenDBTimeoutStorage(string serverUrl, string databaseName, string prefix, RavenDbVersion ravenVersion)
         {
@@ -25,6 +26,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.databaseName = databaseName;
             this.prefix = prefix;
             this.ravenVersion = ravenVersion;
+            this.reader = new RavenDbReader(serverUrl, databaseName, ravenVersion);
         }
 
         public async Task<ToolState> GetToolState()
@@ -59,9 +61,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime)
         {
-            var ravenDbReader = new RavenDBTimeoutsReader();
-            var timeouts = await ravenDbReader.ReadTimeoutsFrom(serverUrl, databaseName, prefix, maxCutoffTime, ravenVersion,
-                CancellationToken.None).ConfigureAwait(false);
+            var timeouts = await reader.GetItems<TimeoutData>(data => data.Time >= maxCutoffTime, prefix, CancellationToken.None).ConfigureAwait(false);
 
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal) RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
@@ -95,8 +95,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         internal async Task CleanupAnyExistingBatchesIfNeeded()
         {
-            RavenDbReader<BatchInfo> batchReader = new RavenDbReader<BatchInfo>(serverUrl, databaseName, ravenVersion);
-            var existingBatches = await batchReader.GetItems(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
+            var existingBatches = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
 
             using (var httpClient = new HttpClient())
             {

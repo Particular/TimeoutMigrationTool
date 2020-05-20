@@ -10,7 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    public class RavenDbReader<T> where T: class
+    public class RavenDbReader
     {
         private readonly string serverUrl;
         private readonly string databaseName;
@@ -25,7 +25,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.pageSize = pageSize;
         }
 
-        public async Task<List<T>> GetItems(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken)
+        public async Task<List<T>> GetItems<T>(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken) where T: class
         {
             var items = new List<T>();
             using (var client = new HttpClient())
@@ -43,7 +43,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     if (result.StatusCode == HttpStatusCode.OK)
                     {
                         var pagedTimeouts =
-                            await GetDocumentsFromResponse(result.Content).ConfigureAwait(false);
+                            await GetDocumentsFromResponse<T>(result.Content).ConfigureAwait(false);
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                             checkForMoreResults = false;
 
@@ -57,7 +57,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse(HttpContent resultContent)
+        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
         {
             var contentString = await resultContent.ReadAsStringAsync().ConfigureAwait(false);
             if (version == RavenDbVersion.Four)
