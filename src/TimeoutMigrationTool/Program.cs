@@ -24,7 +24,7 @@ namespace Particular.TimeoutMigrationTool
 
             var cutoffTimeOption = new CommandOption($"-c|--{ApplicationOptions.CutoffTime}", CommandOptionType.SingleValue)
             {
-                Description = "The cut off time to apply when finding elegible timeouts"
+                Description = "The cut off time to apply when finding eligible timeouts"
             };
 
             app.HelpOption(inherited: true);
