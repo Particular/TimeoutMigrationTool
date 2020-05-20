@@ -68,11 +68,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             if (toolState.IsStoragePrepared)
             {
                 var ravenBatchReader = new RavenDbReader<BatchInfo>(serverUrl, databaseName, ravenVersion);
-                return await ravenBatchReader.GetItems(info => true, "batches", CancellationToken.None).ConfigureAwait(false);
+                return await ravenBatchReader.GetItems(info => true, "batch", CancellationToken.None).ConfigureAwait(false);
             }
 
             var ravenDbReader = new RavenDBTimeoutsReader();
-            CleanupAnyExistingBatchesIfNeeded();
+            await CleanupAnyExistingBatchesIfNeeded(toolState).ConfigureAwait(false);
 
             var timeouts = await ravenDbReader.ReadTimeoutsFrom(serverUrl, databaseName, prefix, DateTime.Now, ravenVersion,
                 CancellationToken.None).ConfigureAwait(false);
@@ -104,9 +104,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return batches;
         }
 
-        private void CleanupAnyExistingBatchesIfNeeded()
+        private async Task CleanupAnyExistingBatchesIfNeeded(ToolState toolState)
         {
-            //throw new NotImplementedException();
+            if (toolState.IsStoragePrepared)
+                return;
+
+            RavenDbReader<BatchInfo> batchReader = new RavenDbReader<BatchInfo>(serverUrl, databaseName, ravenVersion);
+            var existingBatches = await batchReader.GetItems(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
+
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)

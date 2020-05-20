@@ -24,6 +24,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.version = version;
             this.pageSize = pageSize;
         }
+
         public async Task<List<T>> GetItems(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken)
         {
             var items = new List<T>();
