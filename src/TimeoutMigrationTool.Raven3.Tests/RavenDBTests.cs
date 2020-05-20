@@ -9,6 +9,14 @@ namespace TimeoutMigrationTool.Raven3.Tests
 {
     public class RavenDBTests : RavenTimeoutStorageTestSuite
     {
+        private int nrOfTimeouts = 250;
+
+        [SetUp]
+        public async Task Setup()
+        {
+            await InitTimeouts(nrOfTimeouts);
+        }
+
         [Test]
         public async Task WhenReadingTimeouts()
         {

@@ -14,21 +14,16 @@ namespace TimeoutMigrationTool.Raven3.Tests
     {
         protected const string ServerName = "http://localhost:8383";
         protected string databaseName;
-        protected int nrOfTimeoutsInStore = 250;
-        protected List<string> destinations = new List<string>()
-        {
-            "A", "B", "C"
-        };
 
         [SetUp]
-        public async Task Setup()
+        public async Task SetupDatabase()
         {
             var testId = Guid.NewGuid().ToString("N");
             databaseName = $"ravendb-{testId}";
 
-           var createDbUrl = $"{ServerName}/admin/databases/{databaseName}";
+            var createDbUrl = $"{ServerName}/admin/databases/{databaseName}";
 
-           using (var httpClient = new HttpClient())
+            using (var httpClient = new HttpClient())
             {
                 // Create the db
                 var db = new DatabaseRecord(databaseName);
@@ -36,15 +31,22 @@ namespace TimeoutMigrationTool.Raven3.Tests
                 var stringContent = new StringContent(JsonConvert.SerializeObject(db));
                 var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
                 Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            }
+        }
 
+        protected async Task InitTimeouts(int nrOfTimeouts)
+        {
+           using (var httpClient = new HttpClient())
+            {
                 var timeoutsPrefix = "TimeoutDatas";
-                for (var i = 0; i < nrOfTimeoutsInStore; i++)
+                for (var i = 0; i < nrOfTimeouts; i++)
                 {
                     var insertTimeoutUrl = $"{ServerName}/databases/{databaseName}/docs/{timeoutsPrefix}/{i}";
 
                     // Insert the timeout data
                     var timeoutData = new TimeoutData
                     {
+                        Id = $"{timeoutsPrefix}/{i}",
                         Destination = i <100 ? "A" : i== 100 ? "B" : "C",
                         SagaId = Guid.NewGuid(),
                         OwningTimeoutManager = "FakeOwningTimeoutManager",
