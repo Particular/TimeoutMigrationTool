@@ -34,7 +34,7 @@
             .Run();
 
             var timeoutStorage = new RavenDBTimeoutStorage("http://localhost:8080", "TimeoutMigrationTests", "TimeoutDatas", RavenDbVersion.Four);
-            var transportAdapter = new RabbitMqTimeoutCreator("blah");
+            var transportAdapter = new RabbitMqTimeoutCreator("amqp://guest:guest@localhost:5672");
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
             await migrationRunner.Run();
