@@ -7,10 +7,6 @@
     using NServiceBus.AcceptanceTesting.Customization;
     using NUnit.Framework;
 
-
-
-
-
     [TestFixture]
     public abstract class NServiceBusAcceptanceTest
     {
@@ -18,11 +14,6 @@
         [SetUp]
         public void SetUp()
         {
-            // Hack: prevents SerializationException ... Type 'x' in assembly 'y' is not marked as serializable.
-            // https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/mitigation-deserialization-of-objects-across-app-domains
-#if NET452
-            System.Configuration.ConfigurationManager.GetSection("X");
-#endif
             Conventions.EndpointNamingConvention = t =>
             {
                 var classAndEndpoint = t.FullName.Split('.').Last();
