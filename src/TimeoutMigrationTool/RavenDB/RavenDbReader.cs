@@ -15,17 +15,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         private readonly string serverUrl;
         private readonly string databaseName;
         private readonly RavenDbVersion version;
-        private int pageSize;
 
-        public RavenDbReader(string serverUrl, string databaseName, RavenDbVersion version, int pageSize = RavenConstants.DefaultPagingSize)
+        public RavenDbReader(string serverUrl, string databaseName, RavenDbVersion version)
         {
             this.serverUrl = serverUrl;
             this.databaseName = databaseName;
             this.version = version;
-            this.pageSize = pageSize;
         }
 
-        public async Task<List<T>> GetItems<T>(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken) where T: class
+        public async Task<List<T>> GetItems<T>(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken, int pageSize = RavenConstants.DefaultPagingSize) where T: class
         {
             var items = new List<T>();
             using (var client = new HttpClient())
