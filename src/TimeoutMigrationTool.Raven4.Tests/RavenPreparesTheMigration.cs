@@ -69,8 +69,8 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.CleanupAnyExistingBatchesIfNeeded();
 
-            var ravenDbReader = new RavenDbReader<BatchInfo>(ServerName, databaseName, RavenDbVersion.Four);
-            var savedBatches = await ravenDbReader.GetItems(x => true, "batch", CancellationToken.None);
+            var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
+            var savedBatches = await ravenDbReader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None);
             var modifiedItem = await GetTimeout("TimeoutDatas/1").ConfigureAwait(false);
             Assert.That(savedBatches.Count, Is.EqualTo(0));
             Assert.That(modifiedItem.OwningTimeoutManager, Is.EqualTo(originalTimeoutManager));

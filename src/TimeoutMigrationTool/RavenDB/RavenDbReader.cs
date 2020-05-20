@@ -10,22 +10,20 @@ using Newtonsoft.Json.Linq;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    public class RavenDbReader<T> where T: class
+    public class RavenDbReader
     {
         private readonly string serverUrl;
         private readonly string databaseName;
         private readonly RavenDbVersion version;
-        private int pageSize;
 
-        public RavenDbReader(string serverUrl, string databaseName, RavenDbVersion version, int pageSize = RavenConstants.DefaultPagingSize)
+        public RavenDbReader(string serverUrl, string databaseName, RavenDbVersion version)
         {
             this.serverUrl = serverUrl;
             this.databaseName = databaseName;
             this.version = version;
-            this.pageSize = pageSize;
         }
 
-        public async Task<List<T>> GetItems(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken)
+        public async Task<List<T>> GetItems<T>(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken, int pageSize = RavenConstants.DefaultPagingSize) where T: class
         {
             var items = new List<T>();
             using (var client = new HttpClient())
@@ -43,7 +41,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     if (result.StatusCode == HttpStatusCode.OK)
                     {
                         var pagedTimeouts =
-                            await GetDocumentsFromResponse(result.Content).ConfigureAwait(false);
+                            await GetDocumentsFromResponse<T>(result.Content).ConfigureAwait(false);
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                             checkForMoreResults = false;
 
@@ -57,7 +55,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse(HttpContent resultContent)
+        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
         {
             var contentString = await resultContent.ReadAsStringAsync().ConfigureAwait(false);
             if (version == RavenDbVersion.Four)
