@@ -27,7 +27,7 @@
                 Description = "The cut off time to apply when finding eligible timeouts"
             };
 
-            var forceMigrationOption = new CommandOption($"-c|--{ApplicationOptions.ForceMigration}", CommandOptionType.NoValue)
+            var forceMigrationOption = new CommandOption($"-f|--{ApplicationOptions.ForceMigration}", CommandOptionType.NoValue)
             {
                 Description = "To force the migration and start over."
             };
@@ -54,6 +54,7 @@
 
                 sqlpCommand.Options.Add(targetOption);
                 sqlpCommand.Options.Add(cutoffTimeOption);
+                sqlpCommand.Options.Add(forceMigrationOption);
 
                 sqlpCommand.Options.Add(sourceOption);
                 sqlpCommand.Options.Add(timeoutTableOption);
@@ -87,6 +88,8 @@
 
             app.Command("demo", demoCommand =>
             {
+                demoCommand.Options.Add(forceMigrationOption);
+
                 demoCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
                     if (forceMigrationOption.HasValue())
@@ -125,6 +128,7 @@
 
                 ravenDBCommand.Options.Add(targetOption);
                 ravenDBCommand.Options.Add(cutoffTimeOption);
+                ravenDBCommand.Options.Add(forceMigrationOption);
 
                 ravenDBCommand.Options.Add(serverUrlOption);
                 ravenDBCommand.Options.Add(databaseNameOption);
