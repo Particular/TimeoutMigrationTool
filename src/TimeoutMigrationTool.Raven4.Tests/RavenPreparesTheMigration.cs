@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.RavenDB;
@@ -67,7 +63,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await SetupExistingBatchInfoInDatabase();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CleanupAnyExistingBatches();
+            await sut.CleanupAnyExistingBatchesAndResetTimeouts();
 
             var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
             var savedBatches = await ravenDbReader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None);
@@ -87,44 +83,5 @@ namespace TimeoutMigrationTool.Raven4.Tests
 
             Assert.That(batches.Count, Is.EqualTo(2));
         }
-
-        private ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
-        {
-            var runParameters = new Dictionary<string, string>
-            {
-                {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
-                {ApplicationOptions.RavenServerUrl, ServerName},
-                {ApplicationOptions.RavenDatabaseName, databaseName},
-                {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
-            };
-
-            var toolState = new ToolState(runParameters)
-            {
-                Status = status
-            };
-
-            return toolState;
-        }
-
-        private async Task SetupExistingBatchInfoInDatabase()
-        {
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
-        }
-
-        private async Task SaveToolState(ToolState toolState)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                var insertStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-
-                var serializeObject = JsonConvert.SerializeObject(toolState);
-                var httpContent = new StringContent(serializeObject);
-
-                var result = await httpClient.PutAsync(insertStateUrl, httpContent);
-                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-            }
-        }
-
     }
 }
