@@ -19,24 +19,47 @@ namespace Particular.TimeoutMigrationTool
             if (forceMigration)
             {
                 await Console.Out.WriteAsync("Migration will be forced.").ConfigureAwait(false);
-                //TODO: is this approach any better?
-                //await timeoutStorage.ResetState().ConfigureAwait(false);
+                await timeoutStorage.Reset().ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Timeouts storage migration status reset completed.").ConfigureAwait(false);
             }
 
             await Console.Out.WriteAsync("Checking for existing tool state").ConfigureAwait(false);
             var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
-            await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false);
 
-            if (toolState == null || toolState.Status == MigrationStatus.Completed || forceMigration)
+            if (toolState != null)
             {
-                toolState = new ToolState(runParameters);
-                await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Found existing tool state.").ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Checking migration status.").ConfigureAwait(false);
+
+                if (toolState.Status == MigrationStatus.Completed)
+                {
+                    await Console.Out.WriteLineAsync("Migration already completed. To rerun a migration on this timeout storage run the tool using --forceMigration to reset the migration state.").ConfigureAwait(false);
+                    return;
+                }
+
+                await Console.Out.WriteLineAsync("Migration is not complete.").ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Checking run parameters.").ConfigureAwait(false);
+
+                if (!EnsureRunParametersMatch(toolState.RunParameters, runParameters))
+                {
+                    await Console.Out.WriteLineAsync($"An in progress migration (State: {toolState.Status}) was found in the timeouts storage. The in progress migration settings don't match the current migration attempt settings. Please rerun the tool either by using the same settings, or using the --forceMigration option to reset the migration state.").ConfigureAwait(false);
+                    await Console.Out.WriteLineAsync($"In progress migration settings:").ConfigureAwait(false);
+                    foreach (var setting in toolState.RunParameters)
+                    {
+                        await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.").ConfigureAwait(false);
+                    }
+
+                    return;
+                }
+
+                await Console.Out.WriteLineAsync("Run parameters check completed successfully.").ConfigureAwait(false);
             }
             else
             {
-                //TODO: check if run parameters are all the same, then we're safe to continue
+                toolState = new ToolState(runParameters);
+                await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Migration status created and stored.").ConfigureAwait(false);
             }
-
 
             if (toolState.Status == MigrationStatus.NeverRun)
             {
@@ -75,6 +98,29 @@ namespace Particular.TimeoutMigrationTool
 
                 await Console.Out.WriteLineAsync($" - done").ConfigureAwait(false);
             }
+        }
+
+        bool EnsureRunParametersMatch(IDictionary<string, string> inProgressRunParameters, IDictionary<string, string> currentRunParameters)
+        {
+            if (inProgressRunParameters.Count != currentRunParameters.Count)
+            {
+                return false;
+            }
+
+            foreach (var parameterKey in inProgressRunParameters.Keys)
+            {
+                if (!currentRunParameters.ContainsKey(parameterKey))
+                {
+                    return false;
+                }
+
+                if (!string.Equals(inProgressRunParameters[parameterKey], currentRunParameters[parameterKey], StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         async Task MarkStorageAsPrepared(ToolState toolState)

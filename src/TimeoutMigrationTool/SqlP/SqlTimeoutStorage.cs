@@ -39,6 +39,11 @@ namespace Particular.TimeoutMigrationTool.SqlP
             throw new System.NotImplementedException();
         }
 
+        public Task Reset()
+        {
+            throw new NotImplementedException();
+        }
+
         readonly string sourceConnectionString;
         readonly SqlDialect dialect;
         readonly string timeoutTableName;

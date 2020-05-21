@@ -53,7 +53,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
         {
-            await CleanupAnyExistingBatchesIfNeeded().ConfigureAwait(false);
+            //await CleanupAnyExistingBatchesIfNeeded().ConfigureAwait(false);
+            //TODO: this needs to become EnsureItsCleanedUp()
 
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime).ConfigureAwait(false);
             return batches;
@@ -93,7 +94,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return batches;
         }
 
-        internal async Task CleanupAnyExistingBatchesIfNeeded()
+        internal async Task CleanupAnyExistingBatches()
         {
             var existingBatches = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
 
@@ -107,6 +108,24 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
                     result.EnsureSuccessStatusCode();
                 }
+            }
+        }
+
+        internal async Task RemoveToolState() 
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var deleteCommand = new
+                {
+                    Id = RavenConstants.ToolStateId,
+                    ChangeVector = (object)null,
+                    Type = "DELETE"
+                };
+
+                var bulkInsertUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
+                var serializedCommand = JsonConvert.SerializeObject(deleteCommand);
+                var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializedCommand, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                result.EnsureSuccessStatusCode();
             }
         }
 
@@ -132,6 +151,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 var insertResult = await httpClient.PutAsync(insertStateUrl, httpContent).ConfigureAwait(false);
                 insertResult.EnsureSuccessStatusCode();
             }
+        }
+
+        public async Task Reset()
+        {
+            await CleanupAnyExistingBatches().ConfigureAwait(false);
+            await RemoveToolState().ConfigureAwait(false);
         }
 
         private static object GetBatchInsertCommand(BatchInfo batch, RavenDbVersion version)
@@ -206,7 +231,5 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             return null;
         }
-
-
     }
 }

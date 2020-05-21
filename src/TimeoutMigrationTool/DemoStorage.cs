@@ -30,6 +30,11 @@
             return new List<TimeoutData> { new TimeoutData(), new TimeoutData() };
         }
 
+        public Task Reset()
+        {
+            return Task.CompletedTask;
+        }
+
         public Task StoreToolState(ToolState newToolState)
         {
             return Task.CompletedTask;

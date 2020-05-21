@@ -67,7 +67,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await SetupExistingBatchInfoInDatabase();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CleanupAnyExistingBatchesIfNeeded();
+            await sut.CleanupAnyExistingBatches();
 
             var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
             var savedBatches = await ravenDbReader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None);
