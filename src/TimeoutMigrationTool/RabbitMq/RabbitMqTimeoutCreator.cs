@@ -13,7 +13,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         {
             this.targetConnectionString = targetConnectionString;
             this.batchWriter = new RabbitBatchWriter(targetConnectionString);
-            this.messagePump = new RabbitStagePump(targetConnectionString, RabbitBatchWriter.StagingQueueName);
+            this.messagePump = new RabbitStagePump(targetConnectionString, QueueCreator.StagingQueueName);
             Init();
         }
 
@@ -30,16 +30,13 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare("TimeoutMigrationTool_Staging", true, false, false, null);
-                channel.QueuePurge("TimeoutMigrationTool_Staging");
-                channel.ExchangeDeclare("TimeoutMigrationTool_Staging", ExchangeType.Fanout, true);
-                channel.QueueBind("TimeoutMigrationTool_Staging", "TimeoutMigrationTool_Staging", string.Empty);
+                QueueCreator.CreateStagingInfrastructure(channel);
             }
         }
 
         public Task StageBatch(List<TimeoutData> timeouts)
         {
-            return this.batchWriter.WriteTimeoutsToStagingQueue(timeouts, StagingQueueName);
+            return this.batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
         }
 
         public Task CompleteBatch(int number)
@@ -51,6 +48,5 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         private readonly RabbitBatchWriter batchWriter;
         readonly string targetConnectionString;
         private ConnectionFactory factory;
-        public static string StagingQueueName = "TimeoutMigrationTool_Staging";
     }
 }

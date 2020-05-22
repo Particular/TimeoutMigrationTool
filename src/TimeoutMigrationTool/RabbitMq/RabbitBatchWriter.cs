@@ -19,10 +19,12 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public Task<bool> WriteTimeoutsToStagingQueue(List<TimeoutData> timeouts, string stageExchangeName)
         {
+            //todo: check the count and purge the queue if not empty + log the situation
             using (var connection = GetConnection(this.rabbitConnectionString))
             {
                 using (var model = connection.CreateModel())
                 {
+                    PurgueQueueIfNotEmpty(model);
                     foreach (var timeout in timeouts)
                     {
                         PublishTimeout(model, timeout, stageExchangeName);
@@ -30,6 +32,16 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 }
             }
             return Task<bool>.FromResult(true);
+        }
+
+        private void PurgueQueueIfNotEmpty(IModel model)
+        {
+            var statingQueueMessageLength = QueueCreator.GetStatingQueueMessageLength(model);
+            if (statingQueueMessageLength > 0)
+            {
+                Console.Error.WriteLine("Purging staging queue - staging queue contains messages.");
+                QueueCreator.PurgeStatingQueue(model);
+            }
         }
 
         private void PublishTimeout(IModel model, TimeoutData timeout, string stageExchangeName)
@@ -45,6 +57,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             Fill(properties, timeout, delay);
 
             properties.Headers["TimeoutMigrationTool.DelayExchange"] = LevelName(level);
+            properties.Headers["TimeoutMigrationTool.RoutingKey"] = routingKey;
 
             //TODO: Blow up when the time > 8.5 years[max value].
 

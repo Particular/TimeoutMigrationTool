@@ -21,6 +21,9 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             exclusiveScheduler = new ConcurrentExclusiveSchedulerPair().ExclusiveScheduler;
         }
+
+        static int processedMessages = 0;
+        uint messageCount;
         readonly int prefetchMultiplier;
 
         TaskScheduler exclusiveScheduler;
@@ -44,6 +47,8 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             connection = factory.CreateConnection("TimoutMigration - CompleteBatch");
 
             var channel = connection.CreateModel();
+
+            messageCount = QueueCreator.GetStatingQueueMessageLength(channel);
 
             long prefetchCount = (long)maxConcurrency * prefetchMultiplier;
 
@@ -148,22 +153,25 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         async Task Process(BasicDeliverEventArgs message)
         {
-            string delayExchangeName;
+            string delayExchangeName, routingKey;
 
             try
             {
                 delayExchangeName = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.DelayExchange"] as byte[]);
+                routingKey = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.RoutingKey"] as byte[]);
+                message.BasicProperties.Headers.Remove("TimeoutMigrationTool.DelayExchange");
+                message.BasicProperties.Headers.Remove("TimeoutMigrationTool.RoutingKey");
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Failed to retrieve delayed exchange name from the message... {ex}");
+                Console.Error.WriteLine($"Failed to retrieve delayed exchange name or routing key from the message... {ex}");
 
                 return;
             }
 
             using (var tokenSource = new CancellationTokenSource())
             {
-                consumer.Model.BasicPublish(delayExchangeName, message.RoutingKey, true, message.BasicProperties, message.Body);
+                consumer.Model.BasicPublish(delayExchangeName, routingKey, true, message.BasicProperties, message.Body);
 
                 if (tokenSource.IsCancellationRequested)
                 {
@@ -174,6 +182,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     try
                     {
                         await consumer.Model.BasicAckSingle(message.DeliveryTag, exclusiveScheduler).ConfigureAwait(false);
+                        Interlocked.Increment(ref processedMessages);
                     }
                     catch (AlreadyClosedException ex)
                     {
@@ -198,16 +207,21 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public Task CompleteBatch(int number)
         {
+            Start(number);
             do
             {
-                Start(number);
-                Thread.Sleep(1000);
-            } while (GetMessageCount() > 0);
+                Thread.Sleep(100);
+            } while (processedMessages < messageCount);
 
-            return Task.FromResult(true);
+            if (QueueCreator.GetStatingQueueMessageLength(consumer.Model) > 0)
+            {
+                throw new InvalidOperationException("Staging queue is not empty after finishing CompleteBatch");
+            }
+
+            return Stop();
         }
 
-        private ConnectionFactory factory;
-        private string queueName;
+        ConnectionFactory factory;
+        string queueName;
     }
 }
