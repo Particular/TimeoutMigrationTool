@@ -46,7 +46,7 @@
             var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-            await migrationRunner.Run(DateTime.Now.AddDays(-1), new Dictionary<string, string>());
+            await migrationRunner.Run(DateTime.Now.AddDays(-1), true, new Dictionary<string, string>());
 
             context = await Scenario.Define<Context>()
              .WithEndpoint<NewRabbitMqEndpoint>()

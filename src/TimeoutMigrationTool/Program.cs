@@ -192,7 +192,9 @@
                 }
             }
 
-            return migrationRunner.Run(cutOffTime, runParameters);
+            var forceMigration = runParameters.ContainsKey(ApplicationOptions.ForceMigration);
+
+            return migrationRunner.Run(cutOffTime, forceMigration, runParameters);
         }
     }
 }

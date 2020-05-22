@@ -14,9 +14,8 @@ namespace Particular.TimeoutMigrationTool
             this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
 
-        public async Task Run(DateTime cutOffTime, IDictionary<string, string> runParameters)
+        public async Task Run(DateTime cutOffTime, bool forceMigration, IDictionary<string, string> runParameters)
         {
-            var forceMigration = runParameters.ContainsKey(ApplicationOptions.ForceMigration);
             if (forceMigration)
             {
                 await Console.Out.WriteAsync("Migration will be forced.").ConfigureAwait(false);
