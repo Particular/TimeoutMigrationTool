@@ -61,7 +61,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime)
         {
-            var timeouts = await reader.GetItems<TimeoutData>(data => data.Time >= maxCutoffTime, prefix, CancellationToken.None).ConfigureAwait(false);
+            bool filter(TimeoutData td) => td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase);
+            var timeouts = await reader.GetItems<TimeoutData>(filter, prefix, CancellationToken.None).ConfigureAwait(false);
 
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal) RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
