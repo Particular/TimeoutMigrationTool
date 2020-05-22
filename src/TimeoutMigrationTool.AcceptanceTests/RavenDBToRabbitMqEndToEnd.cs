@@ -42,21 +42,11 @@
 
             var targetConnectionString = "amqp://guest:guest@localhost:5672";
 
-            var runParameters = new Dictionary<string, string>
-            {
-                { ApplicationOptions.CutoffTime, DateTime.Now.AddDays(-1).ToString() },
-                { ApplicationOptions.RavenServerUrl, serverUrl },
-                { ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString },
-                { ApplicationOptions.RavenDatabaseName, datebaseName },
-                { ApplicationOptions.RavenTimeoutPrefix, ravenTimeoutPrefix },
-                { ApplicationOptions.RavenVersion, ravenVersion.ToString() }
-            };
-
             var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, datebaseName, ravenTimeoutPrefix, ravenVersion);
             var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-            await migrationRunner.Run(runParameters);
+            await migrationRunner.Run(DateTime.Now.AddDays(-1), true, new Dictionary<string, string>());
 
             context = await Scenario.Define<Context>()
              .WithEndpoint<NewRabbitMqEndpoint>()
