@@ -13,8 +13,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         {
             this.targetConnectionString = targetConnectionString;
             this.batchWriter = new RabbitBatchWriter(targetConnectionString);
-            this.messagePump = new RabbitStagePump(targetConnectionString);
-
+            this.messagePump = new RabbitStagePump(targetConnectionString, RabbitBatchWriter.StagingQueueName);
             Init();
         }
 
@@ -53,22 +52,5 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         readonly string targetConnectionString;
         private ConnectionFactory factory;
         public static string StagingQueueName = "TimeoutMigrationTool_Staging";
-    }
-
-    internal class RabbitStagePump
-    {
-        public RabbitStagePump(string targetConnectionString)
-        {
-            factory = new ConnectionFactory();
-            factory.Uri = new Uri(targetConnectionString);
-        }
-
-
-        public Task CompleteBatch(int number)
-        {
-            return Task.CompletedTask;
-        }
-
-        private ConnectionFactory factory;
     }
 }
