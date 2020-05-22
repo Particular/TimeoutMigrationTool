@@ -98,7 +98,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             throw new NotImplementedException();
         }
 
-        internal async Task CleanupAnyExistingBatchesAndResetTimeouts()
+        internal async Task CleanupExistingBatchesAndResetTimeouts()
         {
             var existingBatches = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
 
@@ -151,7 +151,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task Reset()
         {
-            await CleanupAnyExistingBatchesAndResetTimeouts().ConfigureAwait(false);
+            await CleanupExistingBatchesAndResetTimeouts().ConfigureAwait(false);
             await RemoveToolState().ConfigureAwait(false);
         }
 
