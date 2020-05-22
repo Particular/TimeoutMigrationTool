@@ -150,8 +150,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        public async Task Reset()
+        public async Task Reset(IEnumerable<BatchInfo> batchesToReset)
         {
+            //TODO: implement (and test) new behavior:
+            /*
+             * Cleanup all the batches
+             * Remove tool state
+             * Reset only timeouts referenced by the list of batches to reset, provided as an argument here
+             */
             await CleanupExistingBatchesAndResetTimeouts().ConfigureAwait(false);
             await RemoveToolState().ConfigureAwait(false);
         }
