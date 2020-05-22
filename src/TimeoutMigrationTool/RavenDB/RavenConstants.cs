@@ -4,6 +4,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     {
         public const string ToolStateId = "TimeoutMigrationTool/State";
         public const int DefaultPagingSize = 1024;
-        public const string MigrationPrefix = "Migrating_";
+        public const string MigrationPrefix = "__hidden_";
     }
 }
