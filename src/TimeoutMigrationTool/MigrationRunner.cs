@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
-
 namespace Particular.TimeoutMigrationTool
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System;
 
@@ -20,13 +18,13 @@ namespace Particular.TimeoutMigrationTool
 
             if (toolState != null && toolState.Status == MigrationStatus.StoragePrepared)
             {
-                await Console.Out.WriteLineAsync("Found existing in progress migration.").ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Found in progress migration.").ConfigureAwait(false);
 
                 if (!EnsureRunParametersMatch(toolState.RunParameters, runParameters))
                 {
                     if (!forceMigration)
                     {
-                        await Console.Out.WriteLineAsync($"In progress migration parameters didn't match, please adjust parameters or rerun with --forceMigration option:").ConfigureAwait(false);
+                        await Console.Out.WriteLineAsync($"In progress migration parameters didn't match, either rerun with the --forceMigration option or adjust the parameters to match:").ConfigureAwait(false);
                         foreach (var setting in toolState.RunParameters)
                         {
                             await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.").ConfigureAwait(false);
@@ -38,12 +36,18 @@ namespace Particular.TimeoutMigrationTool
                     await Console.Out.WriteLineAsync("Migration will be forced.").ConfigureAwait(false);
                     await timeoutStorage.Reset().ConfigureAwait(false);
                     await Console.Out.WriteLineAsync("Timeouts storage migration status reset completed.").ConfigureAwait(false);
+
+                    toolState = new ToolState(runParameters);
+                    await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
                 }
             }
+            else
+            {
+                toolState = new ToolState(runParameters);
+                await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Migration status created and stored.").ConfigureAwait(false);
+            }
 
-            toolState = new ToolState(runParameters);
-            await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
-            await Console.Out.WriteLineAsync("Migration status created and stored.").ConfigureAwait(false);
 
             if (toolState.Status == MigrationStatus.NeverRun)
             {
