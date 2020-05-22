@@ -53,8 +53,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
         {
-            //await CleanupAnyExistingBatchesIfNeeded().ConfigureAwait(false);
-            //TODO: this needs to become EnsureItsCleanedUp()
+            await CleanupOnlyExistingBatches().ConfigureAwait(false);
 
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime).ConfigureAwait(false);
             return batches;
@@ -92,6 +91,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             return batches;
+        }
+
+        internal Task CleanupOnlyExistingBatches() 
+        {
+            throw new NotImplementedException();
         }
 
         internal async Task CleanupAnyExistingBatchesAndResetTimeouts()
