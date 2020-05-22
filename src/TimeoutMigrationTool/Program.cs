@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-
-namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool
 {
     using System;
+    using System.Collections.Generic;
     using McMaster.Extensions.CommandLineUtils;
     using SqlP;
     using RabbitMq;
     using RavenDB;
+    using System.Threading.Tasks;
 
     class Program
     {
@@ -33,7 +33,7 @@ namespace Particular.TimeoutMigrationTool
             };
 
             app.HelpOption(inherited: true);
-            Dictionary<string, string> runParameters = new Dictionary<string, string>();
+            var runParameters = new Dictionary<string, string>();
 
             app.Command("sqlp", sqlpCommand =>
             {
@@ -80,9 +80,8 @@ namespace Particular.TimeoutMigrationTool
 
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName);
                     var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
-                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    await migrationRunner.Run(runParameters).ConfigureAwait(false);
+                    await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
                 });
             });
 
@@ -95,13 +94,10 @@ namespace Particular.TimeoutMigrationTool
                         runParameters.Add(ApplicationOptions.ForceMigration, "");
                     }
 
-                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
-
                     var timeoutStorage = new DemoStorage();
                     var transportAdapter = new DemoTimeoutCreator();
-                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    await migrationRunner.Run(runParameters).ConfigureAwait(false);
+                    await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
                 });
             });
 
@@ -160,9 +156,8 @@ namespace Particular.TimeoutMigrationTool
 
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
-                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-                    await migrationRunner.Run(runParameters).ConfigureAwait(false);
+                    await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
                 });
             });
 
@@ -182,6 +177,22 @@ namespace Particular.TimeoutMigrationTool
                 Console.Error.WriteLine($"Command failed with exception ({exception.GetType().Name}): {exception.Message}");
                 return 1;
             }
+        }
+
+        static Task RunMigration(Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
+        {
+            var migrationRunner = new MigrationRunner(timeoutStorage, transportTimeoutCreator);
+
+            var cutOffTime = DateTime.Now.AddDays(-1);
+            if (runParameters.TryGetValue(ApplicationOptions.CutoffTime, out var cutOffTimeValue))
+            {
+                if (!DateTime.TryParse(cutOffTimeValue, out cutOffTime))
+                {
+                    throw new ArgumentException($"{ApplicationOptions.CutoffTime} is not a valid System.DateTime value.");
+                }
+            }
+
+            return migrationRunner.Run(cutOffTime, runParameters);
         }
     }
 }
