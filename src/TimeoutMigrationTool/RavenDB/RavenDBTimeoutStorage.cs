@@ -36,7 +36,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var getStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
                 var result = await httpClient.GetAsync(getStateUrl).ConfigureAwait(false);
-                if (result.StatusCode == HttpStatusCode.NotFound) 
+                if (result.StatusCode == HttpStatusCode.NotFound)
                 {
                     return null;
                 }
@@ -94,12 +94,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return batches;
         }
 
-        internal Task CleanupOnlyExistingBatches() 
+        internal Task CleanupOnlyExistingBatches()
         {
             throw new NotImplementedException();
         }
 
-        internal async Task CleanupExistingBatchesAndResetTimeouts(IEnumerable<BatchInfo> batchesToReset)
+        internal async Task CleanupExistingBatchesAndResetTimeouts(IEnumerable<BatchInfo> batchesForWhichToResetTimeouts)
         {
             //TODO: implement (and test) new behavior:
             /*
@@ -107,21 +107,25 @@ namespace Particular.TimeoutMigrationTool.RavenDB
              * Reset only timeouts referenced by the list of batches to reset, provided as an argument here
              */
             var existingBatches = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
-
             using (var httpClient = new HttpClient())
             {
-                var bulkInsertUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
+                var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
                 foreach (var batch in existingBatches)
                 {
-                    var bulkDeleteBatchAndUpdateTimeoutsCommand = GetBatchDeleteAndUpdateTimeoutCommand(batch, ravenVersion);
-                    var serializedCommands = JsonConvert.SerializeObject(bulkDeleteBatchAndUpdateTimeoutsCommand);
-                    var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                    object commandsToExecuteForBatch;
+                    if (batchesForWhichToResetTimeouts.Any(b => b.Number == batch.Number))
+                        commandsToExecuteForBatch = GetBatchDeleteAndUpdateTimeoutCommand(batch, ravenVersion);
+                    else
+                        commandsToExecuteForBatch = GetBatchDeleteCommand(batch, ravenVersion);
+
+                    var serializedCommands = JsonConvert.SerializeObject(commandsToExecuteForBatch);
+                    var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
                     result.EnsureSuccessStatusCode();
                 }
             }
         }
 
-        internal async Task RemoveToolState() 
+        internal async Task RemoveToolState()
         {
             using (var httpClient = new HttpClient())
             {
@@ -155,7 +159,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        public async Task Reset(IEnumerable<BatchInfo> batchesToReset)
+        public async Task Reset()
         {
             //TODO: implement (and test) new behavior:
             /*
@@ -163,7 +167,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
              * Remove tool state
              * Reset only timeouts referenced by the list of batches to reset, provided as an argument here
              */
-            await CleanupExistingBatchesAndResetTimeouts(batchesToReset).ConfigureAwait(false);
+            var toolState = await GetToolState().ConfigureAwait(false);
+            var incompleteBatches = toolState.Batches.Where(bi => bi.State != BatchState.Completed);
+            await CleanupExistingBatchesAndResetTimeouts(incompleteBatches).ConfigureAwait(false);
             await RemoveToolState().ConfigureAwait(false);
         }
 
@@ -204,17 +210,37 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return null;
         }
 
+        private static object GetDeleteCommand(BatchInfo batch, RavenDbVersion version)
+        {
+            if (version == RavenDbVersion.Four)
+            {
+                return new
+                {
+                    Id = $"batch/{batch.Number}",
+                    ChangeVector = (object) null,
+                    Type = "DELETE"
+                };
+            }
+
+            return null;
+        }
+
+        private static object GetBatchDeleteCommand(BatchInfo batch, RavenDbVersion version)
+        {
+            List<object> commands = new List<object>();
+            commands.Add(GetDeleteCommand(batch, version));
+
+            return new
+            {
+                Commands = commands.ToArray()
+            };
+        }
+
         private static object GetBatchDeleteAndUpdateTimeoutCommand(BatchInfo batch, RavenDbVersion version)
         {
             if (version == RavenDbVersion.Four)
             {
-                var deleteCommand = new
-                {
-                    Id = $"batch/{batch.Number}",
-                    ChangeVector = (object)null,
-                    Type = "DELETE"
-                };
-
+                var deleteCommand = GetDeleteCommand(batch, version);
                 var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
                 {
                     Id = timeoutId,

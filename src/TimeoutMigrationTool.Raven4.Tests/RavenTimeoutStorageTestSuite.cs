@@ -90,10 +90,11 @@ namespace TimeoutMigrationTool.Raven4.Tests
             return toolState;
         }
 
-        protected async Task SetupExistingBatchInfoInDatabase()
+        protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
         {
             var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
+            return batches;
         }
 
         protected async Task SaveToolState(ToolState toolState)
@@ -110,14 +111,14 @@ namespace TimeoutMigrationTool.Raven4.Tests
             }
         }
 
-        protected async Task<ToolState> GetToolState() 
+        protected async Task<ToolState> GetToolState()
         {
             var url = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
             using (var httpClient = new HttpClient())
             {
                 var response = await httpClient.GetAsync(url);
 
-                if (response.StatusCode == HttpStatusCode.NotFound) 
+                if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     return null;
                 }

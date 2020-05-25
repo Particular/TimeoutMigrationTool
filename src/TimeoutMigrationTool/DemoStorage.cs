@@ -30,7 +30,7 @@
             return new List<TimeoutData> { new TimeoutData(), new TimeoutData() };
         }
 
-        public Task Reset(IEnumerable<BatchInfo> batchesToReset)
+        public Task Reset()
         {
             throw new NotImplementedException();
         }

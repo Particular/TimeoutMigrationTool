@@ -12,8 +12,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     public class RavenDbReader
     {
-        private readonly string serverUrl;
         private readonly string databaseName;
+        private readonly string serverUrl;
         private readonly RavenDbVersion version;
 
         public RavenDbReader(string serverUrl, string databaseName, RavenDbVersion version)
@@ -23,7 +23,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.version = version;
         }
 
-        public async Task<List<T>> GetItems<T>(Func<T, bool> filterPredicate, string prefix, CancellationToken cancellationToken, int pageSize = RavenConstants.DefaultPagingSize) where T: class
+        public async Task<List<T>> GetItems<T>(Func<T, bool> filterPredicate, string prefix,
+            CancellationToken cancellationToken, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
             using (var client = new HttpClient())
@@ -52,6 +53,25 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 }
 
                 return items;
+            }
+        }
+
+        public async Task<T> GetItem<T>(string itemId) where T : class
+        {
+            var url = $"{serverUrl}/databases/{databaseName}/docs?id={itemId}";
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    return default;
+
+                var contentString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var jObject = JObject.Parse(contentString);
+                var resultSet = jObject.SelectToken("Results");
+
+                var item = JsonConvert.DeserializeObject<T[]>(resultSet.ToString()).SingleOrDefault();
+                return item;
             }
         }
 

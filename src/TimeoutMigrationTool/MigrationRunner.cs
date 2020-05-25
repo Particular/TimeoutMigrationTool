@@ -36,8 +36,7 @@ namespace Particular.TimeoutMigrationTool
 
                     await Console.Out.WriteLineAsync("Migration will be forced.").ConfigureAwait(false);
 
-                    var notCompletedBatches = toolState.Batches.Where(bi => bi.State != BatchState.Completed);
-                    await timeoutStorage.Reset(notCompletedBatches).ConfigureAwait(false);
+                    await timeoutStorage.Reset().ConfigureAwait(false);
 
                     await Console.Out.WriteLineAsync("Timeouts storage migration status reset completed.").ConfigureAwait(false);
 

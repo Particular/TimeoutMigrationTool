@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.RavenDB;
 
 namespace TimeoutMigrationTool.Raven4.Tests
@@ -14,7 +17,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             await InitTimeouts(nrOfTimeouts);
 
-            Assert.DoesNotThrowAsync(async () => 
+            Assert.DoesNotThrowAsync(async () =>
             {
                 var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
                 await sut.Reset();
@@ -55,6 +58,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var batches = await storage.Prepare(cutOffTime);
             toolState.InitBatches(batches);
             await SaveToolState(toolState);
+            var batchesToReset = batches.Skip(1);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.Reset();
