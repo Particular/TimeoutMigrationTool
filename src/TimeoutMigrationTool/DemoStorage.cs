@@ -30,14 +30,19 @@
             return new List<TimeoutData> { new TimeoutData(), new TimeoutData() };
         }
 
-        public Task Reset()
+        public Task StoreToolState(ToolState newToolState)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task Abort(ToolState toolState)
         {
             throw new NotImplementedException();
         }
 
-        public Task StoreToolState(ToolState newToolState)
+        public Task<bool> CanPrepareStorage()
         {
-            return Task.CompletedTask;
+            throw new NotImplementedException();
         }
     }
 }

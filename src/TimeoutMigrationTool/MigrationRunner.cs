@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Particular.TimeoutMigrationTool
 {
     using System.Collections.Generic;
@@ -13,60 +15,55 @@ namespace Particular.TimeoutMigrationTool
             this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
 
-        public async Task Run(DateTime cutOffTime, bool forceMigration, IDictionary<string, string> runParameters)
+        public async Task Run(DateTime cutOffTime, IDictionary<string, string> runParameters)
         {
             var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
 
-            if (toolState != null && toolState.Status == MigrationStatus.StoragePrepared)
-            {
-                await Console.Out.WriteLineAsync("Found in progress migration.").ConfigureAwait(false);
-
-                if (!EnsureRunParametersMatch(toolState.RunParameters, runParameters))
-                {
-                    if (!forceMigration)
-                    {
-                        await Console.Out.WriteLineAsync($"In progress migration parameters didn't match, either rerun with the --forceMigration option or adjust the parameters to match:").ConfigureAwait(false);
-                        foreach (var setting in toolState.RunParameters)
-                        {
-                            await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.").ConfigureAwait(false);
-                        }
-
-                        return;
-                    }
-
-                    await Console.Out.WriteLineAsync("Migration will be forced.").ConfigureAwait(false);
-
-                    await timeoutStorage.Reset().ConfigureAwait(false);
-
-                    await Console.Out.WriteLineAsync("Timeouts storage migration status reset completed.").ConfigureAwait(false);
-
-                    toolState = new ToolState(runParameters);
-                    await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
-                }
-            }
-            else
+            if (ShouldWeCreateAToolState(toolState))
             {
                 toolState = new ToolState(runParameters);
                 await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
                 await Console.Out.WriteLineAsync("Migration status created and stored.").ConfigureAwait(false);
             }
 
-
-            if (toolState.Status == MigrationStatus.NeverRun)
+            switch (toolState.Status)
             {
-                await Console.Out.WriteAsync("Preparing storage").ConfigureAwait(false);
-                var batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
+                case MigrationStatus.NeverRun:
+                    var canPrepStorage = await timeoutStorage.CanPrepareStorage().ConfigureAwait(false);
+                    if (!canPrepStorage)
+                        await Console.Error.WriteLineAsync(
+                            "We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.").ConfigureAwait(false);
+                    break;
+                case MigrationStatus.Completed:
+                    await Console.Out.WriteAsync("Preparing storage").ConfigureAwait(false);
+                    var batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
 
-                toolState.InitBatches(batches);
+                    toolState.InitBatches(batches);
 
-                await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
-                await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false); ;
+                    await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
+                    await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false); ;
+                    break;
+                case MigrationStatus.StoragePrepared when RunParametersAreDifferent(toolState.RunParameters, runParameters):
+                    await Console.Out
+                        .WriteLineAsync(
+                            $"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:")
+                        .ConfigureAwait(false);
+                    foreach (var setting in toolState.RunParameters)
+                    {
+                        await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.")
+                            .ConfigureAwait(false);
+                    }
+                    return;
+                case MigrationStatus.StoragePrepared:
+                    await Console.Out.WriteAsync("Resuming where we left off...").ConfigureAwait(false);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
-
                 await Console.Out.WriteAsync($"Migrating batch {batch.Number}").ConfigureAwait(false);
 
                 if (batch.State == BatchState.Pending)
@@ -75,11 +72,9 @@ namespace Particular.TimeoutMigrationTool
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number).ConfigureAwait(false);
 
                     await Console.Out.WriteAsync($" - staging").ConfigureAwait(false);
-
                     await transportTimeoutsCreator.StageBatch(timeouts).ConfigureAwait(false);
 
                     await MarkCurrentBatchAsStaged(toolState).ConfigureAwait(false);
-
                     await Console.Out.WriteAsync($" - staged").ConfigureAwait(false);
                 }
 
@@ -96,27 +91,33 @@ namespace Particular.TimeoutMigrationTool
             await Console.Out.WriteLineAsync($"Migration completed successfully").ConfigureAwait(false);
         }
 
-        bool EnsureRunParametersMatch(IDictionary<string, string> inProgressRunParameters, IDictionary<string, string> currentRunParameters)
+        private bool ShouldWeCreateAToolState(ToolState toolState)
+        {
+            if (toolState == null) return true;
+            return toolState.Status == MigrationStatus.Completed;
+        }
+
+        bool RunParametersAreDifferent(IDictionary<string, string> inProgressRunParameters, IDictionary<string, string> currentRunParameters)
         {
             if (inProgressRunParameters.Count != currentRunParameters.Count)
             {
-                return false;
+                return true;
             }
 
             foreach (var parameterKey in inProgressRunParameters.Keys)
             {
                 if (!currentRunParameters.ContainsKey(parameterKey))
                 {
-                    return false;
+                    return true;
                 }
 
                 if (!string.Equals(inProgressRunParameters[parameterKey], currentRunParameters[parameterKey], StringComparison.OrdinalIgnoreCase))
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         async Task MarkStorageAsPrepared(ToolState toolState)

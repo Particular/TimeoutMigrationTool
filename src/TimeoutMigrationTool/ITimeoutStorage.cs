@@ -11,6 +11,7 @@ namespace Particular.TimeoutMigrationTool
         Task<List<TimeoutData>> ReadBatch(int batchNumber);
         Task CompleteBatch(int number);
         Task StoreToolState(ToolState toolState);
-        Task Reset();
+        Task Abort(ToolState toolState);
+        Task<bool> CanPrepareStorage();
     }
 }

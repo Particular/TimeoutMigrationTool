@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
@@ -53,56 +52,27 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
         }
 
+
         [Test]
-        public async Task WhenTheStorageHasBeenPreparedWeReturnStoredBatches()
+        public void WhenCanPrepareAndFoundExistingBatchInfosReturnsFalse()
         {
-            await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1), MigrationStatus.StoragePrepared));
-            await SetupExistingBatchInfoInDatabase();
-
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await sut.Prepare(DateTime.Now.AddDays(-1));
-
-            Assert.That(batches.Count, Is.EqualTo(2));
+            // var timeoutStorage =
+            //     new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            // timeoutStorage.
         }
 
         [Test]
-        public async Task WhenCleaningUpBatchesThenTimeoutsInIncompleteBatchesAreReset()
+        public void WhenCanPrepareAndSystemIsCleanInfosReturnsTrue()
         {
-            SetupToolState(DateTime.Now.AddDays(-1));
-            var preparedBatches = await SetupExistingBatchInfoInDatabase();
-            var incompleteBatches = preparedBatches.Skip(1).Take(1);
-            var incompleteBatch = incompleteBatches.First();
-
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CleanupExistingBatchesAndResetTimeouts(incompleteBatches);
-
-            var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var incompleteBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"batch/{incompleteBatch.Number}");
-            var resetTimeouts = await ravenDbReader.GetItems<TimeoutData>(x => incompleteBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", CancellationToken.None).ConfigureAwait(false);
-
-            Assert.That(incompleteBatchFromStorage, Is.Null);
-            Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => !x.StartsWith(RavenConstants.MigrationPrefix)));
+            // var timeoutStorage =
+                // new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
         }
 
         [Test]
-        public async Task WhenCleaningUpBatchesThenTimeoutsInCompleteBatchesAreNotReset()
+        public void WhenPrepareDoesNotReturnAnyBatchesWhatDoWeDO()
         {
-            SetupToolState(DateTime.Now.AddDays(-1));
-            var preparedBatches = await SetupExistingBatchInfoInDatabase();
-            var incompleteBatches = preparedBatches.Skip(1).Take(1);
-            var completeBatches = preparedBatches.Take(1);
-            var completeBatch = completeBatches.First();
-
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CleanupExistingBatchesAndResetTimeouts(incompleteBatches);
-
-            var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var completeBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"batch/{completeBatch.Number}");
-            var resetTimeouts = await ravenDbReader.GetItems<TimeoutData>(x => completeBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", CancellationToken.None).ConfigureAwait(false);
-
-            Assert.That(completeBatchFromStorage, Is.Null);
-            Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => x.StartsWith(RavenConstants.MigrationPrefix)));
+            // var timeoutStorage =
+            // new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
         }
-
     }
 }

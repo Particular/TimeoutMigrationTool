@@ -39,7 +39,12 @@ namespace Particular.TimeoutMigrationTool.SqlP
             throw new System.NotImplementedException();
         }
 
-        public Task Reset()
+        public Task Abort(ToolState toolState)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> CanPrepareStorage()
         {
             throw new NotImplementedException();
         }
