@@ -17,7 +17,7 @@
         public async Task Can_migrate_timeouts()
         {
             var context = await Scenario.Define<Context>()
-            .WithEndpoint<LegacyRavenDBEndpoint>(b => b
+                .WithEndpoint<LegacyRavenDBEndpoint>(b => b
                 .When(async (session, c) =>
                 {
                     var startSagaMessage = new DelayedMessage();
@@ -31,9 +31,8 @@
 
                     c.TimeoutSet = true;
                 }))
-            .Done(c => c.TimeoutSet)
-            .Run();
-
+                .Done(c => c.TimeoutSet)
+                .Run();
 
             var serverUrl = "http://localhost:8080";
             var datebaseName = "TimeoutMigrationTests";
@@ -46,10 +45,8 @@
             var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
-            await migrationRunner.Run(DateTime.Now.AddDays(-1), true, new Dictionary<string, string>());
-
             context = await Scenario.Define<Context>()
-             .WithEndpoint<NewRabbitMqEndpoint>()
+             .WithEndpoint<NewRabbitMqEndpoint>(async c => await migrationRunner.Run(DateTime.Now.AddDays(-1), true, new Dictionary<string, string>()))
              .Done(c => c.GotTheDelayedMessage)
              .Run();
 
@@ -74,7 +71,7 @@
         {
             public NewRabbitMqEndpoint()
             {
-                EndpointSetup<RavenDbEndpoint>();
+                EndpointSetup<RabbitMqEndpoint>();
             }
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
