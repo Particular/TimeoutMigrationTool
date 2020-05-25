@@ -10,51 +10,71 @@ using RabbitMQ.Client;
 
 namespace Particular.TimeoutMigrationTool.RabbitMq
 {
-    class RabbitMqWriter
+    class RabbitBatchWriter
     {
-        public Task<bool> WriteTimeoutsTo(string rabbitMqBroker, List<TimeoutData> timeouts, CancellationToken cancellationToken)
+        public RabbitBatchWriter(string rabbitConnectionString)
         {
-            using (var connection = GetConnection(rabbitMqBroker))
+            this.rabbitConnectionString = rabbitConnectionString;
+        }
+
+        public Task<bool> WriteTimeoutsToStagingQueue(List<TimeoutData> timeouts, string stageExchangeName)
+        {
+            //todo: check the count and purge the queue if not empty + log the situation
+            using (var connection = GetConnection(this.rabbitConnectionString))
             {
                 using (var model = connection.CreateModel())
                 {
+                    PurgueQueueIfNotEmpty(model);
                     foreach (var timeout in timeouts)
                     {
-                        PublishTimeout(model, timeout);
+                        PublishTimeout(model, timeout, stageExchangeName);
                     }
                 }
             }
             return Task<bool>.FromResult(true);
         }
 
-        private void PublishTimeout(IModel model, TimeoutData timeout)
+        private void PurgueQueueIfNotEmpty(IModel model)
+        {
+            var statingQueueMessageLength = QueueCreator.GetStatingQueueMessageLength(model);
+            if (statingQueueMessageLength > 0)
+            {
+                Console.Error.WriteLine("Purging staging queue - staging queue contains messages.");
+                QueueCreator.PurgeStatingQueue(model);
+            }
+        }
+
+        private void PublishTimeout(IModel model, TimeoutData timeout, string stageExchangeName)
         {
             int level;
 
             //TODO: guard for negative timespan
-            var delay = (timeout.Time - DateTime.UtcNow); 
+            var delay = (timeout.Time - DateTime.UtcNow);
             var delayInSeconds = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
             var routingKey = CalculateRoutingKey(delayInSeconds, timeout.Destination, out level);
-            
+
             var properties = model.CreateBasicProperties();
             Fill(properties, timeout, delay);
 
+            properties.Headers["TimeoutMigrationTool.DelayExchange"] = LevelName(level);
+            properties.Headers["TimeoutMigrationTool.RoutingKey"] = routingKey;
+
             //TODO: Blow up when the time > 8.5 years[max value].
 
-            model.BasicPublish(LevelName(level), routingKey, true, properties, timeout.State);
+            model.BasicPublish(stageExchangeName, routingKey, true, properties, timeout.State);
         }
 
         private IConnection GetConnection(string rabbitMqBroker)
         {
-            var factory = new ConnectionFactory();
+            this.factory = new ConnectionFactory();
             factory.Uri = new Uri(rabbitMqBroker);
             return factory.CreateConnection();
         }
 
-        public void Fill(IBasicProperties properties, TimeoutData timeout, TimeSpan delay)
+        private void Fill(IBasicProperties properties, TimeoutData timeout, TimeSpan delay)
         {
             var messageHeaders = timeout.Headers ?? new Dictionary<string, string>();
-            
+
             if (messageHeaders.TryGetValue("NServiceBus.MessageId", out var originalMessageId) && !string.IsNullOrEmpty(originalMessageId))
             {
                 properties.MessageId = originalMessageId;
@@ -67,11 +87,11 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             properties.Persistent = true;
 
             properties.Headers = messageHeaders.ToDictionary(p => p.Key, p => (object)p.Value);
-                        
+
             properties.Headers["NServiceBus.Transport.RabbitMQ.DelayInSeconds"] = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
 
             properties.Expiration = Convert.ToInt32(delay.TotalMilliseconds).ToString(CultureInfo.InvariantCulture);
-            
+
             if (messageHeaders.TryGetValue("NServiceBus.CorrelationId", out var correlationId) && correlationId != null)
             {
                 properties.CorrelationId = correlationId;
@@ -132,9 +152,13 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             return sb.ToString();
         }
-        
-        public static string LevelName(int level) => $"nsb.delay-level-{level:D2}";
+
+        private static string LevelName(int level) => $"nsb.delay-level-{level:D2}";
 
         private static int MaxLevel = 28;
+
+        private string rabbitConnectionString;
+        private ConnectionFactory factory;
+        public static string StagingQueueName = "TimeoutMigrationTool_Staging";
     }
 }
