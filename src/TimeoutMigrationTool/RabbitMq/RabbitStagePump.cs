@@ -93,10 +93,6 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             {
                 connectionShutdownCompleted?.TrySetResult(true);
             }
-            else
-            {
-//                circuitBreaker.Failure(new Exception(e.ToString()));
-            }
         }
 
         async void Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
