@@ -48,7 +48,6 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var batches = await storage.Prepare(cutOffTime);
             toolState.InitBatches(batches);
             await SaveToolState(toolState);
-            var batchesToReset = batches.Skip(1).ToList();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.Abort(toolState);

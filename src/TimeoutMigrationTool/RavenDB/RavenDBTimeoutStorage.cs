@@ -141,14 +141,32 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        public Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
-            throw new NotImplementedException();
+            var toolState = await GetToolState().ConfigureAwait(false);
+            string prefix = RavenConstants.DefaultTimeoutPrefix;
+            if (toolState.RunParameters.ContainsKey(ApplicationOptions.RavenTimeoutPrefix))
+                prefix = toolState.RunParameters[ApplicationOptions.RavenTimeoutPrefix];
+
+            var batch = await reader.GetItem<BatchInfo>($"batch/{batchNumber}").ConfigureAwait(false);
+            var timeouts = await reader.GetItems<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), prefix, CancellationToken.None).ConfigureAwait(false);
+            return timeouts;
         }
 
-        public Task CompleteBatch(int number)
+        public async Task CompleteBatch(int batchNumber)
         {
-            throw new NotImplementedException();
+            var batch = await reader.GetItem<BatchInfo>($"batch/{batchNumber}").ConfigureAwait(false);
+            batch.State = BatchState.Completed;
+
+            using (var httpClient = new HttpClient())
+            {
+                var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id=batch/{batchNumber}";
+                var serializeObject = JsonConvert.SerializeObject(batch);
+                var httpContent = new StringContent(serializeObject);
+
+                var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent).ConfigureAwait(false);
+                saveResult.EnsureSuccessStatusCode();
+            }
         }
 
         public async Task StoreToolState(ToolState toolState)
@@ -160,8 +178,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 var serializeObject = JsonConvert.SerializeObject(toolState);
                 var httpContent = new StringContent(serializeObject);
 
-                var insertResult = await httpClient.PutAsync(insertStateUrl, httpContent).ConfigureAwait(false);
-                insertResult.EnsureSuccessStatusCode();
+                var saveResult = await httpClient.PutAsync(insertStateUrl, httpContent).ConfigureAwait(false);
+                saveResult.EnsureSuccessStatusCode();
             }
         }
 

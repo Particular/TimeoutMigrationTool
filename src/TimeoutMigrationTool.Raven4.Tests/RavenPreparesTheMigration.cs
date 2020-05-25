@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
@@ -54,25 +56,74 @@ namespace TimeoutMigrationTool.Raven4.Tests
 
 
         [Test]
-        public void WhenCanPrepareAndFoundExistingBatchInfosReturnsFalse()
+        public async Task WhenVerifyingPrepareAndFoundExistingBatchInfosReturnsFalse()
         {
-            // var timeoutStorage =
-            //     new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            // timeoutStorage.
+            var cutOffTime = DateTime.Now.AddDays(-1);
+            var toolState = SetupToolState(cutOffTime);
+            await SaveToolState(toolState).ConfigureAwait(false);
+
+            var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await storage.Prepare(cutOffTime);
+            toolState.InitBatches(batches);
+            await SaveToolState(toolState);
+
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
+            Assert.That(canPrepareStorage, Is.False);
         }
 
         [Test]
-        public void WhenCanPrepareAndSystemIsCleanInfosReturnsTrue()
+        public async Task WhenVerifyingPrepareAndSystemIsCleanInfosReturnsTrue()
         {
-            // var timeoutStorage =
-                // new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
+            Assert.That(canPrepareStorage, Is.True);
         }
 
         [Test]
-        public void WhenPrepareDoesNotReturnAnyBatchesWhatDoWeDO()
+        public async Task WhenRemovingTheToolStateStoreIsCleanedUp()
         {
-            // var timeoutStorage =
-            // new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var toolState = SetupToolState(DateTime.Now);
+            await SaveToolState(toolState).ConfigureAwait(false);
+
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            await timeoutStorage.RemoveToolState();
+
+            using (var httpClient = new HttpClient())
+            {
+                var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+                var result = await httpClient.GetAsync(getStateUrl).ConfigureAwait(false);
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+            }
+        }
+
+        [Test]
+        public void WhenRemovingTheToolStateButNoneIsFoundExceptionIsThrown()
+        {
+            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            {
+                var timeoutStorage =
+                    new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                await timeoutStorage.RemoveToolState();
+            });
+        }
+
+        [Test]
+        public async Task WhenStoringTheToolStateTheToolStateIsUpdated()
+        {
+            var toolState = SetupToolState(DateTime.Now);
+            await SaveToolState(toolState).ConfigureAwait(false);
+
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            toolState.Status = MigrationStatus.StoragePrepared;
+            await timeoutStorage.StoreToolState(toolState);
+
+            var updatedToolState = await GetToolState();
+            Assert.That(updatedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
         }
     }
 }

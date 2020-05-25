@@ -38,8 +38,14 @@ namespace Particular.TimeoutMigrationTool
                     await Console.Out.WriteAsync("Preparing storage").ConfigureAwait(false);
                     var batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
 
-                    toolState.InitBatches(batches);
+                    if (!batches.Any())
+                    {
+                        await Console.Out.WriteLineAsync(
+                                $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.")
+                            .ConfigureAwait(false);
+                    }
 
+                    toolState.InitBatches(batches);
                     await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
                     await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false); ;
                     break;

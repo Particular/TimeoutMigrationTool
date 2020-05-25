@@ -139,7 +139,7 @@
                 {
                     var serverUrl = serverUrlOption.Value();
                     var databaseName = databaseNameOption.Value();
-                    var prefix = prefixOption.Value(); // TODO: make value "TimeoutDatas" the default for the prefix
+                    var prefix = prefixOption.Value();
                     var targetConnectionString = targetOption.Value();
                     var ravenVersion = ravenDbVersion.Value() == "3.5"
                         ? RavenDbVersion.ThreeDotFive

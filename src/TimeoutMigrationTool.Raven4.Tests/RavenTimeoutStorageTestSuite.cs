@@ -80,6 +80,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 {ApplicationOptions.RavenServerUrl, ServerName},
                 {ApplicationOptions.RavenDatabaseName, databaseName},
                 {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
+                {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix},
             };
 
             var toolState = new ToolState(runParameters)

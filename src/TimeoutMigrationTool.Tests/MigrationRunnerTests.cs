@@ -50,5 +50,11 @@ namespace TimeoutMigrationTool.Tests
         {
 
         }
+
+        [Test]
+        public void WhenPrepareDoesNotReturnAnyBatchesWhatDoWeDO()
+        {
+
+        }
     }
 }
