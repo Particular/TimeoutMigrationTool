@@ -3,6 +3,7 @@ namespace Particular.TimeoutMigrationTool
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System;
+    using System.Linq;
 
     public class MigrationRunner
     {
@@ -34,7 +35,10 @@ namespace Particular.TimeoutMigrationTool
                     }
 
                     await Console.Out.WriteLineAsync("Migration will be forced.").ConfigureAwait(false);
-                    await timeoutStorage.Reset().ConfigureAwait(false);
+
+                    var notCompletedBatches = toolState.Batches.Where(bi => bi.State != BatchState.Completed);
+                    await timeoutStorage.Reset(notCompletedBatches).ConfigureAwait(false);
+
                     await Console.Out.WriteLineAsync("Timeouts storage migration status reset completed.").ConfigureAwait(false);
 
                     toolState = new ToolState(runParameters);

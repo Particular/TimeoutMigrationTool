@@ -30,9 +30,9 @@
             return new List<TimeoutData> { new TimeoutData(), new TimeoutData() };
         }
 
-        public Task Reset()
+        public Task Reset(IEnumerable<BatchInfo> batchesToReset)
         {
-            return Task.CompletedTask;
+            throw new NotImplementedException();
         }
 
         public Task StoreToolState(ToolState newToolState)

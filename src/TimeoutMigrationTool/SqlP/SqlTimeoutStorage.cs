@@ -39,7 +39,7 @@ namespace Particular.TimeoutMigrationTool.SqlP
             throw new System.NotImplementedException();
         }
 
-        public Task Reset()
+        public Task Reset(IEnumerable<BatchInfo> batchesToReset)
         {
             throw new NotImplementedException();
         }
