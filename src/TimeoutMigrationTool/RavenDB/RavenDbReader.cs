@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    //TODO: remove or move to tests as it's only used there
     public class RavenDbReader
     {
         private readonly string databaseName;
