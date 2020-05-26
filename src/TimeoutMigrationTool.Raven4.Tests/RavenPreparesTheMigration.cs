@@ -101,17 +101,6 @@ namespace TimeoutMigrationTool.Raven4.Tests
         }
 
         [Test]
-        public void WhenRemovingTheToolStateButNoneIsFoundExceptionIsThrown()
-        {
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            {
-                var timeoutStorage =
-                    new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-                await timeoutStorage.RemoveToolState();
-            });
-        }
-
-        [Test]
         public async Task WhenStoringTheToolStateTheToolStateIsUpdated()
         {
             var toolState = SetupToolState(DateTime.Now);
