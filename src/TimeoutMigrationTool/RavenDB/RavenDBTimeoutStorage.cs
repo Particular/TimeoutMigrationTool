@@ -35,13 +35,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             using (var httpClient = new HttpClient())
             {
                 var getStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-                var result = await httpClient.GetAsync(getStateUrl).ConfigureAwait(false);
+                var result = await httpClient.GetAsync(getStateUrl);
                 if (result.StatusCode == HttpStatusCode.NotFound)
                 {
                     return null;
                 }
 
-                var content = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var content = await result.Content.ReadAsStringAsync();
                 var jObject = JObject.Parse(content);
                 var resultSet = jObject.SelectToken("Results");
                 content = resultSet.ToString();
@@ -54,7 +54,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<bool> CanPrepareStorage()
         {
             var existingBatches = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None)
-                .ConfigureAwait(false);
+                ;
             if (existingBatches.Any())
                 return false;
             return true;
@@ -62,24 +62,24 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
         {
-            var batchesInStorage = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
+            var batchesInStorage = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None);
             var batchDeleteCommand = GetBatchDeleteCommand(batchesInStorage.ToArray(), ravenVersion);
             using (var httpClient = new HttpClient())
             {
                 var bulkDeleteUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
                 var serializedCommands = JsonConvert.SerializeObject(batchDeleteCommand);
-                var result = await httpClient.PostAsync(bulkDeleteUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                var result = await httpClient.PostAsync(bulkDeleteUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
                 result.EnsureSuccessStatusCode();
             }
 
-            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime).ConfigureAwait(false);
+            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime);
             return batches;
         }
 
         internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime)
         {
             bool filter(TimeoutData td) => td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase);
-            var timeouts = await reader.GetItems<TimeoutData>(filter, prefix, CancellationToken.None).ConfigureAwait(false);
+            var timeouts = await reader.GetItems<TimeoutData>(filter, prefix, CancellationToken.None);
 
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal) RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
@@ -103,7 +103,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     var serializedCommands = JsonConvert.SerializeObject(bulkCreateBatchAndUpdateTimeoutsCommand);
                     var result = await httpClient
                         .PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"))
-                        .ConfigureAwait(false);
+                        ;
                     result.EnsureSuccessStatusCode();
                 }
             }
@@ -125,7 +125,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                         commandsToExecuteForBatch = GetBatchDeleteCommand(new []{batch}, ravenVersion);
 
                     var serializedCommands = JsonConvert.SerializeObject(commandsToExecuteForBatch);
-                    var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                    var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
                     result.EnsureSuccessStatusCode();
                 }
             }
@@ -136,26 +136,26 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             using (var httpClient = new HttpClient())
             {
                 var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-                var result = await httpClient.DeleteAsync(deleteStateUrl).ConfigureAwait(false);
+                var result = await httpClient.DeleteAsync(deleteStateUrl);
                 result.EnsureSuccessStatusCode();
             }
         }
 
         public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
-            var toolState = await GetToolState().ConfigureAwait(false);
+            var toolState = await GetToolState();
             string prefix = RavenConstants.DefaultTimeoutPrefix;
             if (toolState.RunParameters.ContainsKey(ApplicationOptions.RavenTimeoutPrefix))
                 prefix = toolState.RunParameters[ApplicationOptions.RavenTimeoutPrefix];
 
-            var batch = await reader.GetItem<BatchInfo>($"batch/{batchNumber}").ConfigureAwait(false);
-            var timeouts = await reader.GetItems<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), prefix, CancellationToken.None).ConfigureAwait(false);
+            var batch = await reader.GetItem<BatchInfo>($"batch/{batchNumber}");
+            var timeouts = await reader.GetItems<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), prefix, CancellationToken.None);
             return timeouts;
         }
 
         public async Task CompleteBatch(int batchNumber)
         {
-            var batch = await reader.GetItem<BatchInfo>($"batch/{batchNumber}").ConfigureAwait(false);
+            var batch = await reader.GetItem<BatchInfo>($"batch/{batchNumber}");
             batch.State = BatchState.Completed;
 
             using (var httpClient = new HttpClient())
@@ -164,7 +164,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 var serializeObject = JsonConvert.SerializeObject(batch);
                 var httpContent = new StringContent(serializeObject);
 
-                var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent).ConfigureAwait(false);
+                var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent);
                 saveResult.EnsureSuccessStatusCode();
             }
         }
@@ -178,7 +178,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 var serializeObject = JsonConvert.SerializeObject(toolState);
                 var httpContent = new StringContent(serializeObject);
 
-                var saveResult = await httpClient.PutAsync(insertStateUrl, httpContent).ConfigureAwait(false);
+                var saveResult = await httpClient.PutAsync(insertStateUrl, httpContent);
                 saveResult.EnsureSuccessStatusCode();
             }
         }
@@ -191,15 +191,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             if (toolState.Batches.Any())
             {
                 var incompleteBatches = toolState.Batches.Where(bi => bi.State != BatchState.Completed).ToList();
-                await CleanupExistingBatchesAndResetTimeouts(toolState.Batches.ToList(), incompleteBatches).ConfigureAwait(false);
+                await CleanupExistingBatchesAndResetTimeouts(toolState.Batches.ToList(), incompleteBatches);
             }
             else
             {
-                var batches = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None).ConfigureAwait(false);
-                await CleanupExistingBatchesAndResetTimeouts(batches, batches).ConfigureAwait(false);
+                var batches = await reader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None);
+                await CleanupExistingBatchesAndResetTimeouts(batches, batches);
             }
 
-            await RemoveToolState().ConfigureAwait(false);
+            await RemoveToolState();
         }
 
         private static object GetBatchInsertCommand(BatchInfo batch, RavenDbVersion version)

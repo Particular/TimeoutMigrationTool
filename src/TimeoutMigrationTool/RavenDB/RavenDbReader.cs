@@ -37,12 +37,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 {
                     var skipFirst = $"&start={iteration * pageSize}";
                     var getUrl = iteration == 0 ? url : url + skipFirst;
-                    var result = await client.GetAsync(getUrl, cancellationToken).ConfigureAwait(false);
+                    var result = await client.GetAsync(getUrl, cancellationToken);
 
                     if (result.StatusCode == HttpStatusCode.OK)
                     {
                         var pagedTimeouts =
-                            await GetDocumentsFromResponse<T>(result.Content).ConfigureAwait(false);
+                            await GetDocumentsFromResponse<T>(result.Content);
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                             checkForMoreResults = false;
 
@@ -61,12 +61,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var url = $"{serverUrl}/databases/{databaseName}/docs?id={itemId}";
             using (var httpClient = new HttpClient())
             {
-                var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+                var response = await httpClient.GetAsync(url);
 
                 if (response.StatusCode == HttpStatusCode.NotFound)
                     return default;
 
-                var contentString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var contentString = await response.Content.ReadAsStringAsync();
                 var jObject = JObject.Parse(contentString);
                 var resultSet = jObject.SelectToken("Results");
 
@@ -77,7 +77,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
         {
-            var contentString = await resultContent.ReadAsStringAsync().ConfigureAwait(false);
+            var contentString = await resultContent.ReadAsStringAsync();
             if (version == RavenDbVersion.Four)
             {
                 var jObject = JObject.Parse(contentString);

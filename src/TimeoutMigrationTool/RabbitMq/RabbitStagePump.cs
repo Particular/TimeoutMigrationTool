@@ -70,7 +70,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             while (semaphore.CurrentCount != maxConcurrency)
             {
-                await Task.Delay(50).ConfigureAwait(false);
+                await Task.Delay(50);
             }
 
             connectionShutdownCompleted = new TaskCompletionSource<bool>();
@@ -84,7 +84,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 connectionShutdownCompleted.SetResult(true);
             }
 
-            await connectionShutdownCompleted.Task.ConfigureAwait(false);
+            await connectionShutdownCompleted.Task;
         }
 
         void Connection_ConnectionShutdown(object sender, ShutdownEventArgs e)
@@ -101,7 +101,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             try
             {
-                await semaphore.WaitAsync(messageProcessing.Token).ConfigureAwait(false);
+                await semaphore.WaitAsync(messageProcessing.Token);
             }
             catch (OperationCanceledException)
             {
@@ -134,12 +134,12 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     await Task.Yield();
                 }
 
-                await Process(eventArgs).ConfigureAwait(false);
+                await Process(eventArgs);
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Failed to process message. Returning message to queue... {ex}");
-                await consumer.Model.BasicRejectAndRequeueIfOpen(eventArgs.DeliveryTag, exclusiveScheduler).ConfigureAwait(false);
+                await consumer.Model.BasicRejectAndRequeueIfOpen(eventArgs.DeliveryTag, exclusiveScheduler);
             }
             finally
             {
@@ -171,13 +171,13 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
                 if (tokenSource.IsCancellationRequested)
                 {
-                    await consumer.Model.BasicRejectAndRequeueIfOpen(message.DeliveryTag, exclusiveScheduler).ConfigureAwait(false);
+                    await consumer.Model.BasicRejectAndRequeueIfOpen(message.DeliveryTag, exclusiveScheduler);
                 }
                 else
                 {
                     try
                     {
-                        await consumer.Model.BasicAckSingle(message.DeliveryTag, exclusiveScheduler).ConfigureAwait(false);
+                        await consumer.Model.BasicAckSingle(message.DeliveryTag, exclusiveScheduler);
                         Interlocked.Increment(ref processedMessages);
                     }
                     catch (AlreadyClosedException ex)

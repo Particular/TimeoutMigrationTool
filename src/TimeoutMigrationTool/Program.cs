@@ -82,25 +82,7 @@
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName);
                     var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
 
-                    await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
-                });
-            });
-
-            app.Command("demo", demoCommand =>
-            {
-                demoCommand.Options.Add(abortMigrationOption);
-
-                demoCommand.OnExecuteAsync(async (cancellationToken) =>
-                {
-                    if (abortMigrationOption.HasValue())
-                    {
-                        runParameters.Add(ApplicationOptions.AbortMigration, "");
-                    }
-
-                    var timeoutStorage = new DemoStorage();
-                    var transportAdapter = new DemoTimeoutCreator();
-
-                    await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
+                    await RunMigration(runParameters, timeoutStorage, transportAdapter);
                 });
             });
 
@@ -158,12 +140,12 @@
 
                     if (abort)
                     {
-                        await AbortMigration(timeoutStorage).ConfigureAwait(false);
+                        await AbortMigration(timeoutStorage);
                     }
                     else
                     {
                         var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
-                        await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
+                        await RunMigration(runParameters, timeoutStorage, transportAdapter);
                     }
                 });
             });
@@ -188,14 +170,14 @@
 
         private static async Task AbortMigration(ITimeoutStorage timeoutStorage)
         {
-            var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
+            var toolState = await timeoutStorage.GetToolState();
             if (toolState == null)
             {
-                await Console.Out.WriteLineAsync("Could not a previous run to abort.").ConfigureAwait(false);
+                await Console.Out.WriteLineAsync("Could not a previous run to abort.");
                 return;
             }
 
-            await timeoutStorage.Abort(toolState).ConfigureAwait(false);
+            await timeoutStorage.Abort(toolState);
         }
 
         static Task RunMigration(Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
