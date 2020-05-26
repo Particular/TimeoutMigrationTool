@@ -33,20 +33,10 @@ namespace Particular.TimeoutMigrationTool
                         await Console.Error.WriteLineAsync(
                             "We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
                     }
+                    await Prepare(cutOffTime, toolState);
                     break;
                 case MigrationStatus.Completed:
-                    await Console.Out.WriteAsync("Preparing storage");
-                    var batches = await timeoutStorage.Prepare(cutOffTime);
-
-                    if (!batches.Any())
-                    {
-                        await Console.Out.WriteLineAsync(
-                                $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
-                    }
-
-                    toolState.InitBatches(batches);
-                    await MarkStorageAsPrepared(toolState);
-                    await Console.Out.WriteLineAsync(" - done");
+                    await Prepare(cutOffTime, toolState);
                     break;
                 case MigrationStatus.StoragePrepared when RunParametersAreDifferent(toolState.RunParameters, runParameters):
                     await Console.Out
@@ -94,6 +84,22 @@ namespace Particular.TimeoutMigrationTool
 
             await timeoutStorage.StoreToolState(toolState);
             await Console.Out.WriteLineAsync($"Migration completed successfully");
+        }
+
+        private async Task Prepare(DateTime cutOffTime, ToolState toolState)
+        {
+            await Console.Out.WriteAsync("Preparing storage");
+            var batches = await timeoutStorage.Prepare(cutOffTime);
+
+            if (!batches.Any())
+            {
+                await Console.Out.WriteLineAsync(
+                        $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
+            }
+
+            toolState.InitBatches(batches);
+            await MarkStorageAsPrepared(toolState);
+            await Console.Out.WriteLineAsync(" - done");
         }
 
         bool ShouldCreateFreshToolState(ToolState toolState)

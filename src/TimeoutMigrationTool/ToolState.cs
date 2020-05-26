@@ -8,12 +8,14 @@ namespace Particular.TimeoutMigrationTool
     {
         public ToolState(IDictionary<string, string> runParameters)
         {
-            this.RunParameters = runParameters;
+            RunParameters = runParameters;
         }
 
-        private ToolState()
+        internal ToolState(IEnumerable<BatchInfo> batches, IDictionary<string, string> runParameters, MigrationStatus migrationStatus)
         {
-            //TEMP: this constructor is required by RavenDB to deserialize the stored document
+            Batches = batches;
+            RunParameters = runParameters;
+            Status = migrationStatus;
         }
 
         public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();

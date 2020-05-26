@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    //TODO: remove or move to tests as it's only used there
     public class RavenDbReader
     {
         private readonly string databaseName;
@@ -67,11 +68,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     return default;
 
                 var contentString = await response.Content.ReadAsStringAsync();
-                var jObject = JObject.Parse(contentString);
-                var resultSet = jObject.SelectToken("Results");
 
-                var item = JsonConvert.DeserializeObject<T[]>(resultSet.ToString()).SingleOrDefault();
-                return item;
+                if (version == RavenDbVersion.Four)
+                {
+                    var jObject = JObject.Parse(contentString);
+                    var resultSet = jObject.SelectToken("Results");
+                    return JsonConvert.DeserializeObject<T[]>(resultSet.ToString()).SingleOrDefault();
+                }
+
+                return JsonConvert.DeserializeObject<T>(contentString);
             }
         }
 

@@ -7,7 +7,7 @@ using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.RavenDB;
 
-namespace TimeoutMigrationTool.Raven4.Tests
+namespace TimeoutMigrationTool.Raven3.Tests
 {
     public class RavenPreparesTheMigration : RavenTimeoutStorageTestSuite
     {
@@ -22,7 +22,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         [Test]
         public async Task WhenGettingTimeoutStateAndNoneIsFoundNullIsReturned()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var toolState = await timeoutStorage.GetToolState();
 
             Assert.That(toolState, Is.Null);
@@ -33,7 +33,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1)));
 
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var retrievedToolState = await timeoutStorage.GetToolState();
 
             Assert.That(retrievedToolState, Is.Not.Null);
@@ -45,7 +45,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
         {
             var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1));
 
             Assert.That(batches.Count, Is.EqualTo(2));
@@ -62,13 +62,13 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var toolState = SetupToolState(cutOffTime);
             await SaveToolState(toolState);
 
-            var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var batches = await storage.Prepare(cutOffTime);
             toolState.InitBatches(batches);
             await SaveToolState(toolState);
 
             var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
             Assert.That(canPrepareStorage, Is.False);
         }
@@ -77,7 +77,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         public async Task WhenVerifyingPrepareAndSystemIsCleanInfosReturnsTrue()
         {
             var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
             Assert.That(canPrepareStorage, Is.True);
         }
@@ -89,7 +89,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await SaveToolState(toolState);
 
             var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await timeoutStorage.RemoveToolState();
 
             using (var httpClient = new HttpClient())
@@ -107,7 +107,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await SaveToolState(toolState);
 
             var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             toolState.Status = MigrationStatus.StoragePrepared;
             await timeoutStorage.StoreToolState(toolState);
 
