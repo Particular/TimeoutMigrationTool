@@ -85,6 +85,30 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
+        public async Task Splits_timeouts_including_cutoff_date()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Splits_timeouts_including_cutoff_date";
+
+            var context = await Scenario.Define<Context>()
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.TimeoutsSet)
+                .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
+            await timeoutStorage.Prepare(DateTime.Now.AddDays(10));
+
+            var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT MAX(Batches) FROM TimeoutsMigration_State WHERE EndpointName = '{SqlP_WithTimeouts_Endpoint.EndpointName}'");
+
+            Assert.AreEqual(3, numberOfBatches);
+        }
+
+        [Test]
         public async Task Removes_Timeouts_From_Original_TimeoutData_Table()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Removes_Timeouts_From_Original_TimeoutData_Table";
