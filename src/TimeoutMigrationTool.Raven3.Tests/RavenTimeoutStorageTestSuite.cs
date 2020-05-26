@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
+using Particular.TimeoutMigrationTool.RavenDB;
 
 namespace TimeoutMigrationTool.Raven3.Tests
 {
@@ -37,7 +40,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         protected async Task InitTimeouts(int nrOfTimeouts)
         {
            using (var httpClient = new HttpClient())
-            {
+           {
                 var timeoutsPrefix = "TimeoutDatas";
                 for (var i = 0; i < nrOfTimeouts; i++)
                 {
@@ -61,6 +64,71 @@ namespace TimeoutMigrationTool.Raven3.Tests
                     var result = await httpClient.PutAsync(insertTimeoutUrl, httpContent);
                     Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
                 }
+           }
+        }
+
+        protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
+        {
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
+            return batches;
+        }
+
+        protected ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
+        {
+            var runParameters = new Dictionary<string, string>
+            {
+                {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
+                {ApplicationOptions.RavenServerUrl, ServerName},
+                {ApplicationOptions.RavenDatabaseName, databaseName},
+                {ApplicationOptions.RavenVersion, RavenDbVersion.ThreeDotFive.ToString()},
+                {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix},
+            };
+
+            var toolState = new ToolState(runParameters)
+            {
+                Status = status
+            };
+
+            return toolState;
+        }
+
+        protected async Task SaveToolState(ToolState toolState)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var bulkInsertUrl = $"{ServerName}/databases/{databaseName}/bulk_docs";
+                var bulkCreateBatchAndUpdateTimeoutsCommand = new[]
+                {
+                    new {
+                        Method = "PUT",
+                        Key = RavenConstants.ToolStateId,
+                        Document = toolState,
+                        Metadata = new object()
+                    }
+                };
+
+                var serializedCommands = JsonConvert.SerializeObject(bulkCreateBatchAndUpdateTimeoutsCommand);
+                var result = await httpClient
+                    .PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+                result.EnsureSuccessStatusCode();
+            }
+        }
+
+        protected async Task<ToolState> GetToolState()
+        {
+            var url = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetAsync(url);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+
+                var contentString = await response.Content.ReadAsStringAsync();
+                var toolState = JsonConvert.DeserializeObject<ToolState>(contentString);
+                return toolState;
             }
         }
 
