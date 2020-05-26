@@ -17,7 +17,7 @@ namespace Particular.TimeoutMigrationTool
         {
             var toolState = await timeoutStorage.GetToolState();
 
-            if (ShouldWeCreateAToolState(toolState))
+            if (ShouldCreateFreshToolState(toolState))
             {
                 toolState = new ToolState(runParameters);
                 await timeoutStorage.StoreToolState(toolState);
@@ -29,8 +29,10 @@ namespace Particular.TimeoutMigrationTool
                 case MigrationStatus.NeverRun:
                     var canPrepStorage = await timeoutStorage.CanPrepareStorage();
                     if (!canPrepStorage)
+                    {
                         await Console.Error.WriteLineAsync(
                             "We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
+                    }
                     break;
                 case MigrationStatus.Completed:
                     await Console.Out.WriteAsync("Preparing storage");
@@ -39,8 +41,7 @@ namespace Particular.TimeoutMigrationTool
                     if (!batches.Any())
                     {
                         await Console.Out.WriteLineAsync(
-                                $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.")
-                            ;
+                                $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
                     }
 
                     toolState.InitBatches(batches);
@@ -50,16 +51,16 @@ namespace Particular.TimeoutMigrationTool
                 case MigrationStatus.StoragePrepared when RunParametersAreDifferent(toolState.RunParameters, runParameters):
                     await Console.Out
                         .WriteLineAsync(
-                            $"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:")
-                        ;
+                            $"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+
                     foreach (var setting in toolState.RunParameters)
                     {
-                        await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.")
-                            ;
+                        await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.");
                     }
+
                     return;
                 case MigrationStatus.StoragePrepared:
-                    await Console.Out.WriteAsync("Resuming where we left off...");
+                    await Console.Out.WriteLineAsync("Resuming in progress migration");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -95,7 +96,7 @@ namespace Particular.TimeoutMigrationTool
             await Console.Out.WriteLineAsync($"Migration completed successfully");
         }
 
-        private bool ShouldWeCreateAToolState(ToolState toolState)
+        bool ShouldCreateFreshToolState(ToolState toolState)
         {
             if (toolState == null) return true;
             return toolState.Status == MigrationStatus.Completed;
