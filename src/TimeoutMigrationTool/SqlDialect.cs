@@ -102,7 +102,7 @@ BEGIN TRANSACTION
         FROM [{endpointName}_TimeoutData_migration]
     ) BatchMigration;
 
-    INSERT INTO TimeoutsMigration_State VALUES ('{endpointName}', 'Prepared', (SELECT COUNT(DISTINCT BatchNumber) from [{endpointName}_TimeoutData_migration]), @RunParameters);
+    INSERT INTO TimeoutsMigration_State VALUES ('{endpointName}', 'StoragePrepared', (SELECT COUNT(DISTINCT BatchNumber) from [{endpointName}_TimeoutData_migration]), @RunParameters);
 
      SELECT
         Id,

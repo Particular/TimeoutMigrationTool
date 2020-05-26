@@ -108,12 +108,12 @@
 
         MigrationStatus ParseMigrationStatus(string status)
         {
-            return MigrationStatus.Completed;
+            return (MigrationStatus)Enum.Parse(typeof(MigrationStatus), status);
         }
 
         BatchState GetBatchStatus(int dbStatus)
         {
-            return BatchState.Pending;
+            return (BatchState)dbStatus;
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
