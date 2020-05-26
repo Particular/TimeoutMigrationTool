@@ -8,7 +8,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     internal interface ICanTalkToRavenVersion
     {
         Task UpdateRecord(string key, object document);
-        Task InsertRecord(string key, object document);
         Task DeleteRecord(string key);
         Task CreateBatchAndUpdateTimeouts(BatchInfo batch);
         Task DeleteBatchAndUpdateTimeouts(BatchInfo batch);

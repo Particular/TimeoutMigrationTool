@@ -41,12 +41,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 result.EnsureSuccessStatusCode();
             }
         }
-
-        public Task InsertRecord(string key, object document)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task DeleteRecord(string key)
         {
             using (var httpClient = new HttpClient())
