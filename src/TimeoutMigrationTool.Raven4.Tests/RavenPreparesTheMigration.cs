@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.RavenDB;
@@ -57,74 +54,76 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
         }
 
-        [Test]
-        public async Task WhenTheStorageHasNotBeenPreparedButWeFindBatchInfoWeClearItAndStartOver()
-        {
-            var toolState = SetupToolState(DateTime.Now.AddDays(-1));
-            var item = await GetTimeout("TimeoutDatas/1").ConfigureAwait(false);
-            var originalTimeoutManager = item.OwningTimeoutManager;
-
-            await SetupExistingBatchInfoInDatabase();
-
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CleanupAnyExistingBatchesIfNeeded();
-
-            var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var savedBatches = await ravenDbReader.GetItems<BatchInfo>(x => true, "batch", CancellationToken.None);
-            var modifiedItem = await GetTimeout("TimeoutDatas/1").ConfigureAwait(false);
-            Assert.That(savedBatches.Count, Is.EqualTo(0));
-            Assert.That(modifiedItem.OwningTimeoutManager, Is.EqualTo(originalTimeoutManager));
-        }
 
         [Test]
-        public async Task WhenTheStorageHasBeenPreparedWeReturnStoredBatches()
+        public async Task WhenVerifyingPrepareAndFoundExistingBatchInfosReturnsFalse()
         {
-            await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1), MigrationStatus.StoragePrepared));
-            await SetupExistingBatchInfoInDatabase();
+            var cutOffTime = DateTime.Now.AddDays(-1);
+            var toolState = SetupToolState(cutOffTime);
+            await SaveToolState(toolState).ConfigureAwait(false);
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await sut.Prepare(DateTime.Now.AddDays(-1));
+            var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await storage.Prepare(cutOffTime);
+            toolState.InitBatches(batches);
+            await SaveToolState(toolState);
 
-            Assert.That(batches.Count, Is.EqualTo(2));
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
+            Assert.That(canPrepareStorage, Is.False);
         }
 
-        private ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
+        [Test]
+        public async Task WhenVerifyingPrepareAndSystemIsCleanInfosReturnsTrue()
         {
-            var runParameters = new Dictionary<string, string>
-            {
-                {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
-                {ApplicationOptions.RavenServerUrl, ServerName},
-                {ApplicationOptions.RavenDatabaseName, databaseName},
-                {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
-            };
-
-            var toolState = new ToolState(runParameters)
-            {
-                Status = status
-            };
-
-            return toolState;
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
+            Assert.That(canPrepareStorage, Is.True);
         }
 
-        private async Task SetupExistingBatchInfoInDatabase()
+        [Test]
+        public async Task WhenRemovingTheToolStateStoreIsCleanedUp()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
-        }
+            var toolState = SetupToolState(DateTime.Now);
+            await SaveToolState(toolState).ConfigureAwait(false);
 
-        private async Task SaveToolState(ToolState toolState)
-        {
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            await timeoutStorage.RemoveToolState();
+
             using (var httpClient = new HttpClient())
             {
-                var insertStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-
-                var serializeObject = JsonConvert.SerializeObject(toolState);
-                var httpContent = new StringContent(serializeObject);
-
-                var result = await httpClient.PutAsync(insertStateUrl, httpContent);
-                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+                var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+                var result = await httpClient.GetAsync(getStateUrl).ConfigureAwait(false);
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             }
         }
 
+        [Test]
+        public void WhenRemovingTheToolStateButNoneIsFoundExceptionIsThrown()
+        {
+            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            {
+                var timeoutStorage =
+                    new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                await timeoutStorage.RemoveToolState();
+            });
+        }
+
+        [Test]
+        public async Task WhenStoringTheToolStateTheToolStateIsUpdated()
+        {
+            var toolState = SetupToolState(DateTime.Now);
+            await SaveToolState(toolState).ConfigureAwait(false);
+
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            toolState.Status = MigrationStatus.StoragePrepared;
+            await timeoutStorage.StoreToolState(toolState);
+
+            var updatedToolState = await GetToolState();
+            Assert.That(updatedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+        }
     }
 }

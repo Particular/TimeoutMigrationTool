@@ -27,9 +27,9 @@
                 Description = "The cut off time to apply when finding eligible timeouts"
             };
 
-            var forceMigrationOption = new CommandOption($"-c|--{ApplicationOptions.ForceMigration}", CommandOptionType.NoValue)
+            var abortMigrationOption = new CommandOption($"-f|--{ApplicationOptions.AbortMigration}", CommandOptionType.NoValue)
             {
-                Description = "To force the migration and start over."
+                Description = "To abort the current migration run."
             };
 
             app.HelpOption(inherited: true);
@@ -54,6 +54,7 @@
 
                 sqlpCommand.Options.Add(targetOption);
                 sqlpCommand.Options.Add(cutoffTimeOption);
+                sqlpCommand.Options.Add(abortMigrationOption);
 
                 sqlpCommand.Options.Add(sourceOption);
                 sqlpCommand.Options.Add(timeoutTableOption);
@@ -67,9 +68,9 @@
                     var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
-                    if (forceMigrationOption.HasValue())
+                    if (abortMigrationOption.HasValue())
                     {
-                        runParameters.Add(ApplicationOptions.ForceMigration, "");
+                        runParameters.Add(ApplicationOptions.AbortMigration, "");
                     }
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
@@ -87,11 +88,13 @@
 
             app.Command("demo", demoCommand =>
             {
+                demoCommand.Options.Add(abortMigrationOption);
+
                 demoCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
-                    if (forceMigrationOption.HasValue())
+                    if (abortMigrationOption.HasValue())
                     {
-                        runParameters.Add(ApplicationOptions.ForceMigration, "");
+                        runParameters.Add(ApplicationOptions.AbortMigration, "");
                     }
 
                     var timeoutStorage = new DemoStorage();
@@ -125,6 +128,7 @@
 
                 ravenDBCommand.Options.Add(targetOption);
                 ravenDBCommand.Options.Add(cutoffTimeOption);
+                ravenDBCommand.Options.Add(abortMigrationOption);
 
                 ravenDBCommand.Options.Add(serverUrlOption);
                 ravenDBCommand.Options.Add(databaseNameOption);
@@ -135,16 +139,11 @@
                 {
                     var serverUrl = serverUrlOption.Value();
                     var databaseName = databaseNameOption.Value();
-                    var prefix = prefixOption.Value(); // TODO: make value "TimeoutDatas" the default for the prefix
+                    var prefix = prefixOption.Value();
                     var targetConnectionString = targetOption.Value();
                     var ravenVersion = ravenDbVersion.Value() == "3.5"
                         ? RavenDbVersion.ThreeDotFive
                         : RavenDbVersion.Four;
-
-                    if (forceMigrationOption.HasValue()) //TODO: double check if this is the way to check if an argument with no value is on the command line
-                    {
-                        runParameters.Add(ApplicationOptions.ForceMigration, "");
-                    }
 
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
@@ -154,10 +153,18 @@
                     runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
                     runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
 
+                    var abort = abortMigrationOption.HasValue();
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
-                    var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
 
-                    await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
+                    if (abort)
+                    {
+                        await AbortMigration(timeoutStorage).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+                        await RunMigration(runParameters, timeoutStorage, transportAdapter).ConfigureAwait(false);
+                    }
                 });
             });
 
@@ -179,6 +186,18 @@
             }
         }
 
+        private static async Task AbortMigration(ITimeoutStorage timeoutStorage)
+        {
+            var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
+            if (toolState == null)
+            {
+                await Console.Out.WriteLineAsync("Could not a previous run to abort.").ConfigureAwait(false);
+                return;
+            }
+
+            await timeoutStorage.Abort(toolState).ConfigureAwait(false);
+        }
+
         static Task RunMigration(Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
         {
             var migrationRunner = new MigrationRunner(timeoutStorage, transportTimeoutCreator);
@@ -191,10 +210,7 @@
                     throw new ArgumentException($"{ApplicationOptions.CutoffTime} is not a valid System.DateTime value.");
                 }
             }
-
-            var forceMigration = runParameters.ContainsKey(ApplicationOptions.ForceMigration);
-
-            return migrationRunner.Run(cutOffTime, forceMigration, runParameters);
+            return migrationRunner.Run(cutOffTime, runParameters);
         }
     }
 }

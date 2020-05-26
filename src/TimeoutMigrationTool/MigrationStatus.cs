@@ -1,10 +1,9 @@
-﻿using System;
-namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool
 {
     public enum MigrationStatus
     {
         NeverRun = 0,
-        StoragePrepared,
-        Completed
+        StoragePrepared = 1,
+        Completed = 2
     }
 }

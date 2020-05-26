@@ -34,5 +34,15 @@
         {
             return Task.CompletedTask;
         }
+
+        public Task Abort(ToolState toolState)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> CanPrepareStorage()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -72,6 +72,69 @@ namespace TimeoutMigrationTool.Raven4.Tests
             }
         }
 
+        protected ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
+        {
+            var runParameters = new Dictionary<string, string>
+            {
+                {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
+                {ApplicationOptions.RavenServerUrl, ServerName},
+                {ApplicationOptions.RavenDatabaseName, databaseName},
+                {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
+                {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix},
+            };
+
+            var toolState = new ToolState(runParameters)
+            {
+                Status = status
+            };
+
+            return toolState;
+        }
+
+        protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
+        {
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
+            return batches;
+        }
+
+        protected async Task SaveToolState(ToolState toolState)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var insertStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+
+                var serializeObject = JsonConvert.SerializeObject(toolState);
+                var httpContent = new StringContent(serializeObject);
+
+                var result = await httpClient.PutAsync(insertStateUrl, httpContent);
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+            }
+        }
+
+        protected async Task<ToolState> GetToolState()
+        {
+            var url = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetAsync(url);
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+
+                var contentString = await response.Content.ReadAsStringAsync();
+
+                var jObject = JObject.Parse(contentString);
+                var resultSet = jObject.SelectToken("Results");
+
+                var toolState = JsonConvert.DeserializeObject<ToolState[]>(resultSet.ToString()).Single();
+
+                return toolState;
+            }
+        }
+
         [TearDown]
         public async Task TeardownDatabase()
         {
