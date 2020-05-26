@@ -104,7 +104,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             {
                 var insertStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
 
-                var serializeObject = JsonConvert.SerializeObject(toolState);
+                var serializeObject = JsonConvert.SerializeObject(RavenToolState.FromToolState(toolState));
                 var httpContent = new StringContent(serializeObject);
 
                 var result = await httpClient.PutAsync(insertStateUrl, httpContent);
@@ -129,10 +129,34 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 var jObject = JObject.Parse(contentString);
                 var resultSet = jObject.SelectToken("Results");
 
-                var toolState = JsonConvert.DeserializeObject<ToolState[]>(resultSet.ToString()).Single();
+                var ravenToolState = JsonConvert.DeserializeObject<RavenToolState[]>(resultSet.ToString()).Single();
+                var batches = await GetBatches(ravenToolState.Batches.ToArray());
 
-                return toolState;
+                return ravenToolState.ToToolState(batches);
             }
+        }
+
+        protected async Task<List<BatchInfo>> GetBatches(string[] ids)
+        {
+            var batches = new List<BatchInfo>();
+
+            foreach (var id in ids)
+            {
+                var url = $"{ServerName}/databases/{databaseName}/docs?id={id}";
+                using (var httpClient = new HttpClient())
+                {
+                    var response = await httpClient.GetAsync(url);
+                    var contentString = await response.Content.ReadAsStringAsync();
+
+                    var jObject = JObject.Parse(contentString);
+                    var resultSet = jObject.SelectToken("Results");
+
+                    var timeout = JsonConvert.DeserializeObject<BatchInfo[]>(resultSet.ToString()).SingleOrDefault();
+                    batches.Add(timeout);
+                }
+            }
+
+            return batches;
         }
 
         [TearDown]

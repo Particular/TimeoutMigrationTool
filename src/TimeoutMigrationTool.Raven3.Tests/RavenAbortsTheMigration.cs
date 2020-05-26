@@ -70,7 +70,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
                 {
                     new {
                         Method = "PUT",
-                        Key = $"batch/1",
+                        Key = $"{RavenConstants.BatchPrefix}/1",
                         Document = new BatchInfo
                         {
                             Number = 1,
@@ -101,7 +101,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
             var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.ThreeDotFive);
-            var incompleteBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"batch/{incompleteBatch.Number}");
+            var incompleteBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"{RavenConstants.BatchPrefix}/{incompleteBatch.Number}");
             var resetTimeouts = await ravenDbReader.GetItems<TimeoutData>(x => incompleteBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", CancellationToken.None);
 
             Assert.That(incompleteBatchFromStorage, Is.Null);
@@ -121,7 +121,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
             var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.ThreeDotFive);
-            var completeBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"batch/{completeBatch.Number}");
+            var completeBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"{RavenConstants.BatchPrefix}/{completeBatch.Number}");
             var resetTimeouts = await ravenDbReader.GetItems<TimeoutData>(x => completeBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", CancellationToken.None);
 
             Assert.That(completeBatchFromStorage, Is.Null);

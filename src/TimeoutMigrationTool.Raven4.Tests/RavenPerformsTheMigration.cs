@@ -26,6 +26,10 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1));
+
+            toolState.InitBatches(batches);
+            await SaveToolState(toolState);
+
             var batchToVerify = batches.First();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
@@ -43,13 +47,17 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1));
+
+            toolState.InitBatches(batches);
+            await SaveToolState(toolState);
+
             var batchToVerify = batches.First();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.CompleteBatch(batchToVerify.Number);
 
             var reader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var updatedBatch = await reader.GetItem<BatchInfo>($"batch/{batchToVerify.Number}");
+            var updatedBatch = await reader.GetItem<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}");
             toolState = await GetToolState();
             var currentBatch = toolState.GetCurrentBatch();
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));

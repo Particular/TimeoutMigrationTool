@@ -77,7 +77,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             commands.Add(new
             {
                 Method = "PUT",
-                Key = $"batch/{batch.Number}",
+                Key = $"{RavenConstants.BatchPrefix}/{batch.Number}",
                 Document = batch,
                 Metadata = new object()
             });
@@ -87,7 +87,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task DeleteBatchAndUpdateTimeouts(BatchInfo batch)
         {
-            var deleteCommand = GetDeleteCommand($"batch/{batch.Number}");
+            var deleteCommand = GetDeleteCommand($"{RavenConstants.BatchPrefix}/{batch.Number}");
             var commands = batch.TimeoutIds.Select(timeoutId =>
             {
                 return new Raven3BatchCommand
@@ -145,19 +145,34 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        public async Task<T> GetDocument<T>(string key) where T : class
+        public async Task<T> GetDocument<T>(string id) where T : class
         {
-            var url = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
-            using (var httpClient = new HttpClient())
+            var documents = await GetDocuments<T>(new[] { id });
+            return documents.SingleOrDefault();
+        }
+
+        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
+        {
+            var docs = new List<T>();
+            if (!ids.Any())
             {
-                var response = await httpClient.GetAsync(url);
-
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                    return default;
-
-                var contentString = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<T>(contentString);
+                return docs;
             }
+
+            foreach (var id in ids)
+            {
+                var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}";
+                using (var httpClient = new HttpClient())
+                {
+                    var response = await httpClient.GetAsync(url);
+                    var contentString = await response.Content.ReadAsStringAsync();
+
+                    var doc = JsonConvert.DeserializeObject<T>(contentString);
+                    docs.Add(doc);
+                }
+            }
+
+            return docs;
         }
 
         private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class

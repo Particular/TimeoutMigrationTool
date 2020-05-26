@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,12 +20,20 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<ToolState> GetToolState()
         {
-            return await ravenAdapter.GetDocument<ToolState>(RavenConstants.ToolStateId);
+            var ravenToolState = await ravenAdapter.GetDocument<RavenToolState>(RavenConstants.ToolStateId);
+            if (ravenToolState == null) 
+            {
+                return null;
+            }
+
+            //TODO: replace with an Include
+            var batches = await ravenAdapter.GetDocuments<BatchInfo>(ravenToolState.Batches);
+            return ravenToolState.ToToolState(batches);
         }
 
         public async Task<bool> CanPrepareStorage()
         {
-            var existingBatches = await ravenAdapter.GetDocuments<BatchInfo>(x => true, "batch", CancellationToken.None);
+            var existingBatches = await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, CancellationToken.None);
             if (existingBatches.Any())
                 return false;
             return true;
@@ -32,10 +41,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
         {
-            var batchesInStorage = await ravenAdapter.GetDocuments<BatchInfo>(x => true, "batch", CancellationToken.None);
+            var batchesInStorage = await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, CancellationToken.None);
             if (batchesInStorage.Any())
             {
-                await ravenAdapter.BatchDelete(batchesInStorage.Select(b => $"batch/{b.Number}").ToArray());
+                await ravenAdapter.BatchDelete(batchesInStorage.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToArray());
             }
 
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime);
@@ -75,7 +84,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (batchesForWhichToResetTimeouts.Any(b => b.Number == batch.Number))
                     await ravenAdapter.DeleteBatchAndUpdateTimeouts(batch);
                 else
-                    await ravenAdapter.DeleteRecord($"batch/{batch.Number}");
+                    await ravenAdapter.DeleteRecord($"{RavenConstants.BatchPrefix}/{batch.Number}");
             }
         }
 
@@ -91,28 +100,29 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             if (toolState.RunParameters.ContainsKey(ApplicationOptions.RavenTimeoutPrefix))
                 prefix = toolState.RunParameters[ApplicationOptions.RavenTimeoutPrefix];
 
-            var batch = await ravenAdapter.GetDocument<BatchInfo>($"batch/{batchNumber}");
+            var batch = await ravenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchNumber}");
             var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), prefix, CancellationToken.None);
             return timeouts;
         }
 
         public async Task CompleteBatch(int batchNumber)
         {
-            var batch = await ravenAdapter.GetDocument<BatchInfo>($"batch/{batchNumber}");
+            var batch = await ravenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchNumber}");
             batch.State = BatchState.Completed;
 
-            await ravenAdapter.UpdateRecord($"batch/{batchNumber}", batch);
+            await ravenAdapter.UpdateRecord($"{RavenConstants.BatchPrefix}/{batchNumber}", batch);
         }
 
         public async Task StoreToolState(ToolState toolState)
         {
-            await ravenAdapter.UpdateRecord(RavenConstants.ToolStateId, toolState);
+            var ravenToolState = RavenToolState.FromToolState(toolState);
+            await ravenAdapter.UpdateRecord(RavenConstants.ToolStateId, ravenToolState);
         }
 
         public async Task Abort(ToolState toolState)
         {
             if (toolState == null)
-                throw new ArgumentNullException(nameof(toolState), "Can't abort without a toolstate");
+                throw new ArgumentNullException(nameof(toolState), "Can't abort without a tool state");
 
             if (toolState.Batches.Any())
             {
@@ -121,7 +131,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
             else
             {
-                var batches = await ravenAdapter.GetDocuments<BatchInfo>(x => true, "batch", CancellationToken.None);
+                var batches = await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, CancellationToken.None);
                 await CleanupExistingBatchesAndResetTimeouts(batches, batches);
             }
 

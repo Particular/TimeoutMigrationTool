@@ -57,7 +57,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var insertCommand = new PutCommand
             {
-                Id = $"batch/{batch.Number}",
+                Id = $"{RavenConstants.BatchPrefix}/{batch.Number}",
                 Type = "PUT",
                 ChangeVector = (object)null,
                 Document = batch
@@ -84,7 +84,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task DeleteBatchAndUpdateTimeouts(BatchInfo batch)
         {
-            var deleteCommand = GetDeleteCommand($"batch/{batch.Number}");
+            var deleteCommand = GetDeleteCommand($"{RavenConstants.BatchPrefix}/{batch.Number}");
             var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
             {
                 Id = timeoutId,
@@ -144,18 +144,30 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id) where T : class
         {
-            var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}";
+            var documents = await GetDocuments<T>(new[] { id });
+            return documents.SingleOrDefault();
+        }
+
+        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
+        {
+            if (!ids.Any()) 
+            {
+                return new List<T>();
+            }
+
+            var qs = ids.Aggregate("", (queryString, id) => queryString + $"id={id}&", queryString=>queryString.TrimEnd('&'));
+            var url = $"{serverUrl}/databases/{databaseName}/docs?{qs}";
             using (var httpClient = new HttpClient())
             {
                 var response = await httpClient.GetAsync(url);
 
                 if (response.StatusCode == HttpStatusCode.NotFound)
-                    return default;
+                    return new List<T>();
 
                 var contentString = await response.Content.ReadAsStringAsync();
                 var jObject = JObject.Parse(contentString);
                 var resultSet = jObject.SelectToken("Results");
-                return JsonConvert.DeserializeObject<T[]>(resultSet.ToString()).SingleOrDefault();
+                return JsonConvert.DeserializeObject<List<T>>(resultSet.ToString());
             }
         }
 

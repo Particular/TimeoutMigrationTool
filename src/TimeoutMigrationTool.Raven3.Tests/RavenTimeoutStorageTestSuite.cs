@@ -103,7 +103,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
                     new {
                         Method = "PUT",
                         Key = RavenConstants.ToolStateId,
-                        Document = toolState,
+                        Document = RavenToolState.FromToolState(toolState),
                         Metadata = new object()
                     }
                 };
@@ -127,9 +127,31 @@ namespace TimeoutMigrationTool.Raven3.Tests
                 }
 
                 var contentString = await response.Content.ReadAsStringAsync();
-                var toolState = JsonConvert.DeserializeObject<ToolState>(contentString);
-                return toolState;
+                var ravenToolState = JsonConvert.DeserializeObject<RavenToolState>(contentString);
+                var batches = await GetBatches(ravenToolState.Batches.ToArray());
+
+                return ravenToolState.ToToolState(batches);
             }
+        }
+
+        protected async Task<List<BatchInfo>> GetBatches(string[] ids)
+        {
+            var batches = new List<BatchInfo>();
+
+            foreach (var id in ids)
+            {
+                var url = $"{ServerName}/databases/{databaseName}/docs?id={id}";
+                using (var httpClient = new HttpClient())
+                {
+                    var response = await httpClient.GetAsync(url);
+                    var contentString = await response.Content.ReadAsStringAsync();
+
+                    var batch = JsonConvert.DeserializeObject<BatchInfo>(contentString);
+                    batches.Add(batch);
+                }
+            }
+
+            return batches;
         }
 
         [TearDown]
