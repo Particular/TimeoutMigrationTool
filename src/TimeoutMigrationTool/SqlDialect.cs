@@ -45,7 +45,7 @@ BEGIN TRANSACTION
     CREATE TABLE [{endpointName}_TimeoutData_migration] (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         BatchNumber INT,
-        Status INT, /* NULL = prepared, 1 = staged, 2 = migrated */
+        Status INT NOT NULL, /* 0 = Pending, 1 = staged, 2 = migrated */
         Destination NVARCHAR(200),
         SagaId UNIQUEIDENTIFIER,
         State VARBINARY(MAX),
@@ -57,7 +57,7 @@ BEGIN TRANSACTION
     DELETE [{endpointName}_TimeoutData]
     OUTPUT DELETED.Id,
         -1,
-        NULL,
+        0,
         DELETED.Destination,
         DELETED.SagaId,
         DELETED.State,
@@ -75,7 +75,14 @@ BEGIN TRANSACTION
     ) BatchMigration;
 
     INSERT INTO TimeoutsMigration_State VALUES ('{endpointName}', 'Prepared', (SELECT COUNT(DISTINCT BatchNumber) from [{endpointName}_TimeoutData_migration]), @RunParameters);
-        
+
+     SELECT
+        Id,
+        BatchNumber,
+        Status
+    FROM
+        [{endpointName}_TimeoutData_migration];
+
 COMMIT;";
         }
     }

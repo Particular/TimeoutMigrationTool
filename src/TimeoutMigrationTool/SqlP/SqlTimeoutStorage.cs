@@ -1,7 +1,9 @@
 ﻿namespace Particular.TimeoutMigrationTool.SqlP
 {
     using System;
+    using System.Linq;
     using System.Collections.Generic;
+    using System.Data.Common;
     using System.Threading.Tasks;
 
     public class SqlTimeoutStorage : ITimeoutStorage
@@ -37,10 +39,43 @@
                 runParametersParameter.Value = runParameters;
                 command.Parameters.Add(runParametersParameter);
 
-                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 
-                return null;
+                var batches = new List<BatchInfo>();
+                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                {
+                    if (reader.HasRows)
+                    {
+                        var batchRows = ReadBatchRows(reader);
+
+                        batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
+                        {
+                            Number = batchNumber.Key,
+                            State = batchNumber.First().Status,
+                            TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
+                        }).ToList();
+                    }
+                }
+
+                return batches;
             }
+        }
+
+        IEnumerable<BatchRowRecord> ReadBatchRows(DbDataReader reader)
+        {
+            while (reader.Read())
+            {
+                yield return new BatchRowRecord
+                {
+                    MessageId = reader.GetGuid(0),
+                    BatchNumber = reader.GetInt32(1),
+                    Status = GetBatchStatus(reader.GetInt32(2))
+                };
+            }
+        }
+
+        BatchState GetBatchStatus(int dbStatus)
+        {
+            return BatchState.Pending;
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
@@ -73,5 +108,12 @@
         readonly string runParameters;
         readonly string timeoutTableName;
         readonly int batchSize;
+    }
+
+    class BatchRowRecord
+    {
+        public Guid MessageId { get; internal set; }
+        public int BatchNumber { get; internal set; }
+        public BatchState Status { get; internal set; }
     }
 }

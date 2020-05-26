@@ -54,11 +54,9 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
-            await timeoutStorage.Prepare(DateTime.Now.AddYears(9).AddMonths(6));
+            var batchInfo = await timeoutStorage.Prepare(DateTime.Now.AddYears(9).AddMonths(6));
 
-            var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT MAX(Batches) FROM TimeoutsMigration_State WHERE EndpointName = '{SqlP_WithTimeouts_Endpoint.EndpointName}'");
-
-            Assert.AreEqual(4, numberOfBatches);
+            Assert.AreEqual(4, batchInfo.Count);
         }
 
         [Test]
