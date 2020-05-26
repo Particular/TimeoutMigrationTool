@@ -89,7 +89,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Splits_timeouts_including_cutoff_date";
 
-            var context = await Scenario.Define<Context>()
+            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
                     .When(session =>
                     {
@@ -105,7 +105,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
             var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT MAX(Batches) FROM TimeoutsMigration_State WHERE EndpointName = '{SqlP_WithTimeouts_Endpoint.EndpointName}'");
 
-            Assert.AreEqual(3, numberOfBatches);
+            Assert.AreEqual(4, numberOfBatches);
         }
 
         [Test]
