@@ -46,7 +46,7 @@
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
             context = await Scenario.Define<Context>()
-             .WithEndpoint<NewRabbitMqEndpoint>(async c => await migrationRunner.Run(DateTime.Now.AddDays(-1), true, new Dictionary<string, string>()))
+             .WithEndpoint<NewRabbitMqEndpoint>(async c => await migrationRunner.Run(DateTime.Now.AddDays(-1), new Dictionary<string, string>()))
              .Done(c => c.GotTheDelayedMessage)
              .Run();
 

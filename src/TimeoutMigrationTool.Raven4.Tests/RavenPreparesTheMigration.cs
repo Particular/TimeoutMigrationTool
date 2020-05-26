@@ -60,7 +60,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             var cutOffTime = DateTime.Now.AddDays(-1);
             var toolState = SetupToolState(cutOffTime);
-            await SaveToolState(toolState).ConfigureAwait(false);
+            await SaveToolState(toolState);
 
             var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             var batches = await storage.Prepare(cutOffTime);
@@ -86,7 +86,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         public async Task WhenRemovingTheToolStateStoreIsCleanedUp()
         {
             var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState).ConfigureAwait(false);
+            await SaveToolState(toolState);
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
@@ -95,7 +95,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             using (var httpClient = new HttpClient())
             {
                 var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-                var result = await httpClient.GetAsync(getStateUrl).ConfigureAwait(false);
+                var result = await httpClient.GetAsync(getStateUrl);
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             }
         }
@@ -115,7 +115,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         public async Task WhenStoringTheToolStateTheToolStateIsUpdated()
         {
             var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState).ConfigureAwait(false);
+            await SaveToolState(toolState);
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);

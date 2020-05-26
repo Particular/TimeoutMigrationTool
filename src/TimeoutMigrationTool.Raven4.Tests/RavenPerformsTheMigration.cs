@@ -21,7 +21,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         public async Task WhenReadingABatchAllTimeoutsInBatchAreReturned()
         {
             var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState).ConfigureAwait(false);
+            await SaveToolState(toolState);
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
@@ -38,7 +38,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         public async Task WhenCompletingABatchCurrentBatchShouldBeMovedUp()
         {
             var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState).ConfigureAwait(false);
+            await SaveToolState(toolState);
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);

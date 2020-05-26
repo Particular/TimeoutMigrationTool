@@ -21,7 +21,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var serializedCommands = JsonConvert.SerializeObject(command);
 
-                var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
                 result.EnsureSuccessStatusCode();
             }
         }

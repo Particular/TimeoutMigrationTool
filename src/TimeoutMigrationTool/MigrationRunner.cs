@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace Particular.TimeoutMigrationTool
 {
     using System.Collections.Generic;
@@ -17,51 +15,52 @@ namespace Particular.TimeoutMigrationTool
 
         public async Task Run(DateTime cutOffTime, IDictionary<string, string> runParameters)
         {
-            var toolState = await timeoutStorage.GetToolState().ConfigureAwait(false);
+            var toolState = await timeoutStorage.GetToolState();
 
-            if (ShouldWeCreateAToolState(toolState))
+            if (ShouldCreateFreshToolState(toolState))
             {
                 toolState = new ToolState(runParameters);
-                await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
-                await Console.Out.WriteLineAsync("Migration status created and stored.").ConfigureAwait(false);
+                await timeoutStorage.StoreToolState(toolState);
+                await Console.Out.WriteLineAsync("Migration status created and stored.");
             }
 
             switch (toolState.Status)
             {
                 case MigrationStatus.NeverRun:
-                    var canPrepStorage = await timeoutStorage.CanPrepareStorage().ConfigureAwait(false);
+                    var canPrepStorage = await timeoutStorage.CanPrepareStorage();
                     if (!canPrepStorage)
+                    {
                         await Console.Error.WriteLineAsync(
-                            "We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.").ConfigureAwait(false);
+                            "We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
+                    }
                     break;
                 case MigrationStatus.Completed:
-                    await Console.Out.WriteAsync("Preparing storage").ConfigureAwait(false);
-                    var batches = await timeoutStorage.Prepare(cutOffTime).ConfigureAwait(false);
+                    await Console.Out.WriteAsync("Preparing storage");
+                    var batches = await timeoutStorage.Prepare(cutOffTime);
 
                     if (!batches.Any())
                     {
                         await Console.Out.WriteLineAsync(
-                                $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.")
-                            .ConfigureAwait(false);
+                                $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
                     }
 
                     toolState.InitBatches(batches);
-                    await MarkStorageAsPrepared(toolState).ConfigureAwait(false);
-                    await Console.Out.WriteLineAsync(" - done").ConfigureAwait(false); ;
+                    await MarkStorageAsPrepared(toolState);
+                    await Console.Out.WriteLineAsync(" - done");
                     break;
                 case MigrationStatus.StoragePrepared when RunParametersAreDifferent(toolState.RunParameters, runParameters):
                     await Console.Out
                         .WriteLineAsync(
-                            $"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:")
-                        .ConfigureAwait(false);
+                            $"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+
                     foreach (var setting in toolState.RunParameters)
                     {
-                        await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.")
-                            .ConfigureAwait(false);
+                        await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.");
                     }
+
                     return;
                 case MigrationStatus.StoragePrepared:
-                    await Console.Out.WriteAsync("Resuming where we left off...").ConfigureAwait(false);
+                    await Console.Out.WriteLineAsync("Resuming in progress migration");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -70,34 +69,34 @@ namespace Particular.TimeoutMigrationTool
             while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
-                await Console.Out.WriteAsync($"Migrating batch {batch.Number}").ConfigureAwait(false);
+                await Console.Out.WriteAsync($"Migrating batch {batch.Number}");
 
                 if (batch.State == BatchState.Pending)
                 {
-                    await Console.Out.WriteAsync($" - reading").ConfigureAwait(false);
-                    var timeouts = await timeoutStorage.ReadBatch(batch.Number).ConfigureAwait(false);
+                    await Console.Out.WriteAsync($" - reading");
+                    var timeouts = await timeoutStorage.ReadBatch(batch.Number);
 
-                    await Console.Out.WriteAsync($" - staging").ConfigureAwait(false);
-                    await transportTimeoutsCreator.StageBatch(timeouts).ConfigureAwait(false);
+                    await Console.Out.WriteAsync($" - staging");
+                    await transportTimeoutsCreator.StageBatch(timeouts);
 
-                    await MarkCurrentBatchAsStaged(toolState).ConfigureAwait(false);
-                    await Console.Out.WriteAsync($" - staged").ConfigureAwait(false);
+                    await MarkCurrentBatchAsStaged(toolState);
+                    await Console.Out.WriteAsync($" - staged");
                 }
 
-                await Console.Out.WriteAsync($" - completing").ConfigureAwait(false);
-                await transportTimeoutsCreator.CompleteBatch(batch.Number).ConfigureAwait(false);
-                await CompleteCurrentBatch(toolState).ConfigureAwait(false);
+                await Console.Out.WriteAsync($" - completing");
+                await transportTimeoutsCreator.CompleteBatch(batch.Number);
+                await CompleteCurrentBatch(toolState);
 
-                await Console.Out.WriteLineAsync($" - done").ConfigureAwait(false);
+                await Console.Out.WriteLineAsync($" - done");
             }
 
             toolState.Status = MigrationStatus.Completed;
 
-            await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
-            await Console.Out.WriteLineAsync($"Migration completed successfully").ConfigureAwait(false);
+            await timeoutStorage.StoreToolState(toolState);
+            await Console.Out.WriteLineAsync($"Migration completed successfully");
         }
 
-        private bool ShouldWeCreateAToolState(ToolState toolState)
+        bool ShouldCreateFreshToolState(ToolState toolState)
         {
             if (toolState == null) return true;
             return toolState.Status == MigrationStatus.Completed;
@@ -129,19 +128,19 @@ namespace Particular.TimeoutMigrationTool
         async Task MarkStorageAsPrepared(ToolState toolState)
         {
             toolState.Status = MigrationStatus.StoragePrepared;
-            await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+            await timeoutStorage.StoreToolState(toolState);
         }
 
         async Task MarkCurrentBatchAsStaged(ToolState toolState)
         {
             toolState.GetCurrentBatch().State = BatchState.Staged;
-            await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+            await timeoutStorage.StoreToolState(toolState);
         }
 
         async Task CompleteCurrentBatch(ToolState toolState)
         {
             toolState.GetCurrentBatch().State = BatchState.Completed;
-            await timeoutStorage.StoreToolState(toolState).ConfigureAwait(false);
+            await timeoutStorage.StoreToolState(toolState);
         }
 
         readonly ITimeoutStorage timeoutStorage;

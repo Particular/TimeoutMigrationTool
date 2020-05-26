@@ -25,7 +25,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 }))
             .Done(c => c.TimeoutsSet)
             .Run()
-            .ConfigureAwait(false);
+            ;
 
             var reader = new SqlTimeoutsReader();
             var timeouts = await reader.ReadTimeoutsFrom(MsSqlMicrosoftDataClientConnectionBuilder.GetConnectionString(), "Sqltimeoutsreadertests_SqlP_WithTimeouts_Endpoint_TimeoutData", new MsSqlServer(), new System.Threading.CancellationToken());
@@ -55,8 +55,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                 public async Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
-                    await RequestTimeout(context, DateTime.Now.AddSeconds(0.1), new Timeout { Id = message.Id }).ConfigureAwait(false); // Wait for the timeout messages to be sent to the timeout manager
-                    await RequestTimeout(context, DateTime.Now.AddDays(7), new Timeout { Id = message.Id }).ConfigureAwait(false);
+                    await RequestTimeout(context, DateTime.Now.AddSeconds(0.1), new Timeout { Id = message.Id }); // Wait for the timeout messages to be sent to the timeout manager
+                    await RequestTimeout(context, DateTime.Now.AddDays(7), new Timeout { Id = message.Id });
                 }
 
                 public Task Timeout(Timeout state, IMessageHandlerContext context)
