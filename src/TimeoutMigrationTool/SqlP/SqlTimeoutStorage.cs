@@ -17,9 +17,38 @@
             this.batchSize = batchSize;
         }
 
-        public Task<ToolState> GetToolState()
+        public async Task<ToolState> GetToolState()
         {
-            throw new System.NotImplementedException();
+            using (var connection = dialect.Connect(connectionString))
+            {
+                ToolState state = null;
+                string endpointName = null;
+
+                var command = connection.CreateCommand();
+                command.CommandText = dialect.GetScriptToLoadToolState(timeoutTableName);
+
+                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                {
+                    if (reader.HasRows && reader.Read())
+                    {
+                        state = new ToolState(null); // Deserialize reader.GetString(2));
+                        state.Status = ParseMigrationStatus(reader.GetString(1));
+                        endpointName = reader.GetString(0);
+                    }
+                }
+
+                if (state == null)
+                {
+                    throw new ApplicationException("No migration found");
+                }
+
+                var batchInfoCommand = connection.CreateCommand();
+                command.CommandText = dialect.GetScriptToLoadBatchInfo(endpointName);
+
+                state.InitBatches(await ReadBatchInfo(command).ConfigureAwait(false));
+
+                return state;
+            }
         }
 
         public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
@@ -39,25 +68,29 @@
                 runParametersParameter.Value = runParameters;
                 command.Parameters.Add(runParametersParameter);
 
-
-                var batches = new List<BatchInfo>();
-                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                {
-                    if (reader.HasRows)
-                    {
-                        var batchRows = ReadBatchRows(reader);
-
-                        batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
-                        {
-                            Number = batchNumber.Key,
-                            State = batchNumber.First().Status,
-                            TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
-                        }).ToList();
-                    }
-                }
-
-                return batches;
+                return await ReadBatchInfo(command).ConfigureAwait(false);
             }
+        }
+
+        async Task<List<BatchInfo>> ReadBatchInfo(DbCommand command)
+        {
+            var batches = new List<BatchInfo>();
+            using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+            {
+                if (reader.HasRows)
+                {
+                    var batchRows = ReadBatchRows(reader);
+
+                    batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
+                    {
+                        Number = batchNumber.Key,
+                        State = batchNumber.First().Status,
+                        TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
+                    }).ToList();
+                }
+            }
+
+            return batches;
         }
 
         IEnumerable<BatchRowRecord> ReadBatchRows(DbDataReader reader)
@@ -71,6 +104,11 @@
                     Status = GetBatchStatus(reader.GetInt32(2))
                 };
             }
+        }
+
+        MigrationStatus ParseMigrationStatus(string status)
+        {
+            return MigrationStatus.Completed;
         }
 
         BatchState GetBatchStatus(int dbStatus)

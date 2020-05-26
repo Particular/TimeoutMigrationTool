@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.SqlP;
 using System;
+using System.Linq;
 using System.Security.Cryptography.Xml;
 using System.Threading.Tasks;
 
@@ -35,6 +36,30 @@ namespace TimeoutMigrationTool.AcceptanceTests
             var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT TOP 1 Batches FROM TimeoutsMigration_State WHERE EndpointName = '{SqlP_WithTimeouts_Endpoint.EndpointName}'");
 
             Assert.AreEqual(1, numberOfBatches);
+        }
+
+        [Test]
+        public async Task Loads_ToolState_For_Existing_Migration()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Loads_ToolState_For_Existing_Migration";
+
+            var context = await Scenario.Define<Context>()
+            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                .When(session =>
+                {
+                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                    return session.SendLocal(startSagaMessage);
+                }))
+            .Done(c => c.TimeoutsSet)
+            .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
+            await timeoutStorage.Prepare(DateTime.Now.AddYears(9).AddMonths(6));
+
+            var toolState = await timeoutStorage.GetToolState();
+
+            Assert.AreEqual(1, toolState.Batches.Count());
         }
 
         [Test]
