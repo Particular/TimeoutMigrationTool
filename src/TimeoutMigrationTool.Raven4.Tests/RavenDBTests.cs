@@ -36,18 +36,6 @@
             Assert.That(timeouts.Count, Is.EqualTo(125));
         }
 
-        //[Test]
-        //public async Task WhenListingEndpoints()
-        //{
-        //    var reader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-        //    var endpoints = await reader.ListDestinationEndpoints(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four, CancellationToken.None);
-
-        //    Assert.That(endpoints.Length, Is.EqualTo(3));
-        //    Assert.That(endpoints.Contains("A"), Is.EqualTo(true));
-        //    Assert.That(endpoints.Contains("B"), Is.EqualTo(true));
-        //    Assert.That(endpoints.Contains("C"), Is.EqualTo(true));
-        //}
-
         [Test]
         public async Task WhenArchivingOneTimeout()
         {
