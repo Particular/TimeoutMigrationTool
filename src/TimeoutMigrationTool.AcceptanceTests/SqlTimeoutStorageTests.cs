@@ -65,7 +65,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Removes_Timeouts_From_Original_TimeoutData_Table()
         {
             // todo
-            SqlP_WithTimeouts_Endpoint.EndpointName = "Splits_timeouts_into_correct_number_of_batches";
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Removes_Timeouts_From_Original_TimeoutData_Table";
 
             var context = await Scenario.Define<Context>()
             .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
@@ -81,9 +81,9 @@ namespace TimeoutMigrationTool.AcceptanceTests
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
             await timeoutStorage.Prepare(DateTime.Now.AddYears(9).AddMonths(6));
 
-            var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT MAX(Batches) FROM TimeoutsMigration_State WHERE EndpointName = '{SqlP_WithTimeouts_Endpoint.EndpointName}'");
+            var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-            Assert.AreEqual(4, numberOfBatches);
+            Assert.AreEqual(0, numberOfBatches);
         }
 
         public class Context : ScenarioContext
