@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 
-public static class MsSqlMicrosoftDataClientConnectionBuilder
+public static class MsSqlMicrosoftDataClientHelper
 {
     const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Initial Catalog=Test;";
 
@@ -36,6 +37,21 @@ public static class MsSqlMicrosoftDataClientConnectionBuilder
 
                 command.CommandText = $"CREATE DATABASE {databaseName} COLLATE SQL_Latin1_General_CP1_CS_AS";
                 command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public static async Task<T> QueryScalarAsync<T>(string sqlStatement)
+    {
+        using (var connection = Build())
+        {
+            connection.Open();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = sqlStatement;
+
+                return (T)await command.ExecuteScalarAsync().ConfigureAwait(false);
             }
         }
     }

@@ -6,11 +6,13 @@
 
     public class SqlTimeoutStorage : ITimeoutStorage
     {
-        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, string timeoutTableName)
+        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, string timeoutTableName, int batchSize, string runParameters)
         {
             connectionString = sourceConnectionString;
             this.dialect = dialect;
             this.timeoutTableName = timeoutTableName;
+            this.runParameters = runParameters;
+            this.batchSize = batchSize;
         }
 
         public Task<ToolState> GetToolState()
@@ -23,7 +25,7 @@
             using (var connection = dialect.Connect(connectionString))
             {
                 var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToPrepareTimeouts(timeoutTableName, 5);
+                command.CommandText = dialect.GetScriptToPrepareTimeouts(timeoutTableName, batchSize);
 
                 var cutOffParameter = command.CreateParameter();
                 cutOffParameter.ParameterName = "maxCutOff";
@@ -32,7 +34,7 @@
 
                 var runParametersParameter = command.CreateParameter();
                 runParametersParameter.ParameterName = "RunParameters";
-                runParametersParameter.Value = "...where do I get this from?";
+                runParametersParameter.Value = runParameters;
                 command.Parameters.Add(runParametersParameter);
 
                 await command.ExecuteNonQueryAsync().ConfigureAwait(false);
@@ -66,8 +68,10 @@
             throw new NotImplementedException();
         }
 
-        readonly string connectionString;
         readonly SqlDialect dialect;
+        readonly string connectionString;
+        readonly string runParameters;
         readonly string timeoutTableName;
+        readonly int batchSize;
     }
 }

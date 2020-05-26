@@ -27,18 +27,22 @@ namespace Particular.TimeoutMigrationTool
             return connection;
         }
 
-        public override string GetScriptToPrepareTimeouts(string originalTableName, int batchSize)
+        public override string GetScriptToPrepareTimeouts(string endpointName, int batchSize)
         {
             return $@"
 BEGIN TRANSACTION
 
-    CREATE TABLE MigrationState (
-        Status VARCHAR(15) NOT NULL,
-        Batches INT NOT NULL,
-        RunParameters NVARCHAR(MAX)
-    );
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
+    BEGIN
+        CREATE TABLE TimeoutsMigration_State (
+            EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
+            Status VARCHAR(15) NOT NULL,
+            Batches INT NOT NULL,
+            RunParameters NVARCHAR(MAX)
+        )
+    END;
 
-    CREATE TABLE [{originalTableName}_migration] (
+    CREATE TABLE [{endpointName}_TimeoutData_migration] (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         BatchNumber INT,
         Status INT, /* NULL = prepared, 1 = staged, 2 = migrated */
@@ -50,7 +54,7 @@ BEGIN TRANSACTION
         PersistenceVersion VARCHAR(23) NOT NULL
     );
 
-    DELETE [{originalTableName}]
+    DELETE [{endpointName}_TimeoutData]
     OUTPUT DELETED.Id,
         -1,
         NULL,
@@ -60,17 +64,17 @@ BEGIN TRANSACTION
         DELETED.Time,
         DELETED.Headers,
         DELETED.PersistenceVersion
-    INTO [{originalTableName}_migration]
-    WHERE [{originalTableName}].Time <= @maxCutOff;
+    INTO [{endpointName}_TimeoutData_migration]
+    WHERE [{endpointName}_TimeoutData].Time <= @maxCutOff;
 
     UPDATE BatchMigration
     SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber
     FROM (
         SELECT BatchNumber, ROW_NUMBER() OVER (ORDER BY (select 0)) / {batchSize} AS CalculatedBatchNumber
-        FROM [{originalTableName}_migration]
+        FROM [{endpointName}_TimeoutData_migration]
     ) BatchMigration;
 
-    INSERT INTO MigrationState VALUES ('Prepared', (SELECT COUNT(DISTINCT BatchNumber) from [{originalTableName}_migration]), @RunParameters);
+    INSERT INTO TimeoutsMigration_State VALUES ('{endpointName}', 'Prepared', (SELECT COUNT(DISTINCT BatchNumber) from [{endpointName}_TimeoutData_migration]), @RunParameters);
         
 COMMIT;";
         }

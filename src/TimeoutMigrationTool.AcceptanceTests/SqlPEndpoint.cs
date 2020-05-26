@@ -32,7 +32,7 @@
             transport.UseNativeDelayedDelivery(false);
 
             var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
-            var connection = MsSqlMicrosoftDataClientConnectionBuilder.GetConnectionString();
+            var connection = MsSqlMicrosoftDataClientHelper.GetConnectionString();
 
             persistence.SqlDialect<SqlDialect.MsSqlServer>();
             persistence.ConnectionBuilder(
