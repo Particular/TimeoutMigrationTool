@@ -17,6 +17,7 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToPrepareTimeouts(string endpointName, int batchSize);
         public abstract string GetScriptToLoadBatchInfo(string endpointName);
         public abstract string GetScriptToLoadToolState(string endpointName);
+        public abstract string GetScriptToLoadBatch(string endpointName);
     }
 
     public class MsSqlServer : SqlDialect
@@ -27,6 +28,22 @@ namespace Particular.TimeoutMigrationTool
             connection.Open();
 
             return connection;
+        }
+
+        public override string GetScriptToLoadBatch(string endpointName)
+        {
+            return $@"SELECT Id,
+    Destination,
+    SagaId,
+    State,
+    Time,
+    Headers,
+    PersistenceVersion
+FROM
+    [{endpointName}_TimeoutData_migration]
+WHERE
+    BatchNumber = @BatchNumber;
+";
         }
 
         public override string GetScriptToLoadBatchInfo(string endpointName)
@@ -122,6 +139,11 @@ COMMIT;";
             throw new NotImplementedException();
         }
 
+        public override string GetScriptToLoadBatch(string endpointName)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string GetScriptToLoadBatchInfo(string endpointName)
         {
             throw new NotImplementedException();
@@ -145,6 +167,11 @@ COMMIT;";
             throw new NotImplementedException();
         }
 
+        public override string GetScriptToLoadBatch(string endpointName)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string GetScriptToLoadBatchInfo(string endpointName)
         {
             throw new NotImplementedException();
@@ -164,6 +191,11 @@ COMMIT;";
     public class PostgreSql : SqlDialect
     {
         public override DbConnection Connect(string connectionString)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToLoadBatch(string endpointName)
         {
             throw new NotImplementedException();
         }
