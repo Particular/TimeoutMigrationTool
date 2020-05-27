@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
     public interface ITimeoutStorage
     {
         Task<ToolState> GetToolState();
@@ -13,6 +13,6 @@ namespace Particular.TimeoutMigrationTool
         Task StoreToolState(ToolState toolState);
         Task Abort(ToolState toolState);
         Task<bool> CanPrepareStorage();
-        Task<List<EndpointInfo>> ListEndpoints();
+        Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime);
     }
 }

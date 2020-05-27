@@ -39,7 +39,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return true;
         }
 
-        public Task<List<EndpointInfo>> ListEndpoints()
+        public Task<List<EndpointInfo>> ListEndpoints(DateTime cutoffTime)
         {
             throw new NotImplementedException();
         }

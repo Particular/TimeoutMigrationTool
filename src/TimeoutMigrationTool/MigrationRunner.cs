@@ -15,16 +15,36 @@ namespace Particular.TimeoutMigrationTool
 
         public async Task Run(DateTime cutOffTime, EndpointFilter endpointFilter, IDictionary<string, string> runParameters)
         {
-            var endpoints = await timeoutStorage.ListEndpoints();
+            var allEndpoints = await timeoutStorage.ListEndpoints(cutOffTime);
 
-            foreach (var endpoint in endpoints.Where(e => e.NrOfTimeouts > 0))
+            var endpointsToMigrate = allEndpoints.Where(e => e.NrOfTimeouts > 0 && endpointFilter.ShouldInclude(e.EndpointName))
+                .ToList();
+
+            var problematicEndpoints = new List<EndpointInfo>();
+            foreach (var enpointToCheck in endpointsToMigrate)
             {
-                if(!endpointFilter.ShouldInclude(endpoint.EndpointName))
-                {
-                    continue;
-                }
+                await Console.Out.WriteLineAsync($"Verifying that {enpointToCheck.EndpointName} has native delay infrastructure in place");
+                var ableToMigrate = await transportTimeoutsCreator.AbleToMigrate(enpointToCheck.EndpointName);
 
-                await Run(cutOffTime, endpoint, runParameters);
+                if (!ableToMigrate)
+                {
+                    problematicEndpoints.Add(enpointToCheck);
+                }
+            }
+
+            if (problematicEndpoints.Any())
+            {
+                var listOfEndpoints = string.Join(";", problematicEndpoints.Select(e => e.EndpointName));
+
+                await Console.Out.WriteLineAsync($"Migration aborted since the following endpoints don't have native delayed delivery infrastructure setup: {listOfEndpoints}");
+
+                return;
+            }
+
+            foreach (var enpointToMigrate in endpointsToMigrate)
+            {
+                await Console.Out.WriteLineAsync($"Starting migration for {enpointToMigrate.EndpointName}");
+                await Run(cutOffTime, enpointToMigrate, runParameters);
             }
         }
 
@@ -39,9 +59,6 @@ namespace Particular.TimeoutMigrationTool
                 await Console.Out.WriteLineAsync("Migration status created and stored.");
             }
 
-            //TODO: Should we do this for all endpoints up front?
-            await transportTimeoutsCreator.VerifyAbilityToMigrate(endpointInfo.EndpointName);
-
             switch (toolState.Status)
             {
                 case MigrationStatus.NeverRun:
@@ -50,12 +67,14 @@ namespace Particular.TimeoutMigrationTool
                     {
                         await Console.Error.WriteLineAsync("We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
                     }
-                    // foreach(var endpoint in endpointsDetected)
-                    await Prepare(cutOffTime, toolState, new EndpointInfo());
+
+                    await Prepare(cutOffTime, toolState, endpointInfo);
+
                     break;
                 case MigrationStatus.Completed:
-                    // foreach(var endpoint in endpointsDetected)
-                    await Prepare(cutOffTime, toolState, new EndpointInfo());
+
+                    await Prepare(cutOffTime, toolState, endpointInfo);
+
                     break;
                 case MigrationStatus.StoragePrepared when RunParametersAreDifferent(endpointInfo, runParameters, toolState):
                     await Console.Out.WriteLineAsync($"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
@@ -113,8 +132,7 @@ namespace Particular.TimeoutMigrationTool
 
             if (!batches.Any())
             {
-                await Console.Out.WriteLineAsync(
-                        $"No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
+                await Console.Out.WriteLineAsync("No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
             }
 
             toolState.InitBatches(batches);
