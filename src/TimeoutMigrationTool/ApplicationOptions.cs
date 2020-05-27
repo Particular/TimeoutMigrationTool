@@ -13,7 +13,6 @@ namespace Particular.TimeoutMigrationTool
         public const string SqlSourceDialect = "dialect";
         public const string AbortMigration = "abort";
         public const string EndpointFilter = "endpoint";
-        public const string AllEndpoints = "all";
-
+        public const string AllEndpoints = "allEndpoints";
     }
 }
