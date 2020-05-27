@@ -21,7 +21,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<ToolState> GetToolState()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolState>(RavenConstants.ToolStateId);
-            if (ravenToolState == null) 
+            if (ravenToolState == null)
             {
                 return null;
             }
@@ -39,7 +39,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return true;
         }
 
-        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
+        public Task<List<EndpointInfo>> ListEndpoints()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
         {
             var batchesInStorage = await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, CancellationToken.None);
             if (batchesInStorage.Any())

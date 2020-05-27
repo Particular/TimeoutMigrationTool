@@ -33,10 +33,12 @@ namespace Particular.TimeoutMigrationTool
                         await Console.Error.WriteLineAsync(
                             "We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
                     }
-                    await Prepare(cutOffTime, toolState);
+                    // foreach(var endpoint in endpointsDetected)
+                    await Prepare(cutOffTime, toolState, new EndpointInfo());
                     break;
                 case MigrationStatus.Completed:
-                    await Prepare(cutOffTime, toolState);
+                    // foreach(var endpoint in endpointsDetected)
+                    await Prepare(cutOffTime, toolState, new EndpointInfo());
                     break;
                 case MigrationStatus.StoragePrepared when RunParametersAreDifferent(toolState.RunParameters, runParameters):
                     await Console.Out
@@ -56,6 +58,7 @@ namespace Particular.TimeoutMigrationTool
                     throw new ArgumentOutOfRangeException();
             }
 
+            // foreach(var endpoint in endpointsDetected)
             while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
@@ -86,10 +89,10 @@ namespace Particular.TimeoutMigrationTool
             await Console.Out.WriteLineAsync($"Migration completed successfully");
         }
 
-        private async Task Prepare(DateTime cutOffTime, ToolState toolState)
+        private async Task Prepare(DateTime cutOffTime, ToolState toolState, EndpointInfo endpoint)
         {
             await Console.Out.WriteAsync("Preparing storage");
-            var batches = await timeoutStorage.Prepare(cutOffTime);
+            var batches = await timeoutStorage.Prepare(cutOffTime, endpoint);
 
             if (!batches.Any())
             {

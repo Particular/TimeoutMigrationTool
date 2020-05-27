@@ -19,7 +19,7 @@ namespace Particular.TimeoutMigrationTool.SqlP
             throw new System.NotImplementedException();
         }
 
-        public Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
+        public Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
         {
             throw new System.NotImplementedException();
         }
@@ -45,6 +45,11 @@ namespace Particular.TimeoutMigrationTool.SqlP
         }
 
         public Task<bool> CanPrepareStorage()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<EndpointInfo>> ListEndpoints()
         {
             throw new NotImplementedException();
         }

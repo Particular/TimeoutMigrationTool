@@ -48,7 +48,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
             await InitTimeouts(nrOfTimeouts);
 
             var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var batches = await storage.Prepare(cutOffTime);
+            var batches = await storage.Prepare(cutOffTime, null);
             toolState.InitBatches(batches);
             await SaveToolState(toolState);
 

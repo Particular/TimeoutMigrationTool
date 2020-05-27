@@ -7,11 +7,12 @@ namespace Particular.TimeoutMigrationTool
     public interface ITimeoutStorage
     {
         Task<ToolState> GetToolState();
-        Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime);
+        Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint);
         Task<List<TimeoutData>> ReadBatch(int batchNumber);
         Task CompleteBatch(int number);
         Task StoreToolState(ToolState toolState);
         Task Abort(ToolState toolState);
         Task<bool> CanPrepareStorage();
+        Task<List<EndpointInfo>> ListEndpoints();
     }
 }
