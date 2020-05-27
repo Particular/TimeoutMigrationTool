@@ -20,23 +20,33 @@ namespace Particular.TimeoutMigrationTool
             var endpointsToMigrate = allEndpoints.Where(e => e.NrOfTimeouts > 0 && endpointFilter.ShouldInclude(e.EndpointName))
                 .ToList();
 
-            var problematicEndpoints = new List<EndpointInfo>();
+            var problematicEndpoints = new List<(EndpointInfo, List<string>)>();
             foreach (var enpointToCheck in endpointsToMigrate)
             {
                 await Console.Out.WriteLineAsync($"Verifying that {enpointToCheck.EndpointName} has native delay infrastructure in place");
-                var ableToMigrate = await transportTimeoutsCreator.AbleToMigrate(enpointToCheck.EndpointName);
+                var migrationCheckResult = await transportTimeoutsCreator.AbleToMigrate(enpointToCheck);
 
-                if (!ableToMigrate)
+                if (!migrationCheckResult.CanMigrate)
                 {
-                    problematicEndpoints.Add(enpointToCheck);
+                    problematicEndpoints.Add((enpointToCheck, migrationCheckResult.Problems));
                 }
             }
 
             if (problematicEndpoints.Any())
             {
-                var listOfEndpoints = string.Join(";", problematicEndpoints.Select(e => e.EndpointName));
+                var listOfEndpoints = string.Join(";", problematicEndpoints.Select(e => e.Item1.EndpointName));
 
-                await Console.Out.WriteLineAsync($"Migration aborted since the following endpoints don't have native delayed delivery infrastructure setup: {listOfEndpoints}");
+                await Console.Out.WriteLineAsync($"Migration aborted:");
+
+                foreach (var problematicEndpoint in problematicEndpoints)
+                {
+                    await Console.Out.WriteLineAsync($"{problematicEndpoint.Item1.EndpointName}:");
+
+                    foreach (var problem in problematicEndpoint.Item2)
+                    {
+                        await Console.Out.WriteLineAsync($"\t - {problem}");
+                    }
+                }
 
                 return;
             }

@@ -14,14 +14,14 @@
             messagePump = new RabbitStagePump(targetConnectionString, QueueCreator.StagingQueueName);
         }
 
-        public async Task<bool> AbleToMigrate(string endpointName)
+        public async Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
         {
             factory = new ConnectionFactory();
             factory.Uri = new Uri(targetConnectionString);
 
             await CreateStagingQueue();
 
-            return await VerifyEndpointIsReadyForNativeTimeouts(endpointName);
+            return await VerifyEndpointIsReadyForNativeTimeouts(endpoint);
         }
 
         public Task StageBatch(List<TimeoutData> timeouts)
@@ -34,7 +34,7 @@
             return messagePump.CompleteBatch(number);
         }
 
-        Task<bool> VerifyEndpointIsReadyForNativeTimeouts(string endpointName)
+        Task<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
             throw new NotImplementedException();
         }
