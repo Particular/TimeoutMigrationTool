@@ -7,6 +7,7 @@
     using RabbitMq;
     using RavenDB;
     using System.Threading.Tasks;
+    using System.Linq;
 
     class Program
     {
@@ -32,6 +33,16 @@
                 Description = "To abort the current migration run."
             };
 
+            var endpointFilterOption = new CommandOption($"--{ApplicationOptions.EndpointFilter}", CommandOptionType.SingleValue)
+            {
+                Description = $"The endpoint to migrate timeouts for, use --{ApplicationOptions.AllEndpoints} to include all endpoints"
+            };
+
+            var allEndpointsOption = new CommandOption($"--{ApplicationOptions.AllEndpoints}", CommandOptionType.NoValue)
+            {
+                Description = "Option to include migrate timeouts for all found endpoints in the database"
+            };
+
             app.HelpOption(inherited: true);
             var runParameters = new Dictionary<string, string>();
 
@@ -52,6 +63,8 @@
                     Description = "The sql dialect to use"
                 };
 
+                sqlpCommand.Options.Add(allEndpointsOption);
+                sqlpCommand.Options.Add(endpointFilterOption);
                 sqlpCommand.Options.Add(targetOption);
                 sqlpCommand.Options.Add(cutoffTimeOption);
                 sqlpCommand.Options.Add(abortMigrationOption);
@@ -72,6 +85,7 @@
                     {
                         runParameters.Add(ApplicationOptions.AbortMigration, "");
                     }
+
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
 
@@ -82,7 +96,9 @@
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName, 1024, "run parameters jason thing goes here");
                     var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
 
-                    await RunMigration(runParameters, timeoutStorage, transportAdapter);
+                    var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                    await RunMigration(endpointFilter, runParameters, timeoutStorage, transportAdapter);
                 });
             });
 
@@ -108,6 +124,8 @@
                     Description = "The version of RavenDB being used in your environment. Only 3.5 and 4 are supported",
                 };
 
+                ravenDBCommand.Options.Add(allEndpointsOption);
+                ravenDBCommand.Options.Add(endpointFilterOption);
                 ravenDBCommand.Options.Add(targetOption);
                 ravenDBCommand.Options.Add(cutoffTimeOption);
                 ravenDBCommand.Options.Add(abortMigrationOption);
@@ -145,7 +163,9 @@
                     else
                     {
                         var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
-                        await RunMigration(runParameters, timeoutStorage, transportAdapter);
+                        var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                        await RunMigration(endpointFilter, runParameters, timeoutStorage, transportAdapter);
                     }
                 });
             });
@@ -168,7 +188,7 @@
             }
         }
 
-        private static async Task AbortMigration(ITimeoutStorage timeoutStorage)
+        static async Task AbortMigration(ITimeoutStorage timeoutStorage)
         {
             var toolState = await timeoutStorage.GetToolState();
             if (toolState == null)
@@ -180,7 +200,7 @@
             await timeoutStorage.Abort(toolState);
         }
 
-        static Task RunMigration(Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
+        static Task RunMigration(EndpointFilter endpointFilter, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
         {
             var migrationRunner = new MigrationRunner(timeoutStorage, transportTimeoutCreator);
 
@@ -192,7 +212,18 @@
                     throw new ArgumentException($"{ApplicationOptions.CutoffTime} is not a valid System.DateTime value.");
                 }
             }
-            return migrationRunner.Run(cutOffTime, runParameters);
+
+            return migrationRunner.Run(cutOffTime, endpointFilter, runParameters);
+        }
+
+        static EndpointFilter ParseEndpointFilter(CommandOption allEndpointsOption, CommandOption endpointFilterOption)
+        {
+            if (allEndpointsOption.HasValue())
+            {
+                return EndpointFilter.IncludeAll;
+            }
+
+            return EndpointFilter.SpecificEndpoint(endpointFilterOption.Value());
         }
     }
 }

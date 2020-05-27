@@ -83,7 +83,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix},
             };
 
-            var toolState = new ToolState(runParameters)
+            var toolState = new ToolState(runParameters, new EndpointInfo())
             {
                 Status = status
             };

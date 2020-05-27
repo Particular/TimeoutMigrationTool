@@ -16,6 +16,7 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<LegacyRavenDBEndpoint>(b => b
                 .When(async (session, c) =>
@@ -25,7 +26,7 @@
                     var options = new SendOptions();
 
                     options.DelayDeliveryWith(TimeSpan.FromSeconds(5));
-                    options.SetDestination(NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint)));
+                    options.SetDestination(targetEndpoint);
 
                     await session.Send(startSagaMessage, options);
 
@@ -46,7 +47,7 @@
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
             context = await Scenario.Define<Context>()
-             .WithEndpoint<NewRabbitMqEndpoint>(async c => await migrationRunner.Run(DateTime.Now.AddDays(-1), new Dictionary<string, string>()))
+             .WithEndpoint<NewRabbitMqEndpoint>(async c => await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>()))
              .Done(c => c.GotTheDelayedMessage)
              .Run();
 
