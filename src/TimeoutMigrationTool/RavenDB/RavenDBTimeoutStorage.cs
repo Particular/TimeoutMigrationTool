@@ -48,18 +48,28 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
         {
+            if (endpoint == null) 
+            {
+                throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
+            }
+
             var batchesInStorage = await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, CancellationToken.None);
             if (batchesInStorage.Any())
             {
                 await ravenAdapter.BatchDelete(batchesInStorage.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToArray());
             }
 
-            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime);
+            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpoint);
             return batches;
         }
 
-        internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime)
+        internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime, EndpointInfo endpoint)
         {
+            if (endpoint == null)
+            {
+                throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
+            }
+
             bool filter(TimeoutData td) => td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase);
             var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentPrefix, CancellationToken.None);
 
