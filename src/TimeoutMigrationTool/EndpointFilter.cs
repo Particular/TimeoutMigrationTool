@@ -34,6 +34,11 @@
 
         EndpointFilter(string endpointName)
         {
+            if(string.IsNullOrEmpty(endpointName))
+            {
+                throw new ArgumentException("Endpoint name must be a non empty string");
+            }
+
             this.endpointName = endpointName;
         }
 
