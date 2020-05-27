@@ -63,6 +63,35 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
+        public async Task Saves_ToolState_Status_When_Changed()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Saves_ToolState_Status_When_Changed";
+
+            var context = await Scenario.Define<Context>()
+            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                .When(session =>
+                {
+                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                    return session.SendLocal(startSagaMessage);
+                }))
+            .Done(c => c.TimeoutsSet)
+            .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
+            await timeoutStorage.Prepare(DateTime.Now.AddYears(9).AddMonths(6));
+
+            var toolState = await timeoutStorage.GetToolState();
+
+            toolState.Status = MigrationStatus.Completed;
+            await timeoutStorage.StoreToolState(toolState);
+
+            var loadedToolState = await timeoutStorage.GetToolState();
+
+            Assert.AreEqual(MigrationStatus.Completed, loadedToolState.Status);
+        }
+
+        [Test]
         public async Task Splits_timeouts_into_correct_number_of_batches()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Splits_timeouts_into_correct_number_of_batches";

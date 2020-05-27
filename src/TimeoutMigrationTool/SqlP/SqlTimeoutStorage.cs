@@ -25,30 +25,32 @@
                 ToolState state = null;
                 string endpointName = null;
 
-                var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToLoadToolState(timeoutTableName);
-
-                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                using (var command = connection.CreateCommand())
                 {
-                    if (reader.HasRows && reader.Read())
+                    command.CommandText = dialect.GetScriptToLoadToolState(timeoutTableName);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
-                        state = new ToolState(null); // Deserialize reader.GetString(2));
-                        state.Status = ParseMigrationStatus(reader.GetString(1));
-                        endpointName = reader.GetString(0);
+                        if (reader.HasRows && reader.Read())
+                        {
+                            state = new ToolState(null); // Deserialize reader.GetString(2));
+                            state.Status = ParseMigrationStatus(reader.GetString(1));
+                            endpointName = reader.GetString(0);
+                        }
                     }
+
+                    if (state == null)
+                    {
+                        throw new ApplicationException("No migration found");
+                    }
+
+                    var batchInfoCommand = connection.CreateCommand();
+                    command.CommandText = dialect.GetScriptToLoadBatchInfo(endpointName);
+
+                    state.InitBatches(await ReadBatchInfo(command).ConfigureAwait(false));
+
+                    return state;
                 }
-
-                if (state == null)
-                {
-                    throw new ApplicationException("No migration found");
-                }
-
-                var batchInfoCommand = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToLoadBatchInfo(endpointName);
-
-                state.InitBatches(await ReadBatchInfo(command).ConfigureAwait(false));
-
-                return state;
             }
         }
 
@@ -105,9 +107,23 @@
             throw new System.NotImplementedException();
         }
 
-        public Task StoreToolState(ToolState toolState)
+        public async Task StoreToolState(ToolState toolState)
         {
-            throw new System.NotImplementedException();
+            using (var connection = dialect.Connect(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = dialect.GetScriptToStoreToolState(timeoutTableName);
+
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "Status";
+                    parameter.Value = toolState.Status;
+
+                    command.Parameters.Add(parameter);
+
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
         }
 
         public Task Abort(ToolState toolState)
@@ -117,7 +133,7 @@
 
         public Task<bool> CanPrepareStorage()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         async Task<List<BatchInfo>> ReadBatchInfo(DbCommand command)

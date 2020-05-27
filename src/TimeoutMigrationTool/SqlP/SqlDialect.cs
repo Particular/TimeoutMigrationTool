@@ -17,6 +17,7 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToPrepareTimeouts(string endpointName, int batchSize);
         public abstract string GetScriptToLoadBatchInfo(string endpointName);
         public abstract string GetScriptToLoadToolState(string endpointName);
+        public abstract string GetScriptToStoreToolState(string endpointName);
         public abstract string GetScriptToLoadBatch(string endpointName);
     }
 
@@ -58,9 +59,6 @@ FROM
 
         public override string GetScriptToLoadToolState(string endpointName)
         {
-            // Batches
-            // RunParameters
-            // Status
             return $@"SELECT
     EndpointName,
     Status,
@@ -68,8 +66,7 @@ FROM
 FROM
     TimeoutsMigration_State
 WHERE
-    EndpointName = '{endpointName}';
-";
+    EndpointName = '{endpointName}';";
         }
 
         public override string GetScriptToPrepareTimeouts(string endpointName, int batchSize)
@@ -130,6 +127,16 @@ BEGIN TRANSACTION
 
 COMMIT;";
         }
+
+        public override string GetScriptToStoreToolState(string endpointName)
+        {
+            return $@"UPDATE
+    TimeoutsMigration_State
+SET
+    Status = @Status
+WHERE
+    EndpointName = '{endpointName}';";
+        }
     }
 
     public class Oracle : SqlDialect
@@ -155,6 +162,11 @@ COMMIT;";
         }
 
         public override string GetScriptToPrepareTimeouts(string originalTableName, int batchSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToStoreToolState(string endpointName)
         {
             throw new NotImplementedException();
         }
@@ -186,6 +198,11 @@ COMMIT;";
         {
             throw new NotImplementedException();
         }
+
+        public override string GetScriptToStoreToolState(string endpointName)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class PostgreSql : SqlDialect
@@ -211,6 +228,11 @@ COMMIT;";
         }
 
         public override string GetScriptToPrepareTimeouts(string originalTableName, int batchSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToStoreToolState(string endpointName)
         {
             throw new NotImplementedException();
         }
