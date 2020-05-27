@@ -102,9 +102,23 @@
             return null;
         }
 
-        public Task CompleteBatch(int number)
+        public async Task CompleteBatch(int number)
         {
-            throw new System.NotImplementedException();
+            using (var connection = dialect.Connect(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = dialect.GetScriptToCompleteBatch(timeoutTableName);
+
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "BatchNumber";
+                    parameter.Value = number;
+
+                    command.Parameters.Add(parameter);
+
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
         }
 
         public async Task StoreToolState(ToolState toolState)

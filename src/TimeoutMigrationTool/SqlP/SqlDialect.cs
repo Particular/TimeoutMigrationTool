@@ -19,7 +19,8 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToLoadToolState(string endpointName);
         public abstract string GetScriptToStoreToolState(string endpointName);
         public abstract string GetScriptToLoadBatch(string endpointName);
-        public abstract string GetScriptToAbortBatch(string timeoutTableName);
+        public abstract string GetScriptToAbortBatch(string endpointName);
+        public abstract string GetScriptToCompleteBatch(string endpointName);
     }
 
     public class MsSqlServer : SqlDialect
@@ -162,6 +163,16 @@ SET
 WHERE
     EndpointName = '{endpointName}';";
         }
+
+        public override string GetScriptToCompleteBatch(string endpointName)
+        {
+            return $@"UPDATE
+    [{endpointName}_TimeoutData_migration]
+SET
+    Status = 2
+WHERE
+    BatchNumber = @BatchNumber";
+        }
     }
 
     public class Oracle : SqlDialect
@@ -172,6 +183,11 @@ WHERE
         }
 
         public override string GetScriptToAbortBatch(string timeoutTableName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToCompleteBatch(string timeoutTableName)
         {
             throw new NotImplementedException();
         }
@@ -214,6 +230,11 @@ WHERE
             throw new NotImplementedException();
         }
 
+        public override string GetScriptToCompleteBatch(string timeoutTableName)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string GetScriptToLoadBatch(string endpointName)
         {
             throw new NotImplementedException();
@@ -248,6 +269,11 @@ WHERE
         }
 
         public override string GetScriptToAbortBatch(string timeoutTableName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToCompleteBatch(string timeoutTableName)
         {
             throw new NotImplementedException();
         }

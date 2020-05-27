@@ -145,7 +145,9 @@ namespace Particular.TimeoutMigrationTool
 
         async Task CompleteCurrentBatch(ToolState toolState)
         {
-            toolState.GetCurrentBatch().State = BatchState.Completed;
+            var currentBatch = toolState.GetCurrentBatch();
+            currentBatch.State = BatchState.Completed;
+            await timeoutStorage.CompleteBatch(currentBatch.Number);
             await timeoutStorage.StoreToolState(toolState);
         }
 

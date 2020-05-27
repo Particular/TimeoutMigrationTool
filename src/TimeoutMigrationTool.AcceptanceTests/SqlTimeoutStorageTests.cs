@@ -138,6 +138,35 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
+        public async Task Batches_Completed_Can_Be_Completed()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Batches_Completed_Can_Be_Completed";
+
+            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.TimeoutsSet)
+                .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var batches = await timeoutStorage.Prepare(DateTime.Now.AddYears(10));
+
+            foreach (var batch in batches)
+            {
+                await timeoutStorage.CompleteBatch(batch.Number);
+            }
+
+            var loadedState = await timeoutStorage.GetToolState();
+
+            Assert.IsTrue(loadedState.Batches.All(b => b.State == BatchState.Completed));
+        }
+
+        [Test]
         public async Task Timeouts_Split_Can_Be_Read_By_Batch()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Timeouts_Split_Can_Be_Read_By_Batch";
