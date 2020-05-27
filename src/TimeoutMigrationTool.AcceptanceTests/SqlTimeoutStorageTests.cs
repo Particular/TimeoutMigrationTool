@@ -190,6 +190,34 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
+        public async Task Restores_Timeouts_To_Original_TimeoutData_Table_When_Aborted()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Restores_Timeouts_To_Original_TimeoutData_Table_When_Aborted";
+
+            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                .When(session =>
+                {
+                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                    return session.SendLocal(startSagaMessage);
+                }))
+            .Done(c => c.TimeoutsSet)
+            .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            await timeoutStorage.Prepare(DateTime.Now.AddYears(9).AddMonths(6));
+
+            var toolState = await timeoutStorage.GetToolState();
+
+            await timeoutStorage.Abort(toolState);
+
+            var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+            Assert.AreEqual(10, numberOfBatches);
+        }
+
+        [Test]
         public async Task Copies_Timeouts_From_Original_TimeoutData_Table_To_New_Table()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Copies_Timeouts_From_Original_TimeoutData_Table_To_New_Table";

@@ -126,9 +126,17 @@
             }
         }
 
-        public Task Abort(ToolState toolState)
+        public async Task Abort(ToolState toolState)
         {
-            throw new NotImplementedException();
+            using (var connection = dialect.Connect(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = dialect.GetScriptToAbortBatch(timeoutTableName);
+
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
         }
 
         public Task<bool> CanPrepareStorage()

@@ -19,6 +19,7 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToLoadToolState(string endpointName);
         public abstract string GetScriptToStoreToolState(string endpointName);
         public abstract string GetScriptToLoadBatch(string endpointName);
+        public abstract string GetScriptToAbortBatch(string timeoutTableName);
     }
 
     public class MsSqlServer : SqlDialect
@@ -128,6 +129,30 @@ BEGIN TRANSACTION
 COMMIT;";
         }
 
+        public override string GetScriptToAbortBatch(string endpointName)
+        {
+            return $@"BEGIN TRANSACTION
+
+DELETE [{endpointName}_TimeoutData_migration]
+    OUTPUT DELETED.Id,
+        DELETED.Destination,
+        DELETED.SagaId,
+        DELETED.State,
+        DELETED.Time,
+        DELETED.Headers,
+        DELETED.PersistenceVersion
+    INTO [{endpointName}_TimeoutData];
+
+    DELETE
+        TimeoutsMigration_State
+    WHERE
+        EndpointName = '{endpointName}';
+
+    DROP TABLE [{endpointName}_TimeoutData_migration];
+
+COMMIT;";
+        }
+
         public override string GetScriptToStoreToolState(string endpointName)
         {
             return $@"UPDATE
@@ -142,6 +167,11 @@ WHERE
     public class Oracle : SqlDialect
     {
         public override DbConnection Connect(string connectionString)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToAbortBatch(string timeoutTableName)
         {
             throw new NotImplementedException();
         }
@@ -179,6 +209,11 @@ WHERE
             throw new NotImplementedException();
         }
 
+        public override string GetScriptToAbortBatch(string timeoutTableName)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string GetScriptToLoadBatch(string endpointName)
         {
             throw new NotImplementedException();
@@ -208,6 +243,11 @@ WHERE
     public class PostgreSql : SqlDialect
     {
         public override DbConnection Connect(string connectionString)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToAbortBatch(string timeoutTableName)
         {
             throw new NotImplementedException();
         }
