@@ -9,7 +9,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var parameters = new RavenStoreParameters();
             if (toolStateParameters.ContainsKey(ApplicationOptions.CutoffTime))
+            {
                 parameters.MaxCutoffTime = Convert.ToDateTime(toolStateParameters[ApplicationOptions.CutoffTime]);
+            }
 
             return parameters;
         }

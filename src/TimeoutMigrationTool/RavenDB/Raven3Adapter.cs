@@ -14,13 +14,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     internal class Raven3Adapter : ICanTalkToRavenVersion
     {
-        private string serverUrl;
-        private string databaseName;
+        readonly string serverUrl;
+        readonly string databaseName;
+
         public Raven3Adapter(string serverUrl, string databaseName)
         {
             this.serverUrl = serverUrl;
             this.databaseName = databaseName;
         }
+        
         public async Task UpdateRecord(string key, object document)
         {
             using (var httpClient = new HttpClient())
@@ -41,6 +43,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 result.EnsureSuccessStatusCode();
             }
         }
+        
         public async Task DeleteRecord(string key)
         {
             using (var httpClient = new HttpClient())
@@ -113,13 +116,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string prefix,
-            CancellationToken cancellationToken, int pageSize = RavenConstants.DefaultPagingSize) where T : class
+        public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, CancellationToken cancellationToken, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
             using (var client = new HttpClient())
             {
-                var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={prefix}&pageSize={pageSize}";
+                var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={pageSize}";
                 var checkForMoreResults = true;
                 var iteration = 0;
 

@@ -14,13 +14,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     internal class Raven4Adapter : ICanTalkToRavenVersion
     {
-        private string serverUrl;
-        private string databaseName;
+        string serverUrl;
+        string databaseName;
+        
         public Raven4Adapter(string serverUrl, string databaseName)
         {
             this.serverUrl = serverUrl;
             this.databaseName = databaseName;
         }
+
         public async Task UpdateRecord(string key, object document)
         {
             using (var httpClient = new HttpClient())
@@ -33,6 +35,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 saveResult.EnsureSuccessStatusCode();
             }
         }
+        
         public async Task DeleteRecord(string key)
         {
             using (var httpClient = new HttpClient())

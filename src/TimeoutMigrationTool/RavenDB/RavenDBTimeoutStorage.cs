@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,13 +8,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     public class RavenDBTimeoutStorage : ITimeoutStorage
     {
-        private readonly string timeoutDocumentsPrefix;
-        private ICanTalkToRavenVersion ravenAdapter;
+        readonly string timeoutDocumentPrefix;
+        ICanTalkToRavenVersion ravenAdapter;
 
-        public RavenDBTimeoutStorage(string serverUrl, string databaseName, string timeoutDocumentsPrefix, RavenDbVersion ravenVersion)
+        public RavenDBTimeoutStorage(string serverUrl, string databaseName, string timeoutDocumentPrefix, RavenDbVersion ravenVersion)
         {
-            this.timeoutDocumentsPrefix = timeoutDocumentsPrefix;
-            this.ravenAdapter = RavenDataReaderFactory.Resolve(serverUrl, databaseName, ravenVersion);
+            this.timeoutDocumentPrefix = timeoutDocumentPrefix;
+            ravenAdapter = RavenDataReaderFactory.Resolve(serverUrl, databaseName, ravenVersion);
         }
 
         public async Task<ToolState> GetToolState()
@@ -35,7 +34,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var existingBatches = await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, CancellationToken.None);
             if (existingBatches.Any())
+            {
                 return false;
+            }
+
             return true;
         }
 
@@ -59,7 +61,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime)
         {
             bool filter(TimeoutData td) => td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase);
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentsPrefix, CancellationToken.None);
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentPrefix, CancellationToken.None);
 
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal) RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
@@ -87,9 +89,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             foreach (var batch in batchesToRemove)
             {
                 if (batchesForWhichToResetTimeouts.Any(b => b.Number == batch.Number))
+                {
                     await ravenAdapter.DeleteBatchAndUpdateTimeouts(batch);
+                }
                 else
+                {
                     await ravenAdapter.DeleteRecord($"{RavenConstants.BatchPrefix}/{batch.Number}");
+                }
             }
         }
 
@@ -103,7 +109,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var toolState = await GetToolState();
             string prefix = RavenConstants.DefaultTimeoutPrefix;
             if (toolState.RunParameters.ContainsKey(ApplicationOptions.RavenTimeoutPrefix))
+            {
                 prefix = toolState.RunParameters[ApplicationOptions.RavenTimeoutPrefix];
+            }
 
             var batch = await ravenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchNumber}");
             var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), prefix, CancellationToken.None);
@@ -127,7 +135,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task Abort(ToolState toolState)
         {
             if (toolState == null)
+            {
                 throw new ArgumentNullException(nameof(toolState), "Can't abort without a tool state");
+            }
 
             if (toolState.Batches.Any())
             {
