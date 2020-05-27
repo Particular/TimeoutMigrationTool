@@ -1,9 +1,7 @@
-﻿using System;
-using System.ComponentModel;
-using RabbitMQ.Client;
-
-namespace Particular.TimeoutMigrationTool.RabbitMq
+﻿namespace Particular.TimeoutMigrationTool.RabbitMq
 {
+    using System;
+    using RabbitMQ.Client;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
@@ -12,31 +10,22 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         public RabbitMqTimeoutCreator(string targetConnectionString)
         {
             this.targetConnectionString = targetConnectionString;
-            this.batchWriter = new RabbitBatchWriter(targetConnectionString);
-            this.messagePump = new RabbitStagePump(targetConnectionString, QueueCreator.StagingQueueName);
-            Init();
+            batchWriter = new RabbitBatchWriter(targetConnectionString);
+            messagePump = new RabbitStagePump(targetConnectionString, QueueCreator.StagingQueueName);
         }
 
-        private void Init()
+        public async Task VerifyAbilityToMigrate(string endpointName)
         {
-            this.factory = new ConnectionFactory();
+            factory = new ConnectionFactory();
             factory.Uri = new Uri(this.targetConnectionString);
 
-            CreateStagingQueue();
-        }
-
-        private void CreateStagingQueue()
-        {
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                QueueCreator.CreateStagingInfrastructure(channel);
-            }
+            await VerifyEndpointIsReadyForNativeTimeouts(endpointName);
+            await CreateStagingQueue();
         }
 
         public Task StageBatch(List<TimeoutData> timeouts)
         {
-            return this.batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
+            return batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
         }
 
         public Task CompleteBatch(int number)
@@ -44,9 +33,26 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             return messagePump.CompleteBatch(number);
         }
 
-        private readonly RabbitStagePump messagePump;
-        private readonly RabbitBatchWriter batchWriter;
-        readonly string targetConnectionString;
-        private ConnectionFactory factory;
+        Task VerifyEndpointIsReadyForNativeTimeouts(string endpointName)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task CreateStagingQueue()
+        {
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                QueueCreator.CreateStagingInfrastructure(channel);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        string targetConnectionString;
+        ConnectionFactory factory;
+
+        readonly RabbitStagePump messagePump;
+        readonly RabbitBatchWriter batchWriter;
     }
 }

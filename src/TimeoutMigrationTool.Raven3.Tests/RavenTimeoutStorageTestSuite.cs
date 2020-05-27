@@ -85,7 +85,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix},
             };
 
-            var toolState = new ToolState(runParameters)
+            var toolState = new ToolState(runParameters,new EndpointInfo())
             {
                 Status = status
             };
@@ -167,7 +167,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
                    resp.EnsureSuccessStatusCode();
                    return;
                 }
-                catch 
+                catch
                 {
                     i++;
                 }
@@ -179,7 +179,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         private Task<HttpResponseMessage> DeleteDatabase()
         {
             var killDb = $"{ServerName}/admin/databases/{databaseName}";
-            
+
             var httpRequest = new HttpRequestMessage
             {
                 Method = HttpMethod.Delete,

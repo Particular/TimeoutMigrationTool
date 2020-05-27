@@ -1,7 +1,7 @@
-using System;
-
 namespace Particular.TimeoutMigrationTool
 {
+    using System;
+
     public class EndpointInfo
     {
         public string EndpointName { get; set; }

@@ -7,5 +7,6 @@ namespace Particular.TimeoutMigrationTool
     {
         Task StageBatch(List<TimeoutData> timeouts);
         Task CompleteBatch(int number);
+        Task VerifyAbilityToMigrate(string endpointName);
     }
 }

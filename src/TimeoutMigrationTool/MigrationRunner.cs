@@ -13,16 +13,34 @@ namespace Particular.TimeoutMigrationTool
             this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
 
-        public async Task Run(DateTime cutOffTime, IDictionary<string, string> runParameters)
+        public async Task Run(DateTime cutOffTime, EndpointFilter endpointFilter, IDictionary<string, string> runParameters)
+        {
+            var endpoints = await timeoutStorage.ListEndpoints();
+
+            foreach (var endpoint in endpoints.Where(e => e.NrOfTimeouts > 0))
+            {
+                if(!endpointFilter.ShouldInclude(endpoint.EndpointName))
+                {
+                    continue;
+                }
+
+                await Run(cutOffTime, endpoint, runParameters);
+            }
+        }
+
+        async Task Run(DateTime cutOffTime, EndpointInfo endpointInfo, IDictionary<string, string> runParameters)
         {
             var toolState = await timeoutStorage.GetToolState();
 
             if (ShouldCreateFreshToolState(toolState))
             {
-                toolState = new ToolState(runParameters);
+                toolState = new ToolState(runParameters, endpointInfo);
                 await timeoutStorage.StoreToolState(toolState);
                 await Console.Out.WriteLineAsync("Migration status created and stored.");
             }
+
+            //TODO: Should we do this for all endpoints up front?
+            await transportTimeoutsCreator.VerifyAbilityToMigrate(endpointInfo.EndpointName);
 
             switch (toolState.Status)
             {
@@ -30,8 +48,7 @@ namespace Particular.TimeoutMigrationTool
                     var canPrepStorage = await timeoutStorage.CanPrepareStorage();
                     if (!canPrepStorage)
                     {
-                        await Console.Error.WriteLineAsync(
-                            "We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
+                        await Console.Error.WriteLineAsync("We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
                     }
                     // foreach(var endpoint in endpointsDetected)
                     await Prepare(cutOffTime, toolState, new EndpointInfo());
@@ -40,10 +57,10 @@ namespace Particular.TimeoutMigrationTool
                     // foreach(var endpoint in endpointsDetected)
                     await Prepare(cutOffTime, toolState, new EndpointInfo());
                     break;
-                case MigrationStatus.StoragePrepared when RunParametersAreDifferent(toolState.RunParameters, runParameters):
-                    await Console.Out
-                        .WriteLineAsync(
-                            $"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+                case MigrationStatus.StoragePrepared when RunParametersAreDifferent(endpointInfo, runParameters, toolState):
+                    await Console.Out.WriteLineAsync($"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+
+                    await Console.Out.WriteLineAsync($"\t'--endpoint': '{endpointInfo.EndpointName}'.");
 
                     foreach (var setting in toolState.RunParameters)
                     {
@@ -58,7 +75,7 @@ namespace Particular.TimeoutMigrationTool
                     throw new ArgumentOutOfRangeException();
             }
 
-            // foreach(var endpoint in endpointsDetected)
+
             while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
@@ -89,7 +106,7 @@ namespace Particular.TimeoutMigrationTool
             await Console.Out.WriteLineAsync($"Migration completed successfully");
         }
 
-        private async Task Prepare(DateTime cutOffTime, ToolState toolState, EndpointInfo endpoint)
+        async Task Prepare(DateTime cutOffTime, ToolState toolState, EndpointInfo endpoint)
         {
             await Console.Out.WriteAsync("Preparing storage");
             var batches = await timeoutStorage.Prepare(cutOffTime, endpoint);
@@ -111,21 +128,28 @@ namespace Particular.TimeoutMigrationTool
             return toolState.Status == MigrationStatus.Completed;
         }
 
-        bool RunParametersAreDifferent(IDictionary<string, string> inProgressRunParameters, IDictionary<string, string> currentRunParameters)
+        bool RunParametersAreDifferent(EndpointInfo endpointInfo, IDictionary<string, string> runParameters, ToolState currentRunState)
         {
-            if (inProgressRunParameters.Count != currentRunParameters.Count)
+            if (endpointInfo.EndpointName != currentRunState.Endpoint.EndpointName)
             {
                 return true;
             }
 
-            foreach (var parameterKey in inProgressRunParameters.Keys)
+            var currentRunParameters = currentRunState.RunParameters;
+
+            if (runParameters.Count != currentRunParameters.Count)
+            {
+                return true;
+            }
+
+            foreach (var parameterKey in runParameters.Keys)
             {
                 if (!currentRunParameters.ContainsKey(parameterKey))
                 {
                     return true;
                 }
 
-                if (!string.Equals(inProgressRunParameters[parameterKey], currentRunParameters[parameterKey], StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(runParameters[parameterKey], currentRunParameters[parameterKey], StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
