@@ -72,7 +72,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             }
         }
 
-        protected ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
+        protected ToolState SetupToolState(DateTime cutoffTime, EndpointInfo endpoint, MigrationStatus status = MigrationStatus.NeverRun)
         {
             var runParameters = new Dictionary<string, string>
             {
@@ -83,7 +83,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix},
             };
 
-            var toolState = new ToolState(runParameters, new EndpointInfo())
+            var toolState = new ToolState(runParameters, endpoint)
             {
                 Status = status
             };
@@ -91,10 +91,10 @@ namespace TimeoutMigrationTool.Raven4.Tests
             return toolState;
         }
 
-        protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
+        protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase(EndpointInfo endpoint)
         {
             var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, endpoint);
             return batches;
         }
 
