@@ -55,10 +55,10 @@ namespace TimeoutMigrationTool.Raven4.Tests
                     var timeoutData = new TimeoutData
                     {
                         Id = $"{timeoutsPrefix}/{i}",
-                        Destination = i < 100 ? "A" : i == 100 ? "B" : "C",
+                        Destination = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C",
                         SagaId = Guid.NewGuid(),
                         OwningTimeoutManager = "FakeOwningTimeoutManager",
-                        Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
+                        Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
                         Headers = new Dictionary<string, string>(),
                         State = Encoding.ASCII.GetBytes("This is my state")
                     };
