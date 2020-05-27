@@ -7,7 +7,6 @@
     using RabbitMq;
     using RavenDB;
     using System.Threading.Tasks;
-    using System.Linq;
 
     class Program
     {
