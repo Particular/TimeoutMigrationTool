@@ -9,12 +9,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     public class RavenDBTimeoutStorage : ITimeoutStorage
     {
-        private readonly string prefix;
+        private readonly string timeoutDocumentsPrefix;
         private ICanTalkToRavenVersion ravenAdapter;
 
-        public RavenDBTimeoutStorage(string serverUrl, string databaseName, string prefix, RavenDbVersion ravenVersion)
+        public RavenDBTimeoutStorage(string serverUrl, string databaseName, string timeoutDocumentsPrefix, RavenDbVersion ravenVersion)
         {
-            this.prefix = prefix;
+            this.timeoutDocumentsPrefix = timeoutDocumentsPrefix;
             this.ravenAdapter = RavenDataReaderFactory.Resolve(serverUrl, databaseName, ravenVersion);
         }
 
@@ -59,7 +59,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime)
         {
             bool filter(TimeoutData td) => td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix, StringComparison.OrdinalIgnoreCase);
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter, prefix, CancellationToken.None);
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentsPrefix, CancellationToken.None);
 
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal) RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
