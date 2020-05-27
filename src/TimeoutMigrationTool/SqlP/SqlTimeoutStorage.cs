@@ -49,7 +49,7 @@ namespace Particular.TimeoutMigrationTool.SqlP
             throw new NotImplementedException();
         }
 
-        public Task<List<EndpointInfo>> ListEndpoints()
+        public Task<List<EndpointInfo>> ListEndpoints(DateTime cutoffTime)
         {
             throw new NotImplementedException();
         }
