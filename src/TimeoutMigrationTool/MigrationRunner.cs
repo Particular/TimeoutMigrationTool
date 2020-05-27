@@ -20,7 +20,7 @@ namespace Particular.TimeoutMigrationTool
             var endpointsToMigrate = allEndpoints.Where(e => e.NrOfTimeouts > 0 && endpointFilter.ShouldInclude(e.EndpointName))
                 .ToList();
 
-            var problematicEndpoints = new List<(EndpointInfo, List<string>)>();
+            var problematicEndpoints = new List<(EndpointInfo Endpoint, List<string> Problems)>();
             foreach (var enpointToCheck in endpointsToMigrate)
             {
                 await Console.Out.WriteLineAsync($"Verifying that {enpointToCheck.EndpointName} has native delay infrastructure in place");
@@ -34,15 +34,15 @@ namespace Particular.TimeoutMigrationTool
 
             if (problematicEndpoints.Any())
             {
-                var listOfEndpoints = string.Join(";", problematicEndpoints.Select(e => e.Item1.EndpointName));
+                var listOfEndpoints = string.Join(";", problematicEndpoints.Select(e => e.Endpoint.EndpointName));
 
                 await Console.Out.WriteLineAsync($"Migration aborted:");
 
                 foreach (var problematicEndpoint in problematicEndpoints)
                 {
-                    await Console.Out.WriteLineAsync($"{problematicEndpoint.Item1.EndpointName}:");
+                    await Console.Out.WriteLineAsync($"{problematicEndpoint.Endpoint.EndpointName}:");
 
-                    foreach (var problem in problematicEndpoint.Item2)
+                    foreach (var problem in problematicEndpoint.Problems)
                     {
                         await Console.Out.WriteLineAsync($"\t - {problem}");
                     }
