@@ -57,7 +57,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await sut.CompleteBatch(batchToVerify.Number);
 
             var reader = new Raven4Adapter(ServerName, databaseName);
-            var updatedBatch = await reader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (doc, id) => { });
+            var updatedBatch = await reader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
             toolState = await GetToolState();
             var currentBatch = toolState.GetCurrentBatch();
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));

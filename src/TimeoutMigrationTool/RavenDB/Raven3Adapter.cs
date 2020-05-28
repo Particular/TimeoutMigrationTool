@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -149,8 +148,18 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
-            var documents = await GetDocuments<T>(new[] { id }, idSetter);
-            return documents.SingleOrDefault();
+            var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}";
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetAsync(url);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return default(T);
+                }
+                var document = await GetDocumentFromResponse<T>(response.Content);
+                idSetter(document, id);
+                return document;
+            }
         }
 
         public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
@@ -163,21 +172,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var id in ids)
             {
-                var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}";
-                using (var httpClient = new HttpClient())
-                {
-                    var response = await httpClient.GetAsync(url);
-                    var contentString = await response.Content.ReadAsStringAsync();
-
-                    var doc = JsonConvert.DeserializeObject<T>(contentString);
-
-                    var jObject = JObject.Parse(contentString);
-                    idSetter(doc, (string)((dynamic)jObject)["@metadata"]["@id"]);
-
-                    docs.Add(doc);
-                }
+                var document = await GetDocument<T>(id, idSetter);
+                docs.Add(document);
             }
-
             return docs;
         }
 
@@ -197,6 +194,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             return results;
+        }
+
+        private async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
+        {
+            var contentString = await resultContent.ReadAsStringAsync();
+            var document = JsonConvert.DeserializeObject<T>(contentString);
+            return document;
         }
 
         private async Task PostToBulkDocs(IEnumerable<object> commands)
