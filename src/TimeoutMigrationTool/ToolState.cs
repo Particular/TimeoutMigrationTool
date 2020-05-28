@@ -19,7 +19,7 @@ namespace Particular.TimeoutMigrationTool
             Status = migrationStatus;
         }
 
-        public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
+        public IEnumerable<BatchInfo> Batches { get; internal set; } = new List<BatchInfo>();
         public IDictionary<string, string> RunParameters { get; private set; } = new Dictionary<string, string>();
         public MigrationStatus Status { get; set; }
         public EndpointInfo Endpoint { get;  set; }

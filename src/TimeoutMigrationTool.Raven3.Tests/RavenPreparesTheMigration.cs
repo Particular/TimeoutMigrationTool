@@ -41,6 +41,19 @@ namespace TimeoutMigrationTool.Raven3.Tests
             Assert.IsEmpty(retrievedToolState.Batches);
         }
 
+        // [Test]
+        // public async Task test()
+        // {
+        //     var toolState = SetupToolState(DateTime.Now.AddDays(-1));
+        //     var timeoutStorage =
+        //         new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+        //     var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), null);
+        //     await SaveToolState(toolState);
+        //     var ravenadapter = RavenDataReaderFactory.Resolve(ServerName, databaseName, RavenDbVersion.ThreeDotFive);
+        //
+        //     await ravenadapter.GetDocument<ToolState, BatchInfo>(RavenConstants.ToolStateId, "Batches", (ts, batchInfos) => ts.Batches = batchInfos);
+        // }
+
         [Test]
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
         {

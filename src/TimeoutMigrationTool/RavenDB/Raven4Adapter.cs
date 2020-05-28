@@ -16,7 +16,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     {
         string serverUrl;
         string databaseName;
-        
+
         public Raven4Adapter(string serverUrl, string databaseName)
         {
             this.serverUrl = serverUrl;
@@ -35,7 +35,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 saveResult.EnsureSuccessStatusCode();
             }
         }
-        
+
         public async Task DeleteRecord(string key)
         {
             using (var httpClient = new HttpClient())
@@ -151,9 +151,32 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return documents.SingleOrDefault();
         }
 
+        public async Task<T> GetDocument<T, TIntermediate, TChildType>(string id, string pathToChild, Action<TIntermediate, List<string>> childProperty) where T : class where TChildType : class
+        {
+            using (var client = new HttpClient())
+            {
+                var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}&include={pathToChild}";
+                var result = await client.GetAsync(url, CancellationToken.None);
+
+                if (result.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return default(T);
+                }
+
+                var documentsFromResponse = await GetDocumentsFromResponse<TIntermediate>(result.Content);
+                var document = documentsFromResponse.FirstOrDefault();
+
+                var includesFromResponse = await GetDocumentsFromResponse<TChildType>( result.Content, childProperty(document));
+
+                childProperty(document, includesFromResponse);
+
+                return document;
+            }
+        }
+
         public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
         {
-            if (!ids.Any()) 
+            if (!ids.Any())
             {
                 return new List<T>();
             }
@@ -174,11 +197,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
+        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, string selector = "Results") where T : class
         {
             var contentString = await resultContent.ReadAsStringAsync();
             var jObject = JObject.Parse(contentString);
-            var resultSet = jObject.SelectToken("Results");
+            var resultSet = jObject.SelectToken(selector);
             contentString = resultSet.ToString();
             return JsonConvert.DeserializeObject<List<T>>(contentString);
         }

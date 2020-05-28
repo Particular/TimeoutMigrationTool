@@ -69,6 +69,23 @@ namespace TimeoutMigrationTool.Raven4.Tests
         }
 
         [Test]
+        public async Task test()
+        {
+            var toolState = SetupToolState(DateTime.Now.AddDays(-1));
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint);
+            toolState.Batches = batches;
+            await SaveToolState(toolState);
+
+            var ravenadapter = (Raven4Adapter) RavenDataReaderFactory.Resolve(ServerName, databaseName, RavenDbVersion.Four);
+            var retrievedToolState = await ravenadapter.GetDocument<ToolState, RavenToolState, BatchInfo>(RavenConstants.ToolStateId, "Batches", (ts, batchInfos) => ts.Batches = batchInfos);
+
+            Assert.That(retrievedToolState, Is.Not.Null);
+            Assert.That(retrievedToolState.Batches, Is.Not.Empty);
+        }
+
+        [Test]
         public async Task WhenVerifyingPrepareAndFoundExistingBatchInfosReturnsFalse()
         {
             var cutOffTime = DateTime.Now.AddDays(-1);
