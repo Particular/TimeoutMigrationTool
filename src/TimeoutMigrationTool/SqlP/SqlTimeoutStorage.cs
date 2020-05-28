@@ -54,17 +54,17 @@
             }
         }
 
-        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
+        public async Task<List<BatchInfo>> Prepare(DateTime migrateTimeoutsWithDeliveryDateLaterThan, EndpointInfo endpoint)
         {
             using (var connection = dialect.Connect(connectionString))
             {
                 var command = connection.CreateCommand();
                 command.CommandText = dialect.GetScriptToPrepareTimeouts(timeoutTableName, batchSize);
 
-                var cutOffParameter = command.CreateParameter();
-                cutOffParameter.ParameterName = "maxCutOff";
-                cutOffParameter.Value = maxCutoffTime;
-                command.Parameters.Add(cutOffParameter);
+                var migrateTimeoutsWithDeliveryDateLaterThanParameter = command.CreateParameter();
+                migrateTimeoutsWithDeliveryDateLaterThanParameter.ParameterName = "migrateTimeoutsWithDeliveryDateLaterThan";
+                migrateTimeoutsWithDeliveryDateLaterThanParameter.Value = migrateTimeoutsWithDeliveryDateLaterThan;
+                command.Parameters.Add(migrateTimeoutsWithDeliveryDateLaterThanParameter);
 
                 var runParametersParameter = command.CreateParameter();
                 runParametersParameter.ParameterName = "RunParameters";
@@ -158,7 +158,7 @@
             return Task.FromResult(true);
         }
 
-        public Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
+        public Task<List<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
         {
             throw new NotImplementedException();
         }
