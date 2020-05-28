@@ -158,6 +158,60 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
+        public async Task Loads_Endpoints_With_Valid_Timeouts()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Loads_Endpoints_With_Valid_Timeouts";
+            var endpoint = new EndpointInfo
+            {
+                EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
+            };
+
+            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.TimeoutsSet)
+                .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
+
+            var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
+
+            Assert.IsTrue(endpoints.Count > 0);
+        }
+
+        [Test]
+        public async Task Doesnt_Load_Endpoints_With_Invalid_Timeouts()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Doesnt_Load_Endpoints_With_Invalid_Timeouts";
+            var endpoint = new EndpointInfo
+            {
+                EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
+            };
+
+            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.TimeoutsSet)
+                .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
+
+            var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(10));
+
+            Assert.IsNull(endpoints);
+        }
+
+        [Test]
         public async Task Batches_Completed_Can_Be_Completed()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Batches_Completed_Can_Be_Completed";

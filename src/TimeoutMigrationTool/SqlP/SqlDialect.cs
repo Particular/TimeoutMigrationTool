@@ -21,6 +21,7 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToLoadBatch(string endpointName);
         public abstract string GetScriptToAbortBatch(string endpointName);
         public abstract string GetScriptToCompleteBatch(string endpointName);
+        public abstract string GetScriptToListEndpoints();
     }
 
     public class MsSqlServer : SqlDialect
@@ -173,6 +174,32 @@ SET
 WHERE
     BatchNumber = @BatchNumber";
         }
+
+        public override string GetScriptToListEndpoints()
+        {
+            return $@"DECLARE @SqlQuery NVARCHAR(MAX) = '';
+
+SELECT
+	@SqlQuery = @SqlQuery + 'SELECT
+	''' + SUBSTRING(name, 0, LEN(name) - LEN('_TimeoutData')) + ''' EndpointName,
+	COUNT(*) NrOfTimeouts,
+	MAX(Time) LongestTimeout,
+	MIN(Time) ShortestTimeout
+FROM
+	' + name + '
+WHERE
+	Time >= @CutOffTime
+HAVING
+    COUNT(*) > 0 UNION '
+FROM
+	sys.tables
+WHERE
+	name LIKE '%_TimeoutData';
+
+SET @SqlQuery = SUBSTRING(@SqlQuery, 0, LEN(@SqlQuery) - LEN('UNION'));
+
+EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
+        }
     }
 
     public class Oracle : SqlDialect
@@ -188,6 +215,11 @@ WHERE
         }
 
         public override string GetScriptToCompleteBatch(string timeoutTableName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToListEndpoints()
         {
             throw new NotImplementedException();
         }
@@ -235,6 +267,11 @@ WHERE
             throw new NotImplementedException();
         }
 
+        public override string GetScriptToListEndpoints()
+        {
+            throw new NotImplementedException();
+        }
+
         public override string GetScriptToLoadBatch(string endpointName)
         {
             throw new NotImplementedException();
@@ -274,6 +311,11 @@ WHERE
         }
 
         public override string GetScriptToCompleteBatch(string timeoutTableName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetScriptToListEndpoints()
         {
             throw new NotImplementedException();
         }
