@@ -6,6 +6,9 @@
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RabbitMq;
     using Particular.TimeoutMigrationTool.RavenDB;
+    using Raven.Client.Documents;
+    using Raven.Client.ServerWide;
+    using Raven.Client.ServerWide.Operations;
     using System;
     using System.Collections.Generic;
     using System.Threading;
@@ -20,25 +23,28 @@
             var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacyRavenDBEndpoint));
             var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
 
-            var serverUrl = "http://localhost:8080";
-            var databaseName = "TimeoutMigrationTests";
             var ravenTimeoutPrefix = "TimeoutDatas";
             var ravenVersion = RavenDbVersion.Four;
 
             var ravenAdapter = new Raven4Adapter(serverUrl, databaseName);
 
             var context = await Scenario.Define<Context>()
-                .WithEndpoint<LegacyRavenDBEndpoint>(b => b
+                .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
+                {
+                    ec.UsePersistence<RavenDBPersistence>()
+                        .SetDefaultDocumentStore(GetDocumentStore(serverUrl, databaseName));
+
+                })
                 .When(async (session, c) =>
                 {
-                    var startSagaMessage = new DelayedMessage();
+                    var delayedMessage = new DelayedMessage();
 
                     var options = new SendOptions();
 
                     options.DelayDeliveryWith(TimeSpan.FromSeconds(5));
                     options.SetDestination(targetEndpoint);
 
-                    await session.Send(startSagaMessage, options);
+                    await session.Send(delayedMessage, options);
 
                     await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
 
@@ -47,15 +53,22 @@
                 .Done(c => c.TimeoutSet)
                 .Run();
 
-
-            var targetConnectionString = "amqp://guest:guest@localhost:5672";
-
             var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
-            var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+            var transportAdapter = new RabbitMqTimeoutCreator(rabbitUrl);
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
             context = await Scenario.Define<Context>()
-             .WithEndpoint<NewRabbitMqEndpoint>(async c => await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>()))
+             .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
+             {
+                 ec.UseTransport<RabbitMQTransport>()
+                 .ConnectionString(rabbitUrl);
+
+             })
+             .When(async (session, c) =>
+                {
+                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
+                })
+             )
              .Done(c => c.GotTheDelayedMessage)
              .Run();
 
@@ -91,7 +104,7 @@
         {
             public LegacyRavenDBEndpoint()
             {
-                EndpointSetup<RavenDbEndpoint>();
+                EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }
         }
 
@@ -122,5 +135,86 @@
         public class DelayedMessage : IMessage
         {
         }
+
+        public override async Task SetUp()
+        {
+            await base.SetUp();
+
+            serverUrl = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8080";
+
+            rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
+
+            databaseName = TestContext.CurrentContext.Test.ID;
+        }
+
+        public override async Task TearDown()
+        {
+            await base.SetUp();
+
+            await DeleteDatabase(serverUrl, databaseName);
+        }
+
+        static DocumentStore GetDocumentStore(string urls, string dbName)
+        {
+            var documentStore = GetInitializedDocumentStore(urls, dbName);
+
+            CreateDatabase(documentStore, dbName);
+
+            return documentStore;
+        }
+
+        static DocumentStore GetInitializedDocumentStore(string urls, string defaultDatabase)
+        {
+            var documentStore = new DocumentStore
+            {
+                Urls = urls.Split(','),
+                Database = defaultDatabase
+            };
+
+            documentStore.Initialize();
+
+            return documentStore;
+        }
+
+        static void CreateDatabase(IDocumentStore defaultStore, string dbName)
+        {
+            var dbRecord = new DatabaseRecord(dbName);
+            defaultStore.Maintenance.Server.Send(new CreateDatabaseOperation(dbRecord));
+        }
+
+        static async Task DeleteDatabase(string urls, string dbName)
+        {
+            // Periodically the delete will throw an exception because Raven has the database locked
+            // To solve this we have a retry loop with a delay
+            var triesLeft = 3;
+
+            while (triesLeft-- > 0)
+            {
+                try
+                {
+                    // We are using a new store because the global one is disposed of before cleanup
+                    using (var storeForDeletion = GetInitializedDocumentStore(urls, dbName))
+                    {
+                        storeForDeletion.Maintenance.Server.Send(new DeleteDatabasesOperation(storeForDeletion.Database, hardDelete: true));
+                        break;
+                    }
+                }
+                catch
+                {
+                    if (triesLeft == 0)
+                    {
+                        throw;
+                    }
+
+                    await Task.Delay(250);
+                }
+            }
+
+            Console.WriteLine("Deleted '{0}' database", dbName);
+        }
+
+        string databaseName = "";
+        string serverUrl = "";
+        string rabbitUrl = "";
     }
 }
