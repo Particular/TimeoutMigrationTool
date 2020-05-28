@@ -28,7 +28,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
             ;
 
             var reader = new SqlTimeoutsReader();
-            var timeouts = await reader.ReadTimeoutsFrom(MsSqlMicrosoftDataClientConnectionBuilder.GetConnectionString(), "Sqltimeoutsreadertests_SqlP_WithTimeouts_Endpoint_TimeoutData", new MsSqlServer(), new System.Threading.CancellationToken());
+            var timeouts = await reader.ReadTimeoutsFrom(MsSqlMicrosoftDataClientHelper.GetConnectionString(), "Sqltimeoutsreadertests_SqlP_WithTimeouts_Endpoint_TimeoutData", new MsSqlServer(), new System.Threading.CancellationToken());
 
             Assert.AreEqual(1, timeouts?.Count);
         }

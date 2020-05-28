@@ -6,6 +6,6 @@ public class SetUpFixture
     [OneTimeSetUp]
     public void SetUp()
     {
-        MsSqlMicrosoftDataClientConnectionBuilder.RecreateDbIfNotExists();
+        MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists();
     }
 }

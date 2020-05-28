@@ -79,7 +79,7 @@
                     runParameters.Add(ApplicationOptions.SqlTimeoutTableName, timeoutTableName);
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
 
-                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName);
+                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName, 1024, "run parameters jason thing goes here");
                     var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
 
                     await RunMigration(runParameters, timeoutStorage, transportAdapter);
