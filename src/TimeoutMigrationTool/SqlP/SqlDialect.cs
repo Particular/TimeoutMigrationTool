@@ -109,7 +109,7 @@ BEGIN TRANSACTION
         DELETED.Headers,
         DELETED.PersistenceVersion
     INTO [{endpointName}_TimeoutData_migration]
-    WHERE [{endpointName}_TimeoutData].Time >= @maxCutOff;
+    WHERE [{endpointName}_TimeoutData].Time >= @migrateTimeoutsWithDeliveryDateLaterThan;
 
     UPDATE BatchMigration
     SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber

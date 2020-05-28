@@ -130,9 +130,9 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
-        public async Task Only_Moves_timeouts_After_cutoff_date()
+        public async Task Only_Moves_timeouts_After_migrateTimeoutsWithDeliveryDateLaterThan_date()
         {
-            SqlP_WithTimeouts_Endpoint.EndpointName = "Only_Moves_timeouts_After_cutoff_date";
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Only_Moves_timeouts_After_migrateTimeoutsWithDeliveryDateLaterThan_date";
             var endpoint = new EndpointInfo
             {
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
