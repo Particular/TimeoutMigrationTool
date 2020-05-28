@@ -13,7 +13,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         public async Task WhenThereAreNoTimeoutsListEndpointsReturnsAnEmptyList()
         {
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var endpoints = await sut.ListEndpoints(DateTime.MinValue);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.IsEmpty(endpoints);
@@ -22,10 +22,10 @@ namespace TimeoutMigrationTool.Raven3.Tests
         [Test]
         public async Task WhenThereTimeoutsListEndpointsReturnsEndpointsList()
         {
-            await InitTimeouts(nrOfTimeouts);
+            await InitTimeouts(nrOfTimeouts, true);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var endpoints = await sut.ListEndpoints(DateTime.MinValue);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(3));
@@ -34,7 +34,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         [Test]
         public async Task WhenThereTimeoutsListEndpointsRespectsTheCutoffDate()
         {
-            await InitTimeouts(nrOfTimeouts);
+            await InitTimeouts(nrOfTimeouts, true);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var endpoints = await sut.ListEndpoints(DateTime.Now.AddDays(8));

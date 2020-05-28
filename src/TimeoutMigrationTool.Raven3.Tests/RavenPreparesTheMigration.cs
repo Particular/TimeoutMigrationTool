@@ -54,6 +54,19 @@ namespace TimeoutMigrationTool.Raven3.Tests
                 Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
         }
 
+        [Test]
+        public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatchesWhenMoreEndpointsAreAvailable()
+        {
+            endpoint.EndpointName = "B";
+            await InitTimeouts(nrOfTimeouts, true);
+
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint);
+
+            Assert.That(batches.Count, Is.EqualTo(1));
+            Assert.That(batches.First().TimeoutIds.Length, Is.EqualTo(500));
+        }
 
         [Test]
         public async Task WhenVerifyingPrepareAndFoundExistingBatchInfosReturnsFalse()

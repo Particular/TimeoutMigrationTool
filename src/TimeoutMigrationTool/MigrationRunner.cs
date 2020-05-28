@@ -21,14 +21,14 @@ namespace Particular.TimeoutMigrationTool
                 .ToList();
 
             var problematicEndpoints = new List<(EndpointInfo Endpoint, List<string> Problems)>();
-            foreach (var enpointToCheck in endpointsToMigrate)
+            foreach (var endpoint in endpointsToMigrate)
             {
-                await Console.Out.WriteLineAsync($"Verifying that {enpointToCheck.EndpointName} has native delay infrastructure in place");
-                var migrationCheckResult = await transportTimeoutsCreator.AbleToMigrate(enpointToCheck);
+                await Console.Out.WriteLineAsync($"Verifying that {endpoint.EndpointName} has native delay infrastructure in place");
+                var migrationCheckResult = await transportTimeoutsCreator.AbleToMigrate(endpoint);
 
                 if (!migrationCheckResult.CanMigrate)
                 {
-                    problematicEndpoints.Add((enpointToCheck, migrationCheckResult.Problems));
+                    problematicEndpoints.Add((endpoint, migrationCheckResult.Problems));
                 }
             }
 
