@@ -13,7 +13,7 @@
 
     public class MigrationCheckResult
     {
-        public List<string> Problems { get; set; }
+        public List<string> Problems { get; set; } = new List<string>();
 
         public bool CanMigrate
         {

@@ -36,7 +36,8 @@
 
         Task<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
-            throw new NotImplementedException();
+            //TODO
+            return Task.FromResult(new MigrationCheckResult());
         }
 
         Task CreateStagingQueue()
