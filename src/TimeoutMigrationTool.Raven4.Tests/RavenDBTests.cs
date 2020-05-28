@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using System.Reflection.Metadata;
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
@@ -21,8 +22,8 @@
         [Test]
         public async Task WhenReadingTimeouts()
         {
-            var reader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var timeouts = await reader.GetItems<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(-1), "TimeoutDatas", CancellationToken.None);
+            var reader = new Raven4Adapter(ServerName, databaseName);
+            var timeouts = await reader.GetDocuments<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(-1), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts));
         }
@@ -30,9 +31,13 @@
         [Test]
         public async Task WhenReadingTimeoutsWithCutoffDateNextWeek()
         {
-            var reader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var timeouts = await reader.GetItems<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(10), "TimeoutDatas", CancellationToken.None);
+            var reader = new Raven4Adapter(ServerName, databaseName);
+            var timeouts = await reader.GetDocuments<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(10), "TimeoutDatas", (doc, id) => doc.Id = id);
 
+            foreach (var timeout in timeouts)
+            {
+                Assert.That(timeout.Id, Is.Not.Null);
+            }
             Assert.That(timeouts.Count, Is.EqualTo(125));
         }
 

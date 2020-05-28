@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace Particular.TimeoutMigrationTool
@@ -8,6 +9,7 @@ namespace Particular.TimeoutMigrationTool
         //
         // Summary:
         //     Id of this timeout.
+        [JsonIgnore]
         public string Id { get; set; }
         //
         // Summary:

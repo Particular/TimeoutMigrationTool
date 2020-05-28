@@ -20,8 +20,8 @@ namespace TimeoutMigrationTool.Raven3.Tests
         [Test]
         public async Task WhenReadingTimeouts()
         {
-            var reader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.ThreeDotFive);
-            var timeouts = await reader.GetItems<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(-1), "TimeoutDatas", CancellationToken.None);
+            var reader = new Raven3Adapter(ServerName, databaseName);
+            var timeouts = await reader.GetDocuments<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(-1), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(timeouts.Count, Is.EqualTo(250));
         }
@@ -29,8 +29,8 @@ namespace TimeoutMigrationTool.Raven3.Tests
         [Test]
         public async Task WhenReadingTimeoutsWithCutoffDateNextWeek()
         {
-            var reader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.ThreeDotFive);
-            var timeouts = await reader.GetItems<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(10), "TimeoutDatas", CancellationToken.None);
+            var reader = new Raven3Adapter(ServerName, databaseName);
+            var timeouts = await reader.GetDocuments<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(10), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(timeouts.Count, Is.EqualTo(125));
         }
