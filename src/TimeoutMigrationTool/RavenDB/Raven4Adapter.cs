@@ -12,7 +12,7 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    internal class Raven4Adapter : ICanTalkToRavenVersion
+    public class Raven4Adapter : ICanTalkToRavenVersion
     {
         private string serverUrl;
         private string databaseName;
@@ -150,7 +150,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
         {
-            if (!ids.Any()) 
+            if (!ids.Any())
             {
                 return new List<T>();
             }

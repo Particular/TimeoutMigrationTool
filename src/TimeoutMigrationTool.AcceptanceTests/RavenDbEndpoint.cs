@@ -34,6 +34,7 @@
             var transport = endpointConfiguration.UseTransport<AcceptanceTestingTransport>();
             transport.StorageDirectory(storageDir);
             transport.UseNativeDelayedDelivery(false);
+            endpointConfiguration.EnableFeature<TimeoutManager>();
 
             var persistence = endpointConfiguration.UsePersistence<RavenDBPersistence>();
 
@@ -50,7 +51,7 @@
 
             persistence.SetDefaultDocumentStore(documentStore);
 
-            endpointConfiguration.EnableFeature<TimeoutManager>();
+
 
             endpointConfiguration.RegisterComponentsAndInheritanceHierarchy(runDescriptor);
 

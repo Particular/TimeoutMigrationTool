@@ -1,4 +1,6 @@
-﻿namespace TimeoutMigrationTool.AcceptanceTests
+﻿using System.Threading;
+
+namespace TimeoutMigrationTool.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
@@ -16,6 +18,12 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
+            var serverUrl = "http://localhost:8081";
+            var databaseName = "TimeoutMigrationTests";
+            var ravenTimeoutPrefix = "TimeoutDatas";
+            var ravenVersion = RavenDbVersion.Four;
+            var ravenAdapter = new Raven4Adapter(serverUrl, databaseName);
+
             var context = await Scenario.Define<Context>()
                 .WithEndpoint<LegacyRavenDBEndpoint>(b => b
                 .When(async (session, c) =>
@@ -29,19 +37,17 @@
 
                     await session.Send(startSagaMessage, options);
 
+                    await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, ravenTimeoutPrefix);
+
                     c.TimeoutSet = true;
                 }))
                 .Done(c => c.TimeoutSet)
                 .Run();
 
-            var serverUrl = "http://localhost:8080";
-            var datebaseName = "TimeoutMigrationTests";
-            var ravenTimeoutPrefix = "TimeoutDatas";
-            var ravenVersion = RavenDbVersion.Four;
 
             var targetConnectionString = "amqp://guest:guest@localhost:5672";
 
-            var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, datebaseName, ravenTimeoutPrefix, ravenVersion);
+            var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
             var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
             var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
 
@@ -51,6 +57,19 @@
              .Run();
 
             Assert.True(context.GotTheDelayedMessage);
+        }
+
+        private static async Task WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string ravenTimeoutPrefix)
+        {
+            List<TimeoutData> timeouts;
+            do
+            {
+                timeouts = await ravenAdapter.GetDocuments<TimeoutData>(x =>
+                    x.OwningTimeoutManager.Equals("Ravendbtorabbitmqendtoend.LegacyRavenDBEndpoint",
+                        StringComparison.OrdinalIgnoreCase), ravenTimeoutPrefix, CancellationToken.None);
+
+                Thread.Sleep(300);
+            } while (timeouts.Count < 1);
         }
 
         public class Context : ScenarioContext
