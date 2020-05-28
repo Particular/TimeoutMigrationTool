@@ -17,12 +17,17 @@ namespace TimeoutMigrationTool.Raven3.Tests
     {
         protected const string ServerName = "http://localhost:8383";
         protected string databaseName;
+        protected EndpointInfo endpoint = new EndpointInfo();
 
         [SetUp]
         public async Task SetupDatabase()
         {
             var testId = Guid.NewGuid().ToString("N");
             databaseName = $"ravendb-{testId}";
+            endpoint = new EndpointInfo
+            {
+                EndpointName = "A",
+            };
 
             var createDbUrl = $"{ServerName}/admin/databases/{databaseName}";
 
@@ -37,10 +42,10 @@ namespace TimeoutMigrationTool.Raven3.Tests
             }
         }
 
-        protected async Task InitTimeouts(int nrOfTimeouts)
+        protected async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false)
         {
-           using (var httpClient = new HttpClient())
-           {
+            using (var httpClient = new HttpClient())
+            {
                 var timeoutsPrefix = "TimeoutDatas";
                 for (var i = 0; i < nrOfTimeouts; i++)
                 {
@@ -50,13 +55,15 @@ namespace TimeoutMigrationTool.Raven3.Tests
                     var timeoutData = new TimeoutData
                     {
                         Id = $"{timeoutsPrefix}/{i}",
-                        Destination = i <100 ? "A" : i== 100 ? "B" : "C",
+                        Destination = "A",
                         SagaId = Guid.NewGuid(),
                         OwningTimeoutManager = "FakeOwningTimeoutManager",
-                        Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
+                        Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
                         Headers = new Dictionary<string, string>(),
                         State = Encoding.ASCII.GetBytes("This is my state")
                     };
+                    if (alternateEndpoints)
+                        timeoutData.Destination = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
 
                     var serializeObject = JsonConvert.SerializeObject(timeoutData);
                     var httpContent = new StringContent(serializeObject);
@@ -64,13 +71,13 @@ namespace TimeoutMigrationTool.Raven3.Tests
                     var result = await httpClient.PutAsync(insertTimeoutUrl, httpContent);
                     Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
                 }
-           }
+            }
         }
 
         protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
         {
             var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, endpoint);
             return batches;
         }
 
@@ -85,7 +92,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix},
             };
 
-            var toolState = new ToolState(runParameters)
+            var toolState = new ToolState(runParameters, endpoint)
             {
                 Status = status
             };
@@ -159,15 +166,15 @@ namespace TimeoutMigrationTool.Raven3.Tests
         {
             int i = 0;
 
-            while (i<10)
+            while (i < 10)
             {
                 try
                 {
-                   var resp = await DeleteDatabase();
-                   resp.EnsureSuccessStatusCode();
-                   return;
+                    var resp = await DeleteDatabase();
+                    resp.EnsureSuccessStatusCode();
+                    return;
                 }
-                catch 
+                catch
                 {
                     i++;
                 }
@@ -179,7 +186,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         private Task<HttpResponseMessage> DeleteDatabase()
         {
             var killDb = $"{ServerName}/admin/databases/{databaseName}";
-            
+
             var httpRequest = new HttpRequestMessage
             {
                 Method = HttpMethod.Delete,

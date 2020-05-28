@@ -10,8 +10,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     class RavenDBTimeoutsArchiver
     {
-        public async Task ArchiveTimeouts(string serverName, string databaseName, string[] timeoutIds,
-            RavenDbVersion version, CancellationToken cancellationToken)
+        public async Task ArchiveTimeouts(string serverName, string databaseName, string[] timeoutIds, RavenDbVersion version, CancellationToken cancellationToken)
         {
             string url = $"{serverName}/databases/{databaseName}/bulk_docs";
 

@@ -25,7 +25,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1));
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), endpoint);
 
             toolState.InitBatches(batches);
             await SaveToolState(toolState);
@@ -46,7 +46,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1));
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), endpoint);
 
             toolState.InitBatches(batches);
             await SaveToolState(toolState);

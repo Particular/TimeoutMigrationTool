@@ -1,14 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Particular.TimeoutMigrationTool
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class ToolState
     {
-        public ToolState(IDictionary<string, string> runParameters)
+        public ToolState(IDictionary<string, string> runParameters, EndpointInfo endpointInfo)
         {
             RunParameters = runParameters;
+            Endpoint = endpointInfo;
         }
 
         internal ToolState(IEnumerable<BatchInfo> batches, IDictionary<string, string> runParameters, MigrationStatus migrationStatus)
@@ -21,6 +22,7 @@ namespace Particular.TimeoutMigrationTool
         public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
         public IDictionary<string, string> RunParameters { get; private set; } = new Dictionary<string, string>();
         public MigrationStatus Status { get; set; }
+        public EndpointInfo Endpoint { get;  set; }
 
         public bool HasMoreBatches() => Batches.Any(x => x.State != BatchState.Completed);
 

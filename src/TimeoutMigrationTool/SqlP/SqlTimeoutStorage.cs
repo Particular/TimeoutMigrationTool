@@ -33,7 +33,7 @@
                     {
                         if (reader.HasRows && reader.Read())
                         {
-                            state = new ToolState(null); // Deserialize reader.GetString(2));
+                            state = new ToolState(null, null); // Deserialize reader.GetString(2));
                             state.Status = ParseMigrationStatus(reader.GetString(1));
                             endpointName = reader.GetString(0);
                         }
@@ -54,7 +54,7 @@
             }
         }
 
-        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime)
+        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
         {
             using (var connection = dialect.Connect(connectionString))
             {
@@ -156,6 +156,11 @@
         public Task<bool> CanPrepareStorage()
         {
             return Task.FromResult(true);
+        }
+
+        public Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
+        {
+            throw new NotImplementedException();
         }
 
         async Task<List<BatchInfo>> ReadBatchInfo(DbCommand command)
