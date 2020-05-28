@@ -12,11 +12,11 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    internal class Raven4Adapter : ICanTalkToRavenVersion
+    public class Raven4Adapter : ICanTalkToRavenVersion
     {
         string serverUrl;
         string databaseName;
-        
+
         public Raven4Adapter(string serverUrl, string databaseName)
         {
             this.serverUrl = serverUrl;
@@ -35,7 +35,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 saveResult.EnsureSuccessStatusCode();
             }
         }
-        
+
         public async Task DeleteRecord(string key)
         {
             using (var httpClient = new HttpClient())
@@ -153,7 +153,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
         {
-            if (!ids.Any()) 
+            if (!ids.Any())
             {
                 return new List<T>();
             }
