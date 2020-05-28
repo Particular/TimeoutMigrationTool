@@ -3,12 +3,16 @@
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Customization;
     using NServiceBus.AcceptanceTesting.Support;
+    using NServiceBus.Features;
     using NUnit.Framework;
+    using Raven.Client.Documents;
+    using Raven.Client.ServerWide;
+    using Raven.Client.ServerWide.Operations;
     using System;
     using System.IO;
     using System.Threading.Tasks;
 
-    public class RabbitMqEndpoint : IEndpointSetupTemplate
+    public class LegacyTimeoutManagerEndpoint : IEndpointSetupTemplate
     {
         public virtual Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointCustomizationConfiguration, Action<EndpointConfiguration> configurationBuilderCustomization)
         {
@@ -24,10 +28,11 @@
 
             endpointConfiguration.EnableInstallers();
 
-            var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
+            var transport = endpointConfiguration.UseTransport<AcceptanceTestingTransport>();
+            transport.StorageDirectory(storageDir);
+            transport.UseNativeDelayedDelivery(false);
 
-            transport.UseConventionalRoutingTopology();
-            //transport.ConnectionString(ConnectionString);
+            endpointConfiguration.EnableFeature<TimeoutManager>();
 
             endpointConfiguration.RegisterComponentsAndInheritanceHierarchy(runDescriptor);
 

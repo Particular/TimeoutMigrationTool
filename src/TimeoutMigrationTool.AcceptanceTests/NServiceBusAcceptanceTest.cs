@@ -4,15 +4,15 @@
     using System.IO;
     using System.Linq;
     using System.Threading;
+    using System.Threading.Tasks;
     using NServiceBus.AcceptanceTesting.Customization;
     using NUnit.Framework;
 
     [TestFixture]
     public abstract class NServiceBusAcceptanceTest
     {
-
         [SetUp]
-        public void SetUp()
+        public virtual Task SetUp()
         {
             Conventions.EndpointNamingConvention = t =>
             {
@@ -31,6 +31,14 @@
 
                 return testName + "." + endpointBuilder;
             };
+
+            return Task.CompletedTask;
+        }
+
+        [TearDown]
+        public virtual Task TearDown()
+        {
+            return Task.CompletedTask;
         }
 
         [OneTimeSetUp]
