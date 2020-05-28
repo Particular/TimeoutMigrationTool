@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -116,7 +115,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, CancellationToken cancellationToken, int pageSize = RavenConstants.DefaultPagingSize) where T : class
+        public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
             using (var client = new HttpClient())
@@ -129,11 +128,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 {
                     var skipFirst = $"&start={iteration * pageSize}";
                     var getUrl = iteration == 0 ? url : url + skipFirst;
-                    var result = await client.GetAsync(getUrl, cancellationToken);
+                    var result = await client.GetAsync(getUrl);
 
                     if (result.StatusCode == HttpStatusCode.OK)
                     {
-                        var pagedTimeouts = await GetDocumentsFromResponse<T>(result.Content);
+                        var pagedTimeouts = await GetDocumentsFromResponse<T>(result.Content, idSetter);
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                             checkForMoreResults = false;
 
@@ -147,13 +146,23 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        public async Task<T> GetDocument<T>(string id) where T : class
+        public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
-            var documents = await GetDocuments<T>(new[] { id });
-            return documents.SingleOrDefault();
+            var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}";
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetAsync(url);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return default(T);
+                }
+                var document = await GetDocumentFromResponse<T>(response.Content);
+                idSetter(document, id);
+                return document;
+            }
         }
 
-        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
+        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
         {
             var docs = new List<T>();
             if (!ids.Any())
@@ -163,24 +172,35 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var id in ids)
             {
-                var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}";
-                using (var httpClient = new HttpClient())
-                {
-                    var response = await httpClient.GetAsync(url);
-                    var contentString = await response.Content.ReadAsStringAsync();
-
-                    var doc = JsonConvert.DeserializeObject<T>(contentString);
-                    docs.Add(doc);
-                }
+                var document = await GetDocument<T>(id, idSetter);
+                docs.Add(document);
             }
-
             return docs;
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
+        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        {
+            var results = new List<T>();
+
+            var contentString = await resultContent.ReadAsStringAsync();
+            var jArray = JArray.Parse(contentString);
+
+            foreach (var item in jArray)
+            {
+                var document = JsonConvert.DeserializeObject<T>(item.ToString());
+                var id = (string)((dynamic)item)["@metadata"]["@id"];
+                idSetter(document, id);
+                results.Add(document);
+            }
+
+            return results;
+        }
+
+        private async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
         {
             var contentString = await resultContent.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<List<T>>(contentString);
+            var document = JsonConvert.DeserializeObject<T>(contentString);
+            return document;
         }
 
         private async Task PostToBulkDocs(IEnumerable<object> commands)

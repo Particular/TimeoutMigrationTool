@@ -56,8 +56,8 @@ namespace TimeoutMigrationTool.Raven3.Tests
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await sut.CompleteBatch(batchToVerify.Number);
 
-            var reader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.ThreeDotFive);
-            var updatedBatch = await reader.GetItem<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}");
+            var reader = new Raven3Adapter(ServerName, databaseName);
+            var updatedBatch = await reader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (doc, id)=> { });
             toolState = await GetToolState();
             var currentBatch = toolState.GetCurrentBatch();
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));

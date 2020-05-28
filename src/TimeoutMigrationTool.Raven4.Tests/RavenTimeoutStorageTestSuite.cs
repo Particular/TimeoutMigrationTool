@@ -59,7 +59,6 @@ namespace TimeoutMigrationTool.Raven4.Tests
                     // Insert the timeout data
                     var timeoutData = new TimeoutData
                     {
-                        Id = $"{timeoutsPrefix}/{i}",
                         Destination = "A",
                         SagaId = Guid.NewGuid(),
                         OwningTimeoutManager = "FakeOwningTimeoutManager",

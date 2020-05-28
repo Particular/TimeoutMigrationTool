@@ -68,9 +68,9 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
-            var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var incompleteBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"{RavenConstants.BatchPrefix}/{incompleteBatch.Number}");
-            var resetTimeouts = await ravenDbReader.GetItems<TimeoutData>(x => incompleteBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", CancellationToken.None);
+            var ravenDbReader = new Raven4Adapter(ServerName, databaseName);
+            var incompleteBatchFromStorage = await ravenDbReader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{incompleteBatch.Number}", (doc, id) => { });
+            var resetTimeouts = await ravenDbReader.GetDocuments<TimeoutData>(x => incompleteBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(incompleteBatchFromStorage, Is.Null);
             Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => !x.StartsWith(RavenConstants.MigrationPrefix)));
@@ -88,9 +88,9 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
-            var ravenDbReader = new RavenDbReader(ServerName, databaseName, RavenDbVersion.Four);
-            var completeBatchFromStorage = await ravenDbReader.GetItem<BatchInfo>($"{RavenConstants.BatchPrefix}/{completeBatch.Number}");
-            var resetTimeouts = await ravenDbReader.GetItems<TimeoutData>(x => completeBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", CancellationToken.None);
+            var ravenDbReader = new Raven4Adapter(ServerName, databaseName);
+            var completeBatchFromStorage = await ravenDbReader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{completeBatch.Number}", (doc, id) => { });
+            var resetTimeouts = await ravenDbReader.GetDocuments<TimeoutData>(x => completeBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(completeBatchFromStorage, Is.Null);
             Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => x.StartsWith(RavenConstants.MigrationPrefix)));
