@@ -82,7 +82,7 @@
             {
                 var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(x =>
                     x.OwningTimeoutManager.Equals(endpoint,
-                        StringComparison.OrdinalIgnoreCase), "TimeoutDatas", CancellationToken.None);
+                        StringComparison.OrdinalIgnoreCase), "TimeoutDatas", (doc, id) => doc.Id = id);
 
                 if (timeouts.Count > 0)
                 {
