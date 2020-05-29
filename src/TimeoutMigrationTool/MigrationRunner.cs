@@ -53,7 +53,7 @@ namespace Particular.TimeoutMigrationTool
 
             foreach (var enpointToMigrate in endpointsToMigrate)
             {
-                await Console.Out.WriteLineAsync($"Starting migration for {enpointToMigrate.EndpointName}");
+                await Console.Out.WriteLineAsync($"Starting migration for {enpointToMigrate.EndpointName}, {enpointToMigrate.NrOfTimeouts}");
                 await Run(cutOffTime, enpointToMigrate, runParameters);
             }
         }

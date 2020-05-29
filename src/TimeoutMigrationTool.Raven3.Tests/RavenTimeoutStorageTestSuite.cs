@@ -1,21 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
-using Particular.TimeoutMigrationTool;
-using Particular.TimeoutMigrationTool.RavenDB;
-
 namespace TimeoutMigrationTool.Raven3.Tests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Net;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Newtonsoft.Json;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
+    using Particular.TimeoutMigrationTool.RavenDB;
+
     public abstract class RavenTimeoutStorageTestSuite
     {
-        protected const string ServerName = "http://localhost:8383";
+        protected string ServerName = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8383";
         protected string databaseName;
         protected EndpointInfo endpoint = new EndpointInfo();
 
