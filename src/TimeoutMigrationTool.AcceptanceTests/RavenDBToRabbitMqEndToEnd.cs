@@ -44,46 +44,39 @@
 
                     c.TimeoutSet = true;
                 }))
-                .Done(c =>
+                .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
+                {
+                    ec.UseTransport<RabbitMQTransport>()
+                    .ConnectionString(rabbitUrl);
+
+                })
+                .When(async c =>
                 {
                     if (!c.TimeoutSet)
                     {
                         return false;
                     }
-                    return WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
-                })
-                .Run();
+                    return await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
 
-            var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
-            var transportAdapter = new RabbitMqTimeoutCreator(rabbitUrl);
-            var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
-
-            context = await Scenario.Define<Context>()
-             .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
-             {
-                 ec.UseTransport<RabbitMQTransport>()
-                 .ConnectionString(rabbitUrl);
-
-             })
-             .When(c => c.EndpointsStarted, async _ =>
-                  {
-                      await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
-                  })
-             )
-             .Done(c => c.GotTheDelayedMessage)
-             .Run(TimeSpan.FromSeconds(15));
+                }, async _ =>
+                {
+                    var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
+                    var transportAdapter = new RabbitMqTimeoutCreator(rabbitUrl);
+                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
+                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
+                }))
+                .Done(c => c.GotTheDelayedMessage)
+                .Run(TimeSpan.FromSeconds(30));
 
             Assert.True(context.GotTheDelayedMessage);
         }
 
 
-        static bool WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
+        static async Task<bool> WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
         {
-            var timeouts = ravenAdapter.GetDocuments<TimeoutData>(x =>
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(x =>
                 x.OwningTimeoutManager.Equals(endpoint,
-                    StringComparison.OrdinalIgnoreCase), "TimeoutDatas", (doc, id) => doc.Id = id)
-                .GetAwaiter()
-                .GetResult();
+                    StringComparison.OrdinalIgnoreCase), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             return timeouts.Count > 0;
         }

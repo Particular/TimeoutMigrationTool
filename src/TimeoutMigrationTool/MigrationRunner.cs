@@ -4,6 +4,7 @@ namespace Particular.TimeoutMigrationTool
     using System.Threading.Tasks;
     using System;
     using System.Linq;
+    using System.Text;
 
     public class MigrationRunner
     {
@@ -35,20 +36,20 @@ namespace Particular.TimeoutMigrationTool
             if (problematicEndpoints.Any())
             {
                 var listOfEndpoints = string.Join(";", problematicEndpoints.Select(e => e.Endpoint.EndpointName));
+                var sb = new StringBuilder();
 
-                await Console.Out.WriteLineAsync($"Migration aborted:");
-
+                sb.AppendLine("Migration aborted:");
                 foreach (var problematicEndpoint in problematicEndpoints)
                 {
-                    await Console.Out.WriteLineAsync($"{problematicEndpoint.Endpoint.EndpointName}:");
+                    sb.AppendLine($"{problematicEndpoint.Endpoint.EndpointName}:");
 
                     foreach (var problem in problematicEndpoint.Problems)
                     {
-                        await Console.Out.WriteLineAsync($"\t - {problem}");
+                        sb.AppendLine($"\t - {problem}");
                     }
                 }
 
-                return;
+                throw new Exception(sb.ToString());
             }
 
             foreach (var enpointToMigrate in endpointsToMigrate)
