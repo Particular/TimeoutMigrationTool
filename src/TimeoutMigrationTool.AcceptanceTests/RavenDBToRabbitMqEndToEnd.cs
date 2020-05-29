@@ -65,10 +65,10 @@
                  .ConnectionString(rabbitUrl);
 
              })
-             .When(async (session, c) =>
-                {
-                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
-                })
+             .When(c => c.EndpointsStarted, async _ =>
+                  {
+                      await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
+                  })
              )
              .Done(c => c.GotTheDelayedMessage)
              .Run(TimeSpan.FromSeconds(15));
