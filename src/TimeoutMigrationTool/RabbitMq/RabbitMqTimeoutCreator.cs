@@ -58,7 +58,6 @@
                 channel.ExchangeBind(endpoint.EndpointName, "nsb.delay-delivery", $"#.{endpoint.EndpointName}");
             }
 
-            //TODO
             return Task.FromResult(result);
         }
 
