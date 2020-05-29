@@ -42,11 +42,16 @@
 
                     await session.Send(delayedMessage, options);
 
-                    await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
-
                     c.TimeoutSet = true;
                 }))
-                .Done(c => c.TimeoutSet)
+                .Done(c =>
+                {
+                    if (!c.TimeoutSet)
+                    {
+                        return false;
+                    }
+                    return WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
+                })
                 .Run();
 
             var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
@@ -72,22 +77,15 @@
         }
 
 
-        static async Task WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
+        static bool WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
         {
-            do
-            {
-                var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(x =>
-                    x.OwningTimeoutManager.Equals(endpoint,
-                        StringComparison.OrdinalIgnoreCase), "TimeoutDatas", (doc, id) => doc.Id = id);
+            var timeouts = ravenAdapter.GetDocuments<TimeoutData>(x =>
+                x.OwningTimeoutManager.Equals(endpoint,
+                    StringComparison.OrdinalIgnoreCase), "TimeoutDatas", (doc, id) => doc.Id = id)
+                .GetAwaiter()
+                .GetResult();
 
-                if (timeouts.Count > 0)
-                {
-                    return;
-                }
-
-                await Task.Delay(300);
-            }
-            while (true);
+            return timeouts.Count > 0;
         }
 
         public class Context : ScenarioContext
