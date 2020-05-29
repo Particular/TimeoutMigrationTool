@@ -71,7 +71,7 @@
                 })
              )
              .Done(c => c.GotTheDelayedMessage)
-             .Run();
+             .Run(TimeSpan.FromSeconds(15));
 
             Assert.True(context.GotTheDelayedMessage);
         }
