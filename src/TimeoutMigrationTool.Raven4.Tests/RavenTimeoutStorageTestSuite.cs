@@ -16,7 +16,21 @@ namespace TimeoutMigrationTool.Raven4.Tests
 
     public abstract class RavenTimeoutStorageTestSuite
     {
-        protected string ServerName = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8080";
+        protected string ServerName
+        {
+            get
+            {
+                var ravenUrls = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls");
+
+                if (string.IsNullOrEmpty(ravenUrls))
+                {
+                    return "http://localhost:8080";
+                }
+
+                return ravenUrls.Split(",").First();
+            }
+        }
+
         protected string databaseName;
         protected EndpointInfo endpoint = new EndpointInfo();
 
@@ -171,7 +185,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var killDb = $"{ServerName}/admin/databases";
             var deleteDb = new DeleteDbParams
             {
-                DatabaseNames = new[] {databaseName},
+                DatabaseNames = new[] { databaseName },
                 HardDelete = true
             };
             var httpRequest = new HttpRequestMessage
