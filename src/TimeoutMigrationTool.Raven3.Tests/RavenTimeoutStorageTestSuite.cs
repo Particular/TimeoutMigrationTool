@@ -13,7 +13,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
 
     public abstract class RavenTimeoutStorageTestSuite
     {
-        protected string ServerName = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8383";
+        protected string ServerName = Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383";
         protected string databaseName;
         protected EndpointInfo endpoint = new EndpointInfo();
 
