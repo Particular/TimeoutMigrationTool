@@ -155,10 +155,10 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         private static string LevelName(int level) => $"nsb.delay-level-{level:D2}";
 
+        public static int MaxDelayInSeconds = (1 << MaxLevel) - 1;
         private static int MaxLevel = 28;
 
-        private string rabbitConnectionString;
+        private readonly string rabbitConnectionString;
         private ConnectionFactory factory;
-        public static string StagingQueueName = "TimeoutMigrationTool_Staging";
     }
 }

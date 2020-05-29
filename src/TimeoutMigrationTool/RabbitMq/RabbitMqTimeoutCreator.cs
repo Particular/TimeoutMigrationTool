@@ -36,8 +36,30 @@
 
         Task<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
+            var result = new MigrationCheckResult();
+            if ((endpoint.LongestTimeout - DateTime.UtcNow).TotalSeconds > RabbitBatchWriter.MaxDelayInSeconds)
+            {
+                result.Problems.Add($"{endpoint.EndpointName} - has a timeout that has further away date than allowed {RabbitBatchWriter.MaxDelayInSeconds} seconds.");
+            }
+
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                try
+                {
+                    channel.QueueDeclarePassive(endpoint.EndpointName);
+                }
+                catch (Exception)
+                {
+                    result.Problems.Add($"There is no queue for an endpoint {endpoint.EndpointName}.");
+                    return Task.FromResult(result);
+                }
+
+                channel.ExchangeBind(endpoint.EndpointName, "nsb.delay-delivery", $"#.{endpoint.EndpointName}");
+            }
+
             //TODO
-            return Task.FromResult(new MigrationCheckResult());
+            return Task.FromResult(result);
         }
 
         Task CreateStagingQueue()
