@@ -158,7 +158,7 @@
             return Task.FromResult(true);
         }
 
-        public Task<List<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
+        public async Task<List<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
         {
             using (var connection = dialect.Connect(connectionString))
             {
@@ -168,7 +168,7 @@
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "CutOffTime";
-                    parameter.Value = cutOffTime;
+                    parameter.Value = migrateTimeoutsWithDeliveryDateLaterThan;
 
                     command.Parameters.Add(parameter);
 
