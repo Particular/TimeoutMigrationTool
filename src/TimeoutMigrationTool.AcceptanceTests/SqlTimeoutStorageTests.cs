@@ -325,7 +325,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
-            await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint);
+            await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), endpoint);
 
             var toolState = await timeoutStorage.GetToolState();
 
