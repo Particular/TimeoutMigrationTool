@@ -160,7 +160,41 @@
 
         public Task<List<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
         {
-            throw new NotImplementedException();
+            using (var connection = dialect.Connect(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = dialect.GetScriptToListEndpoints();
+
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "CutOffTime";
+                    parameter.Value = cutOffTime;
+
+                    command.Parameters.Add(parameter);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (reader.HasRows)
+                        {
+                            var results = new List<EndpointInfo>();
+                            while (reader.Read())
+                            {
+                                results.Add(new EndpointInfo
+                                {
+                                    EndpointName = reader.GetString(0),
+                                    NrOfTimeouts = reader.GetInt32(1),
+                                    LongestTimeout = reader.GetDateTime(2),
+                                    ShortestTimeout = reader.GetDateTime(3)
+                                });
+                            }
+
+                            return results;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         async Task<List<BatchInfo>> ReadBatchInfo(DbCommand command)
