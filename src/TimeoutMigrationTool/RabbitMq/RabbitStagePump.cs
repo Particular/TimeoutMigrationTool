@@ -202,7 +202,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             connection?.Dispose();
         }
 
-        public Task CompleteBatch(int number)
+        public async Task<int> CompleteBatch(int number)
         {
             Start(number);
             do
@@ -215,7 +215,8 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 throw new InvalidOperationException("Staging queue is not empty after finishing CompleteBatch");
             }
 
-            return Stop();
+            await Stop();
+            return processedMessages;
         }
 
         ConnectionFactory factory;

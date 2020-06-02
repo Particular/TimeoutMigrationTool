@@ -122,14 +122,24 @@ namespace Particular.TimeoutMigrationTool
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number);
 
                     logger.LogDebug("Staging batch");
-                    await transportTimeoutsCreator.StageBatch(timeouts);
+                    var stagedTimeoutCount = await transportTimeoutsCreator.StageBatch(timeouts);
+                    if (batch.TimeoutIds.Length != stagedTimeoutCount)
+                    {
+                        throw new InvalidOperationException($"The amount of staged timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {stagedTimeoutCount}, batch contains {batch.TimeoutIds.Length}.");
+                    }
 
                     await MarkCurrentBatchAsStaged(toolState);
                     logger.LogDebug("Batch marked as staged");
                 }
 
                 logger.LogDebug("Completing batch");
-                await transportTimeoutsCreator.CompleteBatch(batch.Number);
+                var completedTimeoutsCount = await transportTimeoutsCreator.CompleteBatch(batch.Number);
+
+                if (batch.TimeoutIds.Length != completedTimeoutsCount)
+                {
+                    throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {completedTimeoutsCount}, batch contains {batch.TimeoutIds.Length}.");
+                }
+
                 await CompleteCurrentBatch(toolState);
 
                 logger.LogDebug("Batch fully migrated");

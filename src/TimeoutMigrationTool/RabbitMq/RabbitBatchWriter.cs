@@ -18,7 +18,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             this.rabbitConnectionString = rabbitConnectionString;
         }
 
-        public Task<bool> WriteTimeoutsToStagingQueue(List<TimeoutData> timeouts, string stageExchangeName)
+        public Task<int> WriteTimeoutsToStagingQueue(List<TimeoutData> timeouts, string stageExchangeName)
         {
             //todo: check the count and purge the queue if not empty + log the situation
             using (var connection = GetConnection(this.rabbitConnectionString))
@@ -32,7 +32,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     }
                 }
             }
-            return Task<bool>.FromResult(true);
+            return Task<int>.FromResult(timeouts.Count);
         }
 
         private void PurgueQueueIfNotEmpty(IModel model)
