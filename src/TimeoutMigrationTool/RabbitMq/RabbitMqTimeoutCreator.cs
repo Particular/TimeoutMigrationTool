@@ -26,14 +26,14 @@
             return await VerifyEndpointIsReadyForNativeTimeouts(endpoint);
         }
 
-        public Task StageBatch(List<TimeoutData> timeouts)
+        public Task<int> StageBatch(List<TimeoutData> timeouts)
         {
             logger.LogDebug($"Writing {timeouts.Count} timeout to queue {QueueCreator.StagingQueueName}");
 
             return batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
         }
 
-        public Task CompleteBatch(int number)
+        public Task<int> CompleteBatch(int number)
         {
             return messagePump.CompleteBatch(number);
         }

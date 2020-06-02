@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -150,24 +151,16 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         async Task Process(BasicDeliverEventArgs message)
         {
-            string delayExchangeName, routingKey;
+            var delayExchangeName = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.DelayExchange"] as byte[]);
+            var routingKey = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.RoutingKey"] as byte[]);
+            var delayInSeconds = (int)message.BasicProperties.Headers["NServiceBus.Transport.RabbitMQ.DelayInSeconds"];
 
-            try
-            {
-                delayExchangeName = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.DelayExchange"] as byte[]);
-                routingKey = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.RoutingKey"] as byte[]);
-                message.BasicProperties.Headers.Remove("TimeoutMigrationTool.DelayExchange");
-                message.BasicProperties.Headers.Remove("TimeoutMigrationTool.RoutingKey");
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Failed to retrieve delayed exchange name or routing key from the message... {ex}");
-
-                return;
-            }
+            message.BasicProperties.Headers.Remove("TimeoutMigrationTool.DelayExchange");
+            message.BasicProperties.Headers.Remove("TimeoutMigrationTool.RoutingKey");
 
             using (var tokenSource = new CancellationTokenSource())
             {
+                message.BasicProperties.Expiration = (delayInSeconds * 1000).ToString(CultureInfo.InvariantCulture);
                 consumer.Model.BasicPublish(delayExchangeName, routingKey, true, message.BasicProperties, message.Body);
 
                 if (tokenSource.IsCancellationRequested)
@@ -183,7 +176,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     }
                     catch (AlreadyClosedException ex)
                     {
-                        Console.Error.WriteLine($"Failed to acknowledge message because the channel was closed. The message was returned to the queue. {ex}");
+                        logger.LogWarning($"Failed to acknowledge message because the channel was closed. The message was returned to the queue. {ex}");
                     }
                 }
             }
@@ -202,7 +195,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             connection?.Dispose();
         }
 
-        public Task CompleteBatch(int number)
+        public async Task<int> CompleteBatch(int number)
         {
             Start(number);
             do
@@ -215,7 +208,8 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 throw new InvalidOperationException("Staging queue is not empty after finishing CompleteBatch");
             }
 
-            return Stop();
+            await Stop();
+            return processedMessages;
         }
 
         ConnectionFactory factory;

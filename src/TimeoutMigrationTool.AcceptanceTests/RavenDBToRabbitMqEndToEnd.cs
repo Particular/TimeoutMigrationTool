@@ -37,7 +37,7 @@
 
                     var options = new SendOptions();
 
-                    options.DelayDeliveryWith(TimeSpan.FromSeconds(30));
+                    options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
                     options.SetDestination(targetEndpoint);
 
                     await session.Send(delayedMessage, options);
@@ -70,7 +70,7 @@
 
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(60));
+                .Run(TimeSpan.FromSeconds(30));
 
             Assert.True(context.GotTheDelayedMessage);
         }
