@@ -8,17 +8,18 @@
     using RavenDB;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
+    using System.Linq;
 
     class Program
     {
         static int Main(string[] args)
         {
-            var logger = new ConsoleLogger();
             var app = new CommandLineApplication
             {
                 Name = "migrate-timeouts"
             };
 
+            var verboseOption = app.Option("-v|--verbose", "Show verbose output", CommandOptionType.NoValue, true);
             var targetOption = new CommandOption($"-t|--{ApplicationOptions.RabbitMqTargetConnectionString}", CommandOptionType.SingleValue)
             {
                 Description = "The connection string for the target transport"
@@ -77,6 +78,7 @@
 
                 sqlpCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
+                    var logger = new ConsoleLogger(verboseOption.HasValue());
                     var sourceConnectionString = sourceOption.Value();
                     var targetConnectionString = targetOption.Value();
                     var timeoutTableName = timeoutTableOption.Value();
@@ -138,6 +140,8 @@
 
                 ravenDBCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
+                    var logger = new ConsoleLogger(verboseOption.HasValue());
+
                     var serverUrl = serverUrlOption.Value();
                     var databaseName = databaseNameOption.Value();
                     var prefix = prefixOption.Value();
@@ -173,20 +177,12 @@
 
             app.OnExecute(() =>
             {
-                logger.LogInformation("Specify a subcommand");
+                Console.WriteLine("Specify a subcommand");
                 app.ShowHelp();
                 return 1;
             });
 
-            try
-            {
-                return app.Execute(args);
-            }
-            catch (Exception exception)
-            {
-                logger.LogError($"Command failed with exception ({exception.GetType().Name}): {exception.Message}");
-                return 1;
-            }
+            return app.Execute(args);
         }
 
         static async Task AbortMigration(ITimeoutStorage timeoutStorage)
@@ -194,8 +190,7 @@
             var toolState = await timeoutStorage.GetToolState();
             if (toolState == null)
             {
-                await Console.Out.WriteLineAsync("Could not a previous run to abort.");
-                return;
+                throw new Exception("Could not a previous run to abort.");
             }
 
             await timeoutStorage.Abort(toolState);
