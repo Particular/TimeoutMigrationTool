@@ -83,7 +83,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await sut.CompleteBatch(batchToVerify.Number);
 
-            var reader = new Raven4Adapter(ServerName, databaseName);
+            var reader = new Raven3Adapter(ServerName, databaseName);
             var updatedTimeout = await reader.GetDocument<TimeoutData>(timeoutIdToVerify,
                 (timeoutData, id) => { timeoutData.Id = id; });
 
