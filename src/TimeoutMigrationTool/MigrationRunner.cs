@@ -137,7 +137,7 @@ namespace Particular.TimeoutMigrationTool
 
                 if (batch.TimeoutIds.Length != completedTimeoutsCount)
                 {
-                    throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {completedTimeoutsCount}, batch contains {batch.TimeoutIds.Length}.");
+                    throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Completed amount of timeouts: {completedTimeoutsCount}, batch contains {batch.TimeoutIds.Length}.");
                 }
 
                 await CompleteCurrentBatch(toolState);
