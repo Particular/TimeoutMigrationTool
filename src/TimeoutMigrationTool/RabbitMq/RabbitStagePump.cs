@@ -151,23 +151,12 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         async Task Process(BasicDeliverEventArgs message)
         {
-            string delayExchangeName, routingKey;
-            int delayInSeconds;
+            var delayExchangeName = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.DelayExchange"] as byte[]);
+            var routingKey = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.RoutingKey"] as byte[]);
+            var delayInSeconds = (int)message.BasicProperties.Headers["NServiceBus.Transport.RabbitMQ.DelayInSeconds"];
 
-            try
-            {
-                delayExchangeName = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.DelayExchange"] as byte[]);
-                routingKey = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.RoutingKey"] as byte[]);
-                delayInSeconds = int.Parse(Encoding.UTF8.GetString(message.BasicProperties.Headers["NServiceBus.Transport.RabbitMQ.DelayInSeconds"] as byte[]));
-                message.BasicProperties.Headers.Remove("TimeoutMigrationTool.DelayExchange");
-                message.BasicProperties.Headers.Remove("TimeoutMigrationTool.RoutingKey");
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Failed to retrieve delayed exchange name or routing key from the message... {ex}");
-
-                return;
-            }
+            message.BasicProperties.Headers.Remove("TimeoutMigrationTool.DelayExchange");
+            message.BasicProperties.Headers.Remove("TimeoutMigrationTool.RoutingKey");
 
             using (var tokenSource = new CancellationTokenSource())
             {
@@ -187,7 +176,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     }
                     catch (AlreadyClosedException ex)
                     {
-                        Console.Error.WriteLine($"Failed to acknowledge message because the channel was closed. The message was returned to the queue. {ex}");
+                        logger.LogWarning($"Failed to acknowledge message because the channel was closed. The message was returned to the queue. {ex}");
                     }
                 }
             }
