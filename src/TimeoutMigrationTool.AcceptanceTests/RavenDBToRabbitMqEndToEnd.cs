@@ -62,7 +62,7 @@
                 {
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(rabbitUrl);
-                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
+                    var migrationRunner = new MigrationRunner(new TestLoggingAdapter(), timeoutStorage, transportAdapter);
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
 
                     c.MigrationComplete = true;
