@@ -37,7 +37,7 @@
 
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(30));
                      options.SetDestination(targetEndpoint);
 
                      await session.Send(delayedMessage, options);
@@ -47,7 +47,7 @@
                      c.TimeoutSet = true;
                  }))
                  .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(10));
+                 .Run(TimeSpan.FromSeconds(15));
 
             var context = await Scenario.Define<TargetTestContext>()
                 .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
@@ -64,7 +64,7 @@
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(TimeSpan.FromSeconds(60));
 
             Assert.True(context.GotTheDelayedMessage);
         }
