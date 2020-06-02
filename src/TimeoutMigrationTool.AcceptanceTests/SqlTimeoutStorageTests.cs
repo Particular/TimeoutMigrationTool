@@ -31,7 +31,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                     return session.SendLocal(startSagaMessage);
                 }))
-            .Done(c => c.TimeoutsSet)
+            .Done(c =>
+            {
+                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                return numberOfTimeouts == c.NumberOfTimeouts;
+            })
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
@@ -59,7 +64,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                     return session.SendLocal(startSagaMessage);
                 }))
-            .Done(c => c.TimeoutsSet)
+            .Done(c =>
+            {
+                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                return numberOfTimeouts == c.NumberOfTimeouts;
+            })
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
@@ -87,7 +97,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                     return session.SendLocal(startSagaMessage);
                 }))
-            .Done(c => c.TimeoutsSet)
+            .Done(c =>
+            {
+                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                return numberOfTimeouts == c.NumberOfTimeouts;
+            })
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
@@ -120,7 +135,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                     return session.SendLocal(startSagaMessage);
                 }))
-            .Done(c => c.TimeoutsSet)
+            .Done(c =>
+            {
+                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                return numberOfTimeouts == c.NumberOfTimeouts;
+            })
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
@@ -146,7 +166,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.TimeoutsSet)
+                .Done(c =>
+                {
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
@@ -174,7 +199,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.TimeoutsSet)
+                .Done(c =>
+                {
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
@@ -201,7 +231,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.TimeoutsSet)
+                .Done(c =>
+                {
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
@@ -228,7 +263,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.TimeoutsSet)
+                .Done(c =>
+                {
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
@@ -261,7 +301,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.TimeoutsSet)
+                .Done(c =>
+                {
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
@@ -293,7 +338,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                     return session.SendLocal(startSagaMessage);
                 }))
-            .Done(c => c.TimeoutsSet)
+            .Done(c =>
+            {
+                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                return numberOfTimeouts == c.NumberOfTimeouts;
+            })
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
@@ -321,7 +371,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                     return session.SendLocal(startSagaMessage);
                 }))
-            .Done(c => c.TimeoutsSet)
+            .Done(c =>
+            {
+                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                return numberOfTimeouts == c.NumberOfTimeouts;
+            })
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
@@ -353,7 +408,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                     return session.SendLocal(startSagaMessage);
                 }))
-            .Done(c => c.TimeoutsSet)
+            .Done(c =>
+            {
+                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                return numberOfTimeouts == c.NumberOfTimeouts;
+            })
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
@@ -366,7 +426,6 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
         public class Context : ScenarioContext
         {
-            public bool TimeoutsSet { get; set; }
             public int NumberOfTimeouts { get; set; } = 1;
         }
 
@@ -398,13 +457,10 @@ namespace TimeoutMigrationTool.AcceptanceTests
                     {
                         await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
                     }
-                    await RequestTimeout(context, DateTime.Now.AddSeconds(0.1), new Timeout { Id = message.Id }); // Wait for the timeout messages to be sent to the timeout manager
                 }
 
                 public Task Timeout(Timeout state, IMessageHandlerContext context)
                 {
-                    TestContext.TimeoutsSet = true;
-
                     return Task.CompletedTask;
                 }
 

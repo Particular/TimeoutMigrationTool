@@ -56,6 +56,21 @@ public static class MsSqlMicrosoftDataClientHelper
         }
     }
 
+    public static T QueryScalar<T>(string sqlStatement)
+    {
+        using (var connection = Build())
+        {
+            connection.Open();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = sqlStatement;
+
+                return (T)command.ExecuteScalar();
+            }
+        }
+    }
+
     public static string GetConnectionString()
     {
         var connection = Environment.GetEnvironmentVariable("SQLServerConnectionString");
