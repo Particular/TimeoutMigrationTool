@@ -40,7 +40,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                             ChangeVector = null,
                             Patch = new Patch()
                             {
-                                Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
+                                Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationOngoingPrefix}' + this.OwningTimeoutManager;",
                                 Values = new { }
                             }
                         };
@@ -57,7 +57,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     DebugMode = false,
                     Patch = new Patch()
                     {
-                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
+                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationOngoingPrefix}' + this.OwningTimeoutManager;",
                         Values = new { }
                     }
                 };

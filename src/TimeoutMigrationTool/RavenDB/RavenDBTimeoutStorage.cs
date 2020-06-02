@@ -41,7 +41,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             bool filter(TimeoutData td)
             {
-                return td.Time >= cutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix,
+                return td.Time >= cutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix,
                     StringComparison.OrdinalIgnoreCase);
             }
             var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter,
@@ -95,7 +95,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var batch = await ravenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
             batch.State = BatchState.Completed;
 
-            await ravenAdapter.UpdateRecord($"{RavenConstants.BatchPrefix}/{batchNumber}", batch);
+            await ravenAdapter.CompleteBatchAndUpdateTimeouts(batch);
         }
 
         public async Task StoreToolState(ToolState toolState)
@@ -129,7 +129,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             bool filter(TimeoutData td)
             {
-                return td.Destination == endpoint.EndpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationPrefix,
+                return td.Destination == endpoint.EndpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix,
                     StringComparison.OrdinalIgnoreCase);
             }
 

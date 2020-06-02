@@ -73,7 +73,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var resetTimeouts = await ravenDbReader.GetDocuments<TimeoutData>(x => incompleteBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(incompleteBatchFromStorage, Is.Null);
-            Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => !x.StartsWith(RavenConstants.MigrationPrefix)));
+            Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => !x.StartsWith(RavenConstants.MigrationOngoingPrefix)));
         }
 
         [Test]
@@ -93,7 +93,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var resetTimeouts = await ravenDbReader.GetDocuments<TimeoutData>(x => completeBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(completeBatchFromStorage, Is.Null);
-            Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => x.StartsWith(RavenConstants.MigrationPrefix)));
+            Assert.That(resetTimeouts.Select(t => t.OwningTimeoutManager), Is.All.Matches<string>(x => x.StartsWith(RavenConstants.MigrationOngoingPrefix)));
         }
     }
 }
