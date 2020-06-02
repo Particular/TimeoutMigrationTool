@@ -24,57 +24,50 @@
 
             var ravenAdapter = new Raven4Adapter(serverUrl, databaseName);
 
-            var context = await Scenario.Define<Context>()
-                .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
-                {
-                    ec.UsePersistence<RavenDBPersistence>()
-                        .SetDefaultDocumentStore(GetDocumentStore(serverUrl, databaseName));
+            await Scenario.Define<SourceTestContext>()
+                 .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
+                 {
+                     ec.UsePersistence<RavenDBPersistence>()
+                         .SetDefaultDocumentStore(GetDocumentStore(serverUrl, databaseName));
 
-                })
-                .When(async (session, c) =>
-                {
-                    var delayedMessage = new DelayedMessage();
+                 })
+                 .When(async (session, c) =>
+                 {
+                     var delayedMessage = new DelayedMessage();
 
-                    var options = new SendOptions();
+                     var options = new SendOptions();
 
-                    options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
-                    options.SetDestination(targetEndpoint);
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                     options.SetDestination(targetEndpoint);
 
-                    await session.Send(delayedMessage, options);
+                     await session.Send(delayedMessage, options);
 
-                    c.TimeoutSet = true;
-                }))
+                     await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
+
+                     c.TimeoutSet = true;
+                 }))
+                 .Done(c => c.TimeoutSet)
+                 .Run(TimeSpan.FromSeconds(10));
+
+            var context = await Scenario.Define<TargetTestContext>()
                 .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
                 {
                     ec.UseTransport<RabbitMQTransport>()
                     .ConnectionString(rabbitUrl);
-
                 })
-                .When(async c =>
-                {
-                    if (!c.TimeoutSet)
-                    {
-                        return false;
-                    }
-                    return await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
-
-                }, async (_, c) =>
+                .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter();
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
-
-                    c.MigrationComplete = true;
-
                 }))
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(30));
 
             Assert.True(context.GotTheDelayedMessage);
         }
-
 
         static async Task<bool> WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
         {
@@ -85,10 +78,13 @@
             return timeouts.Count > 0;
         }
 
-        public class Context : ScenarioContext
+        public class SourceTestContext : ScenarioContext
         {
             public bool TimeoutSet { get; set; }
-            public bool MigrationComplete { get; set; }
+        }
+
+        public class TargetTestContext : ScenarioContext
+        {
             public bool GotTheDelayedMessage { get; set; }
         }
 
@@ -109,7 +105,7 @@
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
             {
-                public DelayedMessageHandler(Context testContext)
+                public DelayedMessageHandler(TargetTestContext testContext)
                 {
                     this.testContext = testContext;
                 }
@@ -120,7 +116,7 @@
                     return Task.CompletedTask;
                 }
 
-                readonly Context testContext;
+                readonly TargetTestContext testContext;
             }
         }
 
