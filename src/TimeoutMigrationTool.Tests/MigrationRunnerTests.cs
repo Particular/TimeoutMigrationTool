@@ -13,11 +13,11 @@ namespace TimeoutMigrationTool.Tests
         [SetUp]
         public void Setup()
         {
-            _timeoutStorage = new FakeTimeoutStorage();
-            _transportTimeoutsCreator = new FakeTransportTimeoutCreator();
-            _runner = new MigrationRunner(_timeoutStorage, _transportTimeoutsCreator);
+            timeoutStorage = new FakeTimeoutStorage();
+            transportTimeoutsCreator = new FakeTransportTimeoutCreator();
+            runner = new MigrationRunner(timeoutStorage, transportTimeoutsCreator);
 
-            _endpoints = new List<EndpointInfo>
+            endpoints = new List<EndpointInfo>
             {
                 new EndpointInfo
                 {
@@ -25,14 +25,14 @@ namespace TimeoutMigrationTool.Tests
                     NrOfTimeouts = 500
                 }
             };
-            _testEndpoint = _endpoints.First();
-            _timeoutStorage.SetupEndpoints(_endpoints);
+            testEndpoint = endpoints.First();
+            timeoutStorage.SetupEndpoints(endpoints);
         }
 
         [Test]
         public async Task WhenRunningWithoutToolState()
         {
-            _timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
+            timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
             {
                 new BatchInfo
                 {
@@ -41,31 +41,31 @@ namespace TimeoutMigrationTool.Tests
                     TimeoutIds = new[] {"timeouts/1"}
                 }
             });
-            await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
-            Assert.That(_timeoutStorage.EndpointsWereListed);
-            Assert.That(_timeoutStorage.ToolStateWasCreated);
-            Assert.That(_transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(_timeoutStorage.CanPrepareStorageWasCalled);
-            Assert.That(_timeoutStorage.BatchesWerePrepared);
-            Assert.That(_timeoutStorage.ToolStateMovedToStoragePrepared);
-            Assert.That(_timeoutStorage.BatchWasRead);
-            Assert.That(_transportTimeoutsCreator.BatchWasStaged);
-            Assert.That(_timeoutStorage.BatchWasCompleted);
-            Assert.That(_timeoutStorage.ToolStateMovedToCompleted);
-            Assert.That(_timeoutStorage.ToolStateWasAborted, Is.False);
+            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.ToolStateWasCreated);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
+            Assert.That(timeoutStorage.BatchesWerePrepared);
+            Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
+            Assert.That(timeoutStorage.BatchWasRead);
+            Assert.That(transportTimeoutsCreator.BatchWasStaged);
+            Assert.That(timeoutStorage.BatchWasCompleted);
+            Assert.That(timeoutStorage.ToolStateMovedToCompleted);
+            Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
         [Test]
         public async Task WhenRunningWithStateNeverRun()
         {
-            var toolState = new ToolState(new Dictionary<string, string>(), _testEndpoint)
+            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint)
             {
                 Status = MigrationStatus.NeverRun
             };
-            _timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupToolStateToReturn(toolState);
 
-            _timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
+            timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
             {
                 new BatchInfo
                 {
@@ -74,25 +74,25 @@ namespace TimeoutMigrationTool.Tests
                     TimeoutIds = new[] {"timeouts/1"}
                 }
             });
-            await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
-            Assert.That(_timeoutStorage.EndpointsWereListed);
-            Assert.That(_timeoutStorage.ToolStateWasCreated, Is.False);
-            Assert.That(_transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(_timeoutStorage.CanPrepareStorageWasCalled);
-            Assert.That(_timeoutStorage.BatchesWerePrepared);
-            Assert.That(_timeoutStorage.ToolStateMovedToStoragePrepared);
-            Assert.That(_timeoutStorage.BatchWasRead);
-            Assert.That(_transportTimeoutsCreator.BatchWasStaged);
-            Assert.That(_timeoutStorage.BatchWasCompleted);
-            Assert.That(_timeoutStorage.ToolStateMovedToCompleted);
-            Assert.That(_timeoutStorage.ToolStateWasAborted, Is.False);
+            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
+            Assert.That(timeoutStorage.BatchesWerePrepared);
+            Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
+            Assert.That(timeoutStorage.BatchWasRead);
+            Assert.That(transportTimeoutsCreator.BatchWasStaged);
+            Assert.That(timeoutStorage.BatchWasCompleted);
+            Assert.That(timeoutStorage.ToolStateMovedToCompleted);
+            Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
         [Test]
         public async Task WhenRunningWithStateStoragePreparedAndParametersMismatch()
         {
-            var toolState = new ToolState(new Dictionary<string, string>(), _testEndpoint)
+            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint)
             {
                 Status = MigrationStatus.StoragePrepared,
                 Endpoint = new EndpointInfo
@@ -100,30 +100,30 @@ namespace TimeoutMigrationTool.Tests
                     EndpointName = "Invoicing"
                 }
             };
-            _timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupToolStateToReturn(toolState);
 
-            await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
-            Assert.That(_timeoutStorage.EndpointsWereListed);
-            Assert.That(_timeoutStorage.ToolStateWasCreated, Is.False);
-            Assert.That(_transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(_timeoutStorage.CanPrepareStorageWasCalled, Is.False);
-            Assert.That(_timeoutStorage.BatchesWerePrepared, Is.False);
-            Assert.That(_timeoutStorage.ToolStateMovedToStoragePrepared, Is.False);
-            Assert.That(_timeoutStorage.BatchWasRead, Is.False);
-            Assert.That(_transportTimeoutsCreator.BatchWasStaged, Is.False);
-            Assert.That(_timeoutStorage.BatchWasCompleted, Is.False);
-            Assert.That(_timeoutStorage.ToolStateMovedToCompleted, Is.False);
-            Assert.That(_timeoutStorage.ToolStateWasAborted, Is.False);
+            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(timeoutStorage.CanPrepareStorageWasCalled, Is.False);
+            Assert.That(timeoutStorage.BatchesWerePrepared, Is.False);
+            Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared, Is.False);
+            Assert.That(timeoutStorage.BatchWasRead, Is.False);
+            Assert.That(transportTimeoutsCreator.BatchWasStaged, Is.False);
+            Assert.That(timeoutStorage.BatchWasCompleted, Is.False);
+            Assert.That(timeoutStorage.ToolStateMovedToCompleted, Is.False);
+            Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
         [Test]
         public async Task WhenRunningWithStateStoragePreparedAndParametersMatch()
         {
-            var toolState = new ToolState(new Dictionary<string, string>(), _testEndpoint)
+            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint)
             {
                 Status = MigrationStatus.StoragePrepared,
-                Endpoint = _testEndpoint
+                Endpoint = testEndpoint
             };
             toolState.InitBatches(new List<BatchInfo>
             {
@@ -134,32 +134,32 @@ namespace TimeoutMigrationTool.Tests
                     TimeoutIds = new[] {"timeouts/1"}
                 }
             });
-            _timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupToolStateToReturn(toolState);
 
-            await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
-            Assert.That(_timeoutStorage.EndpointsWereListed);
-            Assert.That(_timeoutStorage.ToolStateWasCreated, Is.False);
-            Assert.That(_transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(_timeoutStorage.CanPrepareStorageWasCalled, Is.False);
-            Assert.That(_timeoutStorage.BatchesWerePrepared, Is.False);
-            Assert.That(_timeoutStorage.BatchWasRead);
-            Assert.That(_transportTimeoutsCreator.BatchWasStaged);
-            Assert.That(_timeoutStorage.BatchWasCompleted);
-            Assert.That(_timeoutStorage.ToolStateMovedToCompleted);
-            Assert.That(_timeoutStorage.ToolStateWasAborted, Is.False);
+            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(timeoutStorage.CanPrepareStorageWasCalled, Is.False);
+            Assert.That(timeoutStorage.BatchesWerePrepared, Is.False);
+            Assert.That(timeoutStorage.BatchWasRead);
+            Assert.That(transportTimeoutsCreator.BatchWasStaged);
+            Assert.That(timeoutStorage.BatchWasCompleted);
+            Assert.That(timeoutStorage.ToolStateMovedToCompleted);
+            Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
         [Test]
         public async Task WhenRunningWithStateCompleted()
         {
-            var toolState = new ToolState(new Dictionary<string, string>(), _testEndpoint)
+            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint)
             {
                 Status = MigrationStatus.Completed,
-                Endpoint = _testEndpoint
+                Endpoint = testEndpoint
             };
-            _timeoutStorage.SetupToolStateToReturn(toolState);
-            _timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
+            timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
             {
                 new BatchInfo
                 {
@@ -169,51 +169,51 @@ namespace TimeoutMigrationTool.Tests
                 }
             });
 
-            await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
-            Assert.That(_timeoutStorage.EndpointsWereListed);
-            Assert.That(_timeoutStorage.ToolStateWasCreated);
-            Assert.That(_transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(_timeoutStorage.CanPrepareStorageWasCalled);
-            Assert.That(_timeoutStorage.BatchesWerePrepared);
-            Assert.That(_timeoutStorage.ToolStateMovedToStoragePrepared);
-            Assert.That(_timeoutStorage.BatchWasRead);
-            Assert.That(_transportTimeoutsCreator.BatchWasStaged);
-            Assert.That(_timeoutStorage.BatchWasCompleted);
-            Assert.That(_timeoutStorage.ToolStateMovedToCompleted);
-            Assert.That(_timeoutStorage.ToolStateWasAborted, Is.False);
+            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.ToolStateWasCreated);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
+            Assert.That(timeoutStorage.BatchesWerePrepared);
+            Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
+            Assert.That(timeoutStorage.BatchWasRead);
+            Assert.That(transportTimeoutsCreator.BatchWasStaged);
+            Assert.That(timeoutStorage.BatchWasCompleted);
+            Assert.That(timeoutStorage.ToolStateMovedToCompleted);
+            Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
         [Test]
         public async Task WhenPrepareDoesNotReturnAnyBatches()
         {
-            var toolState = new ToolState(new Dictionary<string, string>(), _testEndpoint)
+            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint)
             {
                 Status = MigrationStatus.Completed,
-                Endpoint = _testEndpoint
+                Endpoint = testEndpoint
             };
-            _timeoutStorage.SetupToolStateToReturn(toolState);
-            _timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>());
+            timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>());
 
-            await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
-            Assert.That(_timeoutStorage.EndpointsWereListed);
-            Assert.That(_timeoutStorage.ToolStateWasCreated);
-            Assert.That(_timeoutStorage.CanPrepareStorageWasCalled);
-            Assert.That(_transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(_timeoutStorage.BatchesWerePrepared);
-            Assert.That(_timeoutStorage.ToolStateMovedToStoragePrepared);
-            Assert.That(_timeoutStorage.BatchWasRead, Is.False);
-            Assert.That(_transportTimeoutsCreator.BatchWasStaged, Is.False);
-            Assert.That(_timeoutStorage.BatchWasCompleted, Is.False);
-            Assert.That(_timeoutStorage.ToolStateMovedToCompleted);
-            Assert.That(_timeoutStorage.ToolStateWasAborted, Is.False);
+            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.ToolStateWasCreated);
+            Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(timeoutStorage.BatchesWerePrepared);
+            Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
+            Assert.That(timeoutStorage.BatchWasRead, Is.False);
+            Assert.That(transportTimeoutsCreator.BatchWasStaged, Is.False);
+            Assert.That(timeoutStorage.BatchWasCompleted, Is.False);
+            Assert.That(timeoutStorage.ToolStateMovedToCompleted);
+            Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
-        private FakeTimeoutStorage _timeoutStorage;
-        private FakeTransportTimeoutCreator _transportTimeoutsCreator;
-        private MigrationRunner _runner;
-        private List<EndpointInfo> _endpoints;
-        private EndpointInfo _testEndpoint;
+        FakeTimeoutStorage timeoutStorage;
+        FakeTransportTimeoutCreator transportTimeoutsCreator;
+        MigrationRunner runner;
+        List<EndpointInfo> endpoints;
+        EndpointInfo testEndpoint;
     }
 }
