@@ -1,21 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using Particular.TimeoutMigrationTool;
-
 namespace TimeoutMigrationTool.Tests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
+
     [TestFixture]
     public class MigrationRunnerTests
     {
-         private FakeTimeoutStorage _timeoutStorage;
-         private FakeTransportTimeoutCreator _transportTimeoutsCreator;
-         private MigrationRunner _runner;
-         private List<EndpointInfo> _endpoints;
-         private EndpointInfo _testEndpoint;
-
         [SetUp]
         public void Setup()
         {
@@ -44,7 +38,7 @@ namespace TimeoutMigrationTool.Tests
                 {
                     Number = 1,
                     State = BatchState.Pending,
-                    TimeoutIds = new []{"timeouts/1"}
+                    TimeoutIds = new[] {"timeouts/1"}
                 }
             });
             await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
@@ -77,7 +71,7 @@ namespace TimeoutMigrationTool.Tests
                 {
                     Number = 1,
                     State = BatchState.Pending,
-                    TimeoutIds = new []{"timeouts/1"}
+                    TimeoutIds = new[] {"timeouts/1"}
                 }
             });
             await _runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
@@ -137,7 +131,7 @@ namespace TimeoutMigrationTool.Tests
                 {
                     Number = 1,
                     State = BatchState.Pending,
-                    TimeoutIds = new []{"timeouts/1"}
+                    TimeoutIds = new[] {"timeouts/1"}
                 }
             });
             _timeoutStorage.SetupToolStateToReturn(toolState);
@@ -171,7 +165,7 @@ namespace TimeoutMigrationTool.Tests
                 {
                     Number = 1,
                     State = BatchState.Pending,
-                    TimeoutIds = new []{"timeouts/1"}
+                    TimeoutIds = new[] {"timeouts/1"}
                 }
             });
 
@@ -215,5 +209,11 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(_timeoutStorage.ToolStateMovedToCompleted);
             Assert.That(_timeoutStorage.ToolStateWasAborted, Is.False);
         }
+
+        private FakeTimeoutStorage _timeoutStorage;
+        private FakeTransportTimeoutCreator _transportTimeoutsCreator;
+        private MigrationRunner _runner;
+        private List<EndpointInfo> _endpoints;
+        private EndpointInfo _testEndpoint;
     }
 }
