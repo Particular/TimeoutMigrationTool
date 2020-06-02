@@ -4,16 +4,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
 namespace Particular.TimeoutMigrationTool.RabbitMq
 {
     class RabbitBatchWriter
     {
-        public RabbitBatchWriter(string rabbitConnectionString)
+        public RabbitBatchWriter(ILogger logger, string rabbitConnectionString)
         {
+            this.logger = logger;
             this.rabbitConnectionString = rabbitConnectionString;
         }
 
@@ -39,7 +40,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             var statingQueueMessageLength = QueueCreator.GetStatingQueueMessageLength(model);
             if (statingQueueMessageLength > 0)
             {
-                Console.Error.WriteLine("Purging staging queue - staging queue contains messages.");
+                logger.LogWarning("Purging staging queue - staging queue contains messages.");
                 QueueCreator.PurgeStatingQueue(model);
             }
         }
@@ -157,7 +158,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public const int MaxDelayInSeconds = (1 << MaxLevel) - 1;
         const int MaxLevel = 28;
-
+        readonly ILogger logger;
         readonly string rabbitConnectionString;
         ConnectionFactory factory;
     }

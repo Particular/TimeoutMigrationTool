@@ -7,8 +7,6 @@
     using RabbitMq;
     using RavenDB;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging.Console;
-    using Microsoft.Extensions.Options;
     using Microsoft.Extensions.Logging;
 
     class Program
@@ -97,7 +95,7 @@
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
 
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName, 1024, "run parameters jason thing goes here");
-                    var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+                    var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
 
                     var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -165,7 +163,7 @@
                     }
                     else
                     {
-                        var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+                        var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
                         var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                         await RunMigration(logger, endpointFilter, runParameters, timeoutStorage, transportAdapter);

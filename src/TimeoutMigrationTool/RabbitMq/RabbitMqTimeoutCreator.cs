@@ -4,14 +4,16 @@
     using RabbitMQ.Client;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
 
     public class RabbitMqTimeoutCreator : ICreateTransportTimeouts
     {
-        public RabbitMqTimeoutCreator(string targetConnectionString)
+        public RabbitMqTimeoutCreator(ILogger logger, string targetConnectionString)
         {
+            this.logger = logger;
             this.targetConnectionString = targetConnectionString;
-            batchWriter = new RabbitBatchWriter(targetConnectionString);
-            messagePump = new RabbitStagePump(targetConnectionString, QueueCreator.StagingQueueName);
+            batchWriter = new RabbitBatchWriter(logger, targetConnectionString);
+            messagePump = new RabbitStagePump(logger, targetConnectionString, QueueCreator.StagingQueueName);
         }
 
         public async Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
@@ -26,6 +28,8 @@
 
         public Task StageBatch(List<TimeoutData> timeouts)
         {
+            logger.LogDebug($"Writing {timeouts.Count} timeout to queue {QueueCreator.StagingQueueName}");
+
             return batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
         }
 
@@ -72,6 +76,7 @@
             return Task.CompletedTask;
         }
 
+        readonly ILogger logger;
         string targetConnectionString;
         ConnectionFactory factory;
 
