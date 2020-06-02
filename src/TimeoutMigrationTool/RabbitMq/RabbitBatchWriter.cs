@@ -91,7 +91,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             properties.Headers["NServiceBus.Transport.RabbitMQ.DelayInSeconds"] = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
 
-            properties.Expiration = Convert.ToInt32(delay.TotalMilliseconds).ToString(CultureInfo.InvariantCulture);
+            //properties.Expiration = Convert.ToInt32(delay.TotalMilliseconds).ToString(CultureInfo.InvariantCulture);
 
             if (messageHeaders.TryGetValue("NServiceBus.CorrelationId", out var correlationId) && correlationId != null)
             {
