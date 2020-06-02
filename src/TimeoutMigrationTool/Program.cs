@@ -7,6 +7,8 @@
     using RabbitMq;
     using RavenDB;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using System.Linq;
 
     class Program
     {
@@ -17,6 +19,7 @@
                 Name = "migrate-timeouts"
             };
 
+            var verboseOption = app.Option("-v|--verbose", "Show verbose output", CommandOptionType.NoValue, true);
             var targetOption = new CommandOption($"-t|--{ApplicationOptions.RabbitMqTargetConnectionString}", CommandOptionType.SingleValue)
             {
                 Description = "The connection string for the target transport"
@@ -75,6 +78,7 @@
 
                 sqlpCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
+                    var logger = new ConsoleLogger(verboseOption.HasValue());
                     var sourceConnectionString = sourceOption.Value();
                     var targetConnectionString = targetOption.Value();
                     var timeoutTableName = timeoutTableOption.Value();
@@ -93,11 +97,11 @@
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
 
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName, 1024, "run parameters jason thing goes here");
-                    var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+                    var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
 
                     var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
-                    await RunMigration(endpointFilter, runParameters, timeoutStorage, transportAdapter);
+                    await RunMigration(logger, endpointFilter, runParameters, timeoutStorage, transportAdapter);
                 });
             });
 
@@ -136,6 +140,8 @@
 
                 ravenDBCommand.OnExecuteAsync(async (cancellationToken) =>
                 {
+                    var logger = new ConsoleLogger(verboseOption.HasValue());
+
                     var serverUrl = serverUrlOption.Value();
                     var databaseName = databaseNameOption.Value();
                     var prefix = prefixOption.Value();
@@ -161,10 +167,10 @@
                     }
                     else
                     {
-                        var transportAdapter = new RabbitMqTimeoutCreator(targetConnectionString);
+                        var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
                         var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
-                        await RunMigration(endpointFilter, runParameters, timeoutStorage, transportAdapter);
+                        await RunMigration(logger, endpointFilter, runParameters, timeoutStorage, transportAdapter);
                     }
                 });
             });
@@ -176,15 +182,7 @@
                 return 1;
             });
 
-            try
-            {
-                return app.Execute(args);
-            }
-            catch (Exception exception)
-            {
-                Console.Error.WriteLine($"Command failed with exception ({exception.GetType().Name}): {exception.Message}");
-                return 1;
-            }
+            return app.Execute(args);
         }
 
         static async Task AbortMigration(ITimeoutStorage timeoutStorage)
@@ -192,16 +190,15 @@
             var toolState = await timeoutStorage.GetToolState();
             if (toolState == null)
             {
-                await Console.Out.WriteLineAsync("Could not a previous run to abort.");
-                return;
+                throw new Exception("Could not a previous run to abort.");
             }
 
             await timeoutStorage.Abort(toolState);
         }
 
-        static Task RunMigration(EndpointFilter endpointFilter, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
+        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
         {
-            var migrationRunner = new MigrationRunner(timeoutStorage, transportTimeoutCreator);
+            var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportTimeoutCreator);
 
             var cutOffTime = DateTime.Now.AddDays(-1);
             if (runParameters.TryGetValue(ApplicationOptions.CutoffTime, out var cutOffTimeValue))

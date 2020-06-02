@@ -58,11 +58,12 @@
                     }
                     return await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
 
-                }, async (_,c) =>
+                }, async (_, c) =>
                 {
+                    var logger = new TestLoggingAdapter();
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
-                    var transportAdapter = new RabbitMqTimeoutCreator(rabbitUrl);
-                    var migrationRunner = new MigrationRunner(timeoutStorage, transportAdapter);
+                    var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
+                    var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
 
                     c.MigrationComplete = true;

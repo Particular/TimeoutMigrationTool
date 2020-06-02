@@ -1,22 +1,22 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 
 namespace Particular.TimeoutMigrationTool.RabbitMq
 {
-    internal class RabbitStagePump : IDisposable
+    public class RabbitStagePump : IDisposable
     {
-        public RabbitStagePump(string targetConnectionString, string queueName)
+        public RabbitStagePump(ILogger logger, string targetConnectionString, string queueName)
         {
             factory = new ConnectionFactory();
             factory.Uri = new Uri(targetConnectionString);
             this.prefetchMultiplier = 10;
+            this.logger = logger;
             this.queueName = queueName;
 
             exclusiveScheduler = new ConcurrentExclusiveSchedulerPair().ExclusiveScheduler;
@@ -50,6 +50,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             messageCount = QueueCreator.GetStatingQueueMessageLength(channel);
 
+            logger.LogDebug($"Pushing {messageCount} to the native timeout structure");
             long prefetchCount = (long)maxConcurrency * prefetchMultiplier;
 
             channel.BasicQos(0, (ushort)Math.Min(prefetchCount, ushort.MaxValue), false);
@@ -218,6 +219,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         }
 
         ConnectionFactory factory;
+        private readonly ILogger logger;
         string queueName;
     }
 }

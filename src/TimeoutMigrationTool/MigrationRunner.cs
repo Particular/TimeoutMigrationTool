@@ -5,11 +5,13 @@ namespace Particular.TimeoutMigrationTool
     using System;
     using System.Linq;
     using System.Text;
+    using Microsoft.Extensions.Logging;
 
     public class MigrationRunner
     {
-        public MigrationRunner(ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutsCreator)
+        public MigrationRunner(ILogger logger, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutsCreator)
         {
+            this.logger = logger;
             this.timeoutStorage = timeoutStorage;
             this.transportTimeoutsCreator = transportTimeoutsCreator;
         }
@@ -24,7 +26,7 @@ namespace Particular.TimeoutMigrationTool
             var problematicEndpoints = new List<(EndpointInfo Endpoint, List<string> Problems)>();
             foreach (var endpoint in endpointsToMigrate)
             {
-                await Console.Out.WriteLineAsync($"Verifying that {endpoint.EndpointName} has native delay infrastructure in place");
+                logger.LogInformation($"Verifying that {endpoint.EndpointName} has native delay infrastructure in place");
                 var migrationCheckResult = await transportTimeoutsCreator.AbleToMigrate(endpoint);
 
                 if (!migrationCheckResult.CanMigrate)
@@ -54,7 +56,7 @@ namespace Particular.TimeoutMigrationTool
 
             foreach (var enpointToMigrate in endpointsToMigrate)
             {
-                await Console.Out.WriteLineAsync($"Starting migration for {enpointToMigrate.EndpointName}, {enpointToMigrate.NrOfTimeouts}");
+                logger.LogInformation($"Starting migration for {enpointToMigrate.EndpointName}, {enpointToMigrate.NrOfTimeouts}");
                 await Run(cutOffTime, enpointToMigrate, runParameters);
             }
         }
@@ -67,7 +69,7 @@ namespace Particular.TimeoutMigrationTool
             {
                 toolState = new ToolState(runParameters, endpointInfo);
                 await timeoutStorage.StoreToolState(toolState);
-                await Console.Out.WriteLineAsync("Migration status created and stored.");
+                logger.LogInformation("Migration status created and stored.");
             }
 
             switch (toolState.Status)
@@ -76,7 +78,7 @@ namespace Particular.TimeoutMigrationTool
                     var canPrepStorage = await timeoutStorage.CanPrepareStorage();
                     if (!canPrepStorage)
                     {
-                        await Console.Error.WriteLineAsync("We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
+                        throw new Exception("We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
                     }
 
                     await Prepare(cutOffTime, toolState, endpointInfo);
@@ -88,18 +90,21 @@ namespace Particular.TimeoutMigrationTool
 
                     break;
                 case MigrationStatus.StoragePrepared when RunParametersAreDifferent(endpointInfo, runParameters, toolState):
-                    await Console.Out.WriteLineAsync($"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+                    var sb = new StringBuilder();
 
-                    await Console.Out.WriteLineAsync($"\t'--endpoint': '{endpointInfo.EndpointName}'.");
+                    sb.AppendLine($"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+
+                    sb.AppendLine($"\t'--endpoint': '{endpointInfo.EndpointName}'.");
 
                     foreach (var setting in toolState.RunParameters)
                     {
-                        await Console.Out.WriteLineAsync($"\t'{setting.Key}': '{setting.Value}'.");
+                        sb.AppendLine($"\t'{setting.Key}': '{setting.Value}'.");
                     }
 
-                    return;
+                    throw new Exception(sb.ToString());
+
                 case MigrationStatus.StoragePrepared:
-                    await Console.Out.WriteLineAsync("Resuming in progress migration");
+                    logger.LogInformation("Resuming in progress migration");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -109,46 +114,46 @@ namespace Particular.TimeoutMigrationTool
             while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();
-                await Console.Out.WriteAsync($"Migrating batch {batch.Number}");
+                logger.LogInformation($"Migrating batch {batch.Number}");
 
                 if (batch.State == BatchState.Pending)
                 {
-                    await Console.Out.WriteAsync($" - reading");
+                    logger.LogDebug("Reading batch");
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number);
 
-                    await Console.Out.WriteAsync($" - staging");
+                    logger.LogDebug("Staging batch");
                     await transportTimeoutsCreator.StageBatch(timeouts);
 
                     await MarkCurrentBatchAsStaged(toolState);
-                    await Console.Out.WriteAsync($" - staged");
+                    logger.LogDebug("Batch marked as staged");
                 }
 
-                await Console.Out.WriteAsync($" - completing");
+                logger.LogDebug("Completing batch");
                 await transportTimeoutsCreator.CompleteBatch(batch.Number);
                 await CompleteCurrentBatch(toolState);
 
-                await Console.Out.WriteLineAsync($" - done");
+                logger.LogDebug("Batch fully migrated");
             }
 
             toolState.Status = MigrationStatus.Completed;
 
             await timeoutStorage.StoreToolState(toolState);
-            await Console.Out.WriteLineAsync($"Migration completed successfully");
+            logger.LogInformation($"Migration completed successfully");
         }
 
         async Task Prepare(DateTime cutOffTime, ToolState toolState, EndpointInfo endpoint)
         {
-            await Console.Out.WriteAsync("Preparing storage");
+            logger.LogDebug("Preparing storage");
             var batches = await timeoutStorage.Prepare(cutOffTime, endpoint);
 
             if (!batches.Any())
             {
-                await Console.Out.WriteLineAsync("No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
+                logger.LogWarning("No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
             }
 
             toolState.InitBatches(batches);
             await MarkStorageAsPrepared(toolState);
-            await Console.Out.WriteLineAsync(" - done");
+            logger.LogInformation("Storage prepared");
         }
 
         bool ShouldCreateFreshToolState(ToolState toolState)
@@ -207,6 +212,7 @@ namespace Particular.TimeoutMigrationTool
             await timeoutStorage.StoreToolState(toolState);
         }
 
+        readonly ILogger logger;
         readonly ITimeoutStorage timeoutStorage;
         readonly ICreateTransportTimeouts transportTimeoutsCreator;
     }
