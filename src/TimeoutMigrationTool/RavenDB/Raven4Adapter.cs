@@ -12,10 +12,11 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+
     public class Raven4Adapter : ICanTalkToRavenVersion
     {
-        string serverUrl;
-        string databaseName;
+        readonly string serverUrl;
+        readonly string databaseName;
 
         public Raven4Adapter(string serverUrl, string databaseName)
         {
@@ -73,7 +74,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 ChangeVector = null,
                 Patch = new Patch()
                 {
-                    Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
+                    Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationOngoingPrefix}' + this.OwningTimeoutManager;",
                     Values = new { }
                 }
             }).ToList();
@@ -95,13 +96,41 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 ChangeVector = null,
                 Patch = new Patch()
                 {
-                    Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationPrefix.Length});",
+                    Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationOngoingPrefix.Length});",
                     Values = new { }
                 }
             }).ToList();
 
             List<object> commands = new List<object>();
             commands.Add(deleteCommand);
+            commands.AddRange(timeoutUpdateCommands);
+
+            await PostToBulkDocs(commands);
+        }
+
+        public async Task CompleteBatchAndUpdateTimeouts(BatchInfo batch)
+        {
+            var updateCommand = new PutCommand
+            {
+                Id = $"{RavenConstants.BatchPrefix}/{batch.Number}",
+                Type = "PUT",
+                ChangeVector = (object) null,
+                Document = batch
+            };
+            var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
+            {
+                Id = timeoutId,
+                Type = "PATCH",
+                ChangeVector = null,
+                Patch = new Patch()
+                {
+                    Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationDonePrefix}' + this.OwningTimeoutManager.substr({RavenConstants.MigrationOngoingPrefix.Length});",
+                    Values = new { }
+                }
+            }).ToList();
+
+            List<object> commands = new List<object>();
+            commands.Add(updateCommand);
             commands.AddRange(timeoutUpdateCommands);
 
             await PostToBulkDocs(commands);

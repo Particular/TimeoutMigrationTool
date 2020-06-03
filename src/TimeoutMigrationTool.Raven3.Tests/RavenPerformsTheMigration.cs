@@ -63,5 +63,31 @@ namespace TimeoutMigrationTool.Raven3.Tests
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));
             Assert.That(currentBatch.Number, Is.EqualTo(batchToVerify.Number + 1));
         }
+
+       [Test]
+        public async Task WhenCompletingABatchTimeoutsAreMarkedDone()
+        {
+            var toolState = SetupToolState(DateTime.Now);
+            await SaveToolState(toolState);
+
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), endpoint);
+            var timeoutIdToVerify = batches.First().TimeoutIds.First();
+
+            toolState.InitBatches(batches);
+            await SaveToolState(toolState);
+
+            var batchToVerify = batches.First();
+
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            await sut.CompleteBatch(batchToVerify.Number);
+
+            var reader = new Raven3Adapter(ServerName, databaseName);
+            var updatedTimeout = await reader.GetDocument<TimeoutData>(timeoutIdToVerify,
+                (timeoutData, id) => { timeoutData.Id = id; });
+
+            Assert.That(updatedTimeout.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix), Is.True);
+        }
     }
 }

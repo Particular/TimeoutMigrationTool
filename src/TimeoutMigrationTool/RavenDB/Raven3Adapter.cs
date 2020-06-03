@@ -21,7 +21,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.serverUrl = serverUrl;
             this.databaseName = databaseName;
         }
-        
+
         public async Task UpdateRecord(string key, object document)
         {
             using (var httpClient = new HttpClient())
@@ -42,7 +42,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 result.EnsureSuccessStatusCode();
             }
         }
-        
+
         public async Task DeleteRecord(string key)
         {
             using (var httpClient = new HttpClient())
@@ -70,7 +70,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     DebugMode = false,
                     Patch = new Patch()
                     {
-                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationPrefix}' + this.OwningTimeoutManager;",
+                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationOngoingPrefix}' + this.OwningTimeoutManager;",
                         Values = new { }
                     }
                 };
@@ -99,12 +99,40 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     DebugMode = false,
                     Patch = new Patch()
                     {
-                        Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationPrefix.Length});",
+                        Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationOngoingPrefix.Length});",
                         Values = new { }
                     }
                 };
             }).ToList();
             commands.Add(deleteCommand);
+
+            await PostToBulkDocs(commands);
+        }
+
+        public async Task CompleteBatchAndUpdateTimeouts(BatchInfo batch)
+        {
+            var updateCommand = new
+            {
+                Key = $"{RavenConstants.BatchPrefix}/{batch.Number}",
+                Method = "PUT",
+                Document = batch,
+                Metadata = new object()
+            };
+            var commands = batch.TimeoutIds.Select(timeoutId =>
+            {
+                return new Raven3BatchCommand
+                {
+                    Key = timeoutId,
+                    Method = "EVAL",
+                    DebugMode = false,
+                    Patch = new Patch()
+                    {
+                        Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationDonePrefix}' + this.OwningTimeoutManager.substr({RavenConstants.MigrationOngoingPrefix.Length});",
+                        Values = new { }
+                    }
+                };
+            }).Cast<object>().ToList();
+            commands.Add(updateCommand);
 
             await PostToBulkDocs(commands);
         }

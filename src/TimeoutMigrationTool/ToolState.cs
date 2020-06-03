@@ -12,11 +12,13 @@ namespace Particular.TimeoutMigrationTool
             Endpoint = endpointInfo;
         }
 
-        internal ToolState(IEnumerable<BatchInfo> batches, IDictionary<string, string> runParameters, MigrationStatus migrationStatus)
+        internal ToolState(IEnumerable<BatchInfo> batches, IDictionary<string, string> runParameters,
+            MigrationStatus migrationStatus, EndpointInfo endpoint)
         {
             Batches = batches;
             RunParameters = runParameters;
             Status = migrationStatus;
+            Endpoint = endpoint;
         }
 
         public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();

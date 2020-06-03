@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.RavenDB;
 
 namespace TimeoutMigrationTool.Raven3.Tests
@@ -41,6 +43,42 @@ namespace TimeoutMigrationTool.Raven3.Tests
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task WhenThereAreCompletedTimeoutsTheseAreIgnoredWhenListingEndpoints()
+        {
+            await InitTimeouts(50, false);
+
+            Raven3Adapter adapter = new Raven3Adapter(ServerName, databaseName);
+            var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
+            timeout.OwningTimeoutManager = $"{RavenConstants.MigrationDonePrefix}{timeout.OwningTimeoutManager}";
+            await adapter.UpdateRecord(timeout.Id, timeout);
+
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
+
+            Assert.IsNotNull(endpoints);
+            Assert.That(endpoints.Count, Is.EqualTo(1));
+            Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(49));
+        }
+
+        [Test]
+        public async Task WhenThereAreInProgressTimeoutsTheseAreIncludedWhenListingEndpoints()
+        {
+            await InitTimeouts(50, false);
+
+            Raven3Adapter adapter = new Raven3Adapter(ServerName, databaseName);
+            var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
+            timeout.OwningTimeoutManager = $"{RavenConstants.MigrationOngoingPrefix}{timeout.OwningTimeoutManager}";
+            await adapter.UpdateRecord(timeout.Id, timeout);
+
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
+
+            Assert.IsNotNull(endpoints);
+            Assert.That(endpoints.Count, Is.EqualTo(1));
+            Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(50));
         }
     }
 }

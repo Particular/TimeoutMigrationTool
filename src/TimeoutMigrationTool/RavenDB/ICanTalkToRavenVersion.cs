@@ -14,5 +14,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class;
         Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class;
         Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class;
+        Task CompleteBatchAndUpdateTimeouts(BatchInfo batch);
     }
 }
