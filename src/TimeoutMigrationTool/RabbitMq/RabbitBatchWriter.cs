@@ -52,6 +52,12 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             //TODO: guard for negative timespan
             var delay = (timeout.Time - DateTime.UtcNow);
             var delayInSeconds = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
+            if (delayInSeconds < 0)
+            {//when the tiemout is due we zero the delay
+                delay = TimeSpan.Zero;
+                delayInSeconds = 0;
+            }
+
             var routingKey = CalculateRoutingKey(delayInSeconds, timeout.Destination, out level);
 
             var properties = model.CreateBasicProperties();
