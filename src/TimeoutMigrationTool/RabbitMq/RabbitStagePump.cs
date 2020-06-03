@@ -140,7 +140,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Failed to process message. Returning message to queue... {ex}");
+                logger.LogError($"Failed to process message. Returning message to queue... {ex}");
                 await consumer.Model.BasicRejectAndRequeueIfOpen(eventArgs.DeliveryTag, exclusiveScheduler);
             }
             finally
