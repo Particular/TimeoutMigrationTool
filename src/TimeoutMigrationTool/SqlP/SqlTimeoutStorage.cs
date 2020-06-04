@@ -146,7 +146,7 @@
 
                     parameter = command.CreateParameter();
                     parameter.ParameterName = "RunParameters";
-                    parameter.Value = toolState.RunParameters;
+                    parameter.Value = JsonConvert.SerializeObject(toolState.RunParameters);
                     command.Parameters.Add(parameter);
 
                     await command.ExecuteNonQueryAsync();
