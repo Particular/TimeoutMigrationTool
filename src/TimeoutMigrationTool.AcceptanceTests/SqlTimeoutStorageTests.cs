@@ -215,7 +215,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
-            Assert.AreEqual(SqlP_WithTimeouts_Endpoint.EndpointName, endpoints[0].EndpointName);
+            // this will blow if the names don't match
+            var loadedEndpoint = endpoints.Single(a => string.Equals(a.EndpointName, SqlP_WithTimeouts_Endpoint.EndpointName, StringComparison.OrdinalIgnoreCase)); 
 
             Assert.IsTrue(endpoints.Count > 0);
         }
