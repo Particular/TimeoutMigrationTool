@@ -49,17 +49,21 @@
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                try
+                foreach (var destination in endpoint.Destinations)
                 {
-                    channel.QueueDeclarePassive(endpoint.EndpointName);
-                }
-                catch (Exception)
-                {
-                    result.Problems.Add($"There is no queue for an endpoint {endpoint.EndpointName}.");
-                    return Task.FromResult(result);
-                }
+                    try
+                    {
+                        channel.QueueDeclarePassive(destination);
+                    }
+                    catch (Exception)
+                    {
+                        result.Problems.Add($"There is no queue for destination {destination}.");
+                        continue;
+                    }
 
-                channel.ExchangeBind(endpoint.EndpointName, "nsb.delay-delivery", $"#.{endpoint.EndpointName}");
+                    channel.ExchangeBind(destination, "nsb.delay-delivery", $"#.{destination}");
+
+                }
             }
 
             return Task.FromResult(result);

@@ -49,14 +49,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 (doc, id) => doc.Id = id);
 
             var endpoints = timeouts.GroupBy(
-                key => key.Destination,
+                key => key.OwningTimeoutManager.Replace(RavenConstants.MigrationOngoingPrefix, ""),
                 elements => elements,
-                (destination, destinationTimeouts) => new EndpointInfo
+                (owningTimeoutManager, destinationTimeouts) => new EndpointInfo
                 {
-                    EndpointName = destination,
+                    EndpointName = owningTimeoutManager,
                     NrOfTimeouts = timeouts.Count(),
                     ShortestTimeout = timeouts.Min(x => x.Time),
-                    LongestTimeout = timeouts.Max(x => x.Time)
+                    LongestTimeout = timeouts.Max(x => x.Time),
+                    Destinations = timeouts.GroupBy(x => x.Destination).Select(g => g.Key).ToList()
                 }).ToList();
 
             return endpoints;
@@ -129,7 +130,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             bool filter(TimeoutData td)
             {
-                return td.Destination == endpoint.EndpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix,
+                return td.OwningTimeoutManager == endpoint.EndpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix,
                     StringComparison.OrdinalIgnoreCase);
             }
 

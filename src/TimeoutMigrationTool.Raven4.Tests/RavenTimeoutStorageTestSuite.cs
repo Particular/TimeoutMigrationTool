@@ -27,7 +27,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
                     return "http://localhost:8080";
                 }
 
-                return ravenUrls.Split(",").First();
+                return ravenUrls.Split(",").First().TrimEnd('/');
             }
         }
 
@@ -73,15 +73,17 @@ namespace TimeoutMigrationTool.Raven4.Tests
                     // Insert the timeout data
                     var timeoutData = new TimeoutData
                     {
-                        Destination = "A",
+                        Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
                         SagaId = Guid.NewGuid(),
-                        OwningTimeoutManager = "FakeOwningTimeoutManager",
+                        OwningTimeoutManager = "A",
                         Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
                         Headers = new Dictionary<string, string>(),
                         State = Encoding.ASCII.GetBytes("This is my state")
                     };
                     if (alternateEndpoints)
-                        timeoutData.Destination = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
+                    {
+                        timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
+                    }
 
                     var serializeObject = JsonConvert.SerializeObject(timeoutData);
                     var httpContent = new StringContent(serializeObject);

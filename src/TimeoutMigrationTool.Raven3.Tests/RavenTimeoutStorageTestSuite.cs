@@ -13,7 +13,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
 
     public abstract class RavenTimeoutStorageTestSuite
     {
-        protected string ServerName = Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383";
+        protected string ServerName = (Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383").TrimEnd('/');
         protected string databaseName;
         protected EndpointInfo endpoint = new EndpointInfo();
 
@@ -53,15 +53,17 @@ namespace TimeoutMigrationTool.Raven3.Tests
                     var timeoutData = new TimeoutData
                     {
                         Id = $"{timeoutsPrefix}/{i}",
-                        Destination = "A",
+                        Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
                         SagaId = Guid.NewGuid(),
-                        OwningTimeoutManager = "FakeOwningTimeoutManager",
+                        OwningTimeoutManager = "A",
                         Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
                         Headers = new Dictionary<string, string>(),
                         State = Encoding.ASCII.GetBytes("This is my state")
                     };
                     if (alternateEndpoints)
-                        timeoutData.Destination = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
+                    {
+                        timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
+                    }
 
                     var serializeObject = JsonConvert.SerializeObject(timeoutData);
                     var httpContent = new StringContent(serializeObject);
@@ -184,17 +186,8 @@ namespace TimeoutMigrationTool.Raven3.Tests
         private Task<HttpResponseMessage> DeleteDatabase()
         {
             var killDb = $"{ServerName}/admin/databases/{databaseName}";
-
-            var httpRequest = new HttpRequestMessage
-            {
-                Method = HttpMethod.Delete,
-                //Content = new StringContent(JsonConvert.SerializeObject(deleteDb)),
-                RequestUri = new Uri(killDb)
-            };
-
             using (var httpClient = new HttpClient())
             {
-                //var killDbResult = await httpClient.SendAsync(httpRequest);
                 return httpClient.DeleteAsync(killDb);
             }
         }
