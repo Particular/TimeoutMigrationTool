@@ -6,17 +6,28 @@ public static class MsSqlMicrosoftDataClientHelper
 {
     const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Initial Catalog=Test;";
 
-    public static SqlConnection Build()
+    public static SqlConnection Build(string connectionString = null)
     {
-        return new SqlConnection(GetConnectionString());
+        if (connectionString == null)
+        {
+            connectionString = ConnectionString;
+        }
+
+        return new SqlConnection(connectionString);
     }
 
-    public static void RecreateDbIfNotExists()
+    public static void RecreateDbIfNotExists(string connectionString = null)
     {
-        var connectionStringBuilder = new SqlConnectionStringBuilder(GetConnectionString());
+        if (connectionString == null)
+        {
+            connectionString = GetConnectionString();
+        }
+
+
+        var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
         var databaseName = connectionStringBuilder.InitialCatalog;
 
-        DropDatabase(databaseName);
+        DropDatabase(connectionString, databaseName);
 
         connectionStringBuilder.InitialCatalog = "master";
 
@@ -83,9 +94,9 @@ public static class MsSqlMicrosoftDataClientHelper
         return connection;
     }
 
-    static void DropDatabase(string databaseName)
+    static void DropDatabase(string connectionString, string databaseName)
     {
-        var connectionStringBuilder = new SqlConnectionStringBuilder(GetConnectionString());
+        var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
 
         connectionStringBuilder.InitialCatalog = "master";
 
