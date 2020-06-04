@@ -77,16 +77,6 @@ WHERE
             return $@"
 BEGIN TRANSACTION
 
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
-    BEGIN
-        CREATE TABLE TimeoutsMigration_State (
-            EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
-            Status VARCHAR(15) NOT NULL,
-            Batches INT NOT NULL,
-            RunParameters NVARCHAR(MAX)
-        )
-    END;
-
     CREATE TABLE [{endpointName}_TimeoutData_migration] (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         BatchNumber INT,
@@ -119,7 +109,12 @@ BEGIN TRANSACTION
         FROM [{endpointName}_TimeoutData_migration]
     ) BatchMigration;
 
-    INSERT INTO TimeoutsMigration_State VALUES ('{endpointName}', 'StoragePrepared', (SELECT COUNT(DISTINCT BatchNumber) from [{endpointName}_TimeoutData_migration]), @RunParameters);
+    UPDATE
+        TimeoutsMigration_State
+    SET
+        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [{endpointName}_TimeoutData_migration])
+    WHERE
+        EndpointName = '{endpointName}';
 
      SELECT
         Id,
