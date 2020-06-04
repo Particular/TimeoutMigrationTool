@@ -22,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.Tests", "TimeoutMigrationTool.Raven3.Tests\TimeoutMigrationTool.Raven3.Tests.csproj", "{B180C831-A1F3-4393-A409-ABB99B001F5A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.AcceptanceTests.Raven3", "TimeoutMigrationTool.AcceptanceTests.Raven3\TimeoutMigrationTool.AcceptanceTests.Raven3.csproj", "{95BEE7C9-62D2-4A95-B777-CCDBBF475683}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.AcceptanceTests", "TimeoutMigrationTool.AcceptanceTests.Raven3\TimeoutMigrationTool.Raven3.AcceptanceTests.csproj", "{95BEE7C9-62D2-4A95-B777-CCDBBF475683}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
