@@ -17,14 +17,6 @@
             MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }
 
-        public override async Task TearDown()
-        {
-            await base.SetUp();
-
-            //TODO
-            //MsSqlMicrosoftDataClientHelper.DropDatabase(connectionString);
-        }
-
         protected async Task<T> QueryScalar<T>(string sqlStatement)
         {
             using (var connection = MsSqlMicrosoftDataClientHelper.Build(connectionString))

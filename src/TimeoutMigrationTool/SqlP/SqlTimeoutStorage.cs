@@ -207,7 +207,7 @@
                 }
             }
 
-            return null;
+            return new List<EndpointInfo>();
         }
 
         async Task<List<BatchInfo>> ReadBatchInfo(DbCommand command)

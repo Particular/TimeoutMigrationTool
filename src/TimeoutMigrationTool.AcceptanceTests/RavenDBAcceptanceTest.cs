@@ -22,7 +22,7 @@
 
         public override async Task TearDown()
         {
-            await base.SetUp();
+            await base.TearDown();
 
             await DeleteDatabase(serverUrl, databaseName);
         }

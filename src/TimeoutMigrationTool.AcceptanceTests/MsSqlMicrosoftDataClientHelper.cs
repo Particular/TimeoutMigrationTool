@@ -23,7 +23,6 @@ public static class MsSqlMicrosoftDataClientHelper
             connectionString = GetConnectionString();
         }
 
-
         var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
         var databaseName = connectionStringBuilder.InitialCatalog;
 
