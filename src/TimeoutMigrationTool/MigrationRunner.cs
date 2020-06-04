@@ -26,7 +26,7 @@ namespace Particular.TimeoutMigrationTool
             var problematicEndpoints = new List<(EndpointInfo Endpoint, List<string> Problems)>();
             foreach (var endpoint in endpointsToMigrate)
             {
-                logger.LogInformation($"Verifying that {endpoint.EndpointName} has native delay infrastructure in place");
+                logger.LogInformation($"Verifying that timeouts set by {endpoint.EndpointName} can be migrated");
                 var migrationCheckResult = await transportTimeoutsCreator.AbleToMigrate(endpoint);
 
                 if (!migrationCheckResult.CanMigrate)

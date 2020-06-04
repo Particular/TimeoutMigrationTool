@@ -37,7 +37,7 @@
 
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(30));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(20));
                      options.SetDestination(targetEndpoint);
 
                      await session.Send(delayedMessage, options);
@@ -61,10 +61,10 @@
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
-                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
+                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(60));
+                .Run(TimeSpan.FromSeconds(30));
 
             Assert.True(context.GotTheDelayedMessage);
         }
