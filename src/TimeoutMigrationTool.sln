@@ -22,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.Tests", "TimeoutMigrationTool.Raven3.Tests\TimeoutMigrationTool.Raven3.Tests.csproj", "{B180C831-A1F3-4393-A409-ABB99B001F5A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.AcceptanceTests", "TimeoutMigrationTool.AcceptanceTests.Raven3\TimeoutMigrationTool.Raven3.AcceptanceTests.csproj", "{95BEE7C9-62D2-4A95-B777-CCDBBF475683}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.AcceptanceTests", "TimeoutMigrationTool.Raven3.AcceptanceTests\TimeoutMigrationTool.Raven3.AcceptanceTests.csproj", "{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,10 +58,10 @@ Global
 		{B180C831-A1F3-4393-A409-ABB99B001F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B180C831-A1F3-4393-A409-ABB99B001F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B180C831-A1F3-4393-A409-ABB99B001F5A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{95BEE7C9-62D2-4A95-B777-CCDBBF475683}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{95BEE7C9-62D2-4A95-B777-CCDBBF475683}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{95BEE7C9-62D2-4A95-B777-CCDBBF475683}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{95BEE7C9-62D2-4A95-B777-CCDBBF475683}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
