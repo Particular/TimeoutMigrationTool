@@ -110,7 +110,6 @@ namespace Particular.TimeoutMigrationTool
                     throw new ArgumentOutOfRangeException();
             }
 
-
             while (toolState.HasMoreBatches())
             {
                 var batch = toolState.GetCurrentBatch();

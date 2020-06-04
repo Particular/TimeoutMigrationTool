@@ -30,7 +30,7 @@
                 Description = "The cut off time to apply when finding eligible timeouts"
             };
 
-            var abortMigrationOption = new CommandOption($"-f|--{ApplicationOptions.AbortMigration}", CommandOptionType.NoValue)
+            var abortMigrationOption = new CommandOption($"-a|--{ApplicationOptions.AbortMigration}", CommandOptionType.NoValue)
             {
                 Description = "To abort the current migration run."
             };
