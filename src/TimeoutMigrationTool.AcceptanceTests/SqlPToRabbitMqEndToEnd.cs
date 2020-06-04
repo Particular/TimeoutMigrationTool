@@ -19,7 +19,7 @@
         public async Task Can_migrate_timeouts()
         {
             var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint));
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint)).Replace(".", "_");
 
             await Scenario.Define<SourceTestContext>()
                  .WithEndpoint<LegacySqlPEndpoint>(b => b.CustomConfig(ec =>
