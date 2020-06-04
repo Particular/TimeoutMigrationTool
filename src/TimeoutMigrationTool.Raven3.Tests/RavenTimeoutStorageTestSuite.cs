@@ -53,7 +53,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
                     var timeoutData = new TimeoutData
                     {
                         Id = $"{timeoutsPrefix}/{i}",
-                        Destination = "WeDontCare.ThisShouldBeIgnored.BecuaseItsJustForRouting",
+                        Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
                         SagaId = Guid.NewGuid(),
                         OwningTimeoutManager = "A",
                         Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
@@ -186,17 +186,8 @@ namespace TimeoutMigrationTool.Raven3.Tests
         private Task<HttpResponseMessage> DeleteDatabase()
         {
             var killDb = $"{ServerName}/admin/databases/{databaseName}";
-
-            var httpRequest = new HttpRequestMessage
-            {
-                Method = HttpMethod.Delete,
-                //Content = new StringContent(JsonConvert.SerializeObject(deleteDb)),
-                RequestUri = new Uri(killDb)
-            };
-
             using (var httpClient = new HttpClient())
             {
-                //var killDbResult = await httpClient.SendAsync(httpRequest);
                 return httpClient.DeleteAsync(killDb);
             }
         }

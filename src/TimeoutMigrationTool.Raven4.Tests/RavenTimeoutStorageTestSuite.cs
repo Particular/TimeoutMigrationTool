@@ -73,7 +73,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
                     // Insert the timeout data
                     var timeoutData = new TimeoutData
                     {
-                        Destination = "WeDontCare.ThisShouldBeIgnored.BecuaseItsJustForRouting",
+                        Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
                         SagaId = Guid.NewGuid(),
                         OwningTimeoutManager = "A",
                         Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
