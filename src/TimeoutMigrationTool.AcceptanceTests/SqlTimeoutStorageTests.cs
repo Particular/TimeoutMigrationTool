@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Particular.TimeoutMigrationTool;
 using Particular.TimeoutMigrationTool.SqlP;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.Xml;
 using System.Threading.Tasks;
@@ -40,6 +41,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT TOP 1 Batches FROM TimeoutsMigration_State WHERE EndpointName = '{SqlP_WithTimeouts_Endpoint.EndpointName}'");
@@ -73,11 +76,13 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
-            var toolState = await timeoutStorage.GetToolState();
+            var loadedToolState = await timeoutStorage.GetToolState();
 
-            Assert.AreEqual(1, toolState.Batches.Count());
+            Assert.AreEqual(1, loadedToolState.Batches.Count());
         }
 
         [Test]
@@ -106,16 +111,18 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
-            await timeoutStorage.Prepare(DateTime.Now, endpoint);
-
-            var toolState = await timeoutStorage.GetToolState();
-
-            toolState.Status = MigrationStatus.Completed;
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
+            await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             var loadedToolState = await timeoutStorage.GetToolState();
 
-            Assert.AreEqual(MigrationStatus.Completed, loadedToolState.Status);
+            loadedToolState.Status = MigrationStatus.Completed;
+            await timeoutStorage.StoreToolState(loadedToolState);
+
+            var secondLoadedToolState = await timeoutStorage.GetToolState();
+
+            Assert.AreEqual(MigrationStatus.Completed, secondLoadedToolState.Status);
         }
 
         [Test]
@@ -175,6 +182,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now.AddDays(10), endpoint);
 
             var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT MAX(Batches) FROM TimeoutsMigration_State WHERE EndpointName = '{SqlP_WithTimeouts_Endpoint.EndpointName}'");
@@ -272,6 +281,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             var batches = await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             foreach (var batch in batches)
@@ -310,6 +321,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             var batches = await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             foreach (var batch in batches)
@@ -347,6 +360,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
@@ -380,11 +395,13 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), endpoint);
 
-            var toolState = await timeoutStorage.GetToolState();
+            var loadedToolState = await timeoutStorage.GetToolState();
 
-            await timeoutStorage.Abort(toolState);
+            await timeoutStorage.Abort(loadedToolState);
 
             var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
@@ -417,6 +434,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
             .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData_migration");

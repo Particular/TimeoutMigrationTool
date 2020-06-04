@@ -127,12 +127,26 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToStoreToolState(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToStoreToolState();
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "Status";
                     parameter.Value = toolState.Status;
+                    command.Parameters.Add(parameter);
 
+                    parameter = command.CreateParameter();
+                    parameter.ParameterName = "EndpointName";
+                    parameter.Value = timeoutTableName;
+                    command.Parameters.Add(parameter);
+
+                    parameter = command.CreateParameter();
+                    parameter.ParameterName = "Batches";
+                    parameter.Value = toolState.Batches.Count();
+                    command.Parameters.Add(parameter);
+
+                    parameter = command.CreateParameter();
+                    parameter.ParameterName = "RunParameters";
+                    parameter.Value = JsonConvert.SerializeObject(toolState.RunParameters);
                     command.Parameters.Add(parameter);
 
                     await command.ExecuteNonQueryAsync();
