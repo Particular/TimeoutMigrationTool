@@ -27,7 +27,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
                     return "http://localhost:8080";
                 }
 
-                return ravenUrls.Split(",").First();
+                return ravenUrls.Split(",").First().TrimEnd('/');
             }
         }
 
