@@ -57,11 +57,11 @@ from {tableName}";
 
             if (!reader.IsDBNull(ordinal))
             {
-                long size = reader.GetBytes(ordinal, 0, null, 0, 0);
+                var size = reader.GetBytes(ordinal, 0, null, 0, 0);
                 result = new byte[size];
-                int bufferSize = 1024;
+                const int bufferSize = 1024;
                 long bytesRead = 0;
-                int curPos = 0;
+                var curPos = 0;
 
                 while (bytesRead < size)
                 {

@@ -3,9 +3,7 @@
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Customization;
     using NServiceBus.AcceptanceTesting.Support;
-    using NUnit.Framework;
     using System;
-    using System.IO;
     using System.Threading.Tasks;
 
     public class RabbitMqEndpoint : IEndpointSetupTemplate
@@ -19,8 +17,6 @@
             endpointConfiguration.Recoverability()
                 .Delayed(delayed => delayed.NumberOfRetries(0))
                 .Immediate(immediate => immediate.NumberOfRetries(0));
-
-            var storageDir = Path.Combine(NServiceBusAcceptanceTest.StorageRootDir, TestContext.CurrentContext.Test.ID);
 
             endpointConfiguration.EnableInstallers();
 

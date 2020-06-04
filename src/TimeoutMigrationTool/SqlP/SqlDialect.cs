@@ -1,7 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using System;
 using System.Data.Common;
-using System.Threading.Tasks;
 
 namespace Particular.TimeoutMigrationTool
 {
@@ -152,7 +151,7 @@ COMMIT;";
 
         public override string GetScriptToStoreToolState()
         {
-            return $@"
+            return @"
 BEGIN TRANSACTION
 
     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
@@ -193,7 +192,7 @@ WHERE
 
         public override string GetScriptToListEndpoints()
         {
-            return $@"DECLARE @SqlQuery NVARCHAR(MAX) = '';
+            return @"DECLARE @SqlQuery NVARCHAR(MAX) = '';
 
 SELECT
 	@SqlQuery = @SqlQuery + 'SELECT

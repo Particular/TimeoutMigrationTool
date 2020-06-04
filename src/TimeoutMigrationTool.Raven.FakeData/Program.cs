@@ -15,8 +15,8 @@ namespace TimeoutMigrationTool.Raven.FakeData
             if (args.Length < 2) throw new InvalidOperationException("At least 3 arguments are needed in order to run: Servername and DatabaseName. If you want to skip db-creation, add a third argument set to true");
             var serverName = args[0];
             var databaseName = args[1];
-            bool skipDbCreation = args.Length > 2 && Convert.ToBoolean(args[2]);
-            int nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 250 : Convert.ToInt32(args[3]);
+            var skipDbCreation = args.Length > 2 && Convert.ToBoolean(args[2]);
+            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 250 : Convert.ToInt32(args[3]);
 
             using (var httpClient = new HttpClient())
             {

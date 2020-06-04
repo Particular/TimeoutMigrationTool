@@ -7,7 +7,6 @@ using Particular.TimeoutMigrationTool.SqlP;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.Xml;
 using System.Threading.Tasks;
 
 namespace TimeoutMigrationTool.AcceptanceTests
@@ -24,24 +23,24 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>()
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
+            await Scenario.Define<Context>()
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c =>
                 {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c =>
-            {
-                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                return numberOfTimeouts == c.NumberOfTimeouts;
-            })
-            .Run();
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
+                .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
@@ -59,24 +58,24 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>()
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
+            await Scenario.Define<Context>()
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c =>
                 {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c =>
-            {
-                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                return numberOfTimeouts == c.NumberOfTimeouts;
-            })
-            .Run();
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
+                .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
@@ -94,24 +93,24 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>()
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
+            await Scenario.Define<Context>()
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c =>
                 {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c =>
-            {
-                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                return numberOfTimeouts == c.NumberOfTimeouts;
-            })
-            .Run();
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
+                .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
@@ -134,21 +133,21 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c =>
                 {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c =>
-            {
-                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                return numberOfTimeouts == c.NumberOfTimeouts;
-            })
-            .Run();
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
+                .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
             var batchInfo = await timeoutStorage.Prepare(DateTime.Now, endpoint);
@@ -165,7 +164,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
                     .When(session =>
                     {
@@ -182,7 +181,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now.AddDays(10), endpoint);
 
@@ -195,12 +194,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Loads_Endpoints_With_Valid_Timeouts()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Loads_Endpoints_With_Valid_Timeouts";
-            var endpoint = new EndpointInfo
-            {
-                EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
-            };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
                     .When(session =>
                     {
@@ -227,12 +222,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Doesnt_Load_Endpoints_With_Invalid_Timeouts()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Doesnt_Load_Endpoints_With_Invalid_Timeouts";
-            var endpoint = new EndpointInfo
-            {
-                EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
-            };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
                     .When(session =>
                     {
@@ -264,7 +255,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
                     .When(session =>
                     {
@@ -281,7 +272,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             var batches = await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
@@ -304,7 +295,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
                     .When(session =>
                     {
@@ -321,7 +312,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             var batches = await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
@@ -343,24 +334,24 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c =>
                 {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c =>
-            {
-                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                return numberOfTimeouts == c.NumberOfTimeouts;
-            })
-            .Run();
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
+                .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
@@ -378,24 +369,24 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c =>
                 {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c =>
-            {
-                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                return numberOfTimeouts == c.NumberOfTimeouts;
-            })
-            .Run();
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
+                .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), endpoint);
 
@@ -417,24 +408,24 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
             };
 
-            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 5)
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 5)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c =>
                 {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c =>
-            {
-                var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                return numberOfTimeouts == c.NumberOfTimeouts;
-            })
-            .Run();
+                    return numberOfTimeouts == c.NumberOfTimeouts;
+                })
+                .Run();
 
             var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
-            var toolState = new ToolState(new Dictionary<string, string> { }, new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 

@@ -52,7 +52,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             messageCount = QueueCreator.GetStatingQueueMessageLength(channel);
 
             logger.LogDebug($"Pushing {messageCount} to the native timeout structure");
-            long prefetchCount = (long)maxConcurrency * prefetchMultiplier;
+            var prefetchCount = (long)maxConcurrency * prefetchMultiplier;
 
             channel.BasicQos(0, (ushort)Math.Min(prefetchCount, ushort.MaxValue), false);
 
