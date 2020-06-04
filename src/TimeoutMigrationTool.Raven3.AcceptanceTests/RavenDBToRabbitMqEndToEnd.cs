@@ -22,7 +22,7 @@
             var ravenTimeoutPrefix = "TimeoutDatas";
             var ravenVersion = RavenDbVersion.ThreeDotFive;
 
-            var ravenAdapter = new Raven4Adapter(serverUrl, databaseName);
+            var ravenAdapter = new Raven3Adapter(serverUrl, databaseName);
 
             await Scenario.Define<SourceTestContext>()
                  .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
@@ -63,7 +63,7 @@
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
-                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
+                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(60));
@@ -71,7 +71,7 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        static async Task<bool> WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
+        static async Task<bool> WaitUntilTheTimeoutIsSavedInRaven(Raven3Adapter ravenAdapter, string endpoint)
         {
             var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(x =>
                 x.OwningTimeoutManager.Equals(endpoint,
