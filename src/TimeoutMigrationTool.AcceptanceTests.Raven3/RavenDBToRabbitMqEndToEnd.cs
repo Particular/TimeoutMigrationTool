@@ -20,7 +20,7 @@
             var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
 
             var ravenTimeoutPrefix = "TimeoutDatas";
-            var ravenVersion = RavenDbVersion.Four;
+            var ravenVersion = RavenDbVersion.ThreeDotFive;
 
             var ravenAdapter = new Raven4Adapter(serverUrl, databaseName);
 
@@ -28,6 +28,8 @@
                  .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
                  {
                      ec.UsePersistence<RavenDBPersistence>()
+                         .DoNotSetupDatabasePermissions()
+                         .DisableSubscriptionVersioning()
                          .SetDefaultDocumentStore(GetDocumentStore(serverUrl, databaseName));
 
                  })
