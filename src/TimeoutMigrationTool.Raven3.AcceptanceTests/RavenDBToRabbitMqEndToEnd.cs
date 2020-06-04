@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.AcceptanceTests
+﻿namespace TimeoutMigrationTool.Raven3.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
@@ -9,6 +9,7 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using TimeoutMigrationTool.AcceptanceTests;
 
     [TestFixture]
     class RavenDBToRabbitMqEndToEnd : RavenDBAcceptanceTest
