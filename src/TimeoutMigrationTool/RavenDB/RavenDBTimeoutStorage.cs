@@ -49,7 +49,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 (doc, id) => doc.Id = id);
 
             var endpoints = timeouts.GroupBy(
-                key => key.OwningTimeoutManager,
+                key => key.OwningTimeoutManager.Replace(RavenConstants.MigrationOngoingPrefix, ""),
                 elements => elements,
                 (owningTimeoutManager, destinationTimeouts) => new EndpointInfo
                 {
