@@ -15,7 +15,9 @@ namespace TimeoutMigrationTool.Tests
         {
             timeoutStorage = new FakeTimeoutStorage();
             transportTimeoutsCreator = new FakeTransportTimeoutCreator();
-            runner = new MigrationRunner(timeoutStorage, transportTimeoutsCreator);
+            logger = new ConsoleLogger(false);
+
+            runner = new MigrationRunner(logger, timeoutStorage, transportTimeoutsCreator);
 
             endpoints = new List<EndpointInfo>
             {
@@ -41,6 +43,19 @@ namespace TimeoutMigrationTool.Tests
                     TimeoutIds = new[] {"timeouts/1"}
                 }
             });
+            timeoutStorage.SetupCanPrepareStorageResult(true);
+            var batchInfo = new BatchInfo
+            {
+                Number = 1,
+                State = BatchState.Pending,
+                TimeoutIds = new[] {"timeouts/1"}
+            };
+            timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
+            {
+                batchInfo
+            });
+            timeoutStorage.SetupTimeoutsToReadForBatch(batchInfo);
+
             await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
             Assert.That(timeoutStorage.EndpointsWereListed);
@@ -64,16 +79,18 @@ namespace TimeoutMigrationTool.Tests
                 Status = MigrationStatus.NeverRun
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
-
+            timeoutStorage.SetupCanPrepareStorageResult(true);
+            var batchInfo = new BatchInfo
+            {
+                Number = 1,
+                State = BatchState.Pending,
+                TimeoutIds = new[] {"timeouts/1"}
+            };
             timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
             {
-                new BatchInfo
-                {
-                    Number = 1,
-                    State = BatchState.Pending,
-                    TimeoutIds = new[] {"timeouts/1"}
-                }
+                batchInfo
             });
+            timeoutStorage.SetupTimeoutsToReadForBatch(batchInfo);
             await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
             Assert.That(timeoutStorage.EndpointsWereListed);
@@ -90,7 +107,7 @@ namespace TimeoutMigrationTool.Tests
         }
 
         [Test]
-        public async Task WhenRunningWithStateStoragePreparedAndParametersMismatch()
+        public void WhenRunningWithStateStoragePreparedAndParametersMismatch()
         {
             var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint)
             {
@@ -102,7 +119,10 @@ namespace TimeoutMigrationTool.Tests
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
 
-            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            Assert.ThrowsAsync<Exception>(async () =>
+            {
+                await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            });
 
             Assert.That(timeoutStorage.EndpointsWereListed);
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
@@ -135,6 +155,18 @@ namespace TimeoutMigrationTool.Tests
                 }
             });
             timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupCanPrepareStorageResult(true);
+            var batchInfo = new BatchInfo
+            {
+                Number = 1,
+                State = BatchState.Pending,
+                TimeoutIds = new[] {"timeouts/1"}
+            };
+            timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
+            {
+                batchInfo
+            });
+            timeoutStorage.SetupTimeoutsToReadForBatch(batchInfo);
 
             await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
@@ -159,15 +191,18 @@ namespace TimeoutMigrationTool.Tests
                 Endpoint = testEndpoint
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupCanPrepareStorageResult(true);
+            var batchInfo = new BatchInfo
+            {
+                Number = 1,
+                State = BatchState.Pending,
+                TimeoutIds = new[] {"timeouts/1"}
+            };
             timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>
             {
-                new BatchInfo
-                {
-                    Number = 1,
-                    State = BatchState.Pending,
-                    TimeoutIds = new[] {"timeouts/1"}
-                }
+                batchInfo
             });
+            timeoutStorage.SetupTimeoutsToReadForBatch(batchInfo);
 
             await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
@@ -193,6 +228,7 @@ namespace TimeoutMigrationTool.Tests
                 Endpoint = testEndpoint
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupCanPrepareStorageResult(true);
             timeoutStorage.SetupBatchesToPrepare(new List<BatchInfo>());
 
             await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
@@ -215,5 +251,6 @@ namespace TimeoutMigrationTool.Tests
         MigrationRunner runner;
         List<EndpointInfo> endpoints;
         EndpointInfo testEndpoint;
+        Microsoft.Extensions.Logging.ILogger logger;
     }
 }

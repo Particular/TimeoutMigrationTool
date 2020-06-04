@@ -5,12 +5,15 @@ using Particular.TimeoutMigrationTool;
 
 namespace TimeoutMigrationTool.Tests
 {
+    using System.Linq;
+
     public class FakeTimeoutStorage : ITimeoutStorage
     {
         private ToolState toolState;
         public int TimesToolStateWasStored { get; private set; } = 0;
         private List<BatchInfo> preparedBatches = new List<BatchInfo>();
         private List<EndpointInfo> endpoints = new List<EndpointInfo>();
+        private List<BatchInfo> readBatchResults = new List<BatchInfo>();
         private bool canPrepareStorage;
         public bool BatchesWerePrepared { get; private set; }
         public bool BatchWasRead { get; private set; }
@@ -37,7 +40,13 @@ namespace TimeoutMigrationTool.Tests
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
             BatchWasRead = true;
-            return Task.FromResult(new List<TimeoutData>());
+            var timeoutsInBatch = readBatchResults.First(x => x.Number == batchNumber).TimeoutIds.Length;
+
+            var timeouts = new List<TimeoutData>(timeoutsInBatch);
+            for (var i= 0; i < timeoutsInBatch; i++ )
+                timeouts.Add(new TimeoutData());
+
+            return Task.FromResult(timeouts);
         }
 
         public Task CompleteBatch(int number)
@@ -92,6 +101,11 @@ namespace TimeoutMigrationTool.Tests
         public void SetupCanPrepareStorageResult(bool canPrepareStorage)
         {
             this.canPrepareStorage = canPrepareStorage;
+        }
+
+        public void SetupTimeoutsToReadForBatch(BatchInfo batchInfo)
+        {
+            this.readBatchResults.Add(batchInfo);
         }
     }
 }

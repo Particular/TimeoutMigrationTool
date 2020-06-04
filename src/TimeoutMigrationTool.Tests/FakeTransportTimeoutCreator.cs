@@ -12,17 +12,17 @@ namespace TimeoutMigrationTool.Tests
         public List<int> BatchesCompleted { get; } = new List<int>();
         public bool EndpointWasVerified { get; private set; } = false;
 
-        public Task StageBatch(List<TimeoutData> timeouts)
+        public Task<int> StageBatch(List<TimeoutData> timeouts)
         {
             BatchWasStaged = true;
             TimeoutsStaged.AddRange(timeouts);
-            return Task.CompletedTask;
+            return Task.FromResult(TimeoutsStaged.Count);
         }
 
-        public Task CompleteBatch(int number)
+        public Task<int> CompleteBatch(int number)
         {
             BatchesCompleted.Add(number);
-            return Task.CompletedTask;
+            return Task.FromResult(BatchesCompleted.Count);
         }
 
         public Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
