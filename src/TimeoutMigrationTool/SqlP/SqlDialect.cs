@@ -17,7 +17,7 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToPrepareTimeouts(string endpointName, int batchSize);
         public abstract string GetScriptToLoadBatchInfo(string endpointName);
         public abstract string GetScriptToLoadToolState(string endpointName);
-        public abstract string GetScriptToStoreToolState(string endpointName);
+        public abstract string GetScriptToStoreToolState();
         public abstract string GetScriptToLoadBatch(string endpointName);
         public abstract string GetScriptToAbortBatch(string endpointName);
         public abstract string GetScriptToCompleteBatch(string endpointName);
@@ -155,14 +155,35 @@ DELETE [{endpointName}_TimeoutData_migration]
 COMMIT;";
         }
 
-        public override string GetScriptToStoreToolState(string endpointName)
+        public override string GetScriptToStoreToolState()
         {
-            return $@"UPDATE
-    TimeoutsMigration_State
-SET
-    Status = @Status
-WHERE
-    EndpointName = '{endpointName}';";
+            return $@"
+BEGIN TRANSACTION
+
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
+    BEGIN
+        CREATE TABLE TimeoutsMigration_State (
+            EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
+            Status VARCHAR(15) NOT NULL,
+            Batches INT NOT NULL,
+            RunParameters NVARCHAR(MAX)
+        )
+    END;
+    
+    IF NOT EXISTS (SELECT * FROM TimeoutsMigration_State WHERE EndpointName = @EndpointName)
+        INSERT INTO TimeoutsMigration_State (EndpointName, Status, Batches, RunParameters)
+        VALUES (@EndpointName, @Status, @Batches, @RunParameters);
+    ELSE
+        UPDATE
+            TimeoutsMigration_State
+        SET
+            Status = @Status,
+            RunParameters = @RunParameters,
+            Batches = @Batches
+        WHERE
+            EndpointName = @EndpointName;
+
+COMMIT;";
         }
 
         public override string GetScriptToCompleteBatch(string endpointName)
@@ -244,7 +265,7 @@ EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
             throw new NotImplementedException();
         }
 
-        public override string GetScriptToStoreToolState(string endpointName)
+        public override string GetScriptToStoreToolState()
         {
             throw new NotImplementedException();
         }
@@ -292,7 +313,7 @@ EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
             throw new NotImplementedException();
         }
 
-        public override string GetScriptToStoreToolState(string endpointName)
+        public override string GetScriptToStoreToolState()
         {
             throw new NotImplementedException();
         }
@@ -340,7 +361,7 @@ EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
             throw new NotImplementedException();
         }
 
-        public override string GetScriptToStoreToolState(string endpointName)
+        public override string GetScriptToStoreToolState()
         {
             throw new NotImplementedException();
         }
