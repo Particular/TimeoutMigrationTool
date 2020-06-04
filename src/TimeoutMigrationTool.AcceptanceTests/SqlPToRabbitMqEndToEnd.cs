@@ -51,6 +51,13 @@
                  .Done(c => c.TimeoutSet)
                  .Run(TimeSpan.FromSeconds(15));
 
+            var logger = new TestLoggingAdapter();
+            var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), targetEndpoint, 1024, "");
+            var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
+            var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
+            await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
+
+
             var context = await Scenario.Define<TargetTestContext>()
                 .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
                 {
@@ -59,10 +66,10 @@
                 })
                 .When(async (_, c) =>
                 {
-                    var logger = new TestLoggingAdapter();
-                    var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), targetEndpoint, 1024, "");
-                    var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
-                    var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
+                    //var logger = new TestLoggingAdapter();
+                    //var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), targetEndpoint, 1024, "");
+                    //var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
+                    //var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
                 }))

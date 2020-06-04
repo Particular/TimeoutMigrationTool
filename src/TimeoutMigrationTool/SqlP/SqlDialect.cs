@@ -196,7 +196,7 @@ WHERE
 
 SELECT
 	@SqlQuery = @SqlQuery + 'SELECT
-	''' + SUBSTRING(name, 0, LEN(name) - LEN('_TimeoutData')) + ''' EndpointName,
+	''' + SUBSTRING(name, 0, LEN(name) - LEN('_TimeoutData') + 1) + ''' EndpointName,
 	COUNT(*) NrOfTimeouts,
 	MAX(Time) LongestTimeout,
 	MIN(Time) ShortestTimeout
