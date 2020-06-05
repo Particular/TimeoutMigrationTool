@@ -1,10 +1,16 @@
 ﻿namespace TimeoutMigrationTool.AcceptanceTests
 {
     using Microsoft.Extensions.Logging;
+    using NServiceBus.AcceptanceTesting;
     using System;
 
     public class TestLoggingAdapter : ILogger
     {
+        public TestLoggingAdapter(ScenarioContext scenarioContext)
+        {
+            this.scenarioContext = scenarioContext;
+        }
+
         public IDisposable BeginScope<TState>(TState state)
         {
             throw new NotImplementedException();
@@ -17,8 +23,10 @@
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            //TODO: Write this to the ATTs test logger
-            Console.WriteLine(formatter(state, exception));
+            scenarioContext.AddTrace(formatter(state, exception));
         }
+
+        readonly ScenarioContext scenarioContext;
+
     }
 }

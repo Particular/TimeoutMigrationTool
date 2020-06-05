@@ -57,7 +57,7 @@
                 })
                 .When(async (_, c) =>
                 {
-                    var logger = new TestLoggingAdapter();
+                    var logger = new TestLoggingAdapter(c);
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);

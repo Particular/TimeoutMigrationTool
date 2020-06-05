@@ -6,7 +6,6 @@
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RabbitMq;
-    using Particular.TimeoutMigrationTool.RavenDB;
     using Particular.TimeoutMigrationTool.SqlP;
     using System;
     using System.Collections.Generic;
@@ -40,7 +39,7 @@
 
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(30));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
                      options.SetDestination(targetEndpoint);
 
                      await session.Send(delayedMessage, options);
@@ -60,7 +59,7 @@
                 })
                 .When(async (_, c) =>
                 {
-                    var logger = new TestLoggingAdapter();
+                    var logger = new TestLoggingAdapter(c);
                     var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), 1024, "");
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
@@ -68,7 +67,7 @@
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(TimeSpan.FromSeconds(60));
 
             Assert.True(context.GotTheDelayedMessage);
         }
