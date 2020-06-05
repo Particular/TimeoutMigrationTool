@@ -278,7 +278,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
             foreach (var batch in batches)
             {
-                await timeoutStorage.CompleteBatch(batch.Number);
+                await timeoutStorage.MarkBatchAsCompleted(batch.Number);
             }
 
             var loadedState = await timeoutStorage.GetToolState();

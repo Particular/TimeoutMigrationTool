@@ -101,7 +101,7 @@
             return null;
         }
 
-        public async Task CompleteBatch(int number)
+        public async Task MarkBatchAsCompleted(int number)
         {
             using (var connection = dialect.Connect(connectionString))
             {
@@ -118,6 +118,11 @@
                     await command.ExecuteNonQueryAsync();
                 }
             }
+        }
+
+        public Task MarkBatchAsStaged(int number)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task StoreToolState(ToolState toolState)

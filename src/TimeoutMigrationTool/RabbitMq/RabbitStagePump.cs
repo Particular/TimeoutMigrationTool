@@ -198,6 +198,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public async Task<int> CompleteBatch(int number)
         {
+            processedMessages = 0;
             Start(number);
             do
             {

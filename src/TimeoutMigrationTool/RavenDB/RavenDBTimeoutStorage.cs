@@ -90,12 +90,21 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return timeouts;
         }
 
-        public async Task CompleteBatch(int batchNumber)
+        public async Task MarkBatchAsCompleted(int batchNumber)
         {
             var batch = await ravenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
             batch.State = BatchState.Completed;
 
             await ravenAdapter.CompleteBatchAndUpdateTimeouts(batch);
+        }
+
+        public async Task MarkBatchAsStaged(int batchNumber)
+        {
+            var batchId = $"{RavenConstants.BatchPrefix}/{batchNumber}";
+            var batch = await ravenAdapter.GetDocument<BatchInfo>(batchId, (doc, id) => { });
+            batch.State = BatchState.Staged;
+
+            await ravenAdapter.UpdateRecord(batchId, batch);
         }
 
         public async Task StoreToolState(ToolState toolState)
