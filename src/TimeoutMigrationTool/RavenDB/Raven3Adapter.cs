@@ -11,7 +11,7 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    internal class Raven3Adapter : ICanTalkToRavenVersion
+    public class Raven3Adapter : ICanTalkToRavenVersion
     {
         readonly string serverUrl;
         readonly string databaseName;
