@@ -9,7 +9,8 @@
         Task<ToolState> GetToolState();
         Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint);
         Task<List<TimeoutData>> ReadBatch(int batchNumber);
-        Task CompleteBatch(int number);
+        Task MarkBatchAsCompleted(int number);
+        Task MarkBatchAsStaged(int number);
         Task StoreToolState(ToolState toolState);
         Task Abort(ToolState toolState);
         Task<bool> CanPrepareStorage();

@@ -208,7 +208,9 @@ namespace Particular.TimeoutMigrationTool
 
         async Task MarkCurrentBatchAsStaged(ToolState toolState)
         {
-            toolState.GetCurrentBatch().State = BatchState.Staged;
+            var currentBatch = toolState.GetCurrentBatch();
+            currentBatch.State = BatchState.Staged;
+            await timeoutStorage.MarkBatchAsStaged(currentBatch.Number);
             await timeoutStorage.StoreToolState(toolState);
         }
 
@@ -216,7 +218,7 @@ namespace Particular.TimeoutMigrationTool
         {
             var currentBatch = toolState.GetCurrentBatch();
             currentBatch.State = BatchState.Completed;
-            await timeoutStorage.CompleteBatch(currentBatch.Number);
+            await timeoutStorage.MarkBatchAsCompleted(currentBatch.Number);
             await timeoutStorage.StoreToolState(toolState);
         }
 

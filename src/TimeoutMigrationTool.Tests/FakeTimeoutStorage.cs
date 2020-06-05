@@ -18,6 +18,7 @@ namespace TimeoutMigrationTool.Tests
         public bool BatchesWerePrepared { get; private set; }
         public bool BatchWasRead { get; private set; }
         public bool BatchWasCompleted { get; private set; }
+        public bool BatchWasStaged { get; private set; }
         public bool ToolStateWasAborted { get; private set; }
         public bool ToolStateWasStored { get; private set; }
         public bool EndpointsWereListed { get; private set; }
@@ -49,9 +50,15 @@ namespace TimeoutMigrationTool.Tests
             return Task.FromResult(timeouts);
         }
 
-        public Task CompleteBatch(int number)
+        public Task MarkBatchAsCompleted(int number)
         {
             BatchWasCompleted = true;
+            return Task.CompletedTask;
+        }
+
+        public Task MarkBatchAsStaged(int number)
+        {
+            BatchWasStaged = true;
             return Task.CompletedTask;
         }
 
