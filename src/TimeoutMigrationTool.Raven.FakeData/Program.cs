@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Particular.TimeoutMigrationTool;
-
-namespace TimeoutMigrationTool.Raven.FakeData
+﻿namespace TimeoutMigrationTool.Raven.FakeData
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Newtonsoft.Json;
+    using Particular.TimeoutMigrationTool;
+
     class Program
     {
         static async Task Main(string[] args)
@@ -18,49 +18,48 @@ namespace TimeoutMigrationTool.Raven.FakeData
             var skipDbCreation = args.Length > 2 && Convert.ToBoolean(args[2]);
             var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 250 : Convert.ToInt32(args[3]);
 
-            using (var httpClient = new HttpClient())
+            if (!skipDbCreation)
             {
-                if (!skipDbCreation)
+                var createDbUrl = $"{serverName}/admin/databases?name={databaseName}";
+                // Create the db
+                var db = new DatabaseRecord
                 {
-                    var createDbUrl = $"{serverName}/admin/databases?name={databaseName}";
-                    // Create the db
-                    var db = new DatabaseRecord
-                    {
-                        Disabled = false,
-                        DatabaseName = databaseName
-                    };
+                    Disabled = false,
+                    DatabaseName = databaseName
+                };
 
-                    var stringContent = new StringContent(JsonConvert.SerializeObject(db));
-                    var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
-                    if (!dbCreationResult.IsSuccessStatusCode)
-                        throw new Exception(
-                            $"Something went wrong while creating the database. Error code {dbCreationResult.StatusCode}");
-                }
+                var stringContent = new StringContent(JsonConvert.SerializeObject(db));
+                var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
+                if (!dbCreationResult.IsSuccessStatusCode)
+                    throw new Exception(
+                        $"Something went wrong while creating the database. Error code {dbCreationResult.StatusCode}");
+            }
 
-                var timeoutsPrefix = "TimeoutDatas";
-                for (var i = 0; i < nrOfTimeoutsToInsert; i++)
+            var timeoutsPrefix = "TimeoutDatas";
+            for (var i = 0; i < nrOfTimeoutsToInsert; i++)
+            {
+                var insertTimeoutUrl = $"{serverName}/databases/{databaseName}/docs?id={timeoutsPrefix}/{i}";
+
+                // Insert the timeout data
+                var timeoutData = new TimeoutData
                 {
-                    var insertTimeoutUrl = $"{serverName}/databases/{databaseName}/docs?id={timeoutsPrefix}/{i}";
+                    Id = $"{timeoutsPrefix}/{i + 1}",
+                    Destination = i < 100 ? "A" : i == 100 ? "B" : "C",
+                    SagaId = Guid.NewGuid(),
+                    OwningTimeoutManager = "FakeOwningTimeoutManager",
+                    Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
+                    Headers = new Dictionary<string, string>(),
+                    State = Encoding.ASCII.GetBytes("This is my state")
+                };
 
-                    // Insert the timeout data
-                    var timeoutData = new TimeoutData
-                    {
-                        Id = $"{timeoutsPrefix}/{i+1}",
-                        Destination = i <100 ? "A" : i== 100 ? "B" : "C",
-                        SagaId = Guid.NewGuid(),
-                        OwningTimeoutManager = "FakeOwningTimeoutManager",
-                        Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
-                        Headers = new Dictionary<string, string>(),
-                        State = Encoding.ASCII.GetBytes("This is my state")
-                    };
+                var serializeObject = JsonConvert.SerializeObject(timeoutData);
+                var httpContent = new StringContent(serializeObject);
 
-                    var serializeObject = JsonConvert.SerializeObject(timeoutData);
-                    var httpContent = new StringContent(serializeObject);
-
-                    await httpClient.PutAsync(insertTimeoutUrl, httpContent);
-                }
+                await httpClient.PutAsync(insertTimeoutUrl, httpContent);
             }
         }
+
+        static readonly HttpClient httpClient = new HttpClient();
     }
 
     public class DatabaseRecord

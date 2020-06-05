@@ -1,18 +1,15 @@
-using System;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using Particular.TimeoutMigrationTool;
-using Particular.TimeoutMigrationTool.RavenDB;
-
 namespace TimeoutMigrationTool.Raven3.Tests
 {
+    using System;
+    using System.Linq;
+    using System.Net;
+    using System.Threading.Tasks;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
+    using Particular.TimeoutMigrationTool.RavenDB;
+
     public class RavenPreparesTheMigration : RavenTimeoutStorageTestSuite
     {
-        private readonly int nrOfTimeouts = 1500;
-
         [SetUp]
         public async Task Setup()
         {
@@ -105,12 +102,9 @@ namespace TimeoutMigrationTool.Raven3.Tests
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await timeoutStorage.RemoveToolState();
 
-            using (var httpClient = new HttpClient())
-            {
-                var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-                var result = await httpClient.GetAsync(getStateUrl);
-                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
-            }
+            var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+            var result = await httpClient.GetAsync(getStateUrl);
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
 
         [Test]
@@ -127,5 +121,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
             var updatedToolState = await GetToolState();
             Assert.That(updatedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
         }
+
+        private readonly int nrOfTimeouts = 1500;
     }
 }
