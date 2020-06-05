@@ -73,11 +73,6 @@
             }
         }
 
-        string GetTimeoutTableName(EndpointInfo endpoint)
-        {
-            return endpoint.EndpointName.Replace(".", "_");
-        }
-
         public async Task<List<TimeoutData>> ReadBatch(EndpointInfo endpoint, int batchNumber)
         {
             using (var connection = dialect.Connect(connectionString))
@@ -196,9 +191,14 @@
                             var results = new List<EndpointInfo>();
                             while (reader.Read())
                             {
+                                var escapedEndpointName = reader.GetString(0);
+
+                                //TODO: Just hacked this for now
+                                var endpointName = escapedEndpointName.Replace("_", ".");
+
                                 results.Add(new EndpointInfo
                                 {
-                                    EndpointName = reader.GetString(0),
+                                    EndpointName = endpointName,
                                     NrOfTimeouts = reader.GetInt32(1),
                                     LongestTimeout = reader.GetDateTime(2),
                                     ShortestTimeout = reader.GetDateTime(3),
@@ -234,6 +234,11 @@
             }
 
             return batches;
+        }
+
+        string GetTimeoutTableName(EndpointInfo endpoint)
+        {
+            return endpoint.EndpointName.Replace(".", "_");
         }
 
         IEnumerable<BatchRowRecord> ReadBatchRows(DbDataReader reader)
