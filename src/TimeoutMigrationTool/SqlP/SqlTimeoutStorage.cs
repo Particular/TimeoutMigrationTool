@@ -197,7 +197,7 @@
                                     NrOfTimeouts = reader.GetInt32(1),
                                     LongestTimeout = reader.GetDateTime(2),
                                     ShortestTimeout = reader.GetDateTime(3),
-                                    Destinations = new List<string>() //TODO
+                                    Destinations = reader.GetString(4).Split(", ", StringSplitOptions.RemoveEmptyEntries)
                                 });
                             }
 

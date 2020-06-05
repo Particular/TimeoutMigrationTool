@@ -210,7 +210,12 @@ SELECT
 	''' + SUBSTRING(name, 0, LEN(name) - LEN('_TimeoutData') + 1) + ''' EndpointName,
 	COUNT(*) NrOfTimeouts,
 	MAX(Time) LongestTimeout,
-	MIN(Time) ShortestTimeout
+	MIN(Time) ShortestTimeout,
+    (SELECT
+        Destination + '', ''
+    FROM
+        ' + name + '
+    FOR XML PATH('''')) Destinations
 FROM
 	' + name + '
 WHERE

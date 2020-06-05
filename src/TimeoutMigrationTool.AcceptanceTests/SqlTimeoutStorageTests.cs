@@ -222,6 +222,59 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
+        public async Task Loads_Destinations_For_Endpoints_With_Valid_Timeouts()
+        {
+            SqlP_WithTimeouts_Endpoint.EndpointName = "Loads_Endpoints_With_Valid_Timeouts";
+
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(async session =>
+                    {
+                        var delayedMessage = new StartSagaMessage();
+
+                        var options = new SendOptions();
+
+                        options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                        options.SetDestination("FirstDestination");
+
+                        await session.Send(delayedMessage, options);
+
+                        delayedMessage = new StartSagaMessage();
+
+                        options = new SendOptions();
+
+                        options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                        options.SetDestination("SecondDestination");
+
+                        await session.Send(delayedMessage, options);
+
+                        delayedMessage = new StartSagaMessage();
+
+                        options = new SendOptions();
+
+                        options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                        options.SetDestination("ThirdDestination");
+
+                        await session.Send(delayedMessage, options);
+                    }))
+                .Done(c =>
+                {
+                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+
+                    return numberOfTimeouts == 3;
+                })
+                .Run();
+
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 1, "");
+
+            var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
+
+            var expectedDestinations = new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" };
+
+            CollectionAssert.AreEquivalent(expectedDestinations, endpoints.First().Destinations);
+        }
+
+        [Test]
         public async Task Doesnt_Load_Endpoints_With_Invalid_Timeouts()
         {
             SqlP_WithTimeouts_Endpoint.EndpointName = "Doesnt_Load_Endpoints_With_Invalid_Timeouts";
