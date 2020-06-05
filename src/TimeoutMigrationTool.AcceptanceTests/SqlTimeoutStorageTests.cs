@@ -39,7 +39,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 1024, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
@@ -74,7 +74,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 1024, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
@@ -109,7 +109,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1024, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 1024, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
@@ -149,7 +149,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 3, "");
             var batchInfo = await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             Assert.AreEqual(4, batchInfo.Count);
@@ -180,7 +180,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 1, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now.AddDays(10), endpoint);
@@ -211,12 +211,12 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 1, "");
 
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
             // this will blow if the names don't match
-            var loadedEndpoint = endpoints.Single(a => string.Equals(a.EndpointName, SqlP_WithTimeouts_Endpoint.EndpointName, StringComparison.OrdinalIgnoreCase)); 
+            var loadedEndpoint = endpoints.Single(a => string.Equals(a.EndpointName, SqlP_WithTimeouts_Endpoint.EndpointName, StringComparison.OrdinalIgnoreCase));
 
             Assert.IsTrue(endpoints.Count > 0);
         }
@@ -242,7 +242,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 1, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 1, "");
 
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(10));
 
@@ -274,14 +274,14 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 3, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             var batches = await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
             foreach (var batch in batches)
             {
-                await timeoutStorage.CompleteBatch(batch.Number);
+                await timeoutStorage.CompleteBatch(endpoint, batch.Number);
             }
 
             var loadedState = await timeoutStorage.GetToolState();
@@ -314,7 +314,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 3, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             var batches = await timeoutStorage.Prepare(DateTime.Now, endpoint);
@@ -322,7 +322,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
             foreach (var batch in batches)
             {
                 var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
-                var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
+                var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(endpoint, batch.Number)).Select(timeout => timeout.Id).ToList();
 
                 CollectionAssert.AreEquivalent(timeoutIdsCreatedDuringSplit, timeoutIdsFromDatabase);
             }
@@ -353,7 +353,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 3, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
@@ -388,7 +388,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 3, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), endpoint);
@@ -427,7 +427,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 })
                 .Run();
 
-            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), SqlP_WithTimeouts_Endpoint.EndpointName, 3, "");
+            var timeoutStorage = new SqlTimeoutStorage(MsSqlMicrosoftDataClientHelper.GetConnectionString(), Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), 3, "");
             var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);

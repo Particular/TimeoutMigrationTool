@@ -61,7 +61,18 @@ FROM
 
         public override string GetScriptToLoadToolState(string endpointName)
         {
-            return $@"SELECT
+            return $@"
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
+BEGIN
+    CREATE TABLE TimeoutsMigration_State (
+        EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
+        Status VARCHAR(15) NOT NULL,
+        Batches INT NOT NULL,
+        RunParameters NVARCHAR(MAX)
+    )
+END;
+
+SELECT
     EndpointName,
     Status,
     RunParameters

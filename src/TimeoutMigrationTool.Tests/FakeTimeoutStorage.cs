@@ -37,7 +37,7 @@ namespace TimeoutMigrationTool.Tests
             return Task.FromResult(preparedBatches);
         }
 
-        public Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        public Task<List<TimeoutData>> ReadBatch(EndpointInfo endpoint, int batchNumber)
         {
             BatchWasRead = true;
             var timeoutsInBatch = readBatchResults.First(x => x.Number == batchNumber).TimeoutIds.Length;
@@ -49,7 +49,7 @@ namespace TimeoutMigrationTool.Tests
             return Task.FromResult(timeouts);
         }
 
-        public Task CompleteBatch(int number)
+        public Task CompleteBatch(EndpointInfo endpoint, int number)
         {
             BatchWasCompleted = true;
             return Task.CompletedTask;

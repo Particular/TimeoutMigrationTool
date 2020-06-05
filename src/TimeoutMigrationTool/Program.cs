@@ -54,11 +54,6 @@
                     Description = "Connection string for source storage",
                 };
 
-                var timeoutTableOption = new CommandOption($"--{ApplicationOptions.SqlTimeoutTableName}", CommandOptionType.SingleValue)
-                {
-                    Description = "The table name where timeouts are stored"
-                };
-
                 var sourceDialect = new CommandOption($"-d|--{ApplicationOptions.SqlSourceDialect}", CommandOptionType.SingleValue)
                 {
                     Description = "The sql dialect to use"
@@ -71,7 +66,6 @@
                 sqlpCommand.Options.Add(abortMigrationOption);
 
                 sqlpCommand.Options.Add(sourceOption);
-                sqlpCommand.Options.Add(timeoutTableOption);
                 sqlpCommand.Options.Add(sourceDialect);
 
 
@@ -80,7 +74,6 @@
                     var logger = new ConsoleLogger(verboseOption.HasValue());
                     var sourceConnectionString = sourceOption.Value();
                     var targetConnectionString = targetOption.Value();
-                    var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
 
                     if (abortMigrationOption.HasValue())
@@ -92,10 +85,9 @@
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
 
                     runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
-                    runParameters.Add(ApplicationOptions.SqlTimeoutTableName, timeoutTableName);
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
 
-                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, timeoutTableName, 1024, "run parameters jason thing goes here");
+                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024, "run parameters jason thing goes here");
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
 
                     var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);

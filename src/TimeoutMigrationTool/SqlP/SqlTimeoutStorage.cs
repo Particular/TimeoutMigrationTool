@@ -9,11 +9,10 @@
 
     public class SqlTimeoutStorage : ITimeoutStorage
     {
-        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, string timeoutTableName, int batchSize, string runParameters)
+        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, int batchSize, string runParameters)
         {
             connectionString = sourceConnectionString;
             this.dialect = dialect;
-            this.timeoutTableName = timeoutTableName;
             this.runParameters = runParameters;
             this.batchSize = batchSize;
         }
@@ -27,7 +26,7 @@
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadToolState(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToLoadToolState(ToolStateID);
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
@@ -41,7 +40,7 @@
 
                     if (state == null)
                     {
-                        throw new ApplicationException("No migration found");
+                        return null;
                     }
 
                     command.CommandText = dialect.GetScriptToLoadBatchInfo(endpointName);
@@ -58,7 +57,7 @@
             using (var connection = dialect.Connect(connectionString))
             {
                 var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToPrepareTimeouts(timeoutTableName, batchSize);
+                command.CommandText = dialect.GetScriptToPrepareTimeouts(GetTimeoutTableName(endpoint), batchSize);
 
                 var migrateTimeoutsWithDeliveryDateLaterThanParameter = command.CreateParameter();
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.ParameterName = "migrateTimeoutsWithDeliveryDateLaterThan";
@@ -74,13 +73,18 @@
             }
         }
 
-        public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        string GetTimeoutTableName(EndpointInfo endpoint)
+        {
+            return endpoint.EndpointName.Replace(".", "_");
+        }
+
+        public async Task<List<TimeoutData>> ReadBatch(EndpointInfo endpoint, int batchNumber)
         {
             using (var connection = dialect.Connect(connectionString))
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadBatch(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToLoadBatch(GetTimeoutTableName(endpoint));
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -101,13 +105,13 @@
             return null;
         }
 
-        public async Task CompleteBatch(int number)
+        public async Task CompleteBatch(EndpointInfo endpoint, int number)
         {
             using (var connection = dialect.Connect(connectionString))
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToCompleteBatch(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToCompleteBatch(GetTimeoutTableName(endpoint));
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -135,7 +139,7 @@
 
                     parameter = command.CreateParameter();
                     parameter.ParameterName = "EndpointName";
-                    parameter.Value = timeoutTableName;
+                    parameter.Value = ToolStateID;
                     command.Parameters.Add(parameter);
 
                     parameter = command.CreateParameter();
@@ -159,7 +163,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToAbortBatch(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToAbortBatch(GetTimeoutTableName(toolState.Endpoint));
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -313,8 +317,9 @@
         readonly SqlDialect dialect;
         readonly string connectionString;
         readonly string runParameters;
-        readonly string timeoutTableName;
         readonly int batchSize;
+
+        const string ToolStateID = "TOOLSTATE";
     }
 
     class BatchRowRecord

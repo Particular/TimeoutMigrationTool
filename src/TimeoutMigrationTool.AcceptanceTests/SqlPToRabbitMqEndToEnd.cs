@@ -18,7 +18,7 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint)).Replace(".", "_");
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint));
             var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
 
             await Scenario.Define<SourceTestContext>()
@@ -39,7 +39,7 @@
 
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(45));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(20));
                      options.SetDestination(targetEndpoint);
 
                      await session.Send(delayedMessage, options);
@@ -60,7 +60,7 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter();
-                    var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), targetEndpoint, 1024, "");
+                    var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), 1024, "");
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 

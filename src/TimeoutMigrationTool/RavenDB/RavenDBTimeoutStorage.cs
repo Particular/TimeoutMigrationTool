@@ -77,7 +77,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return batches;
         }
 
-        public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        public async Task<List<TimeoutData>> ReadBatch(EndpointInfo endpoint, int batchNumber)
         {
             var toolState = await GetToolState();
             var prefix = RavenConstants.DefaultTimeoutPrefix;
@@ -90,7 +90,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return timeouts;
         }
 
-        public async Task CompleteBatch(int batchNumber)
+        public async Task CompleteBatch(EndpointInfo endpoint, int batchNumber)
         {
             var batch = await ravenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
             batch.State = BatchState.Completed;
@@ -134,7 +134,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             var timeouts =
-                await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentPrefix, (doc, id) => doc.Id= id);
+                await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentPrefix, (doc, id) => doc.Id = id);
 
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal)RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
