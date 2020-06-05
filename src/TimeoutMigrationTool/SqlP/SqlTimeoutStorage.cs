@@ -43,7 +43,7 @@
                         return null;
                     }
 
-                    command.CommandText = dialect.GetScriptToLoadBatchInfo(endpointName);
+                    command.CommandText = dialect.GetScriptToLoadBatchInfo(ToolStateID);
 
                     state.InitBatches(await ReadBatchInfo(command).ConfigureAwait(false));
 

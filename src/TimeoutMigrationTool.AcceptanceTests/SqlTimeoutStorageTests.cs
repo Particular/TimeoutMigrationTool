@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace TimeoutMigrationTool.AcceptanceTests
 {
     [TestFixture]
-    class SqlTimeoutStorageTests : NServiceBusAcceptanceTest
+    class SqlTimeoutStorageTests : SqlPAcceptanceTest
     {
         [Test]
         public async Task Creates_TimeoutsMigration_State_Table()
@@ -485,7 +485,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, endpoint);
 
-            var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData_migration");
+            var numberOfBatches = await MsSqlMicrosoftDataClientHelper.QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutData_migration");
 
             Assert.AreEqual(5, numberOfBatches);
         }

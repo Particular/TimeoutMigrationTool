@@ -181,7 +181,7 @@
             var toolState = await timeoutStorage.GetToolState();
             if (toolState == null)
             {
-                throw new Exception("Could not a previous run to abort.");
+                throw new Exception("Could not find a previous run to abort.");
             }
 
             await timeoutStorage.Abort(toolState);

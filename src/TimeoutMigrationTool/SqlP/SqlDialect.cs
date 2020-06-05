@@ -43,7 +43,7 @@ namespace Particular.TimeoutMigrationTool
     Headers,
     PersistenceVersion
 FROM
-    [{endpointName}_TimeoutData_migration]
+    [TimeoutData_migration]
 WHERE
     BatchNumber = @BatchNumber;
 ";
@@ -56,22 +56,21 @@ WHERE
     BatchNumber,
     Status
 FROM
-    [{endpointName}_TimeoutData_migration];";
+    [TimeoutData_migration];";
         }
 
         public override string GetScriptToLoadToolState(string endpointName)
         {
             return $@"
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
-BEGIN
-    CREATE TABLE TimeoutsMigration_State (
-        EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
-        Status VARCHAR(15) NOT NULL,
-        Batches INT NOT NULL,
-        RunParameters NVARCHAR(MAX)
-    )
-END;
-
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
+    BEGIN
+        CREATE TABLE TimeoutsMigration_State (
+            EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
+            Status VARCHAR(15) NOT NULL,
+            Batches INT NOT NULL,
+            RunParameters NVARCHAR(MAX)
+        )
+    END;
 SELECT
     EndpointName,
     Status,
@@ -85,9 +84,11 @@ WHERE
         public override string GetScriptToPrepareTimeouts(string endpointName, int batchSize)
         {
             return $@"
+
+
 BEGIN TRANSACTION
 
-    CREATE TABLE [{endpointName}_TimeoutData_migration] (
+    CREATE TABLE [TimeoutData_migration] (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         BatchNumber INT,
         Status INT NOT NULL, /* 0 = Pending, 1 = staged, 2 = migrated */
@@ -109,20 +110,20 @@ BEGIN TRANSACTION
         DELETED.Time,
         DELETED.Headers,
         DELETED.PersistenceVersion
-    INTO [{endpointName}_TimeoutData_migration]
+    INTO [TimeoutData_migration]
     WHERE [{endpointName}_TimeoutData].Time >= @migrateTimeoutsWithDeliveryDateLaterThan;
 
     UPDATE BatchMigration
     SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber
     FROM (
         SELECT BatchNumber, ROW_NUMBER() OVER (ORDER BY (select 0)) / {batchSize} AS CalculatedBatchNumber
-        FROM [{endpointName}_TimeoutData_migration]
+        FROM [TimeoutData_migration]
     ) BatchMigration;
 
     UPDATE
         TimeoutsMigration_State
     SET
-        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [{endpointName}_TimeoutData_migration])
+        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration])
     WHERE
         EndpointName = '{endpointName}';
 
@@ -131,7 +132,7 @@ BEGIN TRANSACTION
         BatchNumber,
         Status
     FROM
-        [{endpointName}_TimeoutData_migration];
+        [TimeoutData_migration];
 
 COMMIT;";
         }
@@ -140,7 +141,7 @@ COMMIT;";
         {
             return $@"BEGIN TRANSACTION
 
-DELETE [{endpointName}_TimeoutData_migration]
+DELETE [TimeoutData_migration]
     OUTPUT DELETED.Id,
         DELETED.Destination,
         DELETED.SagaId,
@@ -155,7 +156,7 @@ DELETE [{endpointName}_TimeoutData_migration]
     WHERE
         EndpointName = '{endpointName}';
 
-    DROP TABLE [{endpointName}_TimeoutData_migration];
+    DROP TABLE [TimeoutData_migration];
 
 COMMIT;";
         }
@@ -194,7 +195,7 @@ COMMIT;";
         public override string GetScriptToCompleteBatch(string endpointName)
         {
             return $@"UPDATE
-    [{endpointName}_TimeoutData_migration]
+    [TimeoutData_migration]
 SET
     Status = 2
 WHERE
