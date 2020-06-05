@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -63,7 +62,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 Id = $"{RavenConstants.BatchPrefix}/{batch.Number}",
                 Type = "PUT",
-                ChangeVector = (object)null,
+                ChangeVector = null,
                 Document = batch
             };
 
@@ -79,7 +78,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 }
             }).ToList();
 
-            List<object> commands = new List<object>();
+            var commands = new List<object>();
             commands.Add(insertCommand);
             commands.AddRange(timeoutUpdateCommands);
 
@@ -101,7 +100,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 }
             }).ToList();
 
-            List<object> commands = new List<object>();
+            var commands = new List<object>();
             commands.Add(deleteCommand);
             commands.AddRange(timeoutUpdateCommands);
 
@@ -114,7 +113,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 Id = $"{RavenConstants.BatchPrefix}/{batch.Number}",
                 Type = "PUT",
-                ChangeVector = (object) null,
+                ChangeVector = null,
                 Document = batch
             };
             var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
@@ -129,7 +128,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 }
             }).ToList();
 
-            List<object> commands = new List<object>();
+            var commands = new List<object>();
             commands.Add(updateCommand);
             commands.AddRange(timeoutUpdateCommands);
 
@@ -159,7 +158,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                     if (result.StatusCode == HttpStatusCode.OK)
                     {
-                        var pagedTimeouts = await GetDocumentsFromResponse<T>(result.Content, idSetter);
+                        var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                             checkForMoreResults = false;
 
@@ -175,7 +174,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
-            var documents = await GetDocuments<T>(new[] { id }, idSetter);
+            var documents = await GetDocuments(new[] { id }, idSetter);
             return documents.SingleOrDefault();
         }
 
@@ -195,7 +194,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (response.StatusCode == HttpStatusCode.NotFound)
                     return new List<T>();
 
-                var results = await GetDocumentsFromResponse<T>(response.Content, idSetter);
+                var results = await GetDocumentsFromResponse(response.Content, idSetter);
 
                 return results;
             }

@@ -5,9 +5,6 @@
     using NServiceBus.AcceptanceTesting.Support;
     using NServiceBus.Features;
     using NUnit.Framework;
-    using Raven.Client.Documents;
-    using Raven.Client.ServerWide;
-    using Raven.Client.ServerWide.Operations;
     using System;
     using System.IO;
     using System.Threading.Tasks;

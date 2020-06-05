@@ -8,7 +8,6 @@
     using RavenDB;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using System.Linq;
 
     class Program
     {
@@ -76,7 +75,7 @@
                 sqlpCommand.Options.Add(sourceDialect);
 
 
-                sqlpCommand.OnExecuteAsync(async (cancellationToken) =>
+                sqlpCommand.OnExecuteAsync(async cancellationToken =>
                 {
                     var logger = new ConsoleLogger(verboseOption.HasValue());
                     var sourceConnectionString = sourceOption.Value();
@@ -138,7 +137,7 @@
                 ravenDBCommand.Options.Add(prefixOption);
                 ravenDBCommand.Options.Add(ravenDbVersion);
 
-                ravenDBCommand.OnExecuteAsync(async (cancellationToken) =>
+                ravenDBCommand.OnExecuteAsync(async cancellationToken =>
                 {
                     var logger = new ConsoleLogger(verboseOption.HasValue());
 

@@ -3,8 +3,8 @@ using System.Threading;
 namespace Particular.TimeoutMigrationTool.RabbitMq
 {
     using System.Threading.Tasks;
-    using global::RabbitMQ.Client;
-    using global::RabbitMQ.Client.Exceptions;
+    using RabbitMQ.Client;
+    using RabbitMQ.Client.Exceptions;
 
     static class ModelExtensions
     {

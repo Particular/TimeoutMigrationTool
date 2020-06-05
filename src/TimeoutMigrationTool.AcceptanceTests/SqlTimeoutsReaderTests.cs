@@ -15,17 +15,16 @@ namespace TimeoutMigrationTool.AcceptanceTests
         [Test]
         public async Task Can_load_the_timeouts_scheduled_by_an_endpoint()
         {
-            var context = await Scenario.Define<Context>()
-            .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
-                .When(session =>
-                {
-                    var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+            await Scenario.Define<Context>()
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
-                    return session.SendLocal(startSagaMessage);
-                }))
-            .Done(c => c.TimeoutsSet)
-            .Run()
-            ;
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.TimeoutsSet)
+                .Run();
 
             var reader = new SqlTimeoutsReader();
             var timeouts = await reader.ReadTimeoutsFrom(MsSqlMicrosoftDataClientHelper.GetConnectionString(), "Sqltimeoutsreadertests_SqlP_WithTimeouts_Endpoint_TimeoutData", new MsSqlServer(), new System.Threading.CancellationToken());

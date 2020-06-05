@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,7 +31,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     }
                 }
             }
-            return Task<int>.FromResult(timeouts.Count);
+            return Task.FromResult(timeouts.Count);
         }
 
         private void PurgueQueueIfNotEmpty(IModel model)
@@ -53,7 +52,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             var delay = (timeout.Time - DateTime.UtcNow);
             var delayInSeconds = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
             if (delayInSeconds < 0)
-            {//when the tiemout is due we zero the delay
+            {//when the timeout is due we zero the delay
                 delay = TimeSpan.Zero;
                 delayInSeconds = 0;
             }

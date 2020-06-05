@@ -164,7 +164,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         [TearDown]
         public async Task Teardown()
         {
-            int i = 0;
+            var i = 0;
 
             while (i < 10)
             {

@@ -160,7 +160,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                     if (result.StatusCode == HttpStatusCode.OK)
                     {
-                        var pagedTimeouts = await GetDocumentsFromResponse<T>(result.Content, idSetter);
+                        var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
                         if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                             checkForMoreResults = false;
 
@@ -200,7 +200,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var id in ids)
             {
-                var document = await GetDocument<T>(id, idSetter);
+                var document = await GetDocument(id, idSetter);
                 docs.Add(document);
             }
             return docs;

@@ -4,7 +4,6 @@
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Customization;
     using NServiceBus.AcceptanceTesting.Support;
-    using NServiceBus.Configuration.AdvancedExtensibility;
     using NServiceBus.Features;
     using NUnit.Framework;
     using System;

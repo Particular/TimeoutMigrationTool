@@ -50,7 +50,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         {
             await InitTimeouts(50, false);
 
-            Raven3Adapter adapter = new Raven3Adapter(ServerName, databaseName);
+            var adapter = new Raven3Adapter(ServerName, databaseName);
             var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationDonePrefix}{timeout.OwningTimeoutManager}";
             await adapter.UpdateRecord(timeout.Id, timeout);
@@ -68,7 +68,7 @@ namespace TimeoutMigrationTool.Raven3.Tests
         {
             await InitTimeouts(50, false);
 
-            Raven3Adapter adapter = new Raven3Adapter(ServerName, databaseName);
+            var adapter = new Raven3Adapter(ServerName, databaseName);
             var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationOngoingPrefix}{timeout.OwningTimeoutManager}";
             await adapter.UpdateRecord(timeout.Id, timeout);

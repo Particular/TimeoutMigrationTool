@@ -12,7 +12,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     {
         public async Task ArchiveTimeouts(string serverName, string databaseName, string[] timeoutIds, RavenDbVersion version, CancellationToken cancellationToken)
         {
-            string url = $"{serverName}/databases/{databaseName}/bulk_docs";
+            var url = $"{serverName}/databases/{databaseName}/bulk_docs";
 
             var command = GetPatchCommand(timeoutIds, version);
 

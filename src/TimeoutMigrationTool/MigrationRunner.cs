@@ -37,7 +37,6 @@ namespace Particular.TimeoutMigrationTool
 
             if (problematicEndpoints.Any())
             {
-                var listOfEndpoints = string.Join(";", problematicEndpoints.Select(e => e.Endpoint.EndpointName));
                 var sb = new StringBuilder();
 
                 sb.AppendLine("Migration aborted:");
@@ -54,10 +53,10 @@ namespace Particular.TimeoutMigrationTool
                 throw new Exception(sb.ToString());
             }
 
-            foreach (var enpointToMigrate in endpointsToMigrate)
+            foreach (var endpointToMigrate in endpointsToMigrate)
             {
-                logger.LogInformation($"Starting migration for {enpointToMigrate.EndpointName}, {enpointToMigrate.NrOfTimeouts}");
-                await Run(cutOffTime, enpointToMigrate, runParameters);
+                logger.LogInformation($"Starting migration for {endpointToMigrate.EndpointName}, {endpointToMigrate.NrOfTimeouts}");
+                await Run(cutOffTime, endpointToMigrate, runParameters);
             }
         }
 
@@ -92,7 +91,7 @@ namespace Particular.TimeoutMigrationTool
                 case MigrationStatus.StoragePrepared when RunParametersAreDifferent(endpointInfo, runParameters, toolState):
                     var sb = new StringBuilder();
 
-                    sb.AppendLine($"In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+                    sb.AppendLine("In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
 
                     sb.AppendLine($"\t'--endpoint': '{endpointInfo.EndpointName}'.");
 
@@ -147,7 +146,7 @@ namespace Particular.TimeoutMigrationTool
             toolState.Status = MigrationStatus.Completed;
 
             await timeoutStorage.StoreToolState(toolState);
-            logger.LogInformation($"Migration completed successfully");
+            logger.LogInformation("Migration completed successfully");
         }
 
         async Task Prepare(DateTime cutOffTime, ToolState toolState, EndpointInfo endpoint)
