@@ -39,7 +39,7 @@
 
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(45));
                      options.SetDestination(targetEndpoint);
 
                      await session.Send(delayedMessage, options);
