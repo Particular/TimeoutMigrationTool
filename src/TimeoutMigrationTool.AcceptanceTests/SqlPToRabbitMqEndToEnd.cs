@@ -18,7 +18,8 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint));
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint))
+                .Replace(".", "_");
             var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
 
             await Scenario.Define<SourceTestContext>()
@@ -39,7 +40,7 @@
 
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(20));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(30));
                      options.SetDestination(targetEndpoint);
 
                      await session.Send(delayedMessage, options);
@@ -49,7 +50,7 @@
                      c.TimeoutSet = true;
                  }))
                  .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(15));
+                 .Run(TimeSpan.FromSeconds(30));
 
             var context = await Scenario.Define<TargetTestContext>()
                 .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
@@ -67,14 +68,14 @@
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(20));
+                .Run(TimeSpan.FromSeconds(30));
 
             Assert.True(context.GotTheDelayedMessage);
         }
 
         async Task<bool> WaitUntilTheTimeoutIsSavedInSql(string endpoint)
         {
-            var numberOfTimeouts = await QueryScalar<int>($"SELECT COUNT(*) FROM {endpoint.Replace(".","_")}_TimeoutData");
+            var numberOfTimeouts = await QueryScalar<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
 
             return numberOfTimeouts > 0;
         }

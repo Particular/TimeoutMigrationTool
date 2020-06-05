@@ -57,7 +57,7 @@
             using (var connection = dialect.Connect(connectionString))
             {
                 var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToPrepareTimeouts(GetTimeoutTableName(endpoint), batchSize);
+                command.CommandText = dialect.GetScriptToPrepareTimeouts(endpoint.EndpointName, batchSize);
 
                 var migrateTimeoutsWithDeliveryDateLaterThanParameter = command.CreateParameter();
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.ParameterName = "migrateTimeoutsWithDeliveryDateLaterThan";
@@ -79,7 +79,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadBatch(GetTimeoutTableName(endpoint));
+                    command.CommandText = dialect.GetScriptToLoadBatch(endpoint.EndpointName);
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -106,7 +106,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToCompleteBatch(GetTimeoutTableName(endpoint));
+                    command.CommandText = dialect.GetScriptToCompleteBatch(endpoint.EndpointName);
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -158,7 +158,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToAbortBatch(GetTimeoutTableName(toolState.Endpoint));
+                    command.CommandText = dialect.GetScriptToAbortBatch(toolState.Endpoint.EndpointName);
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -191,14 +191,9 @@
                             var results = new List<EndpointInfo>();
                             while (reader.Read())
                             {
-                                var escapedEndpointName = reader.GetString(0);
-
-                                //TODO: Just hacked this for now
-                                var endpointName = escapedEndpointName.Replace("_", ".");
-
                                 results.Add(new EndpointInfo
                                 {
-                                    EndpointName = endpointName,
+                                    EndpointName = reader.GetString(0),
                                     NrOfTimeouts = reader.GetInt32(1),
                                     LongestTimeout = reader.GetDateTime(2),
                                     ShortestTimeout = reader.GetDateTime(3),
@@ -234,11 +229,6 @@
             }
 
             return batches;
-        }
-
-        string GetTimeoutTableName(EndpointInfo endpoint)
-        {
-            return endpoint.EndpointName.Replace(".", "_");
         }
 
         IEnumerable<BatchRowRecord> ReadBatchRows(DbDataReader reader)
