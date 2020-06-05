@@ -7,6 +7,7 @@
     using System.Threading.Tasks;
     using Newtonsoft.Json;
     using Particular.TimeoutMigrationTool;
+    using Particular.TimeoutMigrationTool.RavenDB;
 
     class Program
     {
@@ -16,7 +17,7 @@
             var serverName = args[0];
             var databaseName = args[1];
             var skipDbCreation = args.Length > 2 && Convert.ToBoolean(args[2]);
-            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 250 : Convert.ToInt32(args[3]);
+            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 1000000 : Convert.ToInt32(args[3]);
 
             if (!skipDbCreation)
             {
@@ -36,26 +37,46 @@
             }
 
             var timeoutsPrefix = "TimeoutDatas";
-            for (var i = 0; i < nrOfTimeoutsToInsert; i++)
+            var ratio = Math.Floor((decimal)(nrOfTimeoutsToInsert / 3));
+
+            var nrOfBatches = Math.Ceiling(nrOfTimeoutsToInsert / (decimal)RavenConstants.DefaultPagingSize);
+            var timeoutIdCounter = 1;
+            for (var i = 1; i <= nrOfBatches; i++)
             {
-                var insertTimeoutUrl = $"{serverName}/databases/{databaseName}/docs?id={timeoutsPrefix}/{i}";
+                var commands = new List<PutCommand>();
+                var startIndex = i * RavenConstants.DefaultPagingSize;
+                var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk-docs";
 
-                // Insert the timeout data
-                var timeoutData = new TimeoutData
+                for (var j = 0; j < startIndex; j++)
                 {
-                    Id = $"{timeoutsPrefix}/{i + 1}",
-                    Destination = i < 100 ? "A" : i == 100 ? "B" : "C",
-                    SagaId = Guid.NewGuid(),
-                    OwningTimeoutManager = "FakeOwningTimeoutManager",
-                    Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
-                    Headers = new Dictionary<string, string>(),
-                    State = Encoding.ASCII.GetBytes("This is my state")
-                };
+                    // Insert the timeout data
+                    var timeoutData = new TimeoutData
+                    {
+                        Id = $"{timeoutsPrefix}/{i + 1}",
+                        Destination = "DestinationEndpoint",
+                        SagaId = Guid.NewGuid(),
+                        OwningTimeoutManager = i < ratio ? "EndpointA" : i < ratio*2 ? "EndpointB" : "EndpointC",
+                        Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
+                        Headers = new Dictionary<string, string>(),
+                        State = Encoding.ASCII.GetBytes("This is my state")
+                    };
 
-                var serializeObject = JsonConvert.SerializeObject(timeoutData);
-                var httpContent = new StringContent(serializeObject);
+                    var insertCommand = new PutCommand()
+                    {
+                        Id = $"{timeoutsPrefix}/{timeoutIdCounter}",
+                        Type = "PUT",
+                        ChangeVector = null,
+                        Document = timeoutData
+                    };
+                    commands.Add(insertCommand);
 
-                await httpClient.PutAsync(insertTimeoutUrl, httpContent);
+                    timeoutIdCounter++;
+                }
+
+                var serializeObject = JsonConvert.SerializeObject(commands);
+                var result = await httpClient.PostAsync(bulkInsertUrl,
+                    new StringContent(serializeObject, Encoding.UTF8, "application/json"));
+                result.EnsureSuccessStatusCode();
             }
         }
 
@@ -66,5 +87,13 @@
     {
         public string DatabaseName { get; set; }
         public bool Disabled { get; set; }
+    }
+
+    class PutCommand
+    {
+        public string Id { get; set; }
+        public string Type { get; set; }
+        public object ChangeVector { get; set; }
+        public TimeoutData Document { get; set; }
     }
 }
