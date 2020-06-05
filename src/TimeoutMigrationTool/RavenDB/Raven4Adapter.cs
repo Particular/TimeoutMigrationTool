@@ -16,6 +16,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     {
         readonly string serverUrl;
         readonly string databaseName;
+        static readonly HttpClient httpClient = new HttpClient();
 
         public Raven4Adapter(string serverUrl, string databaseName)
         {
@@ -25,25 +26,19 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task UpdateRecord(string key, object document)
         {
-            using (var httpClient = new HttpClient())
-            {
-                var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
-                var serializeObject = JsonConvert.SerializeObject(document);
-                var httpContent = new StringContent(serializeObject);
+            var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
+            var serializeObject = JsonConvert.SerializeObject(document);
+            var httpContent = new StringContent(serializeObject);
 
-                var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent);
-                saveResult.EnsureSuccessStatusCode();
-            }
+            var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent);
+            saveResult.EnsureSuccessStatusCode();
         }
 
         public async Task DeleteRecord(string key)
         {
-            using (var httpClient = new HttpClient())
-            {
-                var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
-                var result = await httpClient.DeleteAsync(deleteStateUrl);
-                result.EnsureSuccessStatusCode();
-            }
+            var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
+            var result = await httpClient.DeleteAsync(deleteStateUrl);
+            result.EnsureSuccessStatusCode();
         }
 
         private static object GetDeleteCommand(string key)
@@ -144,32 +139,29 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string prefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
-            using (var client = new HttpClient())
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={prefix}&pageSize={pageSize}";
+            var checkForMoreResults = true;
+            var iteration = 0;
+
+            while (checkForMoreResults)
             {
-                var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={prefix}&pageSize={pageSize}";
-                var checkForMoreResults = true;
-                var iteration = 0;
+                var skipFirst = $"&start={iteration * pageSize}";
+                var getUrl = iteration == 0 ? url : url + skipFirst;
+                var result = await httpClient.GetAsync(getUrl);
 
-                while (checkForMoreResults)
+                if (result.StatusCode == HttpStatusCode.OK)
                 {
-                    var skipFirst = $"&start={iteration * pageSize}";
-                    var getUrl = iteration == 0 ? url : url + skipFirst;
-                    var result = await client.GetAsync(getUrl);
+                    var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
+                    if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
+                        checkForMoreResults = false;
 
-                    if (result.StatusCode == HttpStatusCode.OK)
-                    {
-                        var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
-                        if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
-                            checkForMoreResults = false;
-
-                        var elegibleItems = pagedTimeouts.Where(filterPredicate);
-                        items.AddRange(elegibleItems);
-                        iteration++;
-                    }
+                    var elegibleItems = pagedTimeouts.Where(filterPredicate);
+                    items.AddRange(elegibleItems);
+                    iteration++;
                 }
-
-                return items;
             }
+
+            return items;
         }
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
@@ -187,17 +179,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             var qs = ids.Aggregate("", (queryString, id) => queryString + $"id={id}&", queryString=>queryString.TrimEnd('&'));
             var url = $"{serverUrl}/databases/{databaseName}/docs?{qs}";
-            using (var httpClient = new HttpClient())
-            {
-                var response = await httpClient.GetAsync(url);
+            var response = await httpClient.GetAsync(url);
 
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                    return new List<T>();
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return new List<T>();
 
-                var results = await GetDocumentsFromResponse(response.Content, idSetter);
+            var results = await GetDocumentsFromResponse(response.Content, idSetter);
 
-                return results;
-            }
+            return results;
         }
 
         private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
@@ -225,14 +214,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 Commands = commands.ToArray()
             };
-            using (var httpClient = new HttpClient())
-            {
-                var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
-                var serializedCommands = JsonConvert.SerializeObject(bulkCommand);
-                var result = await httpClient.PostAsync(bulkUpdateUrl,
-                    new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
-                result.EnsureSuccessStatusCode();
-            }
+            var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
+            var serializedCommands = JsonConvert.SerializeObject(bulkCommand);
+            var result = await httpClient.PostAsync(bulkUpdateUrl,
+                new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+            result.EnsureSuccessStatusCode();
         }
     }
 }
