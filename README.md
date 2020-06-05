@@ -18,6 +18,6 @@ The solution is divided up into a single tool project with multiple test project
 
 ### Tests
 
-* Unit tests, `TimeoutMigrationTool.Tests` are quick tests not needing any infrastructure and can be used by all sources and targets
-* Integrations tests are named `TimeoutMigrationTool.{Source|Target}.IntegrationTests` and requires infrastructure to be present
-* Acceptance tests run full NServiceBus endpoints and are named using the `TimeoutMigrationTool.{Source}.AcceptanceTests` and contains end to end acceptance tests for all supported permutations of targets. So when TargetX is added we would add a new test(s) into all existing acceptance tests projects
+* Unit tests, `TimeoutMigrationTool.Tests`, are quick tests not needing any infrastructure and can be used by all sources and targets
+* Integrations tests are named `TimeoutMigrationTool.{Source|Target}.IntegrationTests` and requires infrastructure for the specific source/target to be present
+* Acceptance tests run full NServiceBus endpoints and are named `TimeoutMigrationTool.{Source}.AcceptanceTests`. They contain end to end tests for all supported permutations of targets. So when TargetX is added we would add new test(s) into all existing acceptance tests projects. They require infastrucure for the specific source and all supported targets to be present.
