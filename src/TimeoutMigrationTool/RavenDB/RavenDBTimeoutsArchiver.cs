@@ -1,13 +1,13 @@
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
-
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System.Linq;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using HttpCommands;
+    using Newtonsoft.Json;
+
     class RavenDBTimeoutsArchiver
     {
         public async Task ArchiveTimeouts(string serverName, string databaseName, string[] timeoutIds, RavenDbVersion version, CancellationToken cancellationToken)
@@ -16,13 +16,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             var command = GetPatchCommand(timeoutIds, version);
 
-            using (var httpClient = new HttpClient())
-            {
-                var serializedCommands = JsonConvert.SerializeObject(command);
 
-                var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
-                result.EnsureSuccessStatusCode();
-            }
+            var serializedCommands = JsonConvert.SerializeObject(command);
+
+            var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+            result.EnsureSuccessStatusCode();
         }
 
         private static object GetPatchCommand(string[] timeoutIds, RavenDbVersion version)
@@ -38,7 +36,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                             Id = timeoutId,
                             Type = "PATCH",
                             ChangeVector = null,
-                            Patch = new Patch()
+                            Patch = new Patch
                             {
                                 Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationOngoingPrefix}' + this.OwningTimeoutManager;",
                                 Values = new { }
@@ -55,7 +53,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     Key = timeoutId,
                     Method = "EVAL",
                     DebugMode = false,
-                    Patch = new Patch()
+                    Patch = new Patch
                     {
                         Script = $"this.OwningTimeoutManager = '{RavenConstants.MigrationOngoingPrefix}' + this.OwningTimeoutManager;",
                         Values = new { }
@@ -63,5 +61,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 };
             }).ToArray();
         }
+
+        static readonly HttpClient httpClient = new HttpClient();
     }
 }
