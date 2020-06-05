@@ -142,6 +142,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             {
                 logger.LogError($"Failed to process message. Returning message to queue... {ex}");
                 await consumer.Model.BasicRejectAndRequeueIfOpen(eventArgs.DeliveryTag, exclusiveScheduler);
+                messageProcessing.Cancel();
             }
             finally
             {
@@ -201,9 +202,14 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             do
             {
                 Thread.Sleep(100);
-            } while (processedMessages < messageCount);
+            } while (processedMessages < messageCount && !messageProcessing.IsCancellationRequested);
 
-            if (QueueCreator.GetStatingQueueMessageLength(consumer.Model) > 0)
+            if (messageProcessing.IsCancellationRequested)
+            {
+                logger.LogError("The migration was cancelled due to error when completing the batch.");
+            }
+
+            if (!messageProcessing.IsCancellationRequested && QueueCreator.GetStatingQueueMessageLength(consumer.Model) > 0 )
             {
                 throw new InvalidOperationException("Staging queue is not empty after finishing CompleteBatch");
             }
