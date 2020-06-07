@@ -74,7 +74,7 @@
 
         async Task<bool> WaitUntilTheTimeoutIsSavedInSql(string endpoint)
         {
-            var numberOfTimeouts = await QueryScalar<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
+            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
 
             return numberOfTimeouts > 0;
         }
