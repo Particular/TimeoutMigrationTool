@@ -5,6 +5,8 @@
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool.SqlP;
     using System;
+    using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public abstract class SqlPAcceptanceTest : NServiceBusAcceptanceTest
@@ -12,6 +14,25 @@
         public override async Task SetUp()
         {
             await base.SetUp();
+
+            NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention = t =>
+            {
+                var classAndEndpoint = t.FullName.Split('.').Last();
+
+                var testName = classAndEndpoint.Split('+').First();
+
+                testName = testName.Replace("When_", "");
+
+                var endpointBuilder = classAndEndpoint.Split('+').Last();
+
+
+                testName = Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(testName);
+
+                testName = testName.Replace("_", "");
+
+                return testName + "_" + endpointBuilder;
+            };
+
             databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
 
             connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";

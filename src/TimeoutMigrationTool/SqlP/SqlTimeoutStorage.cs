@@ -113,9 +113,23 @@
             }
         }
 
-        public Task MarkBatchAsStaged(int number)
+        public async Task MarkBatchAsStaged(int number)
         {
-            throw new NotImplementedException();
+            using (var connection = dialect.Connect(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = dialect.GetScriptToMarkBatchAsStaged();
+
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "BatchNumber";
+                    parameter.Value = number;
+
+                    command.Parameters.Add(parameter);
+
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
         }
 
         public async Task StoreToolState(ToolState toolState)

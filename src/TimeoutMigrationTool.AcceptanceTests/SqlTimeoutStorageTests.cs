@@ -242,6 +242,35 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
+        public async Task Can_mark_batch_as_staged()
+        {
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Run();
+
+            var timeoutStorage = GetTimeoutStorage();
+            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
+            await timeoutStorage.StoreToolState(toolState);
+            var batches = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+
+            foreach (var batch in batches)
+            {
+                await timeoutStorage.MarkBatchAsStaged(batch.Number);
+            }
+
+            var loadedState = await timeoutStorage.GetToolState();
+
+            Assert.IsTrue(loadedState.Batches.All(b => b.State == BatchState.Staged));
+        }
+
+        [Test]
         public async Task Timeouts_Split_Can_Be_Read_By_Batch()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)

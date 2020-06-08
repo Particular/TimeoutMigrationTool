@@ -17,8 +17,7 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint))
-                .Replace(".", "_");
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint));
             var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
 
             await Scenario.Define<SourceTestContext>()
@@ -64,7 +63,7 @@
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 
-                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
+                    await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(30));
@@ -72,11 +71,17 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        async Task<bool> WaitUntilTheTimeoutIsSavedInSql(string endpoint)
+        async Task WaitUntilTheTimeoutIsSavedInSql(string endpoint)
         {
-            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
+            while (true)
+            {
+                var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
 
-            return numberOfTimeouts > 0;
+                if(numberOfTimeouts > 0)
+                {
+                    return;
+                }
+            }
         }
 
         public class SourceTestContext : ScenarioContext

@@ -2,8 +2,8 @@
 {
     public enum BatchState
     {
-        Pending,
-        Staged,
-        Completed
+        Pending = 0,
+        Staged = 1,
+        Completed = 2
     }
 }

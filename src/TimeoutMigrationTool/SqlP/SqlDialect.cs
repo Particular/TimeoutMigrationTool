@@ -21,6 +21,8 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToAbortBatch(string endpointName);
         public abstract string GetScriptToCompleteBatch();
         public abstract string GetScriptToListEndpoints();
+        public abstract string GetScriptToMarkBatchAsStaged();
+
     }
 
     public class MsSqlServer : SqlDialect
@@ -223,6 +225,16 @@ WHERE
 SET @SqlQuery = SUBSTRING(@SqlQuery, 0, LEN(@SqlQuery) - LEN('UNION'));
 
 EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
+        }
+
+        public override string GetScriptToMarkBatchAsStaged()
+        {
+            return $@"UPDATE
+    [TimeoutData_migration]
+SET
+    Status = 1
+WHERE
+    BatchNumber = @BatchNumber";
         }
     }
 }
