@@ -15,7 +15,7 @@ namespace Particular.TimeoutMigrationTool
 
         public abstract string GetScriptToPrepareTimeouts(string endpointName, int batchSize);
         public abstract string GetScriptToLoadBatchInfo(string endpointName);
-        public abstract string GetScriptToLoadToolState(string endpointName);
+        public abstract string GetScriptToLoadToolState();
         public abstract string GetScriptToStoreToolState();
         public abstract string GetScriptToLoadBatch(string endpointName);
         public abstract string GetScriptToAbortBatch(string endpointName);
@@ -59,13 +59,14 @@ FROM
     [TimeoutData_migration];";
         }
 
-        public override string GetScriptToLoadToolState(string endpointName)
+        public override string GetScriptToLoadToolState()
         {
             return $@"
     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
     BEGIN
         CREATE TABLE TimeoutsMigration_State (
-            EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
+            MigrationRunId NVARCHAR(500) NOT NULL PRIMARY KEY,
+            EndpointName NVARCHAR(500) NOT NULL,
             Status VARCHAR(15) NOT NULL,
             Batches INT NOT NULL,
             RunParameters NVARCHAR(MAX)
@@ -93,14 +94,12 @@ SELECT
 FROM
     TimeoutsMigration_State
 WHERE
-    EndpointName = '{endpointName}';";
+    MigrationRunId = 'TOOLSTATE';";
         }
 
         public override string GetScriptToPrepareTimeouts(string endpointName, int batchSize)
         {
             return $@"
-
-
 BEGIN TRANSACTION
 
     DELETE [{endpointName}_TimeoutData]
@@ -128,7 +127,7 @@ BEGIN TRANSACTION
     SET
         Batches = (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration])
     WHERE
-        EndpointName = '{endpointName}';
+        MigrationRunId = 'TOOLSTATE';
 
      SELECT
         Id,
@@ -157,7 +156,7 @@ DELETE [TimeoutData_migration]
     DELETE
         TimeoutsMigration_State
     WHERE
-        EndpointName = '{endpointName}';
+        MigrationRunId = 'TOOLSTATE';
 
     DROP TABLE [TimeoutData_migration];
 
@@ -168,42 +167,19 @@ COMMIT;";
         {
             return @"
 BEGIN TRANSACTION
-
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
-    BEGIN
-        CREATE TABLE TimeoutsMigration_State (
-            EndpointName NVARCHAR(500) NOT NULL PRIMARY KEY,
-            Status VARCHAR(15) NOT NULL,
-            Batches INT NOT NULL,
-            RunParameters NVARCHAR(MAX)
-        )
-    END;
-     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutData_migration')
-    BEGIN
-       CREATE TABLE [TimeoutData_migration] (
-        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-        BatchNumber INT,
-        Status INT NOT NULL, /* 0 = Pending, 1 = staged, 2 = migrated */
-        Destination NVARCHAR(200),
-        SagaId UNIQUEIDENTIFIER,
-        State VARBINARY(MAX),
-        Time DATETIME,
-        Headers NVARCHAR(MAX) NOT NULL,
-        PersistenceVersion VARCHAR(23) NOT NULL
-    );
-    END;
-    IF NOT EXISTS (SELECT * FROM TimeoutsMigration_State WHERE EndpointName = @EndpointName)
-        INSERT INTO TimeoutsMigration_State (EndpointName, Status, Batches, RunParameters)
-        VALUES (@EndpointName, @Status, @Batches, @RunParameters);
+    IF NOT EXISTS (SELECT * FROM TimeoutsMigration_State WHERE MigrationRunId = 'TOOLSTATE')
+        INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, Batches, RunParameters)
+        VALUES ('TOOLSTATE', @EndpointName, @Status, @Batches, @RunParameters);
     ELSE
         UPDATE
             TimeoutsMigration_State
         SET
+            EndpointName =  @EndpointName,
             Status = @Status,
             RunParameters = @RunParameters,
             Batches = @Batches
         WHERE
-            EndpointName = @EndpointName;
+            MigrationRunId = 'TOOLSTATE';
 
 COMMIT;";
         }
@@ -247,150 +223,6 @@ WHERE
 SET @SqlQuery = SUBSTRING(@SqlQuery, 0, LEN(@SqlQuery) - LEN('UNION'));
 
 EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
-        }
-    }
-
-    public class Oracle : SqlDialect
-    {
-        public override DbConnection Connect(string connectionString)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToAbortBatch(string timeoutTableName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToCompleteBatch(string timeoutTableName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToListEndpoints()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadBatch(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadBatchInfo(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadToolState(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToPrepareTimeouts(string originalTableName, int batchSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToStoreToolState()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class MySql : SqlDialect
-    {
-        public override DbConnection Connect(string connectionString)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToAbortBatch(string timeoutTableName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToCompleteBatch(string timeoutTableName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToListEndpoints()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadBatch(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadBatchInfo(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadToolState(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToPrepareTimeouts(string originalTableName, int batchSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToStoreToolState()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class PostgreSql : SqlDialect
-    {
-        public override DbConnection Connect(string connectionString)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToAbortBatch(string timeoutTableName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToCompleteBatch(string timeoutTableName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToListEndpoints()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadBatch(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadBatchInfo(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToLoadToolState(string endpointName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToPrepareTimeouts(string originalTableName, int batchSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetScriptToStoreToolState()
-        {
-            throw new NotImplementedException();
         }
     }
 }

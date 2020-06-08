@@ -22,11 +22,10 @@
             using (var connection = dialect.Connect(connectionString))
             {
                 ToolState state = null;
-                string endpointName = null;
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadToolState(ToolStateID);
+                    command.CommandText = dialect.GetScriptToLoadToolState();
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
@@ -34,7 +33,7 @@
                         {
                             state = new ToolState(null, null); // Deserialize reader.GetString(2));
                             state.Status = ParseMigrationStatus(reader.GetString(1));
-                            endpointName = reader.GetString(0);
+                            state.Endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
                         }
                     }
 
@@ -134,7 +133,7 @@
 
                     parameter = command.CreateParameter();
                     parameter.ParameterName = "EndpointName";
-                    parameter.Value = ToolStateID;
+                    parameter.Value = toolState.Endpoint.EndpointName;
                     command.Parameters.Add(parameter);
 
                     parameter = command.CreateParameter();

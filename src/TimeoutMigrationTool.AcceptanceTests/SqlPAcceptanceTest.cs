@@ -69,7 +69,12 @@
 
         protected SqlTimeoutStorage GetTimeoutStorage(int batchSize = 1024)
         {
-            return new SqlTimeoutStorage(connectionString, Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), batchSize, "");
+            var storage = new SqlTimeoutStorage(connectionString, Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), batchSize, "");
+
+            //TODO: Add a propoer Init()
+            storage.GetToolState().GetAwaiter().GetResult();
+
+            return storage;
         }
 
         protected string databaseName;
