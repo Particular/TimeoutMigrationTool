@@ -9,12 +9,10 @@
 
     public class SqlTimeoutStorage : ITimeoutStorage
     {
-        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, string timeoutTableName, int batchSize, string runParameters)
+        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, int batchSize)
         {
             connectionString = sourceConnectionString;
             this.dialect = dialect;
-            this.timeoutTableName = timeoutTableName;
-            this.runParameters = runParameters;
             this.batchSize = batchSize;
         }
 
@@ -23,28 +21,28 @@
             using (var connection = dialect.Connect(connectionString))
             {
                 ToolState state = null;
-                string endpointName = null;
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadToolState(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToLoadToolState();
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
                         if (reader.HasRows && reader.Read())
                         {
-                            state = new ToolState(null, null); // Deserialize reader.GetString(2));
+                            state = new ToolState(null, null);
                             state.Status = ParseMigrationStatus(reader.GetString(1));
-                            endpointName = reader.GetString(0);
+                            state.Endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
+                            state.RunParameters = JsonConvert.DeserializeObject<Dictionary<string,string>>(reader.GetString(2));
                         }
                     }
 
                     if (state == null)
                     {
-                        throw new ApplicationException("No migration found");
+                        return null;
                     }
 
-                    command.CommandText = dialect.GetScriptToLoadBatchInfo(endpointName);
+                    command.CommandText = dialect.GetScriptToLoadBatchInfo();
 
                     state.InitBatches(await ReadBatchInfo(command).ConfigureAwait(false));
 
@@ -58,17 +56,12 @@
             using (var connection = dialect.Connect(connectionString))
             {
                 var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToPrepareTimeouts(timeoutTableName, batchSize);
+                command.CommandText = dialect.GetScriptToPrepareTimeouts(endpoint.EndpointName, batchSize);
 
                 var migrateTimeoutsWithDeliveryDateLaterThanParameter = command.CreateParameter();
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.ParameterName = "migrateTimeoutsWithDeliveryDateLaterThan";
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.Value = migrateTimeoutsWithDeliveryDateLaterThan;
                 command.Parameters.Add(migrateTimeoutsWithDeliveryDateLaterThanParameter);
-
-                var runParametersParameter = command.CreateParameter();
-                runParametersParameter.ParameterName = "RunParameters";
-                runParametersParameter.Value = runParameters;
-                command.Parameters.Add(runParametersParameter);
 
                 return await ReadBatchInfo(command).ConfigureAwait(false);
             }
@@ -80,7 +73,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadBatch(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToLoadBatch();
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -107,7 +100,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToCompleteBatch(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToCompleteBatch();
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -140,7 +133,7 @@
 
                     parameter = command.CreateParameter();
                     parameter.ParameterName = "EndpointName";
-                    parameter.Value = timeoutTableName;
+                    parameter.Value = toolState.Endpoint.EndpointName;
                     command.Parameters.Add(parameter);
 
                     parameter = command.CreateParameter();
@@ -164,7 +157,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToAbortBatch(timeoutTableName);
+                    command.CommandText = dialect.GetScriptToAbortBatch(toolState.Endpoint.EndpointName);
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -202,7 +195,8 @@
                                     EndpointName = reader.GetString(0),
                                     NrOfTimeouts = reader.GetInt32(1),
                                     LongestTimeout = reader.GetDateTime(2),
-                                    ShortestTimeout = reader.GetDateTime(3)
+                                    ShortestTimeout = reader.GetDateTime(3),
+                                    Destinations = reader.GetString(4).Split(", ", StringSplitOptions.RemoveEmptyEntries)
                                 });
                             }
 
@@ -212,7 +206,7 @@
                 }
             }
 
-            return null;
+            return new List<EndpointInfo>();
         }
 
         async Task<List<BatchInfo>> ReadBatchInfo(DbCommand command)
@@ -316,8 +310,6 @@
 
         readonly SqlDialect dialect;
         readonly string connectionString;
-        readonly string runParameters;
-        readonly string timeoutTableName;
         readonly int batchSize;
     }
 

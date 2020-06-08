@@ -22,7 +22,7 @@ namespace Particular.TimeoutMigrationTool
         }
 
         public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
-        public IDictionary<string, string> RunParameters { get; private set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> RunParameters { get; set; } = new Dictionary<string, string>();
         public MigrationStatus Status { get; set; }
         public EndpointInfo Endpoint { get;  set; }
 

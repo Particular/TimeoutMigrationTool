@@ -143,7 +143,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             var timeouts =
-                await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentPrefix, (doc, id) => doc.Id= id);
+                await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentPrefix, (doc, id) => doc.Id = id);
 
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal)RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
