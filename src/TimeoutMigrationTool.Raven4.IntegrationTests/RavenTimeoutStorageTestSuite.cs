@@ -1,4 +1,4 @@
-namespace TimeoutMigrationTool.Raven4.Tests
+namespace TimeoutMigrationTool.Raven4.IntegrationTests
 {
     using System;
     using System.Collections.Generic;
@@ -12,7 +12,6 @@ namespace TimeoutMigrationTool.Raven4.Tests
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
-    using TimeoutMigrationTool.Tests;
 
     public abstract class RavenTimeoutStorageTestSuite
     {

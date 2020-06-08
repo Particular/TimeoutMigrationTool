@@ -1,8 +1,8 @@
 
-using System;
-
-namespace TimeoutMigrationTool.Raven3.Tests
+namespace TimeoutMigrationTool.Raven4.IntegrationTests
 {
+    using System;
+
     public class DeleteDbParams
     {
         public string[] DatabaseNames { get; set; }
