@@ -352,6 +352,10 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
         public class SqlP_WithTimeouts_Endpoint : EndpointConfigurationBuilder
         {
+            public SqlP_WithTimeouts_Endpoint()
+            {
+                EndpointSetup<LegacyTimeoutManagerEndpoint>();
+            }
             [SqlSaga(correlationProperty: nameof(TestSaga.Id))]
             public class TimeoutSaga : Saga<TestSaga>, IAmStartedByMessages<StartSagaMessage>, IHandleTimeouts<Timeout>
             {

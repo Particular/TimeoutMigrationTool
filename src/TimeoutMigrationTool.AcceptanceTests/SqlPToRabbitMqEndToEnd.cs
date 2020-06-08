@@ -60,7 +60,7 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), 1024, "");
+                    var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), 1024);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 

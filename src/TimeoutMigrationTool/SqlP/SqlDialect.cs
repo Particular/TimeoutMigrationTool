@@ -14,7 +14,7 @@ namespace Particular.TimeoutMigrationTool
         }
 
         public abstract string GetScriptToPrepareTimeouts(string endpointName, int batchSize);
-        public abstract string GetScriptToLoadBatchInfo(string endpointName);
+        public abstract string GetScriptToLoadBatchInfo();
         public abstract string GetScriptToLoadToolState();
         public abstract string GetScriptToStoreToolState();
         public abstract string GetScriptToLoadBatch(string endpointName);
@@ -49,7 +49,7 @@ WHERE
 ";
         }
 
-        public override string GetScriptToLoadBatchInfo(string endpointName)
+        public override string GetScriptToLoadBatchInfo()
         {
             return $@"SELECT
     Id,

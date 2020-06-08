@@ -9,11 +9,10 @@
 
     public class SqlTimeoutStorage : ITimeoutStorage
     {
-        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, int batchSize, string runParameters)
+        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, int batchSize)
         {
             connectionString = sourceConnectionString;
             this.dialect = dialect;
-            this.runParameters = runParameters;
             this.batchSize = batchSize;
         }
 
@@ -43,7 +42,7 @@
                         return null;
                     }
 
-                    command.CommandText = dialect.GetScriptToLoadBatchInfo(ToolStateID);
+                    command.CommandText = dialect.GetScriptToLoadBatchInfo();
 
                     state.InitBatches(await ReadBatchInfo(command).ConfigureAwait(false));
 
@@ -306,10 +305,7 @@
 
         readonly SqlDialect dialect;
         readonly string connectionString;
-        readonly string runParameters;
         readonly int batchSize;
-
-        const string ToolStateID = "TOOLSTATE";
     }
 
     class BatchRowRecord

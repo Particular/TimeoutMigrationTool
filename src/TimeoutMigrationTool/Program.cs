@@ -87,7 +87,7 @@
                     runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
 
-                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024, "run parameters jason thing goes here");
+                    var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
 
                     var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
