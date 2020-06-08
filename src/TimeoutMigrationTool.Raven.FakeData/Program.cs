@@ -37,50 +37,65 @@
             }
 
             var timeoutsPrefix = "TimeoutDatas";
-            var ratio = Math.Floor((decimal)(nrOfTimeoutsToInsert / 3));
 
             var nrOfBatches = Math.Ceiling(nrOfTimeoutsToInsert / (decimal)RavenConstants.DefaultPagingSize);
-            var timeoutIdCounter = 1;
-            for (var i = 1; i <= nrOfBatches; i++)
+            var timeoutIdCounter = 0;
+
+            for (var i = 1; i <= nrOfBatches; i++) // batch inserts per paging size
             {
                 var commands = new List<PutCommand>();
-                var startIndex = i * RavenConstants.DefaultPagingSize;
-                var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk-docs";
+                var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk_docs";
 
-                for (var j = 0; j < startIndex; j++)
+                for (var j = 0; j < RavenConstants.DefaultPagingSize; j++)
                 {
-                    // Insert the timeout data
-                    var timeoutData = new TimeoutData
-                    {
-                        Id = $"{timeoutsPrefix}/{i + 1}",
-                        Destination = "DestinationEndpoint",
-                        SagaId = Guid.NewGuid(),
-                        OwningTimeoutManager = i < ratio ? "EndpointA" : i < ratio*2 ? "EndpointB" : "EndpointC",
-                        Time = i < 125 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
-                        Headers = new Dictionary<string, string>(),
-                        State = Encoding.ASCII.GetBytes("This is my state")
-                    };
-
-                    var insertCommand = new PutCommand()
-                    {
-                        Id = $"{timeoutsPrefix}/{timeoutIdCounter}",
-                        Type = "PUT",
-                        ChangeVector = null,
-                        Document = timeoutData
-                    };
-                    commands.Add(insertCommand);
-
                     timeoutIdCounter++;
+                    var endpoint = j < (RavenConstants.DefaultPagingSize / 3) ? "EndpointA" : j < (RavenConstants.DefaultPagingSize / 3 / 3) * 2 ? "EndpointB" : "EndpointC";
+
+                    var insertCommand = CreateTimeoutInsertCommand(timeoutsPrefix, timeoutIdCounter, endpoint);
+                    commands.Add(insertCommand);
                 }
 
-                var serializeObject = JsonConvert.SerializeObject(commands);
+                var request = new
+                {
+                    Commands = commands.ToArray()
+                };
+
+                var serializeObject = JsonConvert.SerializeObject(request);
                 var result = await httpClient.PostAsync(bulkInsertUrl,
                     new StringContent(serializeObject, Encoding.UTF8, "application/json"));
                 result.EnsureSuccessStatusCode();
             }
         }
 
+        static PutCommand CreateTimeoutInsertCommand(string timeoutsPrefix, int timeoutIdCounter, string endpoint)
+        {
+            var daysToTrigger = random.Next(0, 60); // randomize the Time property
+
+            // Create the timeout
+            var timeoutData = new TimeoutData
+            {
+                Id = $"{timeoutsPrefix}/{timeoutIdCounter}",
+                Destination = "DestinationEndpoint",
+                SagaId = Guid.NewGuid(),
+                OwningTimeoutManager = endpoint,
+                Time = DateTime.Now.AddDays(daysToTrigger),
+                Headers = new Dictionary<string, string>(),
+                State = Encoding.ASCII.GetBytes("This is my state")
+            };
+
+            // Create insert command for timeout
+            var insertCommand = new PutCommand()
+            {
+                Id = $"{timeoutsPrefix}/{timeoutIdCounter}",
+                Type = "PUT",
+                ChangeVector = null,
+                Document = timeoutData
+            };
+            return insertCommand;
+        }
+
         static readonly HttpClient httpClient = new HttpClient();
+        static Random random = new Random();
     }
 
     public class DatabaseRecord
