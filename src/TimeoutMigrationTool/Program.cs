@@ -11,6 +11,7 @@
 
     class Program
     {
+        const string CutoffTimeFormat = "yyyy-MM-dd HH:mm:ss:ffffff Z";
         static int Main(string[] args)
         {
             var app = new CommandLineApplication
@@ -82,6 +83,7 @@
                     var targetConnectionString = targetOption.Value();
                     var timeoutTableName = timeoutTableOption.Value();
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
+                    var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
                     if (abortMigrationOption.HasValue())
                     {
@@ -89,7 +91,7 @@
                     }
 
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
-                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
+                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.ToString(CutoffTimeFormat));
 
                     runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
                     runParameters.Add(ApplicationOptions.SqlTimeoutTableName, timeoutTableName);
@@ -149,8 +151,10 @@
                         ? RavenDbVersion.ThreeDotFive
                         : RavenDbVersion.Four;
 
+                    var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
-                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTimeOption.ToString());
+                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.ToString(CutoffTimeFormat));
 
                     runParameters.Add(ApplicationOptions.RavenServerUrl, serverUrl);
                     runParameters.Add(ApplicationOptions.RavenDatabaseName, databaseName);
@@ -182,6 +186,21 @@
             });
 
             return app.Execute(args);
+        }
+
+        static DateTime GetCutoffTime(CommandOption cutoffTimeOption)
+        {
+            DateTime cutoffTime;
+            if (!cutoffTimeOption.HasValue())
+            {
+                cutoffTime = DateTime.UtcNow;
+            }
+            else if (!DateTime.TryParse(cutoffTimeOption.Value(), out cutoffTime))
+            {
+                Console.WriteLine($"Unable to parse the cutofftime, please supply the cutoffTime in the following format '{CutoffTimeFormat}'");
+            }
+
+            return cutoffTime;
         }
 
         static async Task AbortMigration(ITimeoutStorage timeoutStorage)
