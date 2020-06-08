@@ -7,13 +7,13 @@ namespace TimeoutMigrationTool.RabbitMq.FakeTarget
     {
         static async Task Main(string[] args)
         {
-            var endpointConfigA = new EndpointConfiguration("A");
+            var endpointConfigA = new EndpointConfiguration("EndpointA");
             SetupEndpointConfig(endpointConfigA);
 
-            var endpointConfigB = new EndpointConfiguration("B");
+            var endpointConfigB = new EndpointConfiguration("EndpointB");
             SetupEndpointConfig(endpointConfigB);
 
-            var endpointConfigC = new EndpointConfiguration("C");
+            var endpointConfigC = new EndpointConfiguration("EndpointC");
             SetupEndpointConfig(endpointConfigC);
 
             await Endpoint.Start(endpointConfigA);
