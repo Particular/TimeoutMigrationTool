@@ -178,7 +178,20 @@ BEGIN TRANSACTION
             RunParameters NVARCHAR(MAX)
         )
     END;
- 
+     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutData_migration')
+    BEGIN
+       CREATE TABLE [TimeoutData_migration] (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        BatchNumber INT,
+        Status INT NOT NULL, /* 0 = Pending, 1 = staged, 2 = migrated */
+        Destination NVARCHAR(200),
+        SagaId UNIQUEIDENTIFIER,
+        State VARBINARY(MAX),
+        Time DATETIME,
+        Headers NVARCHAR(MAX) NOT NULL,
+        PersistenceVersion VARCHAR(23) NOT NULL
+    );
+    END;
     IF NOT EXISTS (SELECT * FROM TimeoutsMigration_State WHERE EndpointName = @EndpointName)
         INSERT INTO TimeoutsMigration_State (EndpointName, Status, Batches, RunParameters)
         VALUES (@EndpointName, @Status, @Batches, @RunParameters);

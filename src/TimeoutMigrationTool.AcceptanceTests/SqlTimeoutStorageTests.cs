@@ -14,6 +14,8 @@ namespace TimeoutMigrationTool.AcceptanceTests
     [TestFixture]
     class SqlTimeoutStorageTests : SqlPAcceptanceTest
     {
+        static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlP_WithTimeouts_Endpoint)).Replace(".", "_") };
+
         [Test]
         public async Task Creates_TimeoutsMigration_State_Table()
         {
@@ -29,12 +31,6 @@ namespace TimeoutMigrationTool.AcceptanceTests
         [Test]
         public async Task Loads_ToolState_For_Existing_Migration()
         {
-            SqlP_WithTimeouts_Endpoint.EndpointName = "Loads_ToolState_For_Existing_Migration";
-            var endpoint = new EndpointInfo
-            {
-                EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName
-            };
-
             await Scenario.Define<Context>()
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
@@ -43,13 +39,13 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(SqlP_WithTimeouts_Endpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = SqlP_WithTimeouts_Endpoint.EndpointName });
+            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
             await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now, endpoint);
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
 
             var loadedToolState = await timeoutStorage.GetToolState();
 
