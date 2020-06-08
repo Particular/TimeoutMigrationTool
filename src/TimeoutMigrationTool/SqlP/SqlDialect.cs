@@ -17,9 +17,9 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToLoadBatchInfo();
         public abstract string GetScriptToLoadToolState();
         public abstract string GetScriptToStoreToolState();
-        public abstract string GetScriptToLoadBatch(string endpointName);
+        public abstract string GetScriptToLoadBatch();
         public abstract string GetScriptToAbortBatch(string endpointName);
-        public abstract string GetScriptToCompleteBatch(string endpointName);
+        public abstract string GetScriptToCompleteBatch();
         public abstract string GetScriptToListEndpoints();
     }
 
@@ -33,7 +33,7 @@ namespace Particular.TimeoutMigrationTool
             return connection;
         }
 
-        public override string GetScriptToLoadBatch(string endpointName)
+        public override string GetScriptToLoadBatch()
         {
             return $@"SELECT Id,
     Destination,
@@ -184,7 +184,7 @@ BEGIN TRANSACTION
 COMMIT;";
         }
 
-        public override string GetScriptToCompleteBatch(string endpointName)
+        public override string GetScriptToCompleteBatch()
         {
             return $@"UPDATE
     [TimeoutData_migration]

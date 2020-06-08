@@ -117,7 +117,7 @@ namespace Particular.TimeoutMigrationTool
                 if (batch.State == BatchState.Pending)
                 {
                     logger.LogDebug("Reading batch");
-                    var timeouts = await timeoutStorage.ReadBatch(endpointInfo, batch.Number);
+                    var timeouts = await timeoutStorage.ReadBatch(batch.Number);
 
                     logger.LogDebug("Staging batch");
                     var stagedTimeoutCount = await transportTimeoutsCreator.StageBatch(timeouts);
@@ -216,7 +216,7 @@ namespace Particular.TimeoutMigrationTool
         {
             var currentBatch = toolState.GetCurrentBatch();
             currentBatch.State = BatchState.Completed;
-            await timeoutStorage.CompleteBatch(toolState.Endpoint, currentBatch.Number);
+            await timeoutStorage.CompleteBatch(currentBatch.Number);
             await timeoutStorage.StoreToolState(toolState);
         }
 

@@ -67,13 +67,13 @@
             }
         }
 
-        public async Task<List<TimeoutData>> ReadBatch(EndpointInfo endpoint, int batchNumber)
+        public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
             using (var connection = dialect.Connect(connectionString))
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadBatch(endpoint.EndpointName);
+                    command.CommandText = dialect.GetScriptToLoadBatch();
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -94,13 +94,13 @@
             return null;
         }
 
-        public async Task CompleteBatch(EndpointInfo endpoint, int number)
+        public async Task CompleteBatch(int number)
         {
             using (var connection = dialect.Connect(connectionString))
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToCompleteBatch(endpoint.EndpointName);
+                    command.CommandText = dialect.GetScriptToCompleteBatch();
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";

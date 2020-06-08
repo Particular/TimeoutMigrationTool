@@ -233,7 +233,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
             foreach (var batch in batches)
             {
-                await timeoutStorage.CompleteBatch(sourceEndpoint, batch.Number);
+                await timeoutStorage.CompleteBatch(batch.Number);
             }
 
             var loadedState = await timeoutStorage.GetToolState();
@@ -263,7 +263,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
             foreach (var batch in batches)
             {
                 var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
-                var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(sourceEndpoint, batch.Number)).Select(timeout => timeout.Id).ToList();
+                var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
 
                 CollectionAssert.AreEquivalent(timeoutIdsCreatedDuringSplit, timeoutIdsFromDatabase);
             }
@@ -356,6 +356,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
             {
                 EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }
+
             [SqlSaga(correlationProperty: nameof(TestSaga.Id))]
             public class TimeoutSaga : Saga<TestSaga>, IAmStartedByMessages<StartSagaMessage>, IHandleTimeouts<Timeout>
             {

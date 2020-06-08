@@ -33,7 +33,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var batchToVerify = batches.First();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var timeoutDatasInBatch = await sut.ReadBatch(endpoint, batchToVerify.Number);
+            var timeoutDatasInBatch = await sut.ReadBatch(batchToVerify.Number);
 
             Assert.That(batchToVerify.TimeoutIds.Length, Is.EqualTo(timeoutDatasInBatch.Count));
         }
@@ -54,7 +54,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var batchToVerify = batches.First();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CompleteBatch(endpoint, batchToVerify.Number);
+            await sut.CompleteBatch(batchToVerify.Number);
 
             var reader = new Raven4Adapter(ServerName, databaseName);
             var updatedBatch = await reader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
@@ -81,7 +81,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var batchToVerify = batches.First();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.CompleteBatch(endpoint, batchToVerify.Number);
+            await sut.CompleteBatch(batchToVerify.Number);
 
             var reader = new Raven4Adapter(ServerName, databaseName);
             var updatedTimeout = await reader.GetDocument<TimeoutData>(timeoutIdToVerify,
