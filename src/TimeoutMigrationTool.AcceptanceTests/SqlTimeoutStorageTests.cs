@@ -352,18 +352,6 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
         public class SqlP_WithTimeouts_Endpoint : EndpointConfigurationBuilder
         {
-            public static string EndpointName { get; set; }
-
-            public SqlP_WithTimeouts_Endpoint()
-            {
-                if (!string.IsNullOrWhiteSpace(EndpointName))
-                {
-                    CustomEndpointName(EndpointName);
-                }
-
-                EndpointSetup<LegacyTimeoutManagerEndpoint>();
-            }
-
             [SqlSaga(correlationProperty: nameof(TestSaga.Id))]
             public class TimeoutSaga : Saga<TestSaga>, IAmStartedByMessages<StartSagaMessage>, IHandleTimeouts<Timeout>
             {
