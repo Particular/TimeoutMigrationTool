@@ -5,26 +5,47 @@
     using Raven.Client.ServerWide;
     using Raven.Client.ServerWide.Operations;
     using System;
+    using System.IO;
+    using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
-    public abstract class RavenDBAcceptanceTest : NServiceBusAcceptanceTest
+    public abstract class RavenDBAcceptanceTest
     {
-        public override async Task SetUp()
+        [SetUp]
+        public Task SetUp()
         {
-            await base.SetUp();
+            NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention = t =>
+            {
+                var classAndEndpoint = t.FullName.Split('.').Last();
+
+                var testName = classAndEndpoint.Split('+').First();
+
+                testName = testName.Replace("When_", "");
+
+                var endpointBuilder = classAndEndpoint.Split('+').Last();
+
+
+                testName = Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(testName);
+
+                testName = testName.Replace("_", "");
+
+                return testName + "." + endpointBuilder;
+            };
 
             serverUrl = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8080";
 
             rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
 
             databaseName = TestContext.CurrentContext.Test.ID;
+
+            return Task.CompletedTask;
         }
 
-        public override async Task TearDown()
+        [TearDown]
+        public Task TearDown()
         {
-            await base.TearDown();
-
-            await DeleteDatabase(serverUrl, databaseName);
+            return DeleteDatabase(serverUrl, databaseName);
         }
 
         protected DocumentStore GetDocumentStore(string urls, string dbName)
@@ -89,5 +110,43 @@
         protected string databaseName = "";
         protected string serverUrl = "";
         protected string rabbitUrl = "";
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        public static string StorageRootDir
+        {
+            get
+            {
+                string tempDir;
+
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    //can't use bin dir since that will be too long on the build agents
+                    tempDir = @"c:\temp";
+                }
+                else
+                {
+                    tempDir = Path.GetTempPath();
+                }
+
+                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
+            }
+        }
     }
 }

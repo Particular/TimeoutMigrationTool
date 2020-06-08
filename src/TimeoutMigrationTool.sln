@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven4.Tests", "TimeoutMigrationTool.Raven4.Tests\TimeoutMigrationTool.Raven4.Tests.csproj", "{7976D47B-24DD-4F76-B745-562E46F30E21}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.AcceptanceTests", "TimeoutMigrationTool.AcceptanceTests\TimeoutMigrationTool.AcceptanceTests.csproj", "{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven.FakeData", "TimeoutMigrationTool.Raven.FakeData\TimeoutMigrationTool.Raven.FakeData.csproj", "{3C486002-36D6-42E8-A2A5-E5B28D6E7317}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.RabbitMq.FakeTarget", "TimeoutMigrationTool.RabbitMq.FakeTarget\TimeoutMigrationTool.RabbitMq.FakeTarget.csproj", "{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}"
@@ -23,6 +21,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.Tests", "TimeoutMigrationTool.Raven3.Tests\TimeoutMigrationTool.Raven3.Tests.csproj", "{B180C831-A1F3-4393-A409-ABB99B001F5A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.AcceptanceTests", "TimeoutMigrationTool.Raven3.AcceptanceTests\TimeoutMigrationTool.Raven3.AcceptanceTests.csproj", "{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.SqlP.AcceptanceTests", "TimeoutMigrationTool.SqlP.AcceptanceTests\TimeoutMigrationTool.SqlP.AcceptanceTests.csproj", "{96E41031-1974-4D08-A1A7-ECDF1161E31A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven4.AcceptanceTests", "TimeoutMigrationTool.Raven4.AcceptanceTests\TimeoutMigrationTool.Raven4.AcceptanceTests.csproj", "{7EB4EBCD-7A73-4842-9720-897CCE895FEB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,10 +44,6 @@ Global
 		{7976D47B-24DD-4F76-B745-562E46F30E21}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7976D47B-24DD-4F76-B745-562E46F30E21}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7976D47B-24DD-4F76-B745-562E46F30E21}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0ECD2A95-14C0-4D8E-9B4A-557A009E3010}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3C486002-36D6-42E8-A2A5-E5B28D6E7317}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3C486002-36D6-42E8-A2A5-E5B28D6E7317}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C486002-36D6-42E8-A2A5-E5B28D6E7317}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -62,6 +60,14 @@ Global
 		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96E41031-1974-4D08-A1A7-ECDF1161E31A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96E41031-1974-4D08-A1A7-ECDF1161E31A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96E41031-1974-4D08-A1A7-ECDF1161E31A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96E41031-1974-4D08-A1A7-ECDF1161E31A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EB4EBCD-7A73-4842-9720-897CCE895FEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EB4EBCD-7A73-4842-9720-897CCE895FEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EB4EBCD-7A73-4842-9720-897CCE895FEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EB4EBCD-7A73-4842-9720-897CCE895FEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

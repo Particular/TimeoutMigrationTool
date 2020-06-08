@@ -14,7 +14,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
     [TestFixture]
     class SqlTimeoutStorageTests : SqlPAcceptanceTest
     {
-        static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlP_WithTimeouts_Endpoint)).Replace(".", "_") };
+        static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlP_WithTimeouts_Endpoint)) };
 
         [Test]
         public async Task Creates_TimeoutsMigration_State_Table()

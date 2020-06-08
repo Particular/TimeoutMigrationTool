@@ -5,16 +5,17 @@
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool.SqlP;
     using System;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
-    public abstract class SqlPAcceptanceTest : NServiceBusAcceptanceTest
+    [TestFixture]
+    public abstract class SqlPAcceptanceTest
     {
-        public override async Task SetUp()
+        [SetUp]
+        public Task SetUp()
         {
-            await base.SetUp();
-
             NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention = t =>
             {
                 var classAndEndpoint = t.FullName.Split('.').Last();
@@ -24,7 +25,6 @@
                 testName = testName.Replace("When_", "");
 
                 var endpointBuilder = classAndEndpoint.Split('+').Last();
-
 
                 testName = Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(testName);
 
@@ -39,6 +39,8 @@
             rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
 
             MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
+
+            return Task.CompletedTask;
         }
 
         protected void SetupPersitence(EndpointConfiguration endpointConfiguration)
@@ -101,5 +103,43 @@
         protected string databaseName;
         protected string connectionString;
         protected string rabbitUrl;
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        public static string StorageRootDir
+        {
+            get
+            {
+                string tempDir;
+
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    //can't use bin dir since that will be too long on the build agents
+                    tempDir = @"c:\temp";
+                }
+                else
+                {
+                    tempDir = Path.GetTempPath();
+                }
+
+                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
+            }
+        }
     }
 }

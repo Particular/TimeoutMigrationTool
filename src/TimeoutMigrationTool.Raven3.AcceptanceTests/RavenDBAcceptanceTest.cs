@@ -28,11 +28,7 @@
 
         protected DocumentStore GetDocumentStore(string url, string dbName)
         {
-            var documentStore = GetInitializedDocumentStore(url, dbName);
-
-            CreateDatabase(documentStore, dbName);
-
-            return documentStore;
+            return GetInitializedDocumentStore(url, dbName);
         }
 
         static DocumentStore GetInitializedDocumentStore(string url, string defaultDatabase)
@@ -48,12 +44,6 @@
             documentStore.Initialize();
 
             return documentStore;
-        }
-
-        static void CreateDatabase(IDocumentStore defaultStore, string dbName)
-        {
-            //var dbRecord = new DatabaseRecord(dbName);
-            //defaultStore.Maintenance.Server.Send(new CreateDatabaseOperation(dbRecord));
         }
 
         static async Task DeleteDatabase(string urls, string dbName)
