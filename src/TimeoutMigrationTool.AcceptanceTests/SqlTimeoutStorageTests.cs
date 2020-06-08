@@ -27,7 +27,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
             Assert.AreEqual(MigrationStatus.NeverRun, storedToolState.Status);
             Assert.AreEqual(sourceEndpoint.EndpointName, storedToolState.Endpoint.EndpointName);
-            CollectionAssert.AreEqual(runParameters,storedToolState.RunParameters);
+            CollectionAssert.AreEqual(runParameters, storedToolState.RunParameters);
             CollectionAssert.IsEmpty(storedToolState.Batches);
         }
 
@@ -132,8 +132,6 @@ namespace TimeoutMigrationTool.AcceptanceTests
         [Test]
         public async Task Loads_Endpoints_With_Valid_Timeouts()
         {
-            SqlP_WithTimeouts_Endpoint.EndpointName = "Loads_Endpoints_With_Valid_Timeouts";
-
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
@@ -142,30 +140,20 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c =>
-                {
-                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
-
-                    return numberOfTimeouts == c.NumberOfTimeouts;
-                })
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
 
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
-            // this will blow if the names don't match
-            var loadedEndpoint = endpoints.Single(a => string.Equals(a.EndpointName, SqlP_WithTimeouts_Endpoint.EndpointName, StringComparison.OrdinalIgnoreCase));
-
-            Assert.IsTrue(endpoints.Count > 0);
+            CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint.EndpointName);
         }
 
         [Test]
         public async Task Loads_Destinations_For_Endpoints_With_Valid_Timeouts()
         {
-            SqlP_WithTimeouts_Endpoint.EndpointName = "Loads_Endpoints_With_Valid_Timeouts";
-
-            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 1)
                 .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(async session =>
                     {
@@ -196,19 +184,13 @@ namespace TimeoutMigrationTool.AcceptanceTests
 
                         await session.Send(delayedMessage, options);
                     }))
-                .Done(c =>
-                {
-                    var numberOfTimeouts = MsSqlMicrosoftDataClientHelper.QueryScalar<int>($"SELECT COUNT(*) FROM {SqlP_WithTimeouts_Endpoint.EndpointName}_TimeoutData");
+                    .Done(c => 3 == NumberOfTimeouts(sourceEndpoint.EndpointName))
 
-                    return numberOfTimeouts == 3;
-                })
                 .Run();
 
             var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(-10));
 
-            var expectedDestinations = new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" };
-
-            CollectionAssert.AreEquivalent(expectedDestinations, endpoints.First().Destinations);
+            CollectionAssert.AreEquivalent(new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" }, endpoints.First().Destinations);
         }
 
         [Test]
