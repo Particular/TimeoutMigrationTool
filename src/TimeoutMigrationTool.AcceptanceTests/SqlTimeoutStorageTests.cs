@@ -19,13 +19,15 @@ namespace TimeoutMigrationTool.AcceptanceTests
         [Test]
         public async Task Creates_TimeoutsMigration_State_Table()
         {
+            var runParameters = new Dictionary<string, string> { { "someKey", "someValue" }, { "anotherKey", "anotherValue" } };
             var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.StoreToolState(new ToolState(new Dictionary<string, string>(), sourceEndpoint));
+            await timeoutStorage.StoreToolState(new ToolState(runParameters, sourceEndpoint));
 
             var storedToolState = await timeoutStorage.GetToolState();
 
             Assert.AreEqual(MigrationStatus.NeverRun, storedToolState.Status);
             Assert.AreEqual(sourceEndpoint.EndpointName, storedToolState.Endpoint.EndpointName);
+            CollectionAssert.AreEqual(runParameters,storedToolState.RunParameters);
             CollectionAssert.IsEmpty(storedToolState.Batches);
         }
 

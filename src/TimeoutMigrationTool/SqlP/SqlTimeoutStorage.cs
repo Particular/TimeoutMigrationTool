@@ -31,9 +31,10 @@
                     {
                         if (reader.HasRows && reader.Read())
                         {
-                            state = new ToolState(null, null); // Deserialize reader.GetString(2));
+                            state = new ToolState(null, null);
                             state.Status = ParseMigrationStatus(reader.GetString(1));
                             state.Endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
+                            state.RunParameters = JsonConvert.DeserializeObject<Dictionary<string,string>>(reader.GetString(2));
                         }
                     }
 
@@ -62,11 +63,6 @@
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.ParameterName = "migrateTimeoutsWithDeliveryDateLaterThan";
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.Value = migrateTimeoutsWithDeliveryDateLaterThan;
                 command.Parameters.Add(migrateTimeoutsWithDeliveryDateLaterThanParameter);
-
-                var runParametersParameter = command.CreateParameter();
-                runParametersParameter.ParameterName = "RunParameters";
-                runParametersParameter.Value = runParameters;
-                command.Parameters.Add(runParametersParameter);
 
                 return await ReadBatchInfo(command).ConfigureAwait(false);
             }
