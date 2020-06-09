@@ -62,7 +62,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasCreated);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
             Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
-            Assert.That(timeoutStorage.BatchesWerePrepared);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
@@ -97,7 +96,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
             Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
-            Assert.That(timeoutStorage.BatchesWerePrepared);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
@@ -128,7 +126,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
             Assert.That(timeoutStorage.CanPrepareStorageWasCalled, Is.False);
-            Assert.That(timeoutStorage.BatchesWerePrepared, Is.False);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared, Is.False);
             Assert.That(timeoutStorage.BatchWasRead, Is.False);
             Assert.That(transportTimeoutsCreator.BatchWasStaged, Is.False);
@@ -174,7 +171,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
             Assert.That(timeoutStorage.CanPrepareStorageWasCalled, Is.False);
-            Assert.That(timeoutStorage.BatchesWerePrepared, Is.False);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
             Assert.That(timeoutStorage.BatchWasCompleted);
@@ -210,7 +206,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasCreated);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
             Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
-            Assert.That(timeoutStorage.BatchesWerePrepared);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
@@ -237,7 +232,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasCreated);
             Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(timeoutStorage.BatchesWerePrepared);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
             Assert.That(timeoutStorage.BatchWasRead, Is.False);
             Assert.That(transportTimeoutsCreator.BatchWasStaged, Is.False);

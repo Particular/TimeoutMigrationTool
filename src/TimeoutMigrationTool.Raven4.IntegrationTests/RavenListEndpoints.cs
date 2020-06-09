@@ -53,7 +53,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             var adapter = new Raven4Adapter(ServerName, databaseName);
             var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationDonePrefix}{timeout.OwningTimeoutManager}";
-            await adapter.UpdateRecord(timeout.Id, timeout);
+            await adapter.UpdateDocument(timeout.Id, timeout);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
@@ -71,7 +71,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             var adapter = new Raven4Adapter(ServerName, databaseName);
             var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationOngoingPrefix}{timeout.OwningTimeoutManager}";
-            await adapter.UpdateRecord(timeout.Id, timeout);
+            await adapter.UpdateDocument(timeout.Id, timeout);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             var endpoints = await sut.ListEndpoints(DateTime.Now);

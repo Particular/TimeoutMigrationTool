@@ -55,6 +55,12 @@ namespace Particular.TimeoutMigrationTool
 
             foreach (var endpointToMigrate in endpointsToMigrate)
             {
+                if(endpointToMigrate.NrOfTimeouts == 0)
+                {
+                    logger.LogInformation($"No timeouts found for {endpointToMigrate.EndpointName} migration will be skipped");
+                    continue;
+                }
+
                 logger.LogInformation($"Starting migration for {endpointToMigrate.EndpointName}, {endpointToMigrate.NrOfTimeouts}");
                 await Run(cutOffTime, endpointToMigrate, runParameters);
             }
@@ -143,9 +149,7 @@ namespace Particular.TimeoutMigrationTool
                 logger.LogDebug("Batch fully migrated");
             }
 
-            toolState.Status = MigrationStatus.Completed;
-
-            await timeoutStorage.StoreToolState(toolState);
+            await timeoutStorage.Complete();
             logger.LogInformation("Migration completed successfully");
         }
 
@@ -154,13 +158,7 @@ namespace Particular.TimeoutMigrationTool
             logger.LogDebug("Preparing storage");
             var batches = await timeoutStorage.Prepare(cutOffTime, endpoint);
 
-            if (!batches.Any())
-            {
-                logger.LogWarning("No data was found to migrate. If you think this is not possible, verify your parameters and try again.");
-            }
-
             toolState.InitBatches(batches);
-            await MarkStorageAsPrepared(toolState);
             logger.LogInformation("Storage prepared");
         }
 
@@ -200,18 +198,11 @@ namespace Particular.TimeoutMigrationTool
             return false;
         }
 
-        async Task MarkStorageAsPrepared(ToolState toolState)
-        {
-            toolState.Status = MigrationStatus.StoragePrepared;
-            await timeoutStorage.StoreToolState(toolState);
-        }
-
         async Task MarkCurrentBatchAsStaged(ToolState toolState)
         {
             var currentBatch = toolState.GetCurrentBatch();
             currentBatch.State = BatchState.Staged;
             await timeoutStorage.MarkBatchAsStaged(currentBatch.Number);
-            await timeoutStorage.StoreToolState(toolState);
         }
 
         async Task CompleteCurrentBatch(ToolState toolState)
@@ -219,7 +210,6 @@ namespace Particular.TimeoutMigrationTool
             var currentBatch = toolState.GetCurrentBatch();
             currentBatch.State = BatchState.Completed;
             await timeoutStorage.MarkBatchAsCompleted(currentBatch.Number);
-            await timeoutStorage.StoreToolState(toolState);
         }
 
         readonly ILogger logger;

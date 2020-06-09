@@ -33,7 +33,7 @@
                             state = new ToolState(null, null);
                             state.Status = ParseMigrationStatus(reader.GetString(1));
                             state.Endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
-                            state.RunParameters = JsonConvert.DeserializeObject<Dictionary<string,string>>(reader.GetString(2));
+                            state.RunParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
                         }
                     }
 
@@ -232,6 +232,7 @@
                 {
                     var batchRows = ReadBatchRows(reader);
 
+                    //TODO Do a group by in the DB?
                     batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
                     {
                         Number = batchNumber.Key,
@@ -312,6 +313,25 @@
                 using (var jsonReader = new JsonTextReader(stream))
                 {
                     return serializer.Deserialize<Dictionary<string, string>>(jsonReader);
+                }
+            }
+        }
+
+        public async Task Complete()
+        {
+            using (var connection = dialect.Connect(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = dialect.GetScriptToMarkMigrationAsCompleted();
+
+                    //var parameter = command.CreateParameter();
+                    //parameter.ParameterName = "MigrationRunId";
+                    //parameter.Value = $"Completed_{DateTime.Now.ToShortTimeString()}";
+
+                    //command.Parameters.Add(parameter);
+
+                    await command.ExecuteNonQueryAsync();
                 }
             }
         }

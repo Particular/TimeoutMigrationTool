@@ -22,7 +22,7 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToCompleteBatch();
         public abstract string GetScriptToListEndpoints();
         public abstract string GetScriptToMarkBatchAsStaged();
-
+        public abstract string GetScriptToMarkMigrationAsCompleted();
     }
 
     public class MsSqlServer : SqlDialect
@@ -127,7 +127,8 @@ BEGIN TRANSACTION
     UPDATE
         TimeoutsMigration_State
     SET
-        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration])
+        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration]),
+        Status = 1
     WHERE
         MigrationRunId = 'TOOLSTATE';
 
@@ -235,6 +236,22 @@ SET
     Status = 1
 WHERE
     BatchNumber = @BatchNumber";
+        }
+
+        public override string GetScriptToMarkMigrationAsCompleted()
+        {
+            return @"
+BEGIN TRANSACTION
+    UPDATE
+        TimeoutsMigration_State
+    SET
+        Status = 2
+    WHERE
+        MigrationRunId = 'TOOLSTATE';
+
+EXEC sp_rename 'TimeoutData_migration', 'TimeoutData_migration_completed'
+
+COMMIT;";
         }
     }
 }

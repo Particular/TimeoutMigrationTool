@@ -1,20 +1,19 @@
-﻿using Microsoft.Data.SqlClient;
-using NServiceBus;
-using NServiceBus.AcceptanceTesting;
-using NServiceBus.Persistence.Sql;
-using NUnit.Framework;
-using Particular.TimeoutMigrationTool;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace TimeoutMigrationTool.AcceptanceTests
+﻿namespace TimeoutMigrationTool.AcceptanceTests
 {
+    using NServiceBus;
+    using NServiceBus.AcceptanceTesting;
+    using NServiceBus.Persistence.Sql;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+
     [TestFixture]
     class SqlTimeoutStorageTests : SqlPAcceptanceTest
     {
-        static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlP_WithTimeouts_Endpoint)) };
+        static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint)) };
 
         [Test]
         public async Task Creates_TimeoutsMigration_State_Table()
@@ -36,7 +35,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Loads_ToolState_For_Existing_Migration()
         {
             await Scenario.Define<Context>()
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -60,7 +59,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Saves_ToolState_Status_When_Changed()
         {
             await Scenario.Define<Context>()
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -86,10 +85,10 @@ namespace TimeoutMigrationTool.AcceptanceTests
         }
 
         [Test]
-        public async Task Splits_timeouts_into_correct_number_of_batches()
+        public async Task Can_prepare_storage_for_migration()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -100,16 +99,23 @@ namespace TimeoutMigrationTool.AcceptanceTests
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
+            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
+            await timeoutStorage.StoreToolState(toolState);
+
             var batchInfo = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
 
             Assert.AreEqual(4, batchInfo.Count);
+
+            var storedToolState = await timeoutStorage.GetToolState();
+
+            Assert.AreEqual(MigrationStatus.StoragePrepared, storedToolState.Status);
         }
 
         [Test]
         public async Task Only_Moves_timeouts_After_migrateTimeoutsWithDeliveryDateLaterThan_date()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -122,18 +128,16 @@ namespace TimeoutMigrationTool.AcceptanceTests
             var timeoutStorage = GetTimeoutStorage(1);
             var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
             await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint);
+            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint);
 
-            var numberOfBatches = await QueryScalarAsync<int>($"SELECT MAX(Batches) FROM TimeoutsMigration_State");
-
-            Assert.AreEqual(6, numberOfBatches);
+            Assert.AreEqual(6, batches.Count);
         }
 
         [Test]
         public async Task Loads_Endpoints_With_Valid_Timeouts()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -154,7 +158,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Loads_Destinations_For_Endpoints_With_Valid_Timeouts()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 1)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(async session =>
                     {
                         var delayedMessage = new StartSagaMessage();
@@ -197,7 +201,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Doesnt_Load_Endpoints_With_Timeouts_outside_the_cutoff_date()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                 .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -216,7 +220,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Batches_Completed_Can_Be_Completed()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -245,7 +249,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Can_mark_batch_as_staged()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -274,7 +278,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Timeouts_Split_Can_Be_Read_By_Batch()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -302,7 +306,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Removes_Timeouts_From_Original_TimeoutData_Table()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -326,7 +330,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Restores_Timeouts_To_Original_TimeoutData_Table_When_Aborted()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -354,7 +358,7 @@ namespace TimeoutMigrationTool.AcceptanceTests
         public async Task Copies_Timeouts_From_Original_TimeoutData_Table_To_New_Table()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 5)
-                .WithEndpoint<SqlP_WithTimeouts_Endpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
@@ -374,14 +378,41 @@ namespace TimeoutMigrationTool.AcceptanceTests
             Assert.AreEqual(5, numberOfTimeouts);
         }
 
+        [Test]
+        public async Task WhenCompletingMigrationStatusIsSetToCompleted()
+        {
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 5)
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Run();
+
+            var timeoutStorage = GetTimeoutStorage();
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = sourceEndpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+
+            await timeoutStorage.Complete();
+            var storedToolState = await timeoutStorage.GetToolState();
+
+            var completedTables = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM sys.tables where name = 'TimeoutData_migration_completed'");
+
+            Assert.AreEqual(1, completedTables);
+        }
+
         public class Context : ScenarioContext
         {
             public int NumberOfTimeouts { get; set; } = 1;
         }
 
-        public class SqlP_WithTimeouts_Endpoint : EndpointConfigurationBuilder
+        public class SqlPEndpoint : EndpointConfigurationBuilder
         {
-            public SqlP_WithTimeouts_Endpoint()
+            public SqlPEndpoint()
             {
                 EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }
