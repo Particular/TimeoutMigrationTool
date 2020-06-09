@@ -26,6 +26,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.SqlP.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven4.AcceptanceTests", "TimeoutMigrationTool.Raven4.AcceptanceTests\TimeoutMigrationTool.Raven4.AcceptanceTests.csproj", "{7EB4EBCD-7A73-4842-9720-897CCE895FEB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.RabbitMq.IntegrationTests", "TimeoutMigrationTool.RabbitMq.IntegrationTests\TimeoutMigrationTool.RabbitMq.IntegrationTests.csproj", "{645CAAE0-2F1D-4D19-AE77-D819638A289B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +70,10 @@ Global
 		{7EB4EBCD-7A73-4842-9720-897CCE895FEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EB4EBCD-7A73-4842-9720-897CCE895FEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EB4EBCD-7A73-4842-9720-897CCE895FEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{645CAAE0-2F1D-4D19-AE77-D819638A289B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{645CAAE0-2F1D-4D19-AE77-D819638A289B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{645CAAE0-2F1D-4D19-AE77-D819638A289B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{645CAAE0-2F1D-4D19-AE77-D819638A289B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

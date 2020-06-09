@@ -61,12 +61,37 @@
                         continue;
                     }
 
-                    channel.ExchangeBind(destination, "nsb.delay-delivery", $"#.{destination}");
+                    if (CheckIfEndpointIsUsingConventionalRoutingTopology(destination))
+                    {
+                        channel.ExchangeBind(destination, "nsb.delay-delivery", $"#.{destination}");
+                    }
+                    else
+                    {
+                        channel.QueueBind(destination, "nsb.delay-delivery", $"#.{destination}");
+                    }
 
                 }
             }
 
             return Task.FromResult(result);
+        }
+
+        bool CheckIfEndpointIsUsingConventionalRoutingTopology(string destination)
+        {
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                try
+                {
+                    channel.ExchangeDeclarePassive(destination);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+
         }
 
         Task CreateStagingQueue()
