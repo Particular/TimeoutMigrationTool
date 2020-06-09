@@ -12,23 +12,13 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         private readonly int nrOfTimeouts = 1500;
 
         [Test]
-        public void WhenThereIsNoStateAbortShouldNotFail()
-        {
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            {
-                var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-                await sut.Abort(null);
-            });
-        }
-
-        [Test]
         public async Task WhenThereIsStateAndNoTimeoutsAbortShouldDeleteState()
         {
             var toolState = SetupToolState(DateTime.Now);
             await SaveToolState(toolState);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.Abort(toolState);
+            await sut.Abort();
 
             var storedSate = await GetToolState();
             Assert.That(storedSate, Is.Null);
@@ -48,7 +38,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             await SaveToolState(toolState);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await sut.Abort(toolState);
+            await sut.Abort();
 
             var storedSate = await GetToolState();
             Assert.That(storedSate, Is.Null);

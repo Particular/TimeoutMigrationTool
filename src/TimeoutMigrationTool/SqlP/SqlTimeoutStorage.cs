@@ -165,13 +165,15 @@
             }
         }
 
-        public async Task Abort(ToolState toolState)
+        public async Task Abort()
         {
+            var toolState = await GetToolState();
+
             using (var connection = dialect.Connect(connectionString))
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToAbortBatch(toolState.Endpoint.EndpointName);
+                    command.CommandText = dialect.GetScriptToAbortMigration(toolState.Endpoint.EndpointName);
 
                     await command.ExecuteNonQueryAsync();
                 }

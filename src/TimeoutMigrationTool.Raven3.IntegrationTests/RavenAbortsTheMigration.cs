@@ -17,7 +17,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
             {
                 var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-                await sut.Abort(null);
+                await sut.Abort();
             });
         }
 
@@ -28,7 +28,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             await SaveToolState(toolState);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            await sut.Abort(toolState);
+            await sut.Abort();
 
             var storedSate = await GetToolState();
             Assert.That(storedSate, Is.Null);
@@ -48,7 +48,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             await SaveToolState(toolState);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            await sut.Abort(toolState);
+            await sut.Abort();
 
             var storedSate = await GetToolState();
             Assert.That(storedSate, Is.Null);

@@ -18,7 +18,7 @@ namespace Particular.TimeoutMigrationTool
         public abstract string GetScriptToLoadToolState();
         public abstract string GetScriptToStoreToolState();
         public abstract string GetScriptToLoadBatch();
-        public abstract string GetScriptToAbortBatch(string endpointName);
+        public abstract string GetScriptToAbortMigration(string endpointName);
         public abstract string GetScriptToCompleteBatch();
         public abstract string GetScriptToListEndpoints();
         public abstract string GetScriptToMarkBatchAsStaged();
@@ -142,7 +142,7 @@ BEGIN TRANSACTION
 COMMIT;";
         }
 
-        public override string GetScriptToAbortBatch(string endpointName)
+        public override string GetScriptToAbortMigration(string endpointName)
         {
             return $@"BEGIN TRANSACTION
 

@@ -70,7 +70,7 @@ namespace TimeoutMigrationTool.Tests
             return Task.CompletedTask;
         }
 
-        public Task Abort(ToolState toolState)
+        public Task Abort()
         {
             ToolStateWasAborted = true;
             return Task.CompletedTask;
