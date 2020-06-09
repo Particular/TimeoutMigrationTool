@@ -249,6 +249,8 @@ BEGIN TRANSACTION
     WHERE
         MigrationRunId = 'TOOLSTATE';
 
+EXEC sp_rename 'TimeoutData_migration', 'TimeoutData_migration_completed'
+
 COMMIT;";
         }
     }

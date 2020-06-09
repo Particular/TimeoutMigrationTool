@@ -400,8 +400,9 @@
             await timeoutStorage.Complete();
             var storedToolState = await timeoutStorage.GetToolState();
 
+            var completedTables = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM sys.tables where name = 'TimeoutData_migration_completed'");
 
-            Assert.AreEqual(MigrationStatus.Completed, storedToolState.Status);
+            Assert.AreEqual(1, completedTables);
         }
 
         public class Context : ScenarioContext
