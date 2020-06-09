@@ -127,7 +127,8 @@ BEGIN TRANSACTION
     UPDATE
         TimeoutsMigration_State
     SET
-        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration])
+        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration]),
+        Status = 1
     WHERE
         MigrationRunId = 'TOOLSTATE';
 

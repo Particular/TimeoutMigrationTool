@@ -232,6 +232,7 @@
                 {
                     var batchRows = ReadBatchRows(reader);
 
+                    //TODO Do a group by in the DB?
                     batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
                     {
                         Number = batchNumber.Key,

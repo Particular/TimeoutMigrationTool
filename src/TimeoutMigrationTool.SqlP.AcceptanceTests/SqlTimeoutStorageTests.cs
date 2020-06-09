@@ -85,7 +85,7 @@
         }
 
         [Test]
-        public async Task Splits_timeouts_into_correct_number_of_batches()
+        public async Task Can_prepare_storage_for_migration()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
@@ -99,9 +99,16 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
+            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
+            await timeoutStorage.StoreToolState(toolState);
+
             var batchInfo = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
 
             Assert.AreEqual(4, batchInfo.Count);
+
+            var storedToolState = await timeoutStorage.GetToolState();
+
+            Assert.AreEqual(MigrationStatus.StoragePrepared, storedToolState.Status);
         }
 
         [Test]
@@ -121,11 +128,9 @@
             var timeoutStorage = GetTimeoutStorage(1);
             var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
             await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint);
+            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint);
 
-            var numberOfBatches = await QueryScalarAsync<int>($"SELECT MAX(Batches) FROM TimeoutsMigration_State");
-
-            Assert.AreEqual(6, numberOfBatches);
+            Assert.AreEqual(6, batches.Count);
         }
 
         [Test]
