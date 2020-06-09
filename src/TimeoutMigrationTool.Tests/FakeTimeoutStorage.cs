@@ -114,5 +114,11 @@ namespace TimeoutMigrationTool.Tests
         {
             this.readBatchResults.Add(batchInfo);
         }
+
+        public Task Complete()
+        {
+            //TODO
+            return Task.CompletedTask;
+        }
     }
 }

@@ -89,5 +89,21 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
             Assert.That(updatedTimeout.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix), Is.True);
         }
+
+        [Test]
+        public async Task WhenCompletingMigrationStatusIsSetToCompleted()
+        {
+            var toolState = SetupToolState(DateTime.Now);
+            await SaveToolState(toolState);
+
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            await sut.Complete();
+
+            var reader = new Raven4Adapter(ServerName, databaseName);
+            var updatedToolState = await reader.GetDocument<RavenToolState>(RavenConstants.ToolStateId,
+                (timeoutData, id) => { });
+
+            Assert.AreEqual(MigrationStatus.Completed, updatedToolState.Status);
+        }
     }
 }

@@ -24,7 +24,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.databaseName = databaseName;
         }
 
-        public async Task UpdateRecord(string key, object document)
+        public async Task UpdateDocument(string key, object document)
         {
             var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
             var serializeObject = JsonConvert.SerializeObject(document);

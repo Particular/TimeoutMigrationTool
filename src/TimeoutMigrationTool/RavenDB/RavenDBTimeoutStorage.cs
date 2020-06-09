@@ -104,13 +104,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var batch = await ravenAdapter.GetDocument<BatchInfo>(batchId, (doc, id) => { });
             batch.State = BatchState.Staged;
 
-            await ravenAdapter.UpdateRecord(batchId, batch);
+            await ravenAdapter.UpdateDocument(batchId, batch);
         }
 
         public async Task StoreToolState(ToolState toolState)
         {
             var ravenToolState = RavenToolState.FromToolState(toolState);
-            await ravenAdapter.UpdateRecord(RavenConstants.ToolStateId, ravenToolState);
+            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
         }
 
         public async Task Abort(ToolState toolState)
@@ -175,6 +175,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         internal async Task RemoveToolState()
         {
             await ravenAdapter.DeleteRecord(RavenConstants.ToolStateId);
+        }
+
+        public async Task Complete()
+        {
+            var toolState = await GetToolState();
+
+            toolState.Status = MigrationStatus.Completed;
+
+            var ravenToolState = RavenToolState.FromToolState(toolState);
+            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             this.databaseName = databaseName;
         }
 
-        public async Task UpdateRecord(string key, object document)
+        public async Task UpdateDocument(string key, object document)
         {
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var command = new[] {

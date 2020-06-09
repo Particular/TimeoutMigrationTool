@@ -373,6 +373,32 @@
             Assert.AreEqual(5, numberOfTimeouts);
         }
 
+        [Test]
+        public async Task WhenCompletingMigrationStatusIsSetToCompleted()
+        {
+            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 5)
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                    .When(session =>
+                    {
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+
+                        return session.SendLocal(startSagaMessage);
+                    }))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Run();
+
+            var timeoutStorage = GetTimeoutStorage();
+            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = sourceEndpoint.EndpointName });
+            await timeoutStorage.StoreToolState(toolState);
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+
+            await timeoutStorage.Complete();
+            var storedToolState = await timeoutStorage.GetToolState();
+
+
+            Assert.AreEqual(MigrationStatus.Completed, storedToolState.Status);
+        }
+
         public class Context : ScenarioContext
         {
             public int NumberOfTimeouts { get; set; } = 1;

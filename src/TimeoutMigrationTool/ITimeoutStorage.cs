@@ -15,5 +15,6 @@
         Task Abort(ToolState toolState);
         Task<bool> CanPrepareStorage();
         Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime);
+        Task Complete();
     }
 }
