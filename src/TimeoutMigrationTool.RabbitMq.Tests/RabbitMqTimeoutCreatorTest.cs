@@ -12,7 +12,8 @@ namespace TimeoutMigrationTool.RabbitMq.Tests
     {
         string rabbitUrl;
         ConnectionFactory factory;
-        string ExistingEndpointName = "ExistingEndpointName";
+        string ExistingEndpointNameUsingConventional = "ExistingEndpointName";
+        string ExistingEndpointNameUsingDirect = "ExistingEndpointNameDirect";
         string NonExistingEndpointName = "NonExistingEndpointName";
 
         [OneTimeSetUp]
@@ -29,8 +30,9 @@ namespace TimeoutMigrationTool.RabbitMq.Tests
             {
                 using (var model = connection.CreateModel())
                 {
-                    model.QueueDeclare(ExistingEndpointName, true, false, false, null);
-                    model.ExchangeDeclare(ExistingEndpointName, "fanout", true, false, null);
+                    model.QueueDeclare(ExistingEndpointNameUsingConventional, true, false, false, null);
+                    model.ExchangeDeclare(ExistingEndpointNameUsingConventional, "fanout", true, false, null);
+                    model.QueueDeclare(ExistingEndpointNameUsingDirect, true, false, false, null);
                 }
             }
         }
@@ -42,8 +44,9 @@ namespace TimeoutMigrationTool.RabbitMq.Tests
             {
                 using (var model = connection.CreateModel())
                 {
-                    model.QueueDelete(ExistingEndpointName);
-                    model.ExchangeDelete(ExistingEndpointName);
+                    model.QueueDelete(ExistingEndpointNameUsingConventional);
+                    model.QueueDelete(ExistingEndpointNameUsingDirect);
+                    model.ExchangeDelete(ExistingEndpointNameUsingConventional);
                 }
             }
         }
@@ -54,10 +57,10 @@ namespace TimeoutMigrationTool.RabbitMq.Tests
             var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
 
             var info = new EndpointInfo();
-            info.EndpointName = ExistingEndpointName;
+            info.EndpointName = ExistingEndpointNameUsingConventional;
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddDays(5);
-            info.Destinations = new List<string>{ExistingEndpointName};
+            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect};
             var result = sut.AbleToMigrate(info);
 
             Assert.IsTrue(result.Result.CanMigrate);
@@ -69,10 +72,25 @@ namespace TimeoutMigrationTool.RabbitMq.Tests
             var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
 
             var info = new EndpointInfo();
-            info.EndpointName = ExistingEndpointName;
+            info.EndpointName = ExistingEndpointNameUsingConventional;
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddDays(5);
-            info.Destinations = new List<string>{ExistingEndpointName, NonExistingEndpointName};
+            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, NonExistingEndpointName};
+            var result = sut.AbleToMigrate(info);
+
+            Assert.IsFalse(result.Result.CanMigrate);
+        }
+
+        [Test]
+        public void AbleToMigrate_TimeoutHigherThan9Years_ReturnsProblems()
+        {
+            var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
+
+            var info = new EndpointInfo();
+            info.EndpointName = ExistingEndpointNameUsingConventional;
+            info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
+            info.LongestTimeout = DateTime.UtcNow.AddYears(9);
+            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional};
             var result = sut.AbleToMigrate(info);
 
             Assert.IsFalse(result.Result.CanMigrate);
