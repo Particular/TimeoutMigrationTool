@@ -132,6 +132,21 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
+        public async Task ArchiveDocument(string documentId, string archivedDocumentId, object document)
+        {
+            var insertCommand = new
+            {
+                Key = archivedDocumentId,
+                Method = "PUT",
+                Document = document,
+                Metadata = new object()
+            };
+            var deleteCommand = GetDeleteCommand(documentId);
+
+            var commands = new List<object> {insertCommand, deleteCommand};
+            await PostToBulkDocs(commands);
+        }
+
         public async Task BatchDelete(string[] keys)
         {
             var commands = keys.Select(GetDeleteCommand);

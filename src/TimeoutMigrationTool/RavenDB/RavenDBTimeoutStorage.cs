@@ -183,7 +183,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             toolState.Status = MigrationStatus.Completed;
 
             var ravenToolState = RavenToolState.FromToolState(toolState);
-            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
+            var archivedToolStateId = $"TimeoutMigrationTool/MigrationRun-{toolState.Endpoint.EndpointName}-{DateTime.Now.ToShortTimeString()}";
+            await ravenAdapter.ArchiveDocument(RavenConstants.ToolStateId, archivedToolStateId, ravenToolState);
         }
     }
 }
