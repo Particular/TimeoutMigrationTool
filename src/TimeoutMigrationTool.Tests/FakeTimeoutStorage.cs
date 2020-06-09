@@ -68,7 +68,6 @@ namespace TimeoutMigrationTool.Tests
             TimesToolStateWasStored++;
             if (toolState.Status == MigrationStatus.NeverRun) ToolStateWasCreated = true;
             if (toolState.Status == MigrationStatus.StoragePrepared) ToolStateMovedToStoragePrepared = true;
-            if (toolState.Status == MigrationStatus.Completed) ToolStateMovedToCompleted = true;
             return Task.CompletedTask;
         }
 
@@ -117,7 +116,7 @@ namespace TimeoutMigrationTool.Tests
 
         public Task Complete()
         {
-            //TODO
+            ToolStateMovedToCompleted = true;
             return Task.CompletedTask;
         }
     }

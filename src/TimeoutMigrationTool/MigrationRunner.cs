@@ -143,9 +143,7 @@ namespace Particular.TimeoutMigrationTool
                 logger.LogDebug("Batch fully migrated");
             }
 
-            toolState.Status = MigrationStatus.Completed;
-
-            await timeoutStorage.StoreToolState(toolState);
+            await timeoutStorage.Complete();
             logger.LogInformation("Migration completed successfully");
         }
 
