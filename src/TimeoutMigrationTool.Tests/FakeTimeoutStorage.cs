@@ -15,7 +15,6 @@ namespace TimeoutMigrationTool.Tests
         private List<EndpointInfo> endpoints = new List<EndpointInfo>();
         private List<BatchInfo> readBatchResults = new List<BatchInfo>();
         private bool canPrepareStorage;
-        public bool BatchesWerePrepared { get; private set; }
         public bool BatchWasRead { get; private set; }
         public bool BatchWasCompleted { get; private set; }
         public bool BatchWasStaged { get; private set; }
@@ -34,7 +33,7 @@ namespace TimeoutMigrationTool.Tests
 
         public Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
         {
-            BatchesWerePrepared = true;
+            ToolStateMovedToStoragePrepared = true;
             return Task.FromResult(preparedBatches);
         }
 
