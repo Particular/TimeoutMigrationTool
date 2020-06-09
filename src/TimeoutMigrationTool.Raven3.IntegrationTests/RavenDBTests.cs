@@ -1,12 +1,12 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using Particular.TimeoutMigrationTool;
-using Particular.TimeoutMigrationTool.RavenDB;
-
-namespace TimeoutMigrationTool.Raven3.Tests
+﻿namespace TimeoutMigrationTool.Raven3.IntegrationTests
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
+    using Particular.TimeoutMigrationTool.RavenDB;
+
     public class RavenDBTests : RavenTimeoutStorageTestSuite
     {
         private int nrOfTimeouts = 250;

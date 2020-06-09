@@ -1,12 +1,12 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using Particular.TimeoutMigrationTool;
-using Particular.TimeoutMigrationTool.RavenDB;
-
-namespace TimeoutMigrationTool.Raven4.Tests
+namespace TimeoutMigrationTool.Raven3.IntegrationTests
 {
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
+    using Particular.TimeoutMigrationTool.RavenDB;
+
     public class RavenAbortsTheMigration : RavenTimeoutStorageTestSuite
     {
         private readonly int nrOfTimeouts = 1500;
@@ -16,7 +16,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
         {
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
             {
-                var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+                var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
                 await sut.Abort(null);
             });
         }
@@ -27,7 +27,7 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var toolState = SetupToolState(DateTime.Now);
             await SaveToolState(toolState);
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await sut.Abort(toolState);
 
             var storedSate = await GetToolState();
@@ -42,12 +42,12 @@ namespace TimeoutMigrationTool.Raven4.Tests
             await SaveToolState(toolState);
             await InitTimeouts(nrOfTimeouts);
 
-            var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var batches = await storage.Prepare(cutOffTime, endpoint);
             toolState.InitBatches(batches);
             await SaveToolState(toolState);
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await sut.Abort(toolState);
 
             var storedSate = await GetToolState();
@@ -63,10 +63,10 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var incompleteBatches = preparedBatches.Skip(1).Take(1).ToList();
             var incompleteBatch = incompleteBatches.First();
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
-            var ravenDbReader = new Raven4Adapter(ServerName, databaseName);
+            var ravenDbReader = new Raven3Adapter(ServerName, databaseName);
             var incompleteBatchFromStorage = await ravenDbReader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{incompleteBatch.Number}", (doc, id) => { });
             var resetTimeouts = await ravenDbReader.GetDocuments<TimeoutData>(x => incompleteBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 
@@ -83,10 +83,10 @@ namespace TimeoutMigrationTool.Raven4.Tests
             var incompleteBatches = preparedBatches.Skip(1).Take(1).ToList();
             var completeBatch = preparedBatches.First();
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
-            var ravenDbReader = new Raven4Adapter(ServerName, databaseName);
+            var ravenDbReader = new Raven3Adapter(ServerName, databaseName);
             var completeBatchFromStorage = await ravenDbReader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{completeBatch.Number}", (doc, id) => { });
             var resetTimeouts = await ravenDbReader.GetDocuments<TimeoutData>(x => completeBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 

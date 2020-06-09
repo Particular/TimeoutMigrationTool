@@ -1,4 +1,4 @@
-namespace TimeoutMigrationTool.Raven4.Tests
+namespace TimeoutMigrationTool.Raven4.IntegrationTests
 {
     using System;
     using System.Linq;

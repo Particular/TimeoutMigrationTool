@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-
-namespace TimeoutMigrationTool.Raven3.Tests
+namespace TimeoutMigrationTool.Raven3.IntegrationTests
 {
+    using System.Collections.Generic;
+
     public class DatabaseRecord
     {
         public DatabaseRecord(string databaseName)
