@@ -1,4 +1,4 @@
-namespace TimeoutMigrationTool.RabbitMq.Tests
+namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 {
     using System;
     using Microsoft.Extensions.Logging;
