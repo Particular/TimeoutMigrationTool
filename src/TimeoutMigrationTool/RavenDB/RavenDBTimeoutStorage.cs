@@ -113,10 +113,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
         }
 
-        public async Task Abort(ToolState toolState)
+        public async Task Abort()
         {
-            if (toolState == null)
-                throw new ArgumentNullException(nameof(toolState), "Can't abort without a tool state");
+            var toolState = await GetToolState();
 
             if (toolState.Batches.Any())
             {

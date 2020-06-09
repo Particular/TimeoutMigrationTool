@@ -347,7 +347,7 @@
 
             var loadedToolState = await timeoutStorage.GetToolState();
 
-            await timeoutStorage.Abort(loadedToolState);
+            await timeoutStorage.Abort();
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint.EndpointName}_TimeoutData");
 

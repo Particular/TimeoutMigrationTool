@@ -203,7 +203,7 @@
                 throw new Exception("Could not find a previous run to abort.");
             }
 
-            await timeoutStorage.Abort(toolState);
+            await timeoutStorage.Abort();
         }
 
         static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
