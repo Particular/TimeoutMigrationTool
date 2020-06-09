@@ -12,16 +12,6 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         private readonly int nrOfTimeouts = 1500;
 
         [Test]
-        public void WhenThereIsNoStateAbortShouldNotFail()
-        {
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            {
-                var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-                await sut.Abort();
-            });
-        }
-
-        [Test]
         public async Task WhenThereIsStateAndNoTimeoutsAbortShouldDeleteState()
         {
             var toolState = SetupToolState(DateTime.Now);
