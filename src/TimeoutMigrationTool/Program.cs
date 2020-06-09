@@ -193,11 +193,11 @@
             DateTime cutoffTime;
             if (!cutoffTimeOption.HasValue())
             {
-                cutoffTime = DateTime.UtcNow;
+                cutoffTime = DateTime.UtcNow.AddDays(1);
             }
             else if (!DateTime.TryParse(cutoffTimeOption.Value(), out cutoffTime))
             {
-                Console.WriteLine($"Unable to parse the cutofftime, please supply the cutoffTime in the following format '{CutoffTimeFormat}'");
+                throw new Exception($"Unable to parse the cutofftime, please supply the cutoffTime in the following format '{CutoffTimeFormat}'");
             }
 
             return cutoffTime;
