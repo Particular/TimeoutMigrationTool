@@ -168,12 +168,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (batchesForWhichToResetTimeouts.Any(b => b.Number == batch.Number))
                     await ravenAdapter.DeleteBatchAndUpdateTimeouts(batch);
                 else
-                    await ravenAdapter.DeleteRecord($"{RavenConstants.BatchPrefix}/{batch.Number}");
+                    await ravenAdapter.DeleteDocument($"{RavenConstants.BatchPrefix}/{batch.Number}");
         }
 
         internal async Task RemoveToolState()
         {
-            await ravenAdapter.DeleteRecord(RavenConstants.ToolStateId);
+            await ravenAdapter.DeleteDocument(RavenConstants.ToolStateId);
         }
 
         public async Task Complete()

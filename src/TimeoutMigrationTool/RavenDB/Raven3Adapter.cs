@@ -41,7 +41,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             result.EnsureSuccessStatusCode();
         }
 
-        public async Task DeleteRecord(string key)
+        public async Task DeleteDocument(string key)
         {
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var deleteCommand = GetDeleteCommand(key);

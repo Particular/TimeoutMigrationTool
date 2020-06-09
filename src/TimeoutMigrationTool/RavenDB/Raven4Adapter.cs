@@ -34,7 +34,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             saveResult.EnsureSuccessStatusCode();
         }
 
-        public async Task DeleteRecord(string key)
+        public async Task DeleteDocument(string key)
         {
             var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
             var result = await httpClient.DeleteAsync(deleteStateUrl);
