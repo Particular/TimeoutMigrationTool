@@ -211,7 +211,6 @@ namespace Particular.TimeoutMigrationTool
             var currentBatch = toolState.GetCurrentBatch();
             currentBatch.State = BatchState.Staged;
             await timeoutStorage.MarkBatchAsStaged(currentBatch.Number);
-            await timeoutStorage.StoreToolState(toolState);
         }
 
         async Task CompleteCurrentBatch(ToolState toolState)
@@ -219,7 +218,6 @@ namespace Particular.TimeoutMigrationTool
             var currentBatch = toolState.GetCurrentBatch();
             currentBatch.State = BatchState.Completed;
             await timeoutStorage.MarkBatchAsCompleted(currentBatch.Number);
-            await timeoutStorage.StoreToolState(toolState);
         }
 
         readonly ILogger logger;
