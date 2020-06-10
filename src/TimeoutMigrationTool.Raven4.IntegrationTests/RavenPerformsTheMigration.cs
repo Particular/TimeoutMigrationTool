@@ -34,6 +34,25 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         }
 
         [Test]
+        public async Task WhenMarkingBatchAsStagedThenBatchStatusIsUpdated()
+        {
+            var timeoutStorage =
+                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), endpoint);
+
+            var batchToVerify = batches.First();
+            Assert.That(batchToVerify.State, Is.EqualTo(BatchState.Pending));
+
+            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            await sut.MarkBatchAsStaged(batchToVerify.Number);
+
+            var reader = new Raven4Adapter(ServerName, databaseName);
+            var updatedBatch = await reader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
+
+            Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Staged));
+        }
+
+        [Test]
         public async Task WhenCompletingABatchCurrentBatchShouldBeMovedUp()
         {
             var timeoutStorage =

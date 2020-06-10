@@ -61,14 +61,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
             }
 
-            var batchesInStorage =
-                await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, (doc, id) => { });
-
-            if (batchesInStorage.Any())
-            {
-                await ravenAdapter.BatchDelete(batchesInStorage.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToArray());
-            }
-
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpoint);
             var toolState = new ToolState(runParameters, endpoint, batches);
             await StoreToolState(toolState);
