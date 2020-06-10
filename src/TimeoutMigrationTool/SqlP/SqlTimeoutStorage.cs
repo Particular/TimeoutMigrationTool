@@ -45,9 +45,8 @@
                         }
                     }
 
-                    command.CommandText = dialect.GetScriptToLoadBatchInfo();
+                    var batches = await LoadBatches(connection).ConfigureAwait(false);
 
-                    var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
                     return new ToolState(runParameters, endpoint, batches)
                     {
                         Status = status
@@ -74,7 +73,7 @@
                 command.Parameters.Add(parameters);
 
                 await command.ExecuteNonQueryAsync();
-                //var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
+
                 return await TryLoadOngoingMigration();
             }
         }
@@ -199,26 +198,31 @@
             return new List<EndpointInfo>();
         }
 
-        async Task<List<BatchInfo>> ExecuteCommandThatReturnsBatches(DbCommand command)
+        async Task<List<BatchInfo>> LoadBatches(DbConnection connection)
         {
-            var batches = new List<BatchInfo>();
-            using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+            using (var command = connection.CreateCommand())
             {
-                if (reader.HasRows)
-                {
-                    var batchRows = ReadBatchRows(reader);
+                command.CommandText = dialect.GetScriptToLoadBatchInfo();
 
-                    //TODO Do a group by in the DB?
-                    batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
+                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                {
+                    var batches = new List<BatchInfo>();
+
+                    if (reader.HasRows)
                     {
-                        Number = batchNumber.Key,
-                        State = batchNumber.First().Status,
-                        TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
-                    }).ToList();
+                        var batchRows = ReadBatchRows(reader);
+
+                        //TODO Do a group by in the DB?
+                        batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
+                        {
+                            Number = batchNumber.Key,
+                            State = batchNumber.First().Status,
+                            TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
+                        }).ToList();
+                    }
+                    return batches;
                 }
             }
-
-            return batches;
         }
 
         IEnumerable<BatchRowRecord> ReadBatchRows(DbDataReader reader)
