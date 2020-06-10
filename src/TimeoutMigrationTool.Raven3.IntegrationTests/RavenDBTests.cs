@@ -35,11 +35,5 @@
             Assert.That(timeouts.Count, Is.EqualTo(125));
         }
 
-        [Test]
-        public async Task WhenArchivingTimeouts()
-        {
-            var writer = new RavenDBTimeoutsArchiver();
-            await writer.ArchiveTimeouts(ServerName, databaseName, new[] { "TimeoutDatas/5" }, RavenDbVersion.ThreeDotFive, CancellationToken.None);
-        }
     }
 }
