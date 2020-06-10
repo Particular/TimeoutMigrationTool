@@ -27,15 +27,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return ravenToolState.ToToolState(batches);
         }
 
-        public async Task<bool> CanPrepareStorage()
-        {
-            var existingBatches =
-                await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, (doc, id) => { });
-            if (existingBatches.Any()) return false;
-
-            return true;
-        }
-
         public async Task<List<EndpointInfo>> ListEndpoints(DateTime cutoffTime)
         {
             bool filter(TimeoutData td)

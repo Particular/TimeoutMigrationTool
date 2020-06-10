@@ -66,33 +66,6 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         }
 
         [Test]
-        public async Task WhenVerifyingPrepareAndFoundExistingBatchInfosReturnsFalse()
-        {
-            var cutOffTime = DateTime.Now.AddDays(-1);
-            var toolState = SetupToolState(cutOffTime);
-            await SaveToolState(toolState);
-
-            var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var batches = await storage.Prepare(cutOffTime, endpoint);
-            toolState.InitBatches(batches);
-            await SaveToolState(toolState);
-
-            var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
-            Assert.That(canPrepareStorage, Is.False);
-        }
-
-        [Test]
-        public async Task WhenVerifyingPrepareAndSystemIsCleanInfosReturnsTrue()
-        {
-            var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var canPrepareStorage = await timeoutStorage.CanPrepareStorage();
-            Assert.That(canPrepareStorage, Is.True);
-        }
-
-        [Test]
         public async Task WhenRemovingTheToolStateStoreIsCleanedUp()
         {
             var toolState = SetupToolState(DateTime.Now);
