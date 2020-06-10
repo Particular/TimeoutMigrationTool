@@ -16,31 +16,6 @@
         static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint)) };
 
         [Test]
-        public async Task Creates_TimeoutsMigration_State_Table()
-        {
-            var runParameters = new Dictionary<string, string> { { "someKey", "someValue" }, { "anotherKey", "anotherValue" } };
-            var batches = new List<BatchInfo>
-            {
-                new BatchInfo
-                {
-                    Number = 1,
-                    State = BatchState.Pending,
-                    TimeoutIds = new[] {"timeouts/1"}
-                }
-            };
-            var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.StoreToolState(new ToolState(runParameters, sourceEndpoint, batches));
-
-            var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
-
-            Assert.AreEqual(MigrationStatus.StoragePrepared, storedToolState.Status);
-            Assert.AreEqual(sourceEndpoint.EndpointName, storedToolState.Endpoint.EndpointName);
-            CollectionAssert.AreEqual(runParameters, storedToolState.RunParameters);
-            CollectionAssert.IsEmpty(storedToolState.Batches);
-        }
-
-
-        [Test]
         public async Task Loads_ToolState_For_Existing_Migration()
         {
             await Scenario.Define<Context>()

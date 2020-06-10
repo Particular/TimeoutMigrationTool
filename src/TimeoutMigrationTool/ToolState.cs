@@ -13,10 +13,10 @@ namespace Particular.TimeoutMigrationTool
             Batches = batches;
         }
 
-        public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
-        public IDictionary<string, string> RunParameters { get; set; } = new Dictionary<string, string>();
+        public IEnumerable<BatchInfo> Batches { get; }
+        public IDictionary<string, string> RunParameters { get; }
         public MigrationStatus Status { get; set; }
-        public EndpointInfo Endpoint { get;  set; }
+        public EndpointInfo Endpoint { get; set; }
 
         public bool HasMoreBatches() => Batches.Any(x => x.State != BatchState.Completed);
 

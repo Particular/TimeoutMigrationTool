@@ -136,7 +136,7 @@
             }
         }
 
-        public async Task StoreToolState(ToolState toolState)
+        async Task StoreToolState(ToolState toolState)
         {
             using (var connection = dialect.Connect(connectionString))
             {
