@@ -91,7 +91,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         }
 
         [Test]
-        public async Task WhenCompletingMigrationStatusIsSetToCompleted()
+        public async Task WhenCompletingMigrationToolStateIsArchived()
         {
             var toolState = SetupToolState(DateTime.Now);
             await SaveToolState(toolState);
@@ -103,7 +103,8 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             var updatedToolState = await reader.GetDocument<RavenToolState>(RavenConstants.ToolStateId,
                 (timeoutData, id) => { });
 
-            Assert.AreEqual(MigrationStatus.Completed, updatedToolState.Status);
+            Assert.IsNull(updatedToolState);
+
         }
     }
 }

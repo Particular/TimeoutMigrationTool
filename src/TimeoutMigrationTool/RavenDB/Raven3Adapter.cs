@@ -136,8 +136,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var insertCommand = new
             {
-                Key = archivedDocumentId,
                 Method = "PUT",
+                Key = archivedDocumentId,
                 Document = document,
                 Metadata = new object()
             };

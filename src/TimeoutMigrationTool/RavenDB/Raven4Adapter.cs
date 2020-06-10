@@ -104,7 +104,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task CompleteBatchAndUpdateTimeouts(BatchInfo batch)
         {
-            var updateCommand = new PutCommand
+            var insertCommand = new PutCommand
             {
                 Id = $"{RavenConstants.BatchPrefix}/{batch.Number}",
                 Type = "PUT",
@@ -124,7 +124,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }).ToList();
 
             var commands = new List<object>();
-            commands.Add(updateCommand);
+            commands.Add(insertCommand);
             commands.AddRange(timeoutUpdateCommands);
 
             await PostToBulkDocs(commands);
@@ -134,10 +134,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var insertCommand = new
             {
-                Key = archivedDocumentId,
-                Method = "PUT",
+                Id = archivedDocumentId,
+                Type = "PUT",
                 Document = document,
-                Metadata = new object()
+                ChangeVector = (object)null
             };
             var deleteCommand = GetDeleteCommand(documentId);
 

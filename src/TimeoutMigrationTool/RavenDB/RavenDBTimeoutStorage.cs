@@ -180,7 +180,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             toolState.Status = MigrationStatus.Completed;
 
             var ravenToolState = RavenToolState.FromToolState(toolState);
-            var archivedToolStateId = $"TimeoutMigrationTool/MigrationRun-{toolState.Endpoint.EndpointName}-{DateTime.Now.ToShortTimeString()}";
+            var archivedToolStateId = $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.Endpoint.EndpointName}-{DateTime.Now.ToShortTimeString()}";
             await ravenAdapter.ArchiveDocument(RavenConstants.ToolStateId, archivedToolStateId, ravenToolState);
         }
     }
