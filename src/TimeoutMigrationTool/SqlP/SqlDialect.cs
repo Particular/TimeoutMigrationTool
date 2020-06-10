@@ -15,8 +15,7 @@ namespace Particular.TimeoutMigrationTool
 
         public abstract string GetScriptToPrepareTimeouts(string endpointName, int batchSize);
         public abstract string GetScriptToLoadBatchInfo();
-        public abstract string GetScriptToLoadToolState();
-        public abstract string GetScriptToStoreToolState();
+        public abstract string GetScriptLoadPendingMigrations();
         public abstract string GetScriptToLoadBatch();
         public abstract string GetScriptToAbortMigration(string endpointName);
         public abstract string GetScriptToCompleteBatch();
@@ -61,7 +60,7 @@ FROM
     [TimeoutData_migration];";
         }
 
-        public override string GetScriptToLoadToolState()
+        public override string GetScriptLoadPendingMigrations()
         {
             return $@"
     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutsMigration_State')
@@ -124,21 +123,8 @@ BEGIN TRANSACTION
         FROM [TimeoutData_migration]
     ) BatchMigration;
 
-    UPDATE
-        TimeoutsMigration_State
-    SET
-        Batches = (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration]),
-        Status = 1
-    WHERE
-        MigrationRunId = 'TOOLSTATE';
-
-     SELECT
-        Id,
-        BatchNumber,
-        Status
-    FROM
-        [TimeoutData_migration];
-
+    INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, Batches, RunParameters)
+    VALUES ('TOOLSTATE', '{endpointName}', 1, (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration]), @RunParameters);
 COMMIT;";
         }
 
@@ -162,27 +148,6 @@ DELETE [TimeoutData_migration]
         MigrationRunId = 'TOOLSTATE';
 
     DROP TABLE [TimeoutData_migration];
-
-COMMIT;";
-        }
-
-        public override string GetScriptToStoreToolState()
-        {
-            return @"
-BEGIN TRANSACTION
-    IF NOT EXISTS (SELECT * FROM TimeoutsMigration_State WHERE MigrationRunId = 'TOOLSTATE')
-        INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, Batches, RunParameters)
-        VALUES ('TOOLSTATE', @EndpointName, @Status, @Batches, @RunParameters);
-    ELSE
-        UPDATE
-            TimeoutsMigration_State
-        SET
-            EndpointName =  @EndpointName,
-            Status = @Status,
-            RunParameters = @RunParameters,
-            Batches = @Batches
-        WHERE
-            MigrationRunId = 'TOOLSTATE';
 
 COMMIT;";
         }

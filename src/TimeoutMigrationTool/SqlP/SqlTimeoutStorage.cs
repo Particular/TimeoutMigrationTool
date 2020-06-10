@@ -22,7 +22,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadToolState();
+                    command.CommandText = dialect.GetScriptLoadPendingMigrations();
 
                     EndpointInfo endpoint = null;
                     MigrationStatus status;
@@ -68,10 +68,14 @@
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.Value = migrateTimeoutsWithDeliveryDateLaterThan;
                 command.Parameters.Add(migrateTimeoutsWithDeliveryDateLaterThanParameter);
 
-                var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
-                var toolState = new ToolState(runParameters, endpoint, batches);
-                await StoreToolState(toolState); // todo: pass in the connection
-                return toolState;
+                var parameters = command.CreateParameter();
+                parameters.ParameterName = "RunParameters";
+                parameters.Value = JsonConvert.SerializeObject(runParameters);
+                command.Parameters.Add(parameters);
+
+                await command.ExecuteNonQueryAsync();
+                //var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
+                return await TryLoadOngoingMigration();
             }
         }
 
@@ -133,39 +137,6 @@
                     parameter.ParameterName = "BatchNumber";
                     parameter.Value = number;
 
-                    command.Parameters.Add(parameter);
-
-                    await command.ExecuteNonQueryAsync();
-                }
-            }
-        }
-
-        async Task StoreToolState(ToolState toolState)
-        {
-            using (var connection = dialect.Connect(connectionString))
-            {
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = dialect.GetScriptToStoreToolState();
-
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "Status";
-                    parameter.Value = toolState.Status;
-                    command.Parameters.Add(parameter);
-
-                    parameter = command.CreateParameter();
-                    parameter.ParameterName = "EndpointName";
-                    parameter.Value = toolState.Endpoint.EndpointName;
-                    command.Parameters.Add(parameter);
-
-                    parameter = command.CreateParameter();
-                    parameter.ParameterName = "Batches";
-                    parameter.Value = toolState.Batches.Count();
-                    command.Parameters.Add(parameter);
-
-                    parameter = command.CreateParameter();
-                    parameter.ParameterName = "RunParameters";
-                    parameter.Value = JsonConvert.SerializeObject(toolState.RunParameters);
                     command.Parameters.Add(parameter);
 
                     await command.ExecuteNonQueryAsync();
