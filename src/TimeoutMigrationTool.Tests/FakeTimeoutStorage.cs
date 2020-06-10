@@ -14,14 +14,12 @@ namespace TimeoutMigrationTool.Tests
         private List<BatchInfo> preparedBatches = new List<BatchInfo>();
         private List<EndpointInfo> endpoints = new List<EndpointInfo>();
         private List<BatchInfo> readBatchResults = new List<BatchInfo>();
-        private bool canPrepareStorage;
         public bool BatchWasRead { get; private set; }
         public bool BatchWasCompleted { get; private set; }
         public bool BatchWasStaged { get; private set; }
         public bool ToolStateWasAborted { get; private set; }
         public bool ToolStateWasStored { get; private set; }
         public bool EndpointsWereListed { get; private set; }
-        public bool CanPrepareStorageWasCalled { get; private set; }
         public bool ToolStateWasCreated { get; private set; }
         public bool ToolStateMovedToStoragePrepared { get; private set; }
         public bool ToolStateMovedToCompleted { get; private set; }
@@ -76,12 +74,6 @@ namespace TimeoutMigrationTool.Tests
             return Task.CompletedTask;
         }
 
-        public Task<bool> CanPrepareStorage()
-        {
-            CanPrepareStorageWasCalled = true;
-            return Task.FromResult(canPrepareStorage);
-        }
-
         public Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
         {
             EndpointsWereListed = true;
@@ -101,11 +93,6 @@ namespace TimeoutMigrationTool.Tests
         public void SetupEndpoints(List<EndpointInfo> endpoints)
         {
             this.endpoints = endpoints;
-        }
-
-        public void SetupCanPrepareStorageResult(bool canPrepareStorage)
-        {
-            this.canPrepareStorage = canPrepareStorage;
         }
 
         public void SetupTimeoutsToReadForBatch(BatchInfo batchInfo)

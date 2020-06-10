@@ -167,12 +167,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task Complete()
         {
             var toolState = await TryLoadOngoingMigration();
-
             toolState.Status = MigrationStatus.Completed;
 
             var ravenToolState = RavenToolState.FromToolState(toolState);
             var archivedToolStateId = $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.Endpoint.EndpointName}-{DateTime.Now.ToShortTimeString()}";
-            await ravenAdapter.ArchiveDocument(RavenConstants.ToolStateId, archivedToolStateId, ravenToolState);
+            await ravenAdapter.ArchiveDocument(archivedToolStateId, ravenToolState);
         }
     }
 }

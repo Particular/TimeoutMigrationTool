@@ -132,18 +132,21 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task ArchiveDocument(string documentId, string archivedDocumentId, object document)
+        public async Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState)
         {
             var insertCommand = new
             {
                 Method = "PUT",
-                Key = archivedDocumentId,
-                Document = document,
+                Key = archivedToolStateId,
+                Document = toolState,
                 Metadata = new object()
             };
-            var deleteCommand = GetDeleteCommand(documentId);
+            var deleteCommand = GetDeleteCommand(RavenConstants.ToolStateId);
 
-            var commands = new List<object> {insertCommand, deleteCommand};
+            var commands = toolState.Batches.Select(b => GetDeleteCommand(b)).Cast<object>().ToList();
+            commands.Add(insertCommand);
+            commands.Add(deleteCommand);
+
             await PostToBulkDocs(commands);
         }
 

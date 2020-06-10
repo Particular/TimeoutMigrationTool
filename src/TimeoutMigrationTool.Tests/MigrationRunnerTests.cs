@@ -43,7 +43,6 @@ namespace TimeoutMigrationTool.Tests
                     TimeoutIds = new[] {"timeouts/1"}
                 }
             });
-            timeoutStorage.SetupCanPrepareStorageResult(true);
             var batchInfo = new BatchInfo
             {
                 Number = 1,
@@ -61,7 +60,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.EndpointsWereListed);
             Assert.That(timeoutStorage.ToolStateWasCreated);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
@@ -78,7 +76,6 @@ namespace TimeoutMigrationTool.Tests
                 Status = MigrationStatus.NeverRun
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
-            timeoutStorage.SetupCanPrepareStorageResult(true);
             var batchInfo = new BatchInfo
             {
                 Number = 1,
@@ -95,7 +92,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.EndpointsWereListed);
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(timeoutStorage.CanPrepareStorageWasCalled);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
@@ -125,7 +121,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.EndpointsWereListed);
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(timeoutStorage.CanPrepareStorageWasCalled, Is.False);
             Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared, Is.False);
             Assert.That(timeoutStorage.BatchWasRead, Is.False);
             Assert.That(transportTimeoutsCreator.BatchWasStaged, Is.False);
@@ -152,7 +147,6 @@ namespace TimeoutMigrationTool.Tests
                 }
             });
             timeoutStorage.SetupToolStateToReturn(toolState);
-            timeoutStorage.SetupCanPrepareStorageResult(true);
             var batchInfo = new BatchInfo
             {
                 Number = 1,
@@ -170,7 +164,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.EndpointsWereListed);
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified);
-            Assert.That(timeoutStorage.CanPrepareStorageWasCalled, Is.False);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
             Assert.That(timeoutStorage.BatchWasCompleted);
