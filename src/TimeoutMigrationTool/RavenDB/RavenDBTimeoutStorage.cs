@@ -79,13 +79,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
-            var toolState = await TryLoadOngoingMigration();
-            var prefix = RavenConstants.DefaultTimeoutPrefix;
-            if (toolState.RunParameters.ContainsKey(ApplicationOptions.RavenTimeoutPrefix))
-                prefix = toolState.RunParameters[ApplicationOptions.RavenTimeoutPrefix];
-
             var batch = await ravenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), prefix,
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), timeoutDocumentPrefix,
                 (doc, id) => doc.Id = id);
             return timeouts;
         }
@@ -116,6 +111,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task Abort()
         {
             var toolState = await TryLoadOngoingMigration();
+            if (toolState == null)
+                throw new ArgumentNullException(nameof(toolState), "Can't abort without a tool state");
 
             if (toolState.Batches.Any())
             {
