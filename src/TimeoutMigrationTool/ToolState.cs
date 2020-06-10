@@ -11,6 +11,7 @@ namespace Particular.TimeoutMigrationTool
             RunParameters = runParameters;
             Endpoint = endpointInfo;
             Batches = batches;
+            Status = MigrationStatus.StoragePrepared;
         }
 
         public IEnumerable<BatchInfo> Batches { get; }

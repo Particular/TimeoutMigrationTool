@@ -24,30 +24,31 @@
                 {
                     command.CommandText = dialect.GetScriptToLoadToolState();
 
+                    EndpointInfo endpoint = null;
+                    MigrationStatus status;
+                    Dictionary<string, string> runParameters;
+
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
-                        if (!reader.HasRows)
+                        if (!reader.Read())
                         {
                             return null;
                         }
 
-                        var endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
-                        var status = ParseMigrationStatus(reader.GetString(1));
-                        var runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
+                        endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
+                        status = ParseMigrationStatus(reader.GetString(1));
+                        runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
 
-                        if(reader.Read())
+                        if (reader.Read())
                         {
                             throw new Exception("Multiple uncompleted migrations found");
                         }
-
-                        command.CommandText = dialect.GetScriptToLoadBatchInfo();
-
-                        var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
-                        return new ToolState(runParameters, endpoint, batches)
-                        {
-                            Status = status
-                        };
                     }
+
+                    command.CommandText = dialect.GetScriptToLoadBatchInfo();
+
+                    var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
+                    return new ToolState(runParameters, endpoint, batches);
                 }
             }
         }
