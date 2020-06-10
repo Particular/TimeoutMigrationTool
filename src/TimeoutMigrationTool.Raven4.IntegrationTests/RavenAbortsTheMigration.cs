@@ -10,7 +10,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
     using Raven3;
     using Raven4;
 
-    public abstract class RavenAbortsTheMigrationTests
+    public abstract class RavenAbortsTheMigration
     {
         readonly int nrOfTimeouts = 1500;
         IRavenTestSuite testSuite;
@@ -97,7 +97,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
     }
 
     [TestFixture]
-    public class Raven4AbortsTheMigration : RavenAbortsTheMigrationTests
+    public class Raven4AbortsTheMigration : RavenAbortsTheMigration
     {
         protected override IRavenTestSuite CreateTestSuite()
         {
@@ -106,7 +106,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
     }
 
     [TestFixture]
-    public class Raven3AbortsTheMigration : RavenAbortsTheMigrationTests
+    public class Raven3AbortsTheMigration : RavenAbortsTheMigration
     {
         protected override IRavenTestSuite CreateTestSuite()
         {

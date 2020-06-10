@@ -6,15 +6,33 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
+    using Raven3;
+    using Raven4;
 
-    public class RavenListEndpoints : RavenTimeoutStorageTestSuite
+    public abstract class RavenListEndpoints
     {
         private readonly int nrOfTimeouts = 1500;
+        IRavenTestSuite testSuite;
+
+        [SetUp]
+        public async Task Setup()
+        {
+            testSuite = CreateTestSuite();
+            await testSuite.SetupDatabase();
+        }
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            await testSuite.TeardownDatabase();
+        }
+
+        protected abstract IRavenTestSuite CreateTestSuite();
 
         [Test]
         public async Task WhenThereAreNoTimeoutsListEndpointsReturnsAnEmptyList()
         {
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -24,9 +42,9 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         [Test]
         public async Task WhenThereTimeoutsListEndpointsReturnsEndpointsList()
         {
-            await InitTimeouts(nrOfTimeouts, true);
+            await testSuite.InitTimeouts(nrOfTimeouts, true);
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -36,9 +54,9 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         [Test]
         public async Task WhenThereTimeoutsListEndpointsRespectsTheCutoffDate()
         {
-            await InitTimeouts(nrOfTimeouts, true);
+            await testSuite.InitTimeouts(nrOfTimeouts, true);
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now.AddDays(8));
 
             Assert.IsNotNull(endpoints);
@@ -48,14 +66,13 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         [Test]
         public async Task WhenThereAreCompletedTimeoutsTheseAreIgnoredWhenListingEndpoints()
         {
-            await InitTimeouts(50, false);
+            await testSuite.InitTimeouts(50, false);
 
-            var adapter = new Raven4Adapter(ServerName, databaseName);
-            var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
+            var timeout = await testSuite.RavenAdapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationDonePrefix}{timeout.OwningTimeoutManager}";
-            await adapter.UpdateDocument(timeout.Id, timeout);
+            await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -66,20 +83,37 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         [Test]
         public async Task WhenThereAreInProgressTimeoutsTheseAreIncludedWhenListingEndpoints()
         {
-            await InitTimeouts(50, false);
+            await testSuite.InitTimeouts(50, false);
 
-            var adapter = new Raven4Adapter(ServerName, databaseName);
-            var timeout = await adapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
+            var timeout = await testSuite.RavenAdapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationOngoingPrefix}{timeout.OwningTimeoutManager}";
-            await adapter.UpdateDocument(timeout.Id, timeout);
+            await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
-            var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(1));
             Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(50));
-            Assert.That(endpoints.First().EndpointName, Is.EqualTo(endpoint.EndpointName));
+            Assert.That(endpoints.First().EndpointName, Is.EqualTo(testSuite.Endpoint.EndpointName));
+        }
+    }
+
+    [TestFixture]
+    public class Raven4ListsEndpoints : RavenListEndpoints
+    {
+        protected override IRavenTestSuite CreateTestSuite()
+        {
+            return new Raven4TestSuite();
+        }
+    }
+
+    [TestFixture]
+    public class Raven3ListsEndpoints : RavenListEndpoints
+    {
+        protected override IRavenTestSuite CreateTestSuite()
+        {
+            return new Raven3TestSuite();
         }
     }
 }
