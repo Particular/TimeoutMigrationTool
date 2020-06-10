@@ -53,7 +53,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return endpoints;
         }
 
-        public async Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
+        public async Task<ToolState> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
         {
             if (endpoint == null) throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
 
@@ -65,7 +65,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     .ToArray());
 
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpoint);
-            return batches;
+            var toolState = new ToolState(runParameters, endpoint, batches);
+            await StoreToolState(toolState);
+            return toolState;
         }
 
         public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
@@ -91,12 +93,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             batch.State = BatchState.Staged;
 
             await ravenAdapter.UpdateDocument(batchId, batch);
-        }
-
-        public async Task StoreToolState(ToolState toolState)
-        {
-            var ravenToolState = RavenToolState.FromToolState(toolState);
-            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
         }
 
         public async Task Abort()
@@ -149,6 +145,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return batches;
         }
 
+        public async Task Complete()
+        {
+            var toolState = await TryLoadOngoingMigration();
+            toolState.Status = MigrationStatus.Completed;
+
+            var ravenToolState = RavenToolState.FromToolState(toolState);
+            var archivedToolStateId = $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.Endpoint.EndpointName}-{DateTime.Now.ToShortTimeString()}";
+            await ravenAdapter.ArchiveDocument(archivedToolStateId, ravenToolState);
+        }
+
         internal async Task CleanupExistingBatchesAndResetTimeouts(List<BatchInfo> batchesToRemove,
             List<BatchInfo> batchesForWhichToResetTimeouts)
         {
@@ -164,14 +170,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await ravenAdapter.DeleteDocument(RavenConstants.ToolStateId);
         }
 
-        public async Task Complete()
-        {
-            var toolState = await TryLoadOngoingMigration();
-            toolState.Status = MigrationStatus.Completed;
 
+        async Task StoreToolState(ToolState toolState)
+        {
             var ravenToolState = RavenToolState.FromToolState(toolState);
-            var archivedToolStateId = $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.Endpoint.EndpointName}-{DateTime.Now.ToShortTimeString()}";
-            await ravenAdapter.ArchiveDocument(archivedToolStateId, ravenToolState);
+            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
         }
     }
 }

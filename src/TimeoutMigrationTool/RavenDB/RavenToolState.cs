@@ -24,7 +24,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         internal ToolState ToToolState(List<BatchInfo> batches)
         {
-            return new ToolState(batches, RunParameters, Status, Endpoint);
+            return new ToolState(RunParameters, Endpoint, batches) {Status = Status};
         }
     }
 }

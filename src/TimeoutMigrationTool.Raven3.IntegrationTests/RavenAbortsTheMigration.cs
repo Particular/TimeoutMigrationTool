@@ -1,6 +1,7 @@
 namespace TimeoutMigrationTool.Raven3.IntegrationTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
@@ -28,14 +29,10 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         public async Task WhenAbortingOnPreparedStorageStateShouldBeCleanedUp()
         {
             var cutOffTime = DateTime.Now.AddDays(-1);
-            var toolState = SetupToolState(cutOffTime);
-            await SaveToolState(toolState);
             await InitTimeouts(nrOfTimeouts);
 
             var storage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var batches = await storage.Prepare(cutOffTime, endpoint);
-            toolState.InitBatches(batches);
-            await SaveToolState(toolState);
+            await storage.Prepare(cutOffTime, endpoint, new Dictionary<string, string>());
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             await sut.Abort();

@@ -9,8 +9,7 @@ namespace TimeoutMigrationTool.Tests
 
     public class FakeTimeoutStorage : ITimeoutStorage
     {
-        private ToolState toolState;
-        public int TimesToolStateWasStored { get; private set; } = 0;
+        private ToolState existingToolState;
         private List<BatchInfo> preparedBatches = new List<BatchInfo>();
         private List<EndpointInfo> endpoints = new List<EndpointInfo>();
         private List<BatchInfo> readBatchResults = new List<BatchInfo>();
@@ -18,21 +17,20 @@ namespace TimeoutMigrationTool.Tests
         public bool BatchWasCompleted { get; private set; }
         public bool BatchWasStaged { get; private set; }
         public bool ToolStateWasAborted { get; private set; }
-        public bool ToolStateWasStored { get; private set; }
         public bool EndpointsWereListed { get; private set; }
         public bool ToolStateWasCreated { get; private set; }
-        public bool ToolStateMovedToStoragePrepared { get; private set; }
         public bool ToolStateMovedToCompleted { get; private set; }
 
         public Task<ToolState> TryLoadOngoingMigration()
         {
-            return Task.FromResult(toolState);
+            return Task.FromResult(existingToolState);
         }
 
-        public Task<List<BatchInfo>> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint)
+        public Task<ToolState> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
         {
-            ToolStateMovedToStoragePrepared = true;
-            return Task.FromResult(preparedBatches);
+            ToolStateWasCreated = true;
+            var toolState = new ToolState(runParameters, endpoint, preparedBatches);
+            return Task.FromResult(toolState);
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
@@ -59,15 +57,6 @@ namespace TimeoutMigrationTool.Tests
             return Task.CompletedTask;
         }
 
-        public Task StoreToolState(ToolState toolState)
-        {
-            ToolStateWasStored = true;
-            TimesToolStateWasStored++;
-            if (toolState.Status == MigrationStatus.NeverRun) ToolStateWasCreated = true;
-            if (toolState.Status == MigrationStatus.StoragePrepared) ToolStateMovedToStoragePrepared = true;
-            return Task.CompletedTask;
-        }
-
         public Task Abort()
         {
             ToolStateWasAborted = true;
@@ -82,7 +71,7 @@ namespace TimeoutMigrationTool.Tests
 
         public void SetupToolStateToReturn(ToolState toolState)
         {
-            this.toolState = toolState;
+            this.existingToolState = toolState;
         }
 
         public void SetupBatchesToPrepare(List<BatchInfo> batches)

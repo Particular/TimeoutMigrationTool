@@ -2,6 +2,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Text;
@@ -71,7 +72,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             return batches;
         }
 
-        protected ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
+        protected ToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {
@@ -82,9 +83,19 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix}
             };
 
-            var toolState = new ToolState(runParameters, endpoint)
+            var batches = new List<BatchInfo>
             {
-                Status = status
+                new BatchInfo()
+                {
+                    Number = 1,
+                    State = BatchState.Pending,
+                    TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
+                }
+            };
+
+            var toolState = new ToolState(runParameters, endpoint, batches)
+            {
+                Status = MigrationStatus.StoragePrepared
             };
 
             return toolState;
@@ -93,18 +104,24 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         protected async Task SaveToolState(ToolState toolState)
         {
             var bulkInsertUrl = $"{ServerName}/databases/{databaseName}/bulk_docs";
-            var bulkCreateBatchAndUpdateTimeoutsCommand = new[]
+
+            var batchInsertCommands = toolState.Batches.Select(b => new
             {
-                new
-                {
+                Method = "PUT",
+                Key = $"{RavenConstants.BatchPrefix}/{b.Number}",
+                Document = b,
+                Metadata = new object()
+            }).Cast<object>().ToList();
+
+            batchInsertCommands.Add(
+            new {
                     Method = "PUT",
                     Key = RavenConstants.ToolStateId,
                     Document = RavenToolState.FromToolState(toolState),
                     Metadata = new object()
-                }
-            };
+                });
 
-            var serializedCommands = JsonConvert.SerializeObject(bulkCreateBatchAndUpdateTimeoutsCommand);
+            var serializedCommands = JsonConvert.SerializeObject(batchInsertCommands);
             var result = await httpClient
                 .PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();

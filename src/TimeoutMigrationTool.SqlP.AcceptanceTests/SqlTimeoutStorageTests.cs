@@ -16,22 +16,6 @@
         static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint)) };
 
         [Test]
-        public async Task Creates_TimeoutsMigration_State_Table()
-        {
-            var runParameters = new Dictionary<string, string> { { "someKey", "someValue" }, { "anotherKey", "anotherValue" } };
-            var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.StoreToolState(new ToolState(runParameters, sourceEndpoint));
-
-            var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
-
-            Assert.AreEqual(MigrationStatus.NeverRun, storedToolState.Status);
-            Assert.AreEqual(sourceEndpoint.EndpointName, storedToolState.Endpoint.EndpointName);
-            CollectionAssert.AreEqual(runParameters, storedToolState.RunParameters);
-            CollectionAssert.IsEmpty(storedToolState.Batches);
-        }
-
-
-        [Test]
         public async Task Loads_ToolState_For_Existing_Migration()
         {
             await Scenario.Define<Context>()
@@ -46,10 +30,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
-
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
             var loadedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.AreEqual(1, loadedToolState.Batches.Count());
@@ -70,12 +51,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
-
-            var loadedToolState = await timeoutStorage.TryLoadOngoingMigration();
-
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
             await timeoutStorage.Complete();
 
             Assert.IsNull(await timeoutStorage.TryLoadOngoingMigration());
@@ -96,15 +72,10 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-
-            var batchInfo = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
-
-            Assert.AreEqual(4, batchInfo.Count);
-
+            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
             var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
+            Assert.AreEqual(4, toolState.Batches.Count());
             Assert.AreEqual(MigrationStatus.StoragePrepared, storedToolState.Status);
         }
 
@@ -123,11 +94,9 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(1);
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(6, batches.Count);
+            Assert.AreEqual(6, toolState.Batches.Count());
         }
 
         [Test]
@@ -145,7 +114,6 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
             CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint.EndpointName);
@@ -228,11 +196,8 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            var batches = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
-
-            foreach (var batch in batches)
+            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            foreach (var batch in toolState.Batches)
             {
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
             }
@@ -257,11 +222,9 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            var batches = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            foreach (var batch in batches)
+            foreach (var batch in toolState.Batches)
             {
                 await timeoutStorage.MarkBatchAsStaged(batch.Number);
             }
@@ -286,11 +249,9 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            var batches = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            foreach (var batch in batches)
+            foreach (var batch in toolState.Batches)
             {
                 var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
                 var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
@@ -314,9 +275,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint.EndpointName}_TimeoutData");
 
@@ -338,12 +297,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), sourceEndpoint);
-            await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), sourceEndpoint);
-
-            var loadedToolState = await timeoutStorage.TryLoadOngoingMigration();
-
+            await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), sourceEndpoint, new Dictionary<string, string>());
             await timeoutStorage.Abort();
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint.EndpointName}_TimeoutData");
@@ -366,11 +320,9 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = sourceEndpoint.EndpointName });
-            await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutData_migration");
+            var numberOfTimeouts = await QueryScalarAsync<int>("SELECT COUNT(*) FROM TimeoutData_migration");
 
             Assert.AreEqual(5, numberOfTimeouts);
         }
@@ -390,14 +342,11 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = new ToolState(new Dictionary<string, string>(), new EndpointInfo { EndpointName = sourceEndpoint.EndpointName });
-            await timeoutStorage.StoreToolState(toolState);
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
+            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
             await timeoutStorage.Complete();
-            var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
-            var completedTables = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM sys.tables where name = 'TimeoutData_migration_completed'");
+            var completedTables = await QueryScalarAsync<int>("SELECT COUNT(*) FROM sys.tables where name = 'TimeoutData_migration_completed'");
 
             Assert.AreEqual(1, completedTables);
         }
