@@ -2,6 +2,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Text;
@@ -103,18 +104,24 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         protected async Task SaveToolState(ToolState toolState)
         {
             var bulkInsertUrl = $"{ServerName}/databases/{databaseName}/bulk_docs";
-            var bulkCreateBatchAndUpdateTimeoutsCommand = new[]
+
+            var batchInsertCommands = toolState.Batches.Select(b => new
             {
-                new
-                {
+                Method = "PUT",
+                Key = $"{RavenConstants.BatchPrefix}/{b.Number}",
+                Document = RavenToolState.FromToolState(toolState),
+                Metadata = new object()
+            }).ToList();
+
+            batchInsertCommands.Add(
+            new {
                     Method = "PUT",
                     Key = RavenConstants.ToolStateId,
                     Document = RavenToolState.FromToolState(toolState),
                     Metadata = new object()
-                }
-            };
+                });
 
-            var serializedCommands = JsonConvert.SerializeObject(bulkCreateBatchAndUpdateTimeoutsCommand);
+            var serializedCommands = JsonConvert.SerializeObject(batchInsertCommands);
             var result = await httpClient
                 .PostAsync(bulkInsertUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
