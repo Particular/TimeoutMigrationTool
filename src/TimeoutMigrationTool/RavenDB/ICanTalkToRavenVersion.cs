@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    internal interface ICanTalkToRavenVersion
+    public interface ICanTalkToRavenVersion
     {
         Task UpdateDocument(string key, object document);
         Task DeleteDocument(string key);

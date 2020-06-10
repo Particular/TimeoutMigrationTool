@@ -1,4 +1,4 @@
-namespace TimeoutMigrationTool.Raven4.IntegrationTests
+namespace TimeoutMigrationTool.Raven4.IntegrationTests.Raven4
 {
     using System;
     using System.Collections.Generic;
@@ -13,11 +13,12 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
     using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
-    using Raven4;
 
-    public abstract class RavenTimeoutStorageTestSuite
+    class Raven4TestSuite : IRavenTestSuite
     {
-        protected string ServerName
+        public ICanTalkToRavenVersion RavenAdapter => new Raven4Adapter(ServerName, DatabaseName);
+
+        public string ServerName
         {
             get
             {
@@ -32,23 +33,22 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             }
         }
 
-        [SetUp]
         public async Task SetupDatabase()
         {
             var testId = Guid.NewGuid().ToString("N");
-            databaseName = $"ravendb-{testId}";
-            endpoint = new EndpointInfo
+            DatabaseName = $"ravendb-{testId}";
+            Endpoint = new EndpointInfo
             {
                 EndpointName = "A"
             };
 
-            var createDbUrl = $"{ServerName}/admin/databases?name={databaseName}";
+            var createDbUrl = $"{ServerName}/admin/databases?name={DatabaseName}";
 
             // Create the db
             var db = new DatabaseRecordForRaven4
             {
                 Disabled = false,
-                DatabaseName = databaseName
+                DatabaseName = DatabaseName
             };
 
             var stringContent = new StringContent(JsonConvert.SerializeObject(db));
@@ -56,12 +56,12 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.Created));
         }
 
-        protected async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false)
+        public async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false)
         {
             var timeoutsPrefix = "TimeoutDatas";
             for (var i = 0; i < nrOfTimeouts; i++)
             {
-                var insertTimeoutUrl = $"{ServerName}/databases/{databaseName}/docs?id={timeoutsPrefix}/{i}";
+                var insertTimeoutUrl = $"{ServerName}/databases/{DatabaseName}/docs?id={timeoutsPrefix}/{i}";
 
                 // Insert the timeout data
                 var timeoutData = new TimeoutData
@@ -86,26 +86,26 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             }
         }
 
-        protected ToolState SetupToolState(DateTime cutoffTime)
+        public ToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {
                 {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
                 {ApplicationOptions.RavenServerUrl, ServerName},
-                {ApplicationOptions.RavenDatabaseName, databaseName},
+                {ApplicationOptions.RavenDatabaseName, DatabaseName},
                 {ApplicationOptions.RavenVersion, RavenDbVersion.Four.ToString()},
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix}
             };
 
             var batches = new List<BatchInfo>
             {
-                new BatchInfo()
+                new BatchInfo
                 {
                     Number = 1,
                     State = BatchState.Pending,
                     TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
                 },
-                new BatchInfo()
+                new BatchInfo
                 {
                     Number = 2,
                     State = BatchState.Pending,
@@ -113,7 +113,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
                 }
             };
 
-            var toolState = new ToolState(runParameters, endpoint, batches)
+            var toolState = new ToolState(runParameters, Endpoint, batches)
             {
                 Status = MigrationStatus.StoragePrepared
             };
@@ -121,16 +121,16 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             return toolState;
         }
 
-        protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
+        public async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, endpoint);
+            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, Endpoint);
             return batches;
         }
 
-        protected async Task SaveToolState(ToolState toolState)
+        public async Task SaveToolState(ToolState toolState)
         {
-            var bulkInsertUrl = $"{ServerName}/databases/{databaseName}/bulk_docs";
+            var bulkInsertUrl = $"{ServerName}/databases/{DatabaseName}/bulk_docs";
 
             var inserts = toolState.Batches.Select(batch => new PutCommand
             {
@@ -158,9 +158,9 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             result.EnsureSuccessStatusCode();
         }
 
-        protected async Task<ToolState> GetToolState()
+        public async Task<ToolState> GetToolState()
         {
-            var url = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+            var url = $"{ServerName}/databases/{DatabaseName}/docs?id={RavenConstants.ToolStateId}";
             var response = await httpClient.GetAsync(url);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -179,13 +179,13 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             return ravenToolState.ToToolState(batches);
         }
 
-        protected async Task<List<BatchInfo>> GetBatches(string[] ids)
+        public async Task<List<BatchInfo>> GetBatches(string[] ids)
         {
             var batches = new List<BatchInfo>();
 
             foreach (var id in ids)
             {
-                var url = $"{ServerName}/databases/{databaseName}/docs?id={id}";
+                var url = $"{ServerName}/databases/{DatabaseName}/docs?id={id}";
                 var response = await httpClient.GetAsync(url);
                 var contentString = await response.Content.ReadAsStringAsync();
 
@@ -199,13 +199,12 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             return batches;
         }
 
-        [TearDown]
         public async Task TeardownDatabase()
         {
             var killDb = $"{ServerName}/admin/databases";
             var deleteDb = new DeleteDbParamsForRaven4
             {
-                DatabaseNames = new[] {databaseName},
+                DatabaseNames = new[] {DatabaseName},
                 HardDelete = true
             };
             var httpRequest = new HttpRequestMessage
@@ -219,34 +218,14 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
-        protected async Task<TimeoutData> GetTimeout(string timeoutId)
+        public string DatabaseName { get; private set; }
+
+        public RavenDbVersion RavenVersion
         {
-            var list = await GetTimeouts(new[] {timeoutId});
-            return list.SingleOrDefault();
+            get => RavenDbVersion.Four;
         }
 
-        protected async Task<List<TimeoutData>> GetTimeouts(string[] timeoutIds)
-        {
-            var timeouts = new List<TimeoutData>();
-
-            foreach (var timeoutId in timeoutIds)
-            {
-                var url = $"{ServerName}/databases/{databaseName}/docs?id={timeoutId}";
-                var response = await httpClient.GetAsync(url);
-                var contentString = await response.Content.ReadAsStringAsync();
-
-                var jObject = JObject.Parse(contentString);
-                var resultSet = jObject.SelectToken("Results");
-
-                var timeout = JsonConvert.DeserializeObject<TimeoutData[]>(resultSet.ToString()).SingleOrDefault();
-                timeouts.Add(timeout);
-            }
-
-            return timeouts;
-        }
-
-        protected string databaseName;
-        protected EndpointInfo endpoint = new EndpointInfo();
+        public EndpointInfo Endpoint { get; set; } = new EndpointInfo();
         protected static readonly HttpClient httpClient = new HttpClient();
     }
 }

@@ -8,7 +8,7 @@
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
 
-    public class RavenDBTests : RavenTimeoutStorageTestSuite
+    public class RavenAdapterTests : RavenTimeoutStorageTestSuite
     {
         private int nrOfTimeouts = 250;
 
