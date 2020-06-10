@@ -197,10 +197,10 @@
 
         static async Task AbortMigration(ITimeoutStorage timeoutStorage)
         {
-            var toolState = await timeoutStorage.GetToolState();
+            var toolState = await timeoutStorage.TryLoadOngoingMigration();
             if (toolState == null)
             {
-                throw new Exception("Could not find a previous run to abort.");
+                throw new Exception("Could not find a previous migration to abort.");
             }
 
             await timeoutStorage.Abort();

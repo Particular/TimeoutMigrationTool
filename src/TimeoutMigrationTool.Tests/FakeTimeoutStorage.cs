@@ -26,7 +26,7 @@ namespace TimeoutMigrationTool.Tests
         public bool ToolStateMovedToStoragePrepared { get; private set; }
         public bool ToolStateMovedToCompleted { get; private set; }
 
-        public Task<ToolState> GetToolState()
+        public Task<ToolState> TryLoadOngoingMigration()
         {
             return Task.FromResult(toolState);
         }

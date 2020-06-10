@@ -22,7 +22,7 @@
             var timeoutStorage = GetTimeoutStorage();
             await timeoutStorage.StoreToolState(new ToolState(runParameters, sourceEndpoint));
 
-            var storedToolState = await timeoutStorage.GetToolState();
+            var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.AreEqual(MigrationStatus.NeverRun, storedToolState.Status);
             Assert.AreEqual(sourceEndpoint.EndpointName, storedToolState.Endpoint.EndpointName);
@@ -50,7 +50,7 @@
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
 
-            var loadedToolState = await timeoutStorage.GetToolState();
+            var loadedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.AreEqual(1, loadedToolState.Batches.Count());
         }
@@ -74,14 +74,11 @@
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
 
-            var loadedToolState = await timeoutStorage.GetToolState();
+            var loadedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
-            loadedToolState.Status = MigrationStatus.Completed;
-            await timeoutStorage.StoreToolState(loadedToolState);
+            await timeoutStorage.Complete();
 
-            var secondLoadedToolState = await timeoutStorage.GetToolState();
-
-            Assert.AreEqual(MigrationStatus.Completed, secondLoadedToolState.Status);
+            Assert.IsNull(await timeoutStorage.TryLoadOngoingMigration());
         }
 
         [Test]
@@ -106,7 +103,7 @@
 
             Assert.AreEqual(4, batchInfo.Count);
 
-            var storedToolState = await timeoutStorage.GetToolState();
+            var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.AreEqual(MigrationStatus.StoragePrepared, storedToolState.Status);
         }
@@ -240,7 +237,7 @@
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
             }
 
-            var loadedState = await timeoutStorage.GetToolState();
+            var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.IsTrue(loadedState.Batches.All(b => b.State == BatchState.Completed));
         }
@@ -269,7 +266,7 @@
                 await timeoutStorage.MarkBatchAsStaged(batch.Number);
             }
 
-            var loadedState = await timeoutStorage.GetToolState();
+            var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.IsTrue(loadedState.Batches.All(b => b.State == BatchState.Staged));
         }
@@ -345,7 +342,7 @@
             await timeoutStorage.StoreToolState(toolState);
             await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), sourceEndpoint);
 
-            var loadedToolState = await timeoutStorage.GetToolState();
+            var loadedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             await timeoutStorage.Abort();
 
@@ -398,7 +395,7 @@
             await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint);
 
             await timeoutStorage.Complete();
-            var storedToolState = await timeoutStorage.GetToolState();
+            var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             var completedTables = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM sys.tables where name = 'TimeoutData_migration_completed'");
 

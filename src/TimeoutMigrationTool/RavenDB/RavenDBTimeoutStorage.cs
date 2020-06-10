@@ -17,7 +17,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             ravenAdapter = RavenDataReaderFactory.Resolve(serverUrl, databaseName, ravenVersion);
         }
 
-        public async Task<ToolState> GetToolState()
+        public async Task<ToolState> TryLoadOngoingMigration()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolState>(RavenConstants.ToolStateId, (doc, id) => { });
             if (ravenToolState == null) return null;
@@ -79,7 +79,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
-            var toolState = await GetToolState();
+            var toolState = await TryLoadOngoingMigration();
             var prefix = RavenConstants.DefaultTimeoutPrefix;
             if (toolState.RunParameters.ContainsKey(ApplicationOptions.RavenTimeoutPrefix))
                 prefix = toolState.RunParameters[ApplicationOptions.RavenTimeoutPrefix];
@@ -115,7 +115,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task Abort()
         {
-            var toolState = await GetToolState();
+            var toolState = await TryLoadOngoingMigration();
 
             if (toolState.Batches.Any())
             {
@@ -178,7 +178,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task Complete()
         {
-            var toolState = await GetToolState();
+            var toolState = await TryLoadOngoingMigration();
 
             toolState.Status = MigrationStatus.Completed;
 
