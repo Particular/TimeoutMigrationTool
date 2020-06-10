@@ -95,7 +95,7 @@
             var storage = new SqlTimeoutStorage(connectionString, Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), batchSize);
 
             //TODO: Add a propoer Init()
-            storage.GetToolState().GetAwaiter().GetResult();
+            storage.TryLoadOngoingMigration().GetAwaiter().GetResult();
 
             return storage;
         }

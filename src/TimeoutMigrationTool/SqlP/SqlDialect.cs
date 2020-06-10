@@ -96,7 +96,7 @@ SELECT
 FROM
     TimeoutsMigration_State
 WHERE
-    MigrationRunId = 'TOOLSTATE';";
+    Status <> 2;";
         }
 
         public override string GetScriptToPrepareTimeouts(string endpointName, int batchSize)

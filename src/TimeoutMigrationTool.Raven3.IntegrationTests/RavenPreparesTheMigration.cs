@@ -20,7 +20,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         public async Task WhenGettingTimeoutStateAndNoneIsFoundNullIsReturned()
         {
             var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var toolState = await timeoutStorage.GetToolState();
+            var toolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(toolState, Is.Null);
         }
@@ -31,7 +31,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1)));
 
             var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var retrievedToolState = await timeoutStorage.GetToolState();
+            var retrievedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(retrievedToolState, Is.Not.Null);
             Assert.That(retrievedToolState.Status, Is.EqualTo(MigrationStatus.NeverRun));

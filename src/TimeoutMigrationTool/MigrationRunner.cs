@@ -68,14 +68,15 @@ namespace Particular.TimeoutMigrationTool
 
         async Task Run(DateTime cutOffTime, EndpointInfo endpointInfo, IDictionary<string, string> runParameters)
         {
-            var toolState = await timeoutStorage.GetToolState();
+            var toolState = await timeoutStorage.TryLoadOngoingMigration();
 
-            if (ShouldCreateFreshToolState(toolState))
+            if (toolState == null)
             {
                 toolState = new ToolState(runParameters, endpointInfo);
                 await timeoutStorage.StoreToolState(toolState);
                 logger.LogInformation("Migration status created and stored.");
             }
+
 
             switch (toolState.Status)
             {
@@ -85,11 +86,6 @@ namespace Particular.TimeoutMigrationTool
                     {
                         throw new Exception("We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
                     }
-
-                    await Prepare(cutOffTime, toolState, endpointInfo);
-
-                    break;
-                case MigrationStatus.Completed:
 
                     await Prepare(cutOffTime, toolState, endpointInfo);
 
@@ -160,12 +156,6 @@ namespace Particular.TimeoutMigrationTool
 
             toolState.InitBatches(batches);
             logger.LogInformation("Storage prepared");
-        }
-
-        bool ShouldCreateFreshToolState(ToolState toolState)
-        {
-            if (toolState == null) return true;
-            return toolState.Status == MigrationStatus.Completed;
         }
 
         bool RunParametersAreDifferent(EndpointInfo endpointInfo, IDictionary<string, string> runParameters, ToolState currentRunState)

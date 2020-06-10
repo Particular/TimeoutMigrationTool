@@ -16,7 +16,7 @@
             this.batchSize = batchSize;
         }
 
-        public async Task<ToolState> GetToolState()
+        public async Task<ToolState> TryLoadOngoingMigration()
         {
             using (var connection = dialect.Connect(connectionString))
             {
@@ -34,6 +34,11 @@
                             state.Status = ParseMigrationStatus(reader.GetString(1));
                             state.Endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
                             state.RunParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
+                        }
+
+                        if(reader.Read())
+                        {
+                            throw new Exception("Multiple uncompleted migrations found");
                         }
                     }
 
@@ -167,7 +172,7 @@
 
         public async Task Abort()
         {
-            var toolState = await GetToolState();
+            var toolState = await TryLoadOngoingMigration();
 
             using (var connection = dialect.Connect(connectionString))
             {
