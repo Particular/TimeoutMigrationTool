@@ -20,43 +20,39 @@
         {
             using (var connection = dialect.Connect(connectionString))
             {
-                ToolState state = null;
-
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = dialect.GetScriptToLoadToolState();
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
-                        if (reader.HasRows && reader.Read())
+                        if (!reader.HasRows)
                         {
-                            state = new ToolState(null, null);
-                            state.Status = ParseMigrationStatus(reader.GetString(1));
-                            state.Endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
-                            state.RunParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
+                            return null;
                         }
+
+                        var endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
+                        var status = ParseMigrationStatus(reader.GetString(1));
+                        var runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
 
                         if(reader.Read())
                         {
                             throw new Exception("Multiple uncompleted migrations found");
                         }
+
+                        command.CommandText = dialect.GetScriptToLoadBatchInfo();
+
+                        var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
+                        return new ToolState(runParameters, endpoint, batches)
+                        {
+                            Status = status
+                        };
                     }
-
-                    if (state == null)
-                    {
-                        return null;
-                    }
-
-                    command.CommandText = dialect.GetScriptToLoadBatchInfo();
-
-                    state.InitBatches(await ReadBatchInfo(command).ConfigureAwait(false));
-
-                    return state;
                 }
             }
         }
 
-        public async Task<List<BatchInfo>> Prepare(DateTime migrateTimeoutsWithDeliveryDateLaterThan, EndpointInfo endpoint)
+        public async Task<ToolState> Prepare(DateTime migrateTimeoutsWithDeliveryDateLaterThan, EndpointInfo endpoint, IDictionary<string, string> runParameters)
         {
             using (var connection = dialect.Connect(connectionString))
             {
@@ -68,7 +64,10 @@
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.Value = migrateTimeoutsWithDeliveryDateLaterThan;
                 command.Parameters.Add(migrateTimeoutsWithDeliveryDateLaterThanParameter);
 
-                return await ReadBatchInfo(command).ConfigureAwait(false);
+                var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
+                var toolState = new ToolState(runParameters, endpoint, batches);
+                await StoreToolState(toolState); // todo: pass in the connection
+                return toolState;
             }
         }
 
@@ -225,7 +224,7 @@
             return new List<EndpointInfo>();
         }
 
-        async Task<List<BatchInfo>> ReadBatchInfo(DbCommand command)
+        async Task<List<BatchInfo>> ExecuteCommandThatReturnsBatches(DbCommand command)
         {
             var batches = new List<BatchInfo>();
             using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))

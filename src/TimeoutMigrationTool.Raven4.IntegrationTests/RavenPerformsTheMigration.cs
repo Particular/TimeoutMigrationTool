@@ -1,6 +1,7 @@
 namespace TimeoutMigrationTool.Raven4.IntegrationTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
@@ -20,15 +21,9 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         [Test]
         public async Task WhenReadingABatchAllTimeoutsInBatchAreReturned()
         {
-            var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState);
-
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), endpoint);
-
-            toolState.InitBatches(batches);
-            await SaveToolState(toolState);
 
             var batchToVerify = batches.First();
 
@@ -41,17 +36,11 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         [Test]
         public async Task WhenCompletingABatchCurrentBatchShouldBeMovedUp()
         {
-            var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState);
-
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), endpoint);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint, new Dictionary<string, string>());
 
-            toolState.InitBatches(batches);
-            await SaveToolState(toolState);
-
-            var batchToVerify = batches.First();
+            var batchToVerify = toolState.Batches.First();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.MarkBatchAsCompleted(batchToVerify.Number);
@@ -67,18 +56,12 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         [Test]
         public async Task WhenCompletingABatchTimeoutsAreMarkedDone()
         {
-            var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState);
-
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), endpoint);
-            var timeoutIdToVerify = batches.First().TimeoutIds.First();
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint, new Dictionary<string, string>());
 
-            toolState.InitBatches(batches);
-            await SaveToolState(toolState);
-
-            var batchToVerify = batches.First();
+            var batchToVerify = toolState.Batches.First();
+            var timeoutIdToVerify = batchToVerify.TimeoutIds.First();
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
             await sut.MarkBatchAsCompleted(batchToVerify.Number);
@@ -94,8 +77,6 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         public async Task WhenCompletingMigrationToolStateIsArchived()
         {
             var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState);
-            toolState.InitBatches(await SetupExistingBatchInfoInDatabase());
             await SaveToolState(toolState);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);

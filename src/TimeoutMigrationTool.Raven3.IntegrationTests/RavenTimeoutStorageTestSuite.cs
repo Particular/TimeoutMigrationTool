@@ -71,7 +71,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             return batches;
         }
 
-        protected ToolState SetupToolState(DateTime cutoffTime, MigrationStatus status = MigrationStatus.NeverRun)
+        protected ToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {
@@ -82,9 +82,19 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix}
             };
 
-            var toolState = new ToolState(runParameters, endpoint)
+            var batches = new List<BatchInfo>
             {
-                Status = status
+                new BatchInfo()
+                {
+                    Number = 1,
+                    State = BatchState.Pending,
+                    TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
+                }
+            };
+
+            var toolState = new ToolState(runParameters, endpoint, batches)
+            {
+                Status = MigrationStatus.StoragePrepared
             };
 
             return toolState;

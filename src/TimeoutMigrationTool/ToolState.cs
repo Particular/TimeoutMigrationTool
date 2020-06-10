@@ -6,19 +6,11 @@ namespace Particular.TimeoutMigrationTool
 
     public class ToolState
     {
-        public ToolState(IDictionary<string, string> runParameters, EndpointInfo endpointInfo)
+        public ToolState(IDictionary<string, string> runParameters, EndpointInfo endpointInfo, IEnumerable<BatchInfo> batches)
         {
             RunParameters = runParameters;
             Endpoint = endpointInfo;
-        }
-
-        internal ToolState(IEnumerable<BatchInfo> batches, IDictionary<string, string> runParameters,
-            MigrationStatus migrationStatus, EndpointInfo endpoint)
-        {
             Batches = batches;
-            RunParameters = runParameters;
-            Status = migrationStatus;
-            Endpoint = endpoint;
         }
 
         public IEnumerable<BatchInfo> Batches { get; private set; } = new List<BatchInfo>();
@@ -43,16 +35,6 @@ namespace Particular.TimeoutMigrationTool
             }
 
             return Batches.First(x => x.State != BatchState.Completed);
-        }
-
-        public void InitBatches(IEnumerable<BatchInfo> batches)
-        {
-            if (Batches.Any() && (Status != MigrationStatus.NeverRun || Status != MigrationStatus.StoragePrepared))
-            {
-                throw new InvalidOperationException("Batches have already been initialized");
-            }
-
-            Batches = batches;
         }
     }
 }

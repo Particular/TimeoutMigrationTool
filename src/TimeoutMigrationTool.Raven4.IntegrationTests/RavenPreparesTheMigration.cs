@@ -1,6 +1,7 @@
 namespace TimeoutMigrationTool.Raven4.IntegrationTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             var retrievedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(retrievedToolState, Is.Not.Null);
-            Assert.That(retrievedToolState.Status, Is.EqualTo(MigrationStatus.NeverRun));
+            Assert.That(retrievedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
             Assert.IsEmpty(retrievedToolState.Batches);
         }
 
@@ -43,11 +44,11 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint, new Dictionary<string, string>());
 
-            Assert.That(batches.Count, Is.EqualTo(2));
-            Assert.That(batches.First().TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
-            Assert.That(batches.Skip(1).First().TimeoutIds.Length,
+            Assert.That(toolState.Batches.Count, Is.EqualTo(2));
+            Assert.That(toolState.Batches.First().TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
+            Assert.That(toolState.Batches.Skip(1).First().TimeoutIds.Length,
                 Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
         }
 
@@ -59,10 +60,10 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            var batches = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), endpoint, new Dictionary<string, string>());
 
-            Assert.That(batches.Count, Is.EqualTo(1));
-            Assert.That(batches.First().TimeoutIds.Length, Is.EqualTo(500));
+            Assert.That(toolState.Batches.Count, Is.EqualTo(1));
+            Assert.That(toolState.Batches.First().TimeoutIds.Length, Is.EqualTo(500));
         }
 
         [Test]
@@ -89,10 +90,8 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            toolState.Status = MigrationStatus.StoragePrepared;
-            await timeoutStorage.StoreToolState(toolState);
 
-            var updatedToolState = await GetToolState();
+            var updatedToolState = await timeoutStorage.TryLoadOngoingMigration();
             Assert.That(updatedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
         }
 

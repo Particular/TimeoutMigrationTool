@@ -69,46 +69,17 @@ namespace Particular.TimeoutMigrationTool
         async Task Run(DateTime cutOffTime, EndpointInfo endpointInfo, IDictionary<string, string> runParameters)
         {
             var toolState = await timeoutStorage.TryLoadOngoingMigration();
+            GuardAgainstInvalidState(endpointInfo, runParameters, toolState);
 
             if (toolState == null)
             {
-                toolState = new ToolState(runParameters, endpointInfo);
-                await timeoutStorage.StoreToolState(toolState);
-                logger.LogInformation("Migration status created and stored.");
+                //toolState = new ToolState(runParameters, endpointInfo);
+                //await timeoutStorage.StoreToolState(toolState);
+
 
                 // TODO: LBO => fix this inside prepare and complete should remove batches as well
-
-                // await Prepare(cutOffTime, toolState, endpointInfo);
-
-            }
-
-
-            switch (toolState.Status)
-            {
-                case MigrationStatus.NeverRun:
-
-                    await Prepare(cutOffTime, toolState, endpointInfo);
-
-                    break;
-                case MigrationStatus.StoragePrepared when RunParametersAreDifferent(endpointInfo, runParameters, toolState):
-                    var sb = new StringBuilder();
-
-                    sb.AppendLine("In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
-
-                    sb.AppendLine($"\t'--endpoint': '{endpointInfo.EndpointName}'.");
-
-                    foreach (var setting in toolState.RunParameters)
-                    {
-                        sb.AppendLine($"\t'{setting.Key}': '{setting.Value}'.");
-                    }
-
-                    throw new Exception(sb.ToString());
-
-                case MigrationStatus.StoragePrepared:
-                    logger.LogInformation("Resuming in progress migration");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                toolState = await timeoutStorage.Prepare(cutOffTime, endpointInfo, runParameters);
+                logger.LogInformation("Storage has been prepared for migration.");
             }
 
             while (toolState.HasMoreBatches())
@@ -149,14 +120,35 @@ namespace Particular.TimeoutMigrationTool
             logger.LogInformation("Migration completed successfully");
         }
 
-        async Task Prepare(DateTime cutOffTime, ToolState toolState, EndpointInfo endpoint)
+        void GuardAgainstInvalidState(EndpointInfo endpointInfo, IDictionary<string, string> runParameters, ToolState toolState)
         {
-            logger.LogDebug("Preparing storage");
-            var batches = await timeoutStorage.Prepare(cutOffTime, endpoint);
+            if (toolState == null)
+            {
+                return;
+            }
+            if (toolState.Status == MigrationStatus.Completed)
+            {
+                throw new Exception("We messed up, found a completed toolstate");
+            }
 
-            toolState.InitBatches(batches);
-            logger.LogInformation("Storage prepared");
+            if (RunParametersAreDifferent(endpointInfo, runParameters, toolState))
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine("In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
+                sb.AppendLine($"\t'--endpoint': '{endpointInfo.EndpointName}'.");
+
+                foreach (var setting in toolState.RunParameters)
+                {
+                    sb.AppendLine($"\t'{setting.Key}': '{setting.Value}'.");
+                }
+
+                throw new Exception(sb.ToString());
+            }
+
+            logger.LogInformation("Resuming in progress migration");
         }
+
 
         bool RunParametersAreDifferent(EndpointInfo endpointInfo, IDictionary<string, string> runParameters, ToolState currentRunState)
         {
