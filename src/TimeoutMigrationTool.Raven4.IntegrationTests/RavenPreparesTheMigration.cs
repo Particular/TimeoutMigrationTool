@@ -27,7 +27,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         }
 
         [Test]
-        public async Task WhenGettingTimeoutStateAndOneIsFoundWeReturnIt()
+        public async Task WhenLoadingAnOngoingMigrationAndWeFoundOneWeReturnIt()
         {
             await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1)));
 
@@ -36,7 +36,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
             Assert.That(retrievedToolState, Is.Not.Null);
             Assert.That(retrievedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
-            Assert.IsEmpty(retrievedToolState.Batches);
+            Assert.IsNotEmpty(retrievedToolState.Batches);
         }
 
         [Test]
@@ -64,22 +64,6 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
             Assert.That(toolState.Batches.Count, Is.EqualTo(1));
             Assert.That(toolState.Batches.First().TimeoutIds.Length, Is.EqualTo(500));
-        }
-
-        [Test]
-        public async Task WhenRemovingTheToolStateStoreIsCleanedUp()
-        {
-            var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState);
-
-            var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
-            await timeoutStorage.RemoveToolState();
-
-
-            var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-            var result = await httpClient.GetAsync(getStateUrl);
-            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
 
         [Test]

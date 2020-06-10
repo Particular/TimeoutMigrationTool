@@ -67,21 +67,6 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             Assert.That(toolState.Batches.First().TimeoutIds.Length, Is.EqualTo(500));
         }
 
-        [Test]
-        public async Task WhenRemovingTheToolStateStoreIsCleanedUp()
-        {
-            var toolState = SetupToolState(DateTime.Now);
-            await SaveToolState(toolState);
-
-            var timeoutStorage =
-                new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            await timeoutStorage.RemoveToolState();
-
-            var getStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
-            var result = await httpClient.GetAsync(getStateUrl);
-            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
-        }
-
         readonly int nrOfTimeouts = 1500;
     }
 }

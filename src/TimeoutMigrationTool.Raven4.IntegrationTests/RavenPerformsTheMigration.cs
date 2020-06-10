@@ -47,9 +47,12 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
             var reader = new Raven4Adapter(ServerName, databaseName);
             var updatedBatch = await reader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
-            toolState = await GetToolState();
+
+            toolState = await sut.TryLoadOngoingMigration();
             var currentBatch = toolState.GetCurrentBatch();
+
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));
+            Assert.That(currentBatch, Is.Not.Null);
             Assert.That(currentBatch.Number, Is.EqualTo(batchToVerify.Number + 1));
         }
 
@@ -90,7 +93,6 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
             Assert.IsNull(updatedToolState);
             Assert.That(batches.Count, Is.EqualTo(0));
-
         }
     }
 }

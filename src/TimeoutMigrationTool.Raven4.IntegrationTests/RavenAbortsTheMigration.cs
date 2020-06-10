@@ -13,7 +13,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         private readonly int nrOfTimeouts = 1500;
 
         [Test]
-        public async Task WhenThereIsStateAndNoTimeoutsAbortShouldDeleteState()
+        public async Task WhenThereIsStateAbortShouldDeleteState()
         {
             var toolState = SetupToolState(DateTime.Now);
             await SaveToolState(toolState);

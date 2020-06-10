@@ -12,6 +12,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
+    using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
     public abstract class RavenTimeoutStorageTestSuite
     {
@@ -102,6 +103,12 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
                     Number = 1,
                     State = BatchState.Pending,
                     TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
+                },
+                new BatchInfo()
+                {
+                    Number = 2,
+                    State = BatchState.Pending,
+                    TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
                 }
             };
 
@@ -122,13 +129,32 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
 
         protected async Task SaveToolState(ToolState toolState)
         {
-            var insertStateUrl = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+            var bulkInsertUrl = $"{ServerName}/databases/{databaseName}/bulk_docs";
 
-            var serializeObject = JsonConvert.SerializeObject(RavenToolState.FromToolState(toolState));
-            var httpContent = new StringContent(serializeObject);
+            var inserts = toolState.Batches.Select(batch => new PutCommand
+            {
+                Id = $"{RavenConstants.BatchPrefix}/{batch.Number}",
+                Type = "PUT",
+                ChangeVector = null,
+                Document = batch
+            }).ToList();
 
-            var result = await httpClient.PutAsync(insertStateUrl, httpContent);
-            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+            inserts.Add(new PutCommand
+            {
+                Id = $"{RavenConstants.ToolStateId}",
+                Type = "PUT",
+                ChangeVector = null,
+                Document = RavenToolState.FromToolState(toolState)
+            });
+
+            var request = new
+            {
+                Commands = inserts.ToArray()
+            };
+
+            var serializeObject = JsonConvert.SerializeObject(request);
+            var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializeObject, Encoding.UTF8, "application/json"));
+            result.EnsureSuccessStatusCode();
         }
 
         protected async Task<ToolState> GetToolState()
