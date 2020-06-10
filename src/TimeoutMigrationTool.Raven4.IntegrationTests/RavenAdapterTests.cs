@@ -1,12 +1,9 @@
 ﻿namespace TimeoutMigrationTool.Raven4.IntegrationTests
 {
     using System;
-    using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
-    using Particular.TimeoutMigrationTool.RavenDB;
     using Raven3;
     using Raven4;
 
