@@ -109,9 +109,9 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             {
                 Method = "PUT",
                 Key = $"{RavenConstants.BatchPrefix}/{b.Number}",
-                Document = RavenToolState.FromToolState(toolState),
+                Document = b,
                 Metadata = new object()
-            }).ToList();
+            }).Cast<object>().ToList();
 
             batchInsertCommands.Add(
             new {
