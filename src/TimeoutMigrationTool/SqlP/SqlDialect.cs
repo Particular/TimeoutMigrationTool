@@ -95,7 +95,7 @@ SELECT
 FROM
     TimeoutsMigration_State
 WHERE
-    Status <> 2;";
+    Status = 1;";
         }
 
         public override string GetScriptToPrepareTimeouts(string endpointName, int batchSize)
