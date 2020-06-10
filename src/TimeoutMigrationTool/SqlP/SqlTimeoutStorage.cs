@@ -48,7 +48,10 @@
                     command.CommandText = dialect.GetScriptToLoadBatchInfo();
 
                     var batches = await ExecuteCommandThatReturnsBatches(command).ConfigureAwait(false);
-                    return new ToolState(runParameters, endpoint, batches);
+                    return new ToolState(runParameters, endpoint, batches)
+                    {
+                        Status = status
+                    };
                 }
             }
         }
