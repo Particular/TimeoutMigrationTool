@@ -90,6 +90,12 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
                     Number = 1,
                     State = BatchState.Pending,
                     TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
+                },
+                new BatchInfo()
+                {
+                    Number = 2,
+                    State = BatchState.Pending,
+                    TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
                 }
             };
 

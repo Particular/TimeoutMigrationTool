@@ -36,7 +36,6 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         }
 
         [Test]
-        [Ignore("Laila to debug")]
         public async Task WhenCompletingABatchCurrentBatchShouldBeMovedUp()
         {
             var toolState = SetupToolState(DateTime.Now);
@@ -53,9 +52,12 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
 
             var reader = new Raven3Adapter(ServerName, databaseName);
             var updatedBatch = await reader.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (doc, id)=> { });
-            toolState = await GetToolState();
+            
+            toolState = await timeoutStorage.TryLoadOngoingMigration();
             var currentBatch = toolState.GetCurrentBatch();
+
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));
+            Assert.That(currentBatch, Is.Not.Null);
             Assert.That(currentBatch.Number, Is.EqualTo(batchToVerify.Number + 1));
         }
 

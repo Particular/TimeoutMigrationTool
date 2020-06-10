@@ -27,7 +27,6 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
         }
 
         [Test]
-        [Ignore("Laila to debug")]
         public async Task WhenGettingTimeoutStateAndOneIsFoundWeReturnIt()
         {
             await SaveToolState(SetupToolState(DateTime.Now.AddDays(-1)));
@@ -37,7 +36,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
 
             Assert.That(retrievedToolState, Is.Not.Null);
             Assert.That(retrievedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
-            Assert.IsEmpty(retrievedToolState.Batches);
+            Assert.IsNotEmpty(retrievedToolState.Batches);
         }
 
         [Test]
