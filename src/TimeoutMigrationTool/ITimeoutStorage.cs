@@ -13,7 +13,6 @@
         Task MarkBatchAsStaged(int number);
         Task StoreToolState(ToolState toolState);
         Task Abort();
-        Task<bool> CanPrepareStorage();
         Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime);
         Task Complete();
     }

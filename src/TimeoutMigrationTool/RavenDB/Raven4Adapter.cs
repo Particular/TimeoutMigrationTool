@@ -34,7 +34,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             saveResult.EnsureSuccessStatusCode();
         }
 
-        public async Task DeleteRecord(string key)
+        public async Task DeleteDocument(string key)
         {
             var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
             var result = await httpClient.DeleteAsync(deleteStateUrl);
@@ -104,7 +104,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task CompleteBatchAndUpdateTimeouts(BatchInfo batch)
         {
-            var updateCommand = new PutCommand
+            var insertCommand = new PutCommand
             {
                 Id = $"{RavenConstants.BatchPrefix}/{batch.Number}",
                 Type = "PUT",
@@ -124,8 +124,26 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }).ToList();
 
             var commands = new List<object>();
-            commands.Add(updateCommand);
+            commands.Add(insertCommand);
             commands.AddRange(timeoutUpdateCommands);
+
+            await PostToBulkDocs(commands);
+        }
+
+        public async Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState)
+        {
+            var insertCommand = new
+            {
+                Id = archivedToolStateId,
+                Type = "PUT",
+                Document = toolState,
+                ChangeVector = (object)null
+            };
+
+            var deleteCommand = GetDeleteCommand(RavenConstants.ToolStateId);
+            var commands = toolState.Batches.Select(b => GetDeleteCommand(b)).ToList();
+            commands.Add(insertCommand);
+            commands.Add(deleteCommand);
 
             await PostToBulkDocs(commands);
         }

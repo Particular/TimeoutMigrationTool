@@ -185,11 +185,6 @@
             }
         }
 
-        public Task<bool> CanPrepareStorage()
-        {
-            return Task.FromResult(true);
-        }
-
         public async Task<List<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
         {
             using (var connection = dialect.Connect(connectionString))

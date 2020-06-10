@@ -91,9 +91,11 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
         }
 
         [Test]
-        public async Task WhenCompletingMigrationStatusIsSetToCompleted()
+        public async Task WhenCompletingMigrationToolStateIsArchived()
         {
             var toolState = SetupToolState(DateTime.Now);
+            await SaveToolState(toolState);
+            toolState.InitBatches(await SetupExistingBatchInfoInDatabase());
             await SaveToolState(toolState);
 
             var sut = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.Four);
@@ -103,7 +105,11 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests
             var updatedToolState = await reader.GetDocument<RavenToolState>(RavenConstants.ToolStateId,
                 (timeoutData, id) => { });
 
-            Assert.AreEqual(MigrationStatus.Completed, updatedToolState.Status);
+            var batches = await reader.GetDocuments<BatchInfo>((info => { return true;}), RavenConstants.BatchPrefix, (batch, id) => { });
+
+            Assert.IsNull(updatedToolState);
+            Assert.That(batches.Count, Is.EqualTo(0));
+
         }
     }
 }

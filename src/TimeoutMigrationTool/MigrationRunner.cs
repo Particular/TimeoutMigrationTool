@@ -75,17 +75,17 @@ namespace Particular.TimeoutMigrationTool
                 toolState = new ToolState(runParameters, endpointInfo);
                 await timeoutStorage.StoreToolState(toolState);
                 logger.LogInformation("Migration status created and stored.");
+
+                // TODO: LBO => fix this inside prepare and complete should remove batches as well
+
+                // await Prepare(cutOffTime, toolState, endpointInfo);
+
             }
 
 
             switch (toolState.Status)
             {
                 case MigrationStatus.NeverRun:
-                    var canPrepStorage = await timeoutStorage.CanPrepareStorage();
-                    if (!canPrepStorage)
-                    {
-                        throw new Exception("We found some leftovers of a previous run. Please use the abort option to clean up the state and then rerun.");
-                    }
 
                     await Prepare(cutOffTime, toolState, endpointInfo);
 

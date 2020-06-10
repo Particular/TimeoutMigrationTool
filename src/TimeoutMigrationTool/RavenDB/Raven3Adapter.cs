@@ -41,7 +41,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             result.EnsureSuccessStatusCode();
         }
 
-        public async Task DeleteRecord(string key)
+        public async Task DeleteDocument(string key)
         {
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var deleteCommand = GetDeleteCommand(key);
@@ -128,6 +128,24 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 };
             }).Cast<object>().ToList();
             commands.Add(updateCommand);
+
+            await PostToBulkDocs(commands);
+        }
+
+        public async Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState)
+        {
+            var insertCommand = new
+            {
+                Method = "PUT",
+                Key = archivedToolStateId,
+                Document = toolState,
+                Metadata = new object()
+            };
+            var deleteCommand = GetDeleteCommand(RavenConstants.ToolStateId);
+
+            var commands = toolState.Batches.Select(b => GetDeleteCommand(b)).Cast<object>().ToList();
+            commands.Add(insertCommand);
+            commands.Add(deleteCommand);
 
             await PostToBulkDocs(commands);
         }

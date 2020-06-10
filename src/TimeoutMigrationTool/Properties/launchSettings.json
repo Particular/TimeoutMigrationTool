@@ -2,7 +2,7 @@
   "profiles": {
     "TimeoutMigrationTool": {
       "commandName": "Project",
-      "commandLineArgs": "-v ravendb"
+      "commandLineArgs": "-v ravendb --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 --target host=localhost;username=guest;password=guest --allEndpoints"
     }
   }
 }
