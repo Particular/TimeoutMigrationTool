@@ -1,4 +1,4 @@
-namespace TimeoutMigrationTool.Raven4.IntegrationTests.Raven3
+namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 {
     using System;
     using System.Collections.Generic;
@@ -199,7 +199,7 @@ namespace TimeoutMigrationTool.Raven4.IntegrationTests.Raven3
 
         public RavenDbVersion RavenVersion
         {
-            get => RavenDbVersion.Four;
+            get => RavenDbVersion.ThreeDotFive;
         }
 
         public EndpointInfo Endpoint { get; set; } = new EndpointInfo();
