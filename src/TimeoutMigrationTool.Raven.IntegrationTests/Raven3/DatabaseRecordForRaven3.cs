@@ -1,10 +1,10 @@
-namespace TimeoutMigrationTool.Raven3.IntegrationTests
+namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 {
     using System.Collections.Generic;
 
-    public class DatabaseRecord
+    public class DatabaseRecordForRaven3
     {
-        public DatabaseRecord(string databaseName)
+        public DatabaseRecordForRaven3(string databaseName)
         {
             Settings = new Dictionary<string, string>();
             Settings.Add("Raven/ActiveBundles", "");

@@ -5,6 +5,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB.HttpCommands
         public string Id { get; set; }
         public string Type { get; set; }
         public object ChangeVector { get; set; }
-        public BatchInfo Document { get; set; }
+        public object Document { get; set; }
     }
 }

@@ -34,6 +34,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 return td.Time >= cutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix,
                     StringComparison.OrdinalIgnoreCase);
             }
+
             var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter,
                 timeoutDocumentPrefix,
                 (doc, id) => doc.Id = id);
@@ -55,14 +56,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<ToolState> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
         {
-            if (endpoint == null) throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
-
-            var batchesInStorage =
-                await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, (doc, id) => { });
-
-            if (batchesInStorage.Any())
-                await ravenAdapter.BatchDelete(batchesInStorage.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}")
-                    .ToArray());
+            if (endpoint == null)
+            {
+                throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
+            }
 
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpoint);
             var toolState = new ToolState(runParameters, endpoint, batches);
@@ -99,25 +96,22 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var toolState = await TryLoadOngoingMigration();
             if (toolState == null)
+            {
                 throw new ArgumentNullException(nameof(toolState), "Can't abort without a tool state");
-
-            if (toolState.Batches.Any())
-            {
-                var incompleteBatches = toolState.Batches.Where(bi => bi.State != BatchState.Completed).ToList();
-                await CleanupExistingBatchesAndResetTimeouts(toolState.Batches.ToList(), incompleteBatches);
-            }
-            else
-            {
-                var batches = await ravenAdapter.GetDocuments<BatchInfo>(x => true, RavenConstants.BatchPrefix, (doc, id) => { });
-                await CleanupExistingBatchesAndResetTimeouts(batches, batches);
             }
 
-            await RemoveToolState();
+            // Only restoring the timeouts in pending batches to their original state
+            var incompleteBatches = toolState.Batches.Where(bi => bi.State != BatchState.Completed).ToList();
+            await CleanupExistingBatchesAndResetTimeouts(toolState.Batches.ToList(), incompleteBatches);
+            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(toolState), RavenToolState.FromToolState(toolState));
         }
 
         internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime, EndpointInfo endpoint)
         {
-            if (endpoint == null) throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
+            if (endpoint == null)
+            {
+                throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
+            }
 
             bool filter(TimeoutData td)
             {
@@ -131,6 +125,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal)RavenConstants.DefaultPagingSize);
             var batches = new List<BatchInfo>();
             for (var i = 0; i < nrOfBatches; i++)
+            {
                 batches.Add(new BatchInfo
                 {
                     Number = i + 1,
@@ -139,8 +134,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                         .Take(RavenConstants.DefaultPagingSize)
                         .Select(t => t.Id).ToArray()
                 });
+            }
 
-            foreach (var batch in batches) await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
+            foreach (var batch in batches)
+            {
+                await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
+            }
 
             return batches;
         }
@@ -151,30 +150,33 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             toolState.Status = MigrationStatus.Completed;
 
             var ravenToolState = RavenToolState.FromToolState(toolState);
-            var archivedToolStateId = $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.Endpoint.EndpointName}-{DateTime.Now.ToShortTimeString()}";
-            await ravenAdapter.ArchiveDocument(archivedToolStateId, ravenToolState);
+            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(toolState), ravenToolState);
         }
 
-        internal async Task CleanupExistingBatchesAndResetTimeouts(List<BatchInfo> batchesToRemove,
-            List<BatchInfo> batchesForWhichToResetTimeouts)
+        internal async Task CleanupExistingBatchesAndResetTimeouts(List<BatchInfo> batchesToRemove, List<BatchInfo> batchesForWhichToResetTimeouts)
         {
             foreach (var batch in batchesToRemove)
+            {
                 if (batchesForWhichToResetTimeouts.Any(b => b.Number == batch.Number))
+                {
                     await ravenAdapter.DeleteBatchAndUpdateTimeouts(batch);
+                }
                 else
+                {
                     await ravenAdapter.DeleteDocument($"{RavenConstants.BatchPrefix}/{batch.Number}");
+                }
+            }
         }
-
-        internal async Task RemoveToolState()
-        {
-            await ravenAdapter.DeleteDocument(RavenConstants.ToolStateId);
-        }
-
 
         async Task StoreToolState(ToolState toolState)
         {
             var ravenToolState = RavenToolState.FromToolState(toolState);
             await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
+        }
+
+        string GetArchivedToolStateId(ToolState toolState)
+        {
+            return $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.Endpoint.EndpointName}-{DateTime.Now:yyyy-MM-dd hh-mm-ss}";
         }
     }
 }

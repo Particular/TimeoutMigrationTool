@@ -1,4 +1,4 @@
-namespace TimeoutMigrationTool.Raven3.IntegrationTests
+namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 {
     using System;
     using System.Collections.Generic;
@@ -12,34 +12,40 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
 
-    public abstract class RavenTimeoutStorageTestSuite
+    public class Raven3TestSuite : IRavenTestSuite
     {
-        [SetUp]
+        public ICanTalkToRavenVersion RavenAdapter => new Raven3Adapter(ServerName, DatabaseName);
+
+        public string ServerName
+        {
+            get { return serverName; }
+        }
+
         public async Task SetupDatabase()
         {
             var testId = Guid.NewGuid().ToString("N");
-            databaseName = $"ravendb-{testId}";
-            endpoint = new EndpointInfo
+            DatabaseName = $"ravendb-{testId}";
+            Endpoint = new EndpointInfo
             {
                 EndpointName = "A"
             };
 
-            var createDbUrl = $"{ServerName}/admin/databases/{databaseName}";
+            var createDbUrl = $"{serverName}/admin/databases/{DatabaseName}";
 
             // Create the db
-            var db = new DatabaseRecord(databaseName);
+            var db = new DatabaseRecordForRaven3(DatabaseName);
 
             var stringContent = new StringContent(JsonConvert.SerializeObject(db));
             var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
             Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
-        protected async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false)
+        public async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false)
         {
             var timeoutsPrefix = "TimeoutDatas";
             for (var i = 0; i < nrOfTimeouts; i++)
             {
-                var insertTimeoutUrl = $"{ServerName}/databases/{databaseName}/docs/{timeoutsPrefix}/{i}";
+                var insertTimeoutUrl = $"{serverName}/databases/{DatabaseName}/docs/{timeoutsPrefix}/{i}";
 
                 // Insert the timeout data
                 var timeoutData = new TimeoutData
@@ -65,35 +71,41 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             }
         }
 
-        protected async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
+        public async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(ServerName, databaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, endpoint);
+            var timeoutStorage = new RavenDBTimeoutStorage(serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, Endpoint);
             return batches;
         }
 
-        protected ToolState SetupToolState(DateTime cutoffTime)
+        public ToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {
                 {ApplicationOptions.CutoffTime, cutoffTime.ToString()},
-                {ApplicationOptions.RavenServerUrl, ServerName},
-                {ApplicationOptions.RavenDatabaseName, databaseName},
+                {ApplicationOptions.RavenServerUrl, serverName},
+                {ApplicationOptions.RavenDatabaseName, DatabaseName},
                 {ApplicationOptions.RavenVersion, RavenDbVersion.ThreeDotFive.ToString()},
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix}
             };
 
             var batches = new List<BatchInfo>
             {
-                new BatchInfo()
+                new BatchInfo
                 {
                     Number = 1,
                     State = BatchState.Pending,
                     TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
+                },
+                new BatchInfo
+                {
+                    Number = 2,
+                    State = BatchState.Pending,
+                    TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
                 }
             };
 
-            var toolState = new ToolState(runParameters, endpoint, batches)
+            var toolState = new ToolState(runParameters, Endpoint, batches)
             {
                 Status = MigrationStatus.StoragePrepared
             };
@@ -101,9 +113,9 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             return toolState;
         }
 
-        protected async Task SaveToolState(ToolState toolState)
+        public async Task SaveToolState(ToolState toolState)
         {
-            var bulkInsertUrl = $"{ServerName}/databases/{databaseName}/bulk_docs";
+            var bulkInsertUrl = $"{serverName}/databases/{DatabaseName}/bulk_docs";
 
             var batchInsertCommands = toolState.Batches.Select(b => new
             {
@@ -114,7 +126,8 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             }).Cast<object>().ToList();
 
             batchInsertCommands.Add(
-            new {
+                new
+                {
                     Method = "PUT",
                     Key = RavenConstants.ToolStateId,
                     Document = RavenToolState.FromToolState(toolState),
@@ -127,9 +140,9 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             result.EnsureSuccessStatusCode();
         }
 
-        protected async Task<ToolState> GetToolState()
+        public async Task<ToolState> GetToolState()
         {
-            var url = $"{ServerName}/databases/{databaseName}/docs?id={RavenConstants.ToolStateId}";
+            var url = $"{serverName}/databases/{DatabaseName}/docs?id={RavenConstants.ToolStateId}";
 
             var response = await httpClient.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -144,13 +157,13 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             return ravenToolState.ToToolState(batches);
         }
 
-        protected async Task<List<BatchInfo>> GetBatches(string[] ids)
+        public async Task<List<BatchInfo>> GetBatches(string[] ids)
         {
             var batches = new List<BatchInfo>();
 
             foreach (var id in ids)
             {
-                var url = $"{ServerName}/databases/{databaseName}/docs?id={id}";
+                var url = $"{serverName}/databases/{DatabaseName}/docs?id={id}";
                 var response = await httpClient.GetAsync(url);
                 var contentString = await response.Content.ReadAsStringAsync();
 
@@ -161,8 +174,7 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             return batches;
         }
 
-        [TearDown]
-        public async Task Teardown()
+        public async Task TeardownDatabase()
         {
             var i = 0;
 
@@ -183,15 +195,22 @@ namespace TimeoutMigrationTool.Raven3.IntegrationTests
             }
         }
 
-        private Task<HttpResponseMessage> DeleteDatabase()
+        public string DatabaseName { get; private set; }
+
+        public RavenDbVersion RavenVersion
         {
-            var killDb = $"{ServerName}/admin/databases/{databaseName}";
+            get => RavenDbVersion.ThreeDotFive;
+        }
+
+        public EndpointInfo Endpoint { get; set; } = new EndpointInfo();
+
+        Task<HttpResponseMessage> DeleteDatabase()
+        {
+            var killDb = $"{serverName}/admin/databases/{DatabaseName}";
             return httpClient.DeleteAsync(killDb);
         }
 
-        protected string ServerName = (Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383").TrimEnd('/');
-        protected string databaseName;
-        protected EndpointInfo endpoint = new EndpointInfo();
+        public string serverName = (Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383").TrimEnd('/');
         protected static readonly HttpClient httpClient = new HttpClient();
     }
 }
