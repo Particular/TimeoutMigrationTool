@@ -6,10 +6,10 @@ namespace Particular.TimeoutMigrationTool
 
     public class ToolState
     {
-        public ToolState(IDictionary<string, string> runParameters, EndpointInfo endpointInfo, IEnumerable<BatchInfo> batches)
+        public ToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<BatchInfo> batches)
         {
             RunParameters = runParameters;
-            Endpoint = endpointInfo;
+            EndpointName = endpointName;
             Batches = batches;
             Status = MigrationStatus.StoragePrepared;
         }
@@ -17,7 +17,7 @@ namespace Particular.TimeoutMigrationTool
         public IEnumerable<BatchInfo> Batches { get; }
         public IDictionary<string, string> RunParameters { get; }
         public MigrationStatus Status { get; set; }
-        public EndpointInfo Endpoint { get; set; }
+        public string EndpointName { get; set; }
 
         public bool HasMoreBatches() => Batches.Any(x => x.State != BatchState.Completed);
 

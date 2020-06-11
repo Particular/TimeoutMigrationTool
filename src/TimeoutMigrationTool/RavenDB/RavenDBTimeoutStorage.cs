@@ -54,15 +54,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return endpoints;
         }
 
-        public async Task<ToolState> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
+        public async Task<ToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
-            if (endpoint == null)
-            {
-                throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
-            }
-
-            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpoint);
-            var toolState = new ToolState(runParameters, endpoint, batches);
+            var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpointName);
+            var toolState = new ToolState(runParameters, endpointName, batches);
             await StoreToolState(toolState);
             return toolState;
         }
@@ -106,16 +101,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(toolState), RavenToolState.FromToolState(toolState));
         }
 
-        internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime, EndpointInfo endpoint)
+        internal async Task<List<BatchInfo>> PrepareBatchesAndTimeouts(DateTime maxCutoffTime, string endpointName)
         {
-            if (endpoint == null)
-            {
-                throw new ArgumentNullException(nameof(endpoint), "EndpointInfo is required.");
-            }
-
             bool filter(TimeoutData td)
             {
-                return td.OwningTimeoutManager == endpoint.EndpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix,
+                return td.OwningTimeoutManager == endpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix,
                     StringComparison.OrdinalIgnoreCase);
             }
 
@@ -176,7 +166,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         string GetArchivedToolStateId(ToolState toolState)
         {
-            return $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.Endpoint.EndpointName}-{DateTime.Now:yyyy-MM-dd hh-mm-ss}";
+            return $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.EndpointName}-{DateTime.Now:yyyy-MM-dd hh-mm-ss}";
         }
     }
 }

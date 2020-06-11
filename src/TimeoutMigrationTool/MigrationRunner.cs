@@ -62,23 +62,18 @@ namespace Particular.TimeoutMigrationTool
                 }
 
                 logger.LogInformation($"Starting migration for {endpointToMigrate.EndpointName}, {endpointToMigrate.NrOfTimeouts}");
-                await Run(cutOffTime, endpointToMigrate, runParameters);
+                await Run(cutOffTime, endpointToMigrate.EndpointName, runParameters);
             }
         }
 
-        async Task Run(DateTime cutOffTime, EndpointInfo endpointInfo, IDictionary<string, string> runParameters)
+        async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             var toolState = await timeoutStorage.TryLoadOngoingMigration();
-            GuardAgainstInvalidState(endpointInfo, runParameters, toolState);
+            GuardAgainstInvalidState(endpointName, runParameters, toolState);
 
             if (toolState == null)
             {
-                //toolState = new ToolState(runParameters, endpointInfo);
-                //await timeoutStorage.StoreToolState(toolState);
-
-
-                // TODO: LBO => fix this inside prepare and complete should remove batches as well
-                toolState = await timeoutStorage.Prepare(cutOffTime, endpointInfo, runParameters);
+                toolState = await timeoutStorage.Prepare(cutOffTime, endpointName, runParameters);
                 logger.LogInformation("Storage has been prepared for migration.");
             }
 
@@ -120,7 +115,7 @@ namespace Particular.TimeoutMigrationTool
             logger.LogInformation("Migration completed successfully");
         }
 
-        void GuardAgainstInvalidState(EndpointInfo endpointInfo, IDictionary<string, string> runParameters, ToolState toolState)
+        void GuardAgainstInvalidState(string endpointName, IDictionary<string, string> runParameters, ToolState toolState)
         {
             if (toolState == null)
             {
@@ -131,12 +126,12 @@ namespace Particular.TimeoutMigrationTool
                 throw new Exception("We messed up, found a completed toolstate");
             }
 
-            if (RunParametersAreDifferent(endpointInfo, runParameters, toolState))
+            if (RunParametersAreDifferent(endpointName, runParameters, toolState))
             {
                 var sb = new StringBuilder();
 
                 sb.AppendLine("In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
-                sb.AppendLine($"\t'--endpoint': '{endpointInfo.EndpointName}'.");
+                sb.AppendLine($"\t'--endpoint': '{endpointName}'.");
 
                 foreach (var setting in toolState.RunParameters)
                 {
@@ -150,9 +145,9 @@ namespace Particular.TimeoutMigrationTool
         }
 
 
-        bool RunParametersAreDifferent(EndpointInfo endpointInfo, IDictionary<string, string> runParameters, ToolState currentRunState)
+        bool RunParametersAreDifferent(string endpointName, IDictionary<string, string> runParameters, ToolState currentRunState)
         {
-            if (endpointInfo.EndpointName != currentRunState.Endpoint.EndpointName)
+            if (endpointName != currentRunState.EndpointName)
             {
                 return true;
             }

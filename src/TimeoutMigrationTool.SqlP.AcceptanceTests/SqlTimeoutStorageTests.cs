@@ -13,7 +13,7 @@
     [TestFixture]
     class SqlTimeoutStorageTests : SqlPAcceptanceTest
     {
-        static EndpointInfo sourceEndpoint = new EndpointInfo { EndpointName = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint)) };
+        static string sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint));
 
         [Test]
         public async Task Loads_ToolState_For_Existing_Migration()
@@ -26,7 +26,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
@@ -47,7 +47,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
@@ -69,7 +69,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(1);
@@ -89,13 +89,13 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
-            CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint.EndpointName);
+            CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint);
         }
 
         [Test]
@@ -132,7 +132,7 @@
 
                         await session.Send(delayedMessage, options);
                     }))
-                    .Done(c => 3 == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                    .Done(c => 3 == NumberOfTimeouts(sourceEndpoint))
 
                 .Run();
 
@@ -152,7 +152,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(10));
@@ -171,7 +171,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
@@ -197,7 +197,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
@@ -224,7 +224,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
@@ -250,13 +250,13 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
             await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint.EndpointName}_TimeoutData");
+            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint}_TimeoutData");
 
             Assert.AreEqual(0, numberOfTimeouts);
         }
@@ -272,14 +272,14 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
             await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), sourceEndpoint, new Dictionary<string, string>());
             await timeoutStorage.Abort();
 
-            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint.EndpointName}_TimeoutData");
+            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint}_TimeoutData");
 
             Assert.AreEqual(10, numberOfTimeouts);
 
@@ -297,7 +297,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(1);
@@ -317,7 +317,7 @@
 
                         return session.SendLocal(startSagaMessage);
                     }))
-                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
+                .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();

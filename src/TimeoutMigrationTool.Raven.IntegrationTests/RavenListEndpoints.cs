@@ -95,7 +95,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(1));
             Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(50));
-            Assert.That(endpoints.First().EndpointName, Is.EqualTo(testSuite.Endpoint.EndpointName));
+            Assert.That(endpoints.First().EndpointName, Is.EqualTo(testSuite.EndpointName));
         }
     }
 
