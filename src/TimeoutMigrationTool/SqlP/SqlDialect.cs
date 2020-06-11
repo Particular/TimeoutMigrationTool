@@ -69,7 +69,10 @@ FROM
             MigrationRunId NVARCHAR(500) NOT NULL PRIMARY KEY,
             EndpointName NVARCHAR(500) NOT NULL,
             Status VARCHAR(15) NOT NULL,
-            RunParameters NVARCHAR(MAX)
+            RunParameters NVARCHAR(MAX) NOT NULL,
+            CutOffTime DATETIME NOT NULL,
+            StartedAt DATETIME NOT NULL,
+            CompletedAt DATETIME NULL
         )
     END;
 SELECT
@@ -112,7 +115,7 @@ BEGIN TRANSACTION
         DELETED.Headers,
         DELETED.PersistenceVersion
     INTO ['{migrationTableName}']
-    WHERE [{endpointName}_TimeoutData].Time >= @migrateTimeoutsWithDeliveryDateLaterThan;
+    WHERE [{endpointName}_TimeoutData].Time >= @CutOffTime;
 
     UPDATE BatchMigration
     SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber
@@ -121,8 +124,8 @@ BEGIN TRANSACTION
         FROM ['{migrationTableName}']
     ) BatchMigration;
 
-    INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, RunParameters)
-    VALUES ('{migrationRunId}', '{endpointName}', 1, @RunParameters);
+    INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, RunParameters, CutOffTime, StartedAt)
+    VALUES ('{migrationRunId}', '{endpointName}', 1, @RunParameters, @CutOffTime, @StartedAt);
 COMMIT;";
         }
 
@@ -143,7 +146,8 @@ DELETE ['{GetMigrationTableName(migrationRunId)}']
     UPDATE
         TimeoutsMigration_State
     SET
-        Status = 3
+        Status = 3,
+        CompletedAt = @CompletedAt
     WHERE
         MigrationRunId = '{migrationRunId}';
 
@@ -209,7 +213,8 @@ WHERE
     UPDATE
         TimeoutsMigration_State
     SET
-        Status = 2
+        Status = 2,
+        CompletedAt = @CompletedAt
     WHERE
         MigrationRunId = @MigrationRunId;
 ";

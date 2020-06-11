@@ -57,7 +57,7 @@
             }
         }
 
-        public async Task<ToolState> Prepare(DateTime migrateTimeoutsWithDeliveryDateLaterThan, EndpointInfo endpoint, IDictionary<string, string> runParameters)
+        public async Task<ToolState> Prepare(DateTime cutOffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
         {
             //HACK until we have a "session"
             migrationRunId = Guid.NewGuid().ToString().Replace("-", "");
@@ -67,15 +67,20 @@
                 var command = connection.CreateCommand();
                 command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpoint.EndpointName, batchSize);
 
-                var migrateTimeoutsWithDeliveryDateLaterThanParameter = command.CreateParameter();
-                migrateTimeoutsWithDeliveryDateLaterThanParameter.ParameterName = "migrateTimeoutsWithDeliveryDateLaterThan";
-                migrateTimeoutsWithDeliveryDateLaterThanParameter.Value = migrateTimeoutsWithDeliveryDateLaterThan;
-                command.Parameters.Add(migrateTimeoutsWithDeliveryDateLaterThanParameter);
+                var runParametersParameter = command.CreateParameter();
+                runParametersParameter.ParameterName = "RunParameters";
+                runParametersParameter.Value = JsonConvert.SerializeObject(runParameters);
+                command.Parameters.Add(runParametersParameter);
 
-                var parameters = command.CreateParameter();
-                parameters.ParameterName = "RunParameters";
-                parameters.Value = JsonConvert.SerializeObject(runParameters);
-                command.Parameters.Add(parameters);
+                var cutOffTimeParameter = command.CreateParameter();
+                cutOffTimeParameter.ParameterName = "CutOffTime";
+                cutOffTimeParameter.Value = cutOffTime;
+                command.Parameters.Add(cutOffTimeParameter);
+
+                var startedAtParameter = command.CreateParameter();
+                startedAtParameter.ParameterName = "StartedAt";
+                startedAtParameter.Value = DateTime.UtcNow;
+                command.Parameters.Add(startedAtParameter);
 
                 await command.ExecuteNonQueryAsync();
 
@@ -148,6 +153,29 @@
             }
         }
 
+        public async Task Complete()
+        {
+            using (var connection = dialect.Connect(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    var migrationRunIdParameter = command.CreateParameter();
+                    migrationRunIdParameter.ParameterName = "MigrationRunId";
+                    migrationRunIdParameter.Value = migrationRunId;
+                    command.Parameters.Add(migrationRunIdParameter);
+
+                    var completedAtParameter = command.CreateParameter();
+                    completedAtParameter.ParameterName = "CompletedAt";
+                    completedAtParameter.Value = DateTime.UtcNow;
+                    command.Parameters.Add(completedAtParameter);
+
+                    command.CommandText = dialect.GetScriptToMarkMigrationAsCompleted();
+
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
         public async Task Abort()
         {
             var toolState = await TryLoadOngoingMigration();
@@ -157,6 +185,11 @@
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = dialect.GetScriptToAbortMigration(migrationRunId, toolState.Endpoint.EndpointName);
+
+                    var completedAtParameter = command.CreateParameter();
+                    completedAtParameter.ParameterName = "CompletedAt";
+                    completedAtParameter.Value = DateTime.UtcNow;
+                    command.Parameters.Add(completedAtParameter);
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -291,32 +324,13 @@
             return result;
         }
 
-        private Dictionary<string, string> GetHeaders(DbDataReader reader)
+        Dictionary<string, string> GetHeaders(DbDataReader reader)
         {
             using (var stream = reader.GetTextReader(5))
             {
                 using (var jsonReader = new JsonTextReader(stream))
                 {
                     return serializer.Deserialize<Dictionary<string, string>>(jsonReader);
-                }
-            }
-        }
-
-        public async Task Complete()
-        {
-            using (var connection = dialect.Connect(connectionString))
-            {
-                using (var command = connection.CreateCommand())
-                {
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "MigrationRunId";
-                    parameter.Value = migrationRunId;
-
-                    command.Parameters.Add(parameter);
-
-                    command.CommandText = dialect.GetScriptToMarkMigrationAsCompleted();
-
-                    await command.ExecuteNonQueryAsync();
                 }
             }
         }
