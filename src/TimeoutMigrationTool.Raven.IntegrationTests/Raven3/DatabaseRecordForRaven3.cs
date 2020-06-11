@@ -1,4 +1,4 @@
-namespace TimeoutMigrationTool.Raven4.IntegrationTests.Raven3
+namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 {
     using System.Collections.Generic;
 

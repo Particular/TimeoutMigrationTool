@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool", "Tim
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Tests", "TimeoutMigrationTool.Tests\TimeoutMigrationTool.Tests.csproj", "{445C6D7F-E99D-4522-A934-9E70D4173D66}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven4.IntegrationTests", "TimeoutMigrationTool.Raven4.IntegrationTests\TimeoutMigrationTool.Raven4.IntegrationTests.csproj", "{7976D47B-24DD-4F76-B745-562E46F30E21}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven.IntegrationTests", "TimeoutMigrationTool.Raven.IntegrationTests\TimeoutMigrationTool.Raven.IntegrationTests.csproj", "{7976D47B-24DD-4F76-B745-562E46F30E21}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven.FakeData", "TimeoutMigrationTool.Raven.FakeData\TimeoutMigrationTool.Raven.FakeData.csproj", "{3C486002-36D6-42E8-A2A5-E5B28D6E7317}"
 EndProject
@@ -17,8 +17,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.IntegrationTests", "TimeoutMigrationTool.Raven3.IntegrationTests\TimeoutMigrationTool.Raven3.IntegrationTests.csproj", "{B180C831-A1F3-4393-A409-ABB99B001F5A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven3.AcceptanceTests", "TimeoutMigrationTool.Raven3.AcceptanceTests\TimeoutMigrationTool.Raven3.AcceptanceTests.csproj", "{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}"
 EndProject
@@ -54,10 +52,6 @@ Global
 		{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{054DD592-7D9D-4EC6-BE3E-DC5A7CFCBBB3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B180C831-A1F3-4393-A409-ABB99B001F5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B180C831-A1F3-4393-A409-ABB99B001F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B180C831-A1F3-4393-A409-ABB99B001F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B180C831-A1F3-4393-A409-ABB99B001F5A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26C5BEE3-6C9B-4986-AE89-0624D898F2B4}.Release|Any CPU.ActiveCfg = Release|Any CPU

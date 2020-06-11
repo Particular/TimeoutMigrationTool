@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.Raven4.IntegrationTests
+﻿namespace TimeoutMigrationTool.Raven.IntegrationTests
 {
     using System;
     using System.Threading.Tasks;
