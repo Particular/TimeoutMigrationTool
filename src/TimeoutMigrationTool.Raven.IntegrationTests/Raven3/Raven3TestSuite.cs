@@ -25,10 +25,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
         {
             var testId = Guid.NewGuid().ToString("N");
             DatabaseName = $"ravendb-{testId}";
-            Endpoint = new EndpointInfo
-            {
-                EndpointName = "A"
-            };
+            EndpointName = "A";
 
             var createDbUrl = $"{serverName}/admin/databases/{DatabaseName}";
 
@@ -74,7 +71,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
         public async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
         {
             var timeoutStorage = new RavenDBTimeoutStorage(serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, Endpoint);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }
 
@@ -105,7 +102,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                 }
             };
 
-            var toolState = new ToolState(runParameters, Endpoint, batches)
+            var toolState = new ToolState(runParameters, EndpointName, batches)
             {
                 Status = MigrationStatus.StoragePrepared
             };
@@ -202,7 +199,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
             get => RavenDbVersion.ThreeDotFive;
         }
 
-        public EndpointInfo Endpoint { get; set; } = new EndpointInfo();
+        public string EndpointName { get; set; }
 
         Task<HttpResponseMessage> DeleteDatabase()
         {

@@ -26,10 +26,10 @@ namespace TimeoutMigrationTool.Tests
             return Task.FromResult(existingToolState);
         }
 
-        public Task<ToolState> Prepare(DateTime maxCutoffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
+        public Task<ToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             ToolStateWasCreated = true;
-            var toolState = new ToolState(runParameters, endpoint, preparedBatches);
+            var toolState = new ToolState(runParameters, endpointName, preparedBatches);
             return Task.FromResult(toolState);
         }
 

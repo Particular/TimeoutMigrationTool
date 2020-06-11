@@ -73,12 +73,7 @@ namespace Particular.TimeoutMigrationTool
 
             if (toolState == null)
             {
-                //toolState = new ToolState(runParameters, endpointInfo);
-                //await timeoutStorage.StoreToolState(toolState);
-
-
-                // TODO: LBO => fix this inside prepare and complete should remove batches as well
-                toolState = await timeoutStorage.Prepare(cutOffTime, endpointInfo, runParameters);
+                toolState = await timeoutStorage.Prepare(cutOffTime, endpointInfo.EndpointName, runParameters);
                 logger.LogInformation("Storage has been prepared for migration.");
             }
 
@@ -152,7 +147,7 @@ namespace Particular.TimeoutMigrationTool
 
         bool RunParametersAreDifferent(EndpointInfo endpointInfo, IDictionary<string, string> runParameters, ToolState currentRunState)
         {
-            if (endpointInfo.EndpointName != currentRunState.Endpoint.EndpointName)
+            if (endpointInfo.EndpointName != currentRunState.EndpointName)
             {
                 return true;
             }

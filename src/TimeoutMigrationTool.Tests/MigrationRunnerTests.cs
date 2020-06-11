@@ -28,7 +28,7 @@ namespace TimeoutMigrationTool.Tests
                     NrOfTimeouts = 500
                 }
             };
-            testEndpoint = endpoints.First();
+            testEndpoint = endpoints.First().EndpointName;
             timeoutStorage.SetupEndpoints(endpoints);
         }
 
@@ -91,10 +91,7 @@ namespace TimeoutMigrationTool.Tests
             var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, GetBatches())
             {
                 Status = MigrationStatus.StoragePrepared,
-                Endpoint = new EndpointInfo
-                {
-                    EndpointName = "Invoicing"
-                }
+                EndpointName = "Invoicing"
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
 
@@ -120,7 +117,7 @@ namespace TimeoutMigrationTool.Tests
             var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, batches)
             {
                 Status = MigrationStatus.StoragePrepared,
-                Endpoint = testEndpoint
+                EndpointName = testEndpoint
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
             timeoutStorage.SetupTimeoutsToReadForBatch(batches.First());
@@ -143,7 +140,7 @@ namespace TimeoutMigrationTool.Tests
             var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, GetBatches())
             {
                 Status = MigrationStatus.Completed,
-                Endpoint = testEndpoint
+                EndpointName = testEndpoint
             };
 
             timeoutStorage.SetupToolStateToReturn(toolState);
@@ -169,7 +166,7 @@ namespace TimeoutMigrationTool.Tests
         FakeTransportTimeoutCreator transportTimeoutsCreator;
         MigrationRunner runner;
         List<EndpointInfo> endpoints;
-        EndpointInfo testEndpoint;
+        string testEndpoint;
         Microsoft.Extensions.Logging.ILogger logger;
     }
 }

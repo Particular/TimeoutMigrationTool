@@ -9,7 +9,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public IDictionary<string, string> RunParameters { get; set; } = new Dictionary<string, string>();
         public MigrationStatus Status { get; set; }
 
-        public EndpointInfo Endpoint { get;  set; }
+        public string Endpoint { get;  set; }
 
         internal static RavenToolState FromToolState(ToolState toolState)
         {
@@ -18,7 +18,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 RunParameters = toolState.RunParameters,
                 Status = toolState.Status,
                 Batches = toolState.Batches.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToList(),
-                Endpoint = toolState.Endpoint
+                Endpoint = toolState.EndpointName
             };
         }
 

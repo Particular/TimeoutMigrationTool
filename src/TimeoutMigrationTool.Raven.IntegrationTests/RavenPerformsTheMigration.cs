@@ -36,7 +36,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), testSuite.Endpoint);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), testSuite.EndpointName);
 
             var batchToVerify = batches.First();
 
@@ -51,7 +51,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), testSuite.Endpoint);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), testSuite.EndpointName);
 
             var batchToVerify = batches.First();
             Assert.That(batchToVerify.State, Is.EqualTo(BatchState.Pending));
@@ -69,7 +69,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
-            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.Endpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             var batchToVerify = toolState.Batches.First();
 
@@ -91,7 +91,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
-            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.Endpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             var batchToVerify = toolState.Batches.First();
             var timeoutIdToVerify = batchToVerify.TimeoutIds.First();

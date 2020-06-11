@@ -48,7 +48,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var cutOffTime = DateTime.Now.AddDays(-1);
             var storage = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
-            await storage.Prepare(cutOffTime, testSuite.Endpoint, new Dictionary<string, string>());
+            await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.Abort();

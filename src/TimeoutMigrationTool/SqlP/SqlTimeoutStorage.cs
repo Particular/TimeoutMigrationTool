@@ -24,7 +24,7 @@
                 {
                     command.CommandText = dialect.GetScriptLoadPendingMigrations();
 
-                    EndpointInfo endpoint = null;
+                    string endpoint;
                     MigrationStatus status;
                     Dictionary<string, string> runParameters;
 
@@ -37,7 +37,7 @@
 
                         //HACK until we have a "session"
                         migrationRunId = reader.GetString(0);
-                        endpoint = new EndpointInfo { EndpointName = reader.GetString(1) };
+                        endpoint = reader.GetString(1);
                         status = ParseMigrationStatus(reader.GetString(2));
                         runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(3));
 
@@ -57,7 +57,7 @@
             }
         }
 
-        public async Task<ToolState> Prepare(DateTime cutOffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
+        public async Task<ToolState> Prepare(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             //HACK until we have a "session"
             migrationRunId = Guid.NewGuid().ToString().Replace("-", "");
@@ -65,7 +65,7 @@
             using (var connection = dialect.Connect(connectionString))
             {
                 var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpoint.EndpointName, batchSize);
+                command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpointName, batchSize);
 
                 var runParametersParameter = command.CreateParameter();
                 runParametersParameter.ParameterName = "RunParameters";
@@ -184,7 +184,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToAbortMigration(migrationRunId, toolState.Endpoint.EndpointName);
+                    command.CommandText = dialect.GetScriptToAbortMigration(migrationRunId, toolState.EndpointName);
 
                     var completedAtParameter = command.CreateParameter();
                     completedAtParameter.ParameterName = "CompletedAt";
