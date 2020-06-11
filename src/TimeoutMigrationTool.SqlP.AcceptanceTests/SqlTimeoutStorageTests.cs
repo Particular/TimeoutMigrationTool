@@ -37,27 +37,6 @@
         }
 
         [Test]
-        public async Task Saves_ToolState_Status_When_Changed()
-        {
-            await Scenario.Define<Context>()
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
-                    .When(session =>
-                    {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
-
-                        return session.SendLocal(startSagaMessage);
-                    }))
-                 .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
-                .Run();
-
-            var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
-            await timeoutStorage.Complete();
-
-            Assert.IsNull(await timeoutStorage.TryLoadOngoingMigration());
-        }
-
-        [Test]
         public async Task Can_prepare_storage_for_migration()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
@@ -303,6 +282,8 @@
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint.EndpointName}_TimeoutData");
 
             Assert.AreEqual(10, numberOfTimeouts);
+
+            Assert.AreEqual(1, await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutsMigration_State WHERE Status = 3"), "Status should be set to aborted");
         }
 
         [Test]
@@ -319,12 +300,10 @@
                 .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint.EndpointName))
                 .Run();
 
-            var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            var timeoutStorage = GetTimeoutStorage(1);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            var numberOfTimeouts = await QueryScalarAsync<int>("SELECT COUNT(*) FROM TimeoutData_migration");
-
-            Assert.AreEqual(5, numberOfTimeouts);
+            Assert.AreEqual(5, toolState.Batches.Count());
         }
 
         [Test]
@@ -344,11 +323,10 @@
             var timeoutStorage = GetTimeoutStorage();
             await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
+            Assert.NotNull(await timeoutStorage.TryLoadOngoingMigration());
             await timeoutStorage.Complete();
 
-            var completedTables = await QueryScalarAsync<int>("SELECT COUNT(*) FROM sys.tables where name = 'TimeoutData_migration_completed'");
-
-            Assert.AreEqual(1, completedTables);
+            Assert.Null(await timeoutStorage.TryLoadOngoingMigration());
         }
 
         public class Context : ScenarioContext

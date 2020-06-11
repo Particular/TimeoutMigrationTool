@@ -35,9 +35,11 @@
                             return null;
                         }
 
-                        endpoint = new EndpointInfo { EndpointName = reader.GetString(0) };
-                        status = ParseMigrationStatus(reader.GetString(1));
-                        runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
+                        //HACK until we have a "session"
+                        migrationRunId = reader.GetString(0);
+                        endpoint = new EndpointInfo { EndpointName = reader.GetString(1) };
+                        status = ParseMigrationStatus(reader.GetString(2));
+                        runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(3));
 
                         if (reader.Read())
                         {
@@ -57,10 +59,13 @@
 
         public async Task<ToolState> Prepare(DateTime migrateTimeoutsWithDeliveryDateLaterThan, EndpointInfo endpoint, IDictionary<string, string> runParameters)
         {
+            //HACK until we have a "session"
+            migrationRunId = Guid.NewGuid().ToString().Replace("-", "");
+
             using (var connection = dialect.Connect(connectionString))
             {
                 var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToPrepareTimeouts(endpoint.EndpointName, batchSize);
+                command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpoint.EndpointName, batchSize);
 
                 var migrateTimeoutsWithDeliveryDateLaterThanParameter = command.CreateParameter();
                 migrateTimeoutsWithDeliveryDateLaterThanParameter.ParameterName = "migrateTimeoutsWithDeliveryDateLaterThan";
@@ -84,7 +89,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToLoadBatch();
+                    command.CommandText = dialect.GetScriptToLoadBatch(migrationRunId);
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -111,7 +116,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToCompleteBatch();
+                    command.CommandText = dialect.GetScriptToCompleteBatch(migrationRunId);
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -130,7 +135,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToMarkBatchAsStaged();
+                    command.CommandText = dialect.GetScriptToMarkBatchAsStaged(migrationRunId);
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "BatchNumber";
@@ -151,7 +156,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = dialect.GetScriptToAbortMigration(toolState.Endpoint.EndpointName);
+                    command.CommandText = dialect.GetScriptToAbortMigration(migrationRunId, toolState.Endpoint.EndpointName);
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -202,7 +207,7 @@
         {
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = dialect.GetScriptToLoadBatchInfo();
+                command.CommandText = dialect.GetScriptToLoadBatchInfo(migrationRunId);
 
                 using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                 {
@@ -303,13 +308,13 @@
             {
                 using (var command = connection.CreateCommand())
                 {
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "MigrationRunId";
+                    parameter.Value = migrationRunId;
+
+                    command.Parameters.Add(parameter);
+
                     command.CommandText = dialect.GetScriptToMarkMigrationAsCompleted();
-
-                    //var parameter = command.CreateParameter();
-                    //parameter.ParameterName = "MigrationRunId";
-                    //parameter.Value = $"Completed_{DateTime.Now.ToShortTimeString()}";
-
-                    //command.Parameters.Add(parameter);
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -321,6 +326,8 @@
             Formatting = Formatting.Indented,
             DefaultValueHandling = DefaultValueHandling.Ignore
         });
+
+        string migrationRunId;
 
         readonly SqlDialect dialect;
         readonly string connectionString;

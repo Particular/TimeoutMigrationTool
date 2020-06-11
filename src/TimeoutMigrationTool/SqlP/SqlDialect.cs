@@ -13,14 +13,14 @@ namespace Particular.TimeoutMigrationTool
             return new MsSqlServer();
         }
 
-        public abstract string GetScriptToPrepareTimeouts(string endpointName, int batchSize);
-        public abstract string GetScriptToLoadBatchInfo();
+        public abstract string GetScriptToPrepareTimeouts(string migrationRunId, string endpointName, int batchSize);
+        public abstract string GetScriptToLoadBatchInfo(string migrationRunId);
         public abstract string GetScriptLoadPendingMigrations();
-        public abstract string GetScriptToLoadBatch();
-        public abstract string GetScriptToAbortMigration(string endpointName);
-        public abstract string GetScriptToCompleteBatch();
+        public abstract string GetScriptToLoadBatch(string migrationRunId);
+        public abstract string GetScriptToAbortMigration(string migrationRunId, string endpointName);
+        public abstract string GetScriptToCompleteBatch(string migrationRunId);
         public abstract string GetScriptToListEndpoints();
-        public abstract string GetScriptToMarkBatchAsStaged();
+        public abstract string GetScriptToMarkBatchAsStaged(string migrationRunId);
         public abstract string GetScriptToMarkMigrationAsCompleted();
     }
 
@@ -34,7 +34,7 @@ namespace Particular.TimeoutMigrationTool
             return connection;
         }
 
-        public override string GetScriptToLoadBatch()
+        public override string GetScriptToLoadBatch(string migrationRunId)
         {
             return $@"SELECT Id,
     Destination,
@@ -44,20 +44,20 @@ namespace Particular.TimeoutMigrationTool
     Headers,
     PersistenceVersion
 FROM
-    [TimeoutData_migration]
+    ['{GetMigrationTableName(migrationRunId)}']
 WHERE
     BatchNumber = @BatchNumber;
 ";
         }
 
-        public override string GetScriptToLoadBatchInfo()
+        public override string GetScriptToLoadBatchInfo(string migrationRunId)
         {
             return $@"SELECT
     Id,
     BatchNumber,
     Status
 FROM
-    [TimeoutData_migration];";
+    ['{GetMigrationTableName(migrationRunId)}'];";
         }
 
         public override string GetScriptLoadPendingMigrations()
@@ -73,10 +73,24 @@ FROM
             RunParameters NVARCHAR(MAX)
         )
     END;
+SELECT
+    MigrationRunId,
+    EndpointName,
+    Status,
+    RunParameters
+FROM
+    TimeoutsMigration_State
+WHERE
+    Status = 1;";
+        }
 
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimeoutData_migration')
-    BEGIN
-       CREATE TABLE [TimeoutData_migration] (
+        public override string GetScriptToPrepareTimeouts(string migrationRunId, string endpointName, int batchSize)
+        {
+            var migrationTableName = GetMigrationTableName(migrationRunId);
+            return $@"
+BEGIN TRANSACTION
+
+    CREATE TABLE ['{migrationTableName}'] (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         BatchNumber INT,
         Status INT NOT NULL, /* 0 = Pending, 1 = staged, 2 = migrated */
@@ -87,21 +101,6 @@ FROM
         Headers NVARCHAR(MAX) NOT NULL,
         PersistenceVersion VARCHAR(23) NOT NULL
     );
-    END;
-SELECT
-    EndpointName,
-    Status,
-    RunParameters
-FROM
-    TimeoutsMigration_State
-WHERE
-    Status = 1;";
-        }
-
-        public override string GetScriptToPrepareTimeouts(string endpointName, int batchSize)
-        {
-            return $@"
-BEGIN TRANSACTION
 
     DELETE [{endpointName}_TimeoutData]
     OUTPUT DELETED.Id,
@@ -113,26 +112,26 @@ BEGIN TRANSACTION
         DELETED.Time,
         DELETED.Headers,
         DELETED.PersistenceVersion
-    INTO [TimeoutData_migration]
+    INTO ['{migrationTableName}']
     WHERE [{endpointName}_TimeoutData].Time >= @migrateTimeoutsWithDeliveryDateLaterThan;
 
     UPDATE BatchMigration
     SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber
     FROM (
         SELECT BatchNumber, ROW_NUMBER() OVER (ORDER BY (select 0)) / {batchSize} AS CalculatedBatchNumber
-        FROM [TimeoutData_migration]
+        FROM ['{migrationTableName}']
     ) BatchMigration;
 
     INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, Batches, RunParameters)
-    VALUES ('TOOLSTATE', '{endpointName}', 1, (SELECT COUNT(DISTINCT BatchNumber) from [TimeoutData_migration]), @RunParameters);
+    VALUES ('{migrationRunId}', '{endpointName}', 1, (SELECT COUNT(DISTINCT BatchNumber) from ['{migrationTableName}']), @RunParameters);
 COMMIT;";
         }
 
-        public override string GetScriptToAbortMigration(string endpointName)
+        public override string GetScriptToAbortMigration(string migrationRunId, string endpointName)
         {
             return $@"BEGIN TRANSACTION
 
-DELETE [TimeoutData_migration]
+DELETE ['{GetMigrationTableName(migrationRunId)}']
     OUTPUT DELETED.Id,
         DELETED.Destination,
         DELETED.SagaId,
@@ -142,20 +141,22 @@ DELETE [TimeoutData_migration]
         DELETED.PersistenceVersion
     INTO [{endpointName}_TimeoutData];
 
-    DELETE
+    UPDATE
         TimeoutsMigration_State
+    SET
+        Status = 3
     WHERE
-        MigrationRunId = 'TOOLSTATE';
+        MigrationRunId = '{migrationRunId}';
 
-    DROP TABLE [TimeoutData_migration];
+    DROP TABLE ['{GetMigrationTableName(migrationRunId)}'];
 
 COMMIT;";
         }
 
-        public override string GetScriptToCompleteBatch()
+        public override string GetScriptToCompleteBatch(string migrationRunId)
         {
             return $@"UPDATE
-    [TimeoutData_migration]
+    ['{GetMigrationTableName(migrationRunId)}']
 SET
     Status = 2
 WHERE
@@ -193,10 +194,10 @@ SET @SqlQuery = SUBSTRING(@SqlQuery, 0, LEN(@SqlQuery) - LEN('UNION'));
 EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
         }
 
-        public override string GetScriptToMarkBatchAsStaged()
+        public override string GetScriptToMarkBatchAsStaged(string migrationRunId)
         {
             return $@"UPDATE
-    [TimeoutData_migration]
+    ['{GetMigrationTableName(migrationRunId)}']
 SET
     Status = 1
 WHERE
@@ -206,17 +207,18 @@ WHERE
         public override string GetScriptToMarkMigrationAsCompleted()
         {
             return @"
-BEGIN TRANSACTION
     UPDATE
         TimeoutsMigration_State
     SET
         Status = 2
     WHERE
-        MigrationRunId = 'TOOLSTATE';
+        MigrationRunId = @MigrationRunId;
+";
+        }
 
-EXEC sp_rename 'TimeoutData_migration', 'TimeoutData_migration_completed'
-
-COMMIT;";
+        string GetMigrationTableName(string migrationRunId)
+        {
+            return $"TimeoutData_migration_{migrationRunId}";
         }
     }
 }
