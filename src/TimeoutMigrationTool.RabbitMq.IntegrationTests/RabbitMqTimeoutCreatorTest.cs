@@ -2,6 +2,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RabbitMq;
@@ -15,6 +16,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         string ExistingEndpointNameUsingConventional = "ExistingEndpointName";
         string ExistingEndpointNameUsingDirect = "ExistingEndpointNameDirect";
         string NonExistingEndpointName = "NonExistingEndpointName";
+        string EndpointWithShortTimeout = "EndpointWithShortTimeout";
 
         [OneTimeSetUp]
         public void TestSuitSetup()
@@ -33,6 +35,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                     model.QueueDeclare(ExistingEndpointNameUsingConventional, true, false, false, null);
                     model.ExchangeDeclare(ExistingEndpointNameUsingConventional, "fanout", true, false, null);
                     model.QueueDeclare(ExistingEndpointNameUsingDirect, true, false, false, null);
+
+                    model.QueueDeclare(EndpointWithShortTimeout, true, false, false, null);
                 }
             }
         }
@@ -52,7 +56,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         }
 
         [Test]
-        public void AbleToMigrate_ExistingDestination_ReturnsNoProblems()
+        public async Task AbleToMigrate_ExistingDestination_ReturnsNoProblems()
         {
             var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
 
@@ -61,13 +65,13 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddDays(5);
             info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect};
-            var result = sut.AbleToMigrate(info);
+            var result = await sut.AbleToMigrate(info);
 
-            Assert.IsTrue(result.Result.CanMigrate);
+            Assert.IsTrue(result.CanMigrate);
         }
 
         [Test]
-        public void AbleToMigrate_NonExistingDestination_ReturnsProblems()
+        public async Task AbleToMigrate_NonExistingDestination_ReturnsProblems()
         {
             var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
 
@@ -76,13 +80,13 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddDays(5);
             info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, NonExistingEndpointName};
-            var result = sut.AbleToMigrate(info);
+            var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.Result.CanMigrate);
+            Assert.IsFalse(result.CanMigrate);
         }
 
         [Test]
-        public void AbleToMigrate_TimeoutHigherThan9Years_ReturnsProblems()
+        public async Task AbleToMigrate_TimeoutHigherThan9Years_ReturnsProblems()
         {
             var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
 
@@ -91,9 +95,30 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddYears(9);
             info.Destinations = new List<string>{ExistingEndpointNameUsingConventional};
-            var result = sut.AbleToMigrate(info);
+            var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.Result.CanMigrate);
+            Assert.IsFalse(result.CanMigrate);
+        }
+
+        [Test]
+        public async Task Should_handle_negative_delays()
+        {
+            var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
+
+            await sut.StageBatch(new List<TimeoutData> {
+            new TimeoutData
+            {
+                Id = "SomeID",
+                Headers = new Dictionary<string, string>(),
+                Destination = EndpointWithShortTimeout,
+                State = new byte[2],
+                Time = DateTime.Now -  TimeSpan.FromDays(1)
+            }
+            });
+
+            var numPumped = await sut.CompleteBatch(33);
+
+            Assert.AreEqual(1, numPumped);
         }
     }
 }
