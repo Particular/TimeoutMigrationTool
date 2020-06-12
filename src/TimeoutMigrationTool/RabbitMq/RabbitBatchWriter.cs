@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-
-namespace Particular.TimeoutMigrationTool.RabbitMq
+﻿namespace Particular.TimeoutMigrationTool.RabbitMq
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using RabbitMQ.Client;
+
     class RabbitBatchWriter
     {
         public RabbitBatchWriter(ILogger logger, string rabbitConnectionString)
@@ -34,7 +34,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             return Task.FromResult(timeouts.Count);
         }
 
-        private void PurgueQueueIfNotEmpty(IModel model)
+        void PurgueQueueIfNotEmpty(IModel model)
         {
             var statingQueueMessageLength = QueueCreator.GetStatingQueueMessageLength(model);
             if (statingQueueMessageLength > 0)
@@ -44,7 +44,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             }
         }
 
-        private void PublishTimeout(IModel model, TimeoutData timeout, string stageExchangeName)
+        void PublishTimeout(IModel model, TimeoutData timeout, string stageExchangeName)
         {
             int level;
 
@@ -70,14 +70,14 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             model.BasicPublish(stageExchangeName, routingKey, true, properties, timeout.State);
         }
 
-        private IConnection GetConnection(string rabbitMqBroker)
+        IConnection GetConnection(string rabbitMqBroker)
         {
             this.factory = new ConnectionFactory();
             factory.Uri = new Uri(rabbitMqBroker);
             return factory.CreateConnection();
         }
 
-        private void Fill(IBasicProperties properties, TimeoutData timeout, TimeSpan delay)
+        void Fill(IBasicProperties properties, TimeoutData timeout, TimeSpan delay)
         {
             var messageHeaders = timeout.Headers ?? new Dictionary<string, string>();
 
@@ -130,8 +130,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             }
         }
 
-
-        private static string CalculateRoutingKey(int delayInSeconds, string address, out int startingDelayLevel)
+        static string CalculateRoutingKey(int delayInSeconds, string address, out int startingDelayLevel)
         {
             if (delayInSeconds < 0)
             {
@@ -142,7 +141,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             var sb = new StringBuilder();
             startingDelayLevel = 0;
 
-            for (var level = MaxLevel; level >= 0; level--)
+            for (var level = RabbitMqTimeoutCreator.MaxLevel; level >= 0; level--)
             {
                 if (startingDelayLevel == 0 && bitArray[level])
                 {
@@ -157,12 +156,10 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             return sb.ToString();
         }
 
-        private static string LevelName(int level) => $"nsb.delay-level-{level:D2}";
+        ConnectionFactory factory;
 
-        public const int MaxDelayInSeconds = (1 << MaxLevel) - 1;
-        const int MaxLevel = 28;
         readonly ILogger logger;
         readonly string rabbitConnectionString;
-        ConnectionFactory factory;
+        static string LevelName(int level) => $"nsb.delay-level-{level:D2}";
     }
 }

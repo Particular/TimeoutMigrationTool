@@ -41,9 +41,9 @@
         Task<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
             var result = new MigrationCheckResult();
-            if ((endpoint.LongestTimeout - DateTime.UtcNow).TotalSeconds > RabbitBatchWriter.MaxDelayInSeconds)
+            if ((endpoint.LongestTimeout - DateTime.UtcNow).TotalSeconds > MaxDelayInSeconds)
             {
-                result.Problems.Add($"{endpoint.EndpointName} - has a timeout that has further away date than allowed {RabbitBatchWriter.MaxDelayInSeconds} seconds.");
+                result.Problems.Add($"{endpoint.EndpointName} - has a timeout that has further away date than allowed {MaxDelayInSeconds} seconds.");
             }
 
             using (var connection = factory.CreateConnection())
@@ -105,11 +105,15 @@
             return Task.CompletedTask;
         }
 
-        readonly ILogger logger;
         string targetConnectionString;
         ConnectionFactory factory;
 
+        readonly ILogger logger;
         readonly RabbitStagePump messagePump;
         readonly RabbitBatchWriter batchWriter;
+
+        const int MaxDelayInSeconds = (1 << MaxLevel) - 1;
+
+        public const int MaxLevel = 28;
     }
 }
