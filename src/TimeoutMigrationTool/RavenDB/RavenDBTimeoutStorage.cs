@@ -17,7 +17,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             ravenAdapter = RavenDataReaderFactory.Resolve(serverUrl, databaseName, ravenVersion);
         }
 
-        public async Task<ToolState> TryLoadOngoingMigration()
+        public async Task<IToolState> TryLoadOngoingMigration()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolState>(RavenConstants.ToolStateId, (doc, id) => { });
             if (ravenToolState == null) return null;
@@ -54,7 +54,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return endpoints;
         }
 
-        public async Task<ToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
+        public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpointName);
             var toolState = new ToolState(runParameters, endpointName, batches);
@@ -137,9 +137,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task Complete()
         {
             var toolState = await TryLoadOngoingMigration();
-            toolState.Status = MigrationStatus.Completed;
 
             var ravenToolState = RavenToolState.FromToolState(toolState);
+
+            ravenToolState.Status = MigrationStatus.Completed;
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(toolState), ravenToolState);
         }
 
@@ -158,13 +159,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
         }
 
-        async Task StoreToolState(ToolState toolState)
+        async Task StoreToolState(IToolState toolState)
         {
             var ravenToolState = RavenToolState.FromToolState(toolState);
             await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
         }
 
-        string GetArchivedToolStateId(ToolState toolState)
+        string GetArchivedToolStateId(IToolState toolState)
         {
             return $"{RavenConstants.ArchivedToolStateIdPrefix}{toolState.EndpointName}-{DateTime.Now:yyyy-MM-dd hh-mm-ss}";
         }

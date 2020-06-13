@@ -30,10 +30,9 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
-            var loadedToolState = await timeoutStorage.TryLoadOngoingMigration();
+            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(1, loadedToolState.Batches.Count());
+            Assert.AreEqual(1, toolState.Batches.Count());
         }
 
         [Test]
@@ -52,10 +51,9 @@
 
             var timeoutStorage = GetTimeoutStorage(3);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
-            var storedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.AreEqual(4, toolState.Batches.Count());
-            Assert.AreEqual(MigrationStatus.StoragePrepared, storedToolState.Status);
+            Assert.AreEqual(MigrationStatus.StoragePrepared, toolState.Status);
         }
 
         [Test]

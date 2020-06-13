@@ -16,7 +16,7 @@
             this.batchSize = batchSize;
         }
 
-        public async Task<ToolState> TryLoadOngoingMigration()
+        public async Task<IToolState> TryLoadOngoingMigration()
         {
             using (var connection = dialect.Connect(connectionString))
             {
@@ -57,7 +57,7 @@
             }
         }
 
-        public async Task<ToolState> Prepare(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
+        public async Task<IToolState> Prepare(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             //HACK until we have a "session"
             migrationRunId = Guid.NewGuid().ToString().Replace("-", "");

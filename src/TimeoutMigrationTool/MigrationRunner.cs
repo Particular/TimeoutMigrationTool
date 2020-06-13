@@ -117,7 +117,7 @@ namespace Particular.TimeoutMigrationTool
             logger.LogInformation("Migration completed successfully");
         }
 
-        void GuardAgainstInvalidState(string endpointName, IDictionary<string, string> runParameters, ToolState toolState)
+        void GuardAgainstInvalidState(string endpointName, IDictionary<string, string> runParameters, IToolState toolState)
         {
             if (toolState == null)
             {
@@ -147,7 +147,7 @@ namespace Particular.TimeoutMigrationTool
         }
 
 
-        bool RunParametersAreDifferent(string endpointName, IDictionary<string, string> runParameters, ToolState currentRunState)
+        bool RunParametersAreDifferent(string endpointName, IDictionary<string, string> runParameters, IToolState currentRunState)
         {
             if (endpointName != currentRunState.EndpointName)
             {
