@@ -94,7 +94,8 @@ namespace Particular.TimeoutMigrationTool
                         throw new InvalidOperationException($"The amount of staged timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {stagedTimeoutCount}, batch contains {batch.TimeoutIds.Length}.");
                     }
 
-                    await MarkCurrentBatchAsStaged(toolState);
+                    batch.State = BatchState.Staged;
+                    await timeoutStorage.MarkBatchAsStaged(batch.Number);
                     logger.LogDebug("Batch marked as staged");
                 }
 
@@ -106,7 +107,8 @@ namespace Particular.TimeoutMigrationTool
                     throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Completed amount of timeouts: {completedTimeoutsCount}, batch contains {batch.TimeoutIds.Length}.");
                 }
 
-                await CompleteCurrentBatch(toolState);
+                batch.State = BatchState.Completed;
+                await timeoutStorage.MarkBatchAsCompleted(batch.Number);
 
                 logger.LogDebug("Batch fully migrated");
             }
@@ -173,20 +175,6 @@ namespace Particular.TimeoutMigrationTool
             }
 
             return false;
-        }
-
-        async Task MarkCurrentBatchAsStaged(ToolState toolState)
-        {
-            var currentBatch = toolState.GetCurrentBatch();
-            currentBatch.State = BatchState.Staged;
-            await timeoutStorage.MarkBatchAsStaged(currentBatch.Number);
-        }
-
-        async Task CompleteCurrentBatch(ToolState toolState)
-        {
-            var currentBatch = toolState.GetCurrentBatch();
-            currentBatch.State = BatchState.Completed;
-            await timeoutStorage.MarkBatchAsCompleted(currentBatch.Number);
         }
 
         readonly ILogger logger;
