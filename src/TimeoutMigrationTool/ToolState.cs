@@ -1,10 +1,9 @@
 namespace Particular.TimeoutMigrationTool
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
 
-    public class ToolState
+    public class ToolState : IToolState
     {
         public ToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<BatchInfo> batches)
         {
@@ -37,5 +36,16 @@ namespace Particular.TimeoutMigrationTool
 
             return Batches.First(x => x.State != BatchState.Completed);
         }
+    }
+
+    public interface IToolState
+    {
+        IDictionary<string, string> RunParameters { get; }
+        string EndpointName { get; }
+        MigrationStatus Status { get; }
+        IEnumerable<BatchInfo> Batches { get; }
+
+        bool HasMoreBatches();
+        BatchInfo GetCurrentBatch();
     }
 }

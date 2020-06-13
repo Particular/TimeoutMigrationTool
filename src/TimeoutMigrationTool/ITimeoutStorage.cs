@@ -6,8 +6,8 @@
 
     public interface ITimeoutStorage
     {
-        Task<ToolState> TryLoadOngoingMigration();
-        Task<ToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters);
+        Task<IToolState> TryLoadOngoingMigration();
+        Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters);
         Task<List<TimeoutData>> ReadBatch(int batchNumber);
         Task MarkBatchAsCompleted(int number);
         Task MarkBatchAsStaged(int number);

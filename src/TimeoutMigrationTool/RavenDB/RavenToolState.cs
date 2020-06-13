@@ -11,7 +11,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public string Endpoint { get;  set; }
 
-        internal static RavenToolState FromToolState(ToolState toolState)
+        internal static RavenToolState FromToolState(IToolState toolState)
         {
             return new RavenToolState()
             {

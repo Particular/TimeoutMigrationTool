@@ -21,16 +21,16 @@ namespace TimeoutMigrationTool.Tests
         public bool ToolStateWasCreated { get; private set; }
         public bool ToolStateMovedToCompleted { get; private set; }
 
-        public Task<ToolState> TryLoadOngoingMigration()
+        public Task<IToolState> TryLoadOngoingMigration()
         {
-            return Task.FromResult(existingToolState);
+            return Task.FromResult<IToolState>(existingToolState);
         }
 
-        public Task<ToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
+        public Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             ToolStateWasCreated = true;
             var toolState = new ToolState(runParameters, endpointName, preparedBatches);
-            return Task.FromResult(toolState);
+            return Task.FromResult<IToolState>(toolState);
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
