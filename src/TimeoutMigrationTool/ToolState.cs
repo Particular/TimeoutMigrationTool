@@ -42,7 +42,6 @@ namespace Particular.TimeoutMigrationTool
     {
         IDictionary<string, string> RunParameters { get; }
         string EndpointName { get; }
-        MigrationStatus Status { get; }
         IEnumerable<BatchInfo> Batches { get; }
 
         bool HasMoreBatches();
