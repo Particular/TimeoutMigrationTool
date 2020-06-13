@@ -90,7 +90,6 @@ namespace TimeoutMigrationTool.Tests
         {
             var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, GetBatches())
             {
-                Status = MigrationStatus.StoragePrepared,
                 EndpointName = "Invoicing"
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
@@ -116,7 +115,6 @@ namespace TimeoutMigrationTool.Tests
             var batches = GetBatches();
             var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, batches)
             {
-                Status = MigrationStatus.StoragePrepared,
                 EndpointName = testEndpoint
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
@@ -132,20 +130,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.BatchWasCompleted);
             Assert.That(timeoutStorage.ToolStateMovedToCompleted);
             Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
-        }
-
-        [Test]
-        public void WhenRunningWithStateCompleted()
-        {
-            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, GetBatches())
-            {
-                Status = MigrationStatus.Completed,
-                EndpointName = testEndpoint
-            };
-
-            timeoutStorage.SetupToolStateToReturn(toolState);
-
-            Assert.ThrowsAsync<Exception>(async () => await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>()));
         }
 
         static List<BatchInfo> GetBatches()

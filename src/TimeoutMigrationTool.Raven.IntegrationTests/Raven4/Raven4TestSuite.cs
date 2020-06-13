@@ -110,12 +110,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 }
             };
 
-            var toolState = new ToolState(runParameters, EndpointName, batches)
-            {
-                Status = MigrationStatus.StoragePrepared
-            };
-
-            return toolState;
+            return new ToolState(runParameters, EndpointName, batches);
         }
 
         public async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()

@@ -49,10 +49,7 @@
 
                     var batches = await LoadBatches(connection).ConfigureAwait(false);
 
-                    return new ToolState(runParameters, endpoint, batches)
-                    {
-                        Status = status
-                    };
+                    return new ToolState(runParameters, endpoint, batches);
                 }
             }
         }
