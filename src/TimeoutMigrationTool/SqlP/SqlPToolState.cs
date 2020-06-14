@@ -13,8 +13,8 @@
             this.batches = batches;
         }
 
-        IEnumerable<BatchInfo> batches;
         public IDictionary<string, string> RunParameters { get; }
+
         public string EndpointName { get; set; }
 
         public int NumberOfBatches { get; }
@@ -37,5 +37,7 @@
 
             return batches.First(x => x.State != BatchState.Completed);
         }
+
+        IEnumerable<BatchInfo> batches;
     }
 }
