@@ -209,7 +209,7 @@
                 var batch = toolState.GetCurrentBatch();
 
                 await timeoutStorage.MarkBatchAsStaged(batch.Number);
-                batch.State = BatchState.Staged;
+                batch.State = BatchState.Completed;
             }
 
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
@@ -252,7 +252,7 @@
                 CollectionAssert.AreEquivalent(timeoutIdsCreatedDuringSplit, timeoutIdsFromDatabase);
 
                 await timeoutStorage.MarkBatchAsStaged(batch.Number);
-                batch.State = BatchState.Staged;
+                batch.State = BatchState.Completed;
             }
         }
 
