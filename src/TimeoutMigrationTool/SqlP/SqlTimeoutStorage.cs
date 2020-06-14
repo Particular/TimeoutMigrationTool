@@ -47,9 +47,7 @@
                         }
                     }
 
-                    var batches = await LoadBatches(connection).ConfigureAwait(false);
-
-                    return new SqlPToolState(runParameters, endpoint, batches, numberOfBatches);
+                    return new SqlPToolState(connectionString, dialect, migrationRunId, runParameters, endpoint, numberOfBatches);
                 }
             }
         }
@@ -231,56 +229,6 @@
             }
 
             return new List<EndpointInfo>();
-        }
-
-        async Task<List<BatchInfo>> LoadBatches(DbConnection connection)
-        {
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = dialect.GetScriptToLoadBatchInfo(migrationRunId);
-
-                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                {
-                    var batches = new List<BatchInfo>();
-
-                    if (reader.HasRows)
-                    {
-                        var batchRows = ReadBatchRows(reader);
-
-                        //TODO Do a group by in the DB?
-                        batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
-                        {
-                            Number = batchNumber.Key,
-                            State = batchNumber.First().Status,
-                            TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
-                        }).ToList();
-                    }
-                    return batches;
-                }
-            }
-        }
-
-        IEnumerable<BatchRowRecord> ReadBatchRows(DbDataReader reader)
-        {
-            while (reader.Read())
-            {
-                yield return new BatchRowRecord
-                {
-                    MessageId = reader.GetGuid(0),
-                    BatchNumber = reader.GetInt32(1),
-                    Status = GetBatchStatus(reader.GetInt32(2))
-                };
-            }
-        }
-
-        MigrationStatus ParseMigrationStatus(string status)
-        {
-            return (MigrationStatus)Enum.Parse(typeof(MigrationStatus), status);
-        }
-
-        BatchState GetBatchStatus(int dbStatus)
-        {
-            return (BatchState)dbStatus;
         }
 
         IEnumerable<TimeoutData> ReadTimeoutDataRows(DbDataReader reader)

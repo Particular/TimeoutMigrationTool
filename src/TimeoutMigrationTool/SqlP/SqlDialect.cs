@@ -14,7 +14,7 @@ namespace Particular.TimeoutMigrationTool
         }
 
         public abstract string GetScriptToPrepareTimeouts(string migrationRunId, string endpointName, int batchSize);
-        public abstract string GetScriptToLoadBatchInfo(string migrationRunId);
+        public abstract string GetScriptToTryGetNextBatch(string migrationRunId);
         public abstract string GetScriptLoadPendingMigrations();
         public abstract string GetScriptToLoadBatch(string migrationRunId);
         public abstract string GetScriptToAbortMigration(string migrationRunId, string endpointName);
@@ -50,14 +50,15 @@ WHERE
 ";
         }
 
-        public override string GetScriptToLoadBatchInfo(string migrationRunId)
+        public override string GetScriptToTryGetNextBatch(string migrationRunId)
         {
-            return $@"SELECT
-    Id,
-    BatchNumber,
-    Status
-FROM
-    ['{GetMigrationTableName(migrationRunId)}'];";
+            return $@"
+SELECT top 1 BatchNumber,
+    Status,
+    (SELECT COUNT(*) FROM ['{GetMigrationTableName(migrationRunId)}'] as bc WHERE bc.BatchNumber = batch.BatchNumber) as NumberOfTimeouts 
+FROM ['{GetMigrationTableName(migrationRunId)}'] AS batch
+WHERE Status < 2
+ORDER BY Status DESC";
         }
 
         public override string GetScriptLoadPendingMigrations()

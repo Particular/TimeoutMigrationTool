@@ -6,12 +6,19 @@
 
     public class SqlPToolState : IToolState
     {
-        public SqlPToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<BatchInfo> batches, int numberOfBatches)
+        public SqlPToolState(string connectionString,
+            SqlDialect dialect,
+            string migrationRunId,
+            IDictionary<string, string> runParameters,
+            string endpointName,
+            int numberOfBatches)
         {
+            this.connectionString = connectionString;
+            this.dialect = dialect;
+            this.migrationRunId = migrationRunId;
             RunParameters = runParameters;
             EndpointName = endpointName;
             NumberOfBatches = numberOfBatches;
-            this.batches = batches;
         }
 
         public IDictionary<string, string> RunParameters { get; }
@@ -20,23 +27,49 @@
 
         public int NumberOfBatches { get; }
 
-        public Task<BatchInfo> TryGetNextBatch()
+        public async Task<BatchInfo> TryGetNextBatch()
         {
-            if (batches.All(x => x.State == BatchState.Completed))
+            using (var connection = dialect.Connect(connectionString))
             {
-                return Task.FromResult<BatchInfo>(null);
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = dialect.GetScriptToTryGetNextBatch(migrationRunId);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        if (!reader.Read())
+                        {
+                            return null;
+                        }
+
+                        return new BatchInfo {
+Number = reader.GetInt32(0),
+State = GetBatchStatus(reader.GetInt32(1)),
+NumberOfTimeouts = reader.GetInt32(2)
+                        };
+
+                        //var batchRows = ReadBatchRows(reader);
+
+                        ////TODO Do a group by in the DB?
+                        //batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
+                        //{
+                        //    Number = batchNumber.Key,
+                        //    State = batchNumber.First().Status,
+                        //    TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
+                        //}).ToList();
+
+                    }
+                }
             }
-
-            var stagedBatch = batches.SingleOrDefault(x => x.State == BatchState.Staged);
-
-            if (stagedBatch != null)
-            {
-                return Task.FromResult(stagedBatch);
-            }
-
-            return Task.FromResult( batches.First(x => x.State != BatchState.Completed));
         }
 
-        IEnumerable<BatchInfo> batches;
+        BatchState GetBatchStatus(int dbStatus)
+        {
+            return (BatchState)dbStatus;
+        }
+
+        readonly string connectionString;
+        readonly SqlDialect dialect;
+        readonly string migrationRunId;
     }
 }

@@ -90,9 +90,9 @@ namespace Particular.TimeoutMigrationTool
 
                     logger.LogDebug("Staging batch");
                     var stagedTimeoutCount = await transportTimeoutsCreator.StageBatch(timeouts);
-                    if (batch.TimeoutIds.Length != stagedTimeoutCount)
+                    if (batch.NumberOfTimeouts!= stagedTimeoutCount)
                     {
-                        throw new InvalidOperationException($"The amount of staged timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {stagedTimeoutCount}, batch contains {batch.TimeoutIds.Length}.");
+                        throw new InvalidOperationException($"The amount of staged timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {stagedTimeoutCount}, batch contains {batch.NumberOfTimeouts}.");
                     }
 
                     batch.State = BatchState.Staged;
@@ -103,9 +103,9 @@ namespace Particular.TimeoutMigrationTool
                 logger.LogDebug("Completing batch");
                 var completedTimeoutsCount = await transportTimeoutsCreator.CompleteBatch(batch.Number);
 
-                if (batch.TimeoutIds.Length != completedTimeoutsCount)
+                if (batch.NumberOfTimeouts != completedTimeoutsCount)
                 {
-                    throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Completed amount of timeouts: {completedTimeoutsCount}, batch contains {batch.TimeoutIds.Length}.");
+                    throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Completed amount of timeouts: {completedTimeoutsCount}, batch contains {batch.NumberOfTimeouts}.");
                 }
 
                 batch.State = BatchState.Completed;

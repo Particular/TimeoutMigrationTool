@@ -208,7 +208,6 @@
 
             await timeoutStorage.MarkBatchAsStaged(batch.Number);
 
-
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
             var stagedBatch = await loadedState.TryGetNextBatch();
@@ -219,7 +218,7 @@
         [Test]
         public async Task Timeouts_Split_Can_Be_Read_By_Batch()
         {
-            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
@@ -235,17 +234,20 @@
 
 
             BatchInfo batch;
+            var timeoutIdsFromDatabase = new List<string>();
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
                 var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
-                var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
-
-                CollectionAssert.AreEquivalent(timeoutIdsCreatedDuringSplit, timeoutIdsFromDatabase);
+                var batchTimeoutIds = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
 
                 await timeoutStorage.MarkBatchAsStaged(batch.Number);
                 batch.State = BatchState.Completed;
+
+                timeoutIdsFromDatabase.AddRange(batchTimeoutIds);
             }
+
+            CollectionAssert.AreEquivalent(context.TimeoutIds, timeoutIdsFromDatabase);
         }
 
         [Test]
@@ -341,6 +343,7 @@
         public class Context : ScenarioContext
         {
             public int NumberOfTimeouts { get; set; } = 1;
+            public List<string> TimeoutIds{ get; set; } = new List<string>();
         }
 
         public class SqlPEndpoint : EndpointConfigurationBuilder
@@ -360,7 +363,11 @@
                 {
                     for (var x = 0; x < TestContext.NumberOfTimeouts; x++)
                     {
-                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
+                        var timeoutId = Guid.NewGuid();
+
+                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = timeoutId });
+
+                        TestContext.TimeoutIds.Add(timeoutId.ToString());
                     }
                 }
 
