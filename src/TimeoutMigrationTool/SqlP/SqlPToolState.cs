@@ -5,10 +5,11 @@
 
     public class SqlPToolState : IToolState
     {
-        public SqlPToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<BatchInfo> batches)
+        public SqlPToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<BatchInfo> batches, int numberOfBatches)
         {
             RunParameters = runParameters;
             EndpointName = endpointName;
+            NumberOfBatches = numberOfBatches;
             this.batches = batches;
         }
 
@@ -16,7 +17,7 @@
         public IDictionary<string, string> RunParameters { get; }
         public string EndpointName { get; set; }
 
-        public int NumberOfBatches => batches.Count();
+        public int NumberOfBatches { get; }
 
         public bool HasMoreBatches() => batches.Any(x => x.State != BatchState.Completed);
 

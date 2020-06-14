@@ -70,6 +70,7 @@ FROM
             EndpointName NVARCHAR(500) NOT NULL,
             Status VARCHAR(15) NOT NULL,
             RunParameters NVARCHAR(MAX) NOT NULL,
+            NumberOfBatches INT NOT NULL,
             CutOffTime DATETIME NOT NULL,
             StartedAt DATETIME NOT NULL,
             CompletedAt DATETIME NULL
@@ -78,8 +79,8 @@ FROM
 SELECT
     MigrationRunId,
     EndpointName,
-    Status,
-    RunParameters
+    RunParameters,
+    NumberOfBatches
 FROM
     TimeoutsMigration_State
 WHERE
@@ -124,8 +125,8 @@ BEGIN TRANSACTION
         FROM ['{migrationTableName}']
     ) BatchMigration;
 
-    INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, RunParameters, CutOffTime, StartedAt)
-    VALUES ('{migrationRunId}', '{endpointName}', 1, @RunParameters, @CutOffTime, @StartedAt);
+    INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, RunParameters, NumberOfBatches, CutOffTime, StartedAt)
+    VALUES ('{migrationRunId}', '{endpointName}', 1, @RunParameters,(SELECT COUNT(DISTINCT BatchNumber) from ['{migrationTableName}']), @CutOffTime, @StartedAt);
 COMMIT;";
         }
 
