@@ -48,7 +48,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var retrievedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(retrievedToolState, Is.Not.Null);
-            Assert.IsNotEmpty(retrievedToolState.Batches);
+            Assert.That(retrievedToolState.NumberOfBatches, Is.GreaterThan(0));
         }
 
         [Test]
@@ -58,9 +58,15 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
                 new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
-            Assert.That(toolState.Batches.Count, Is.EqualTo(2));
-            Assert.That(toolState.Batches.First().TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
-            Assert.That(toolState.Batches.Skip(1).First().TimeoutIds.Length,
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
+
+            var firstBatch = toolState.GetCurrentBatch();
+
+            Assert.That(firstBatch.TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
+
+            firstBatch.State = BatchState.Completed;
+
+            Assert.That(toolState.GetCurrentBatch().TimeoutIds.Length,
                 Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
         }
 
@@ -74,8 +80,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
                 new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
-            Assert.That(toolState.Batches.Count, Is.EqualTo(1));
-            Assert.That(toolState.Batches.First().TimeoutIds.Length, Is.EqualTo(500));
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(1));
+            Assert.That(toolState.GetCurrentBatch().TimeoutIds.Length, Is.EqualTo(500));
         }
 
         [Test]
