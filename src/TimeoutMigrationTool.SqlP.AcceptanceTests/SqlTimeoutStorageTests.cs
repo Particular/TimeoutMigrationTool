@@ -53,7 +53,6 @@
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
             Assert.AreEqual(4, toolState.Batches.Count());
-            Assert.AreEqual(MigrationStatus.StoragePrepared, toolState.Status);
         }
 
         [Test]

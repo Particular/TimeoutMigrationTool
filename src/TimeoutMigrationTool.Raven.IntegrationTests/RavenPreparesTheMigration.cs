@@ -48,7 +48,6 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var retrievedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(retrievedToolState, Is.Not.Null);
-            Assert.That(retrievedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
             Assert.IsNotEmpty(retrievedToolState.Batches);
         }
 
@@ -89,7 +88,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
                 new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
 
             var updatedToolState = await timeoutStorage.TryLoadOngoingMigration();
-            Assert.That(updatedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            Assert.That(updatedToolState.EndpointName, Is.EqualTo(testSuite.EndpointName));
         }
 
         private readonly int nrOfTimeouts = 1500;

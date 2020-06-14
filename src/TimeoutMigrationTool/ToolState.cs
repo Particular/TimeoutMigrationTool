@@ -10,12 +10,10 @@ namespace Particular.TimeoutMigrationTool
             RunParameters = runParameters;
             EndpointName = endpointName;
             Batches = batches;
-            Status = MigrationStatus.StoragePrepared;
         }
 
         public IEnumerable<BatchInfo> Batches { get; }
         public IDictionary<string, string> RunParameters { get; }
-        public MigrationStatus Status { get; set; }
         public string EndpointName { get; set; }
 
         public bool HasMoreBatches() => Batches.Any(x => x.State != BatchState.Completed);
@@ -42,7 +40,6 @@ namespace Particular.TimeoutMigrationTool
     {
         IDictionary<string, string> RunParameters { get; }
         string EndpointName { get; }
-        MigrationStatus Status { get; }
         IEnumerable<BatchInfo> Batches { get; }
 
         bool HasMoreBatches();

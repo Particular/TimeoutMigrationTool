@@ -16,7 +16,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return new RavenToolState()
             {
                 RunParameters = toolState.RunParameters,
-                Status = toolState.Status,
                 Batches = toolState.Batches.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToList(),
                 Endpoint = toolState.EndpointName
             };
@@ -24,7 +23,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         internal ToolState ToToolState(List<BatchInfo> batches)
         {
-            return new ToolState(RunParameters, Endpoint, batches) {Status = Status};
+            return new ToolState(RunParameters, Endpoint, batches);
         }
     }
 }

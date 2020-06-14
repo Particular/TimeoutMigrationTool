@@ -123,11 +123,7 @@ namespace Particular.TimeoutMigrationTool
             {
                 return;
             }
-            if (toolState.Status == MigrationStatus.Completed)
-            {
-                throw new Exception("We messed up, found a completed toolstate");
-            }
-
+          
             if (RunParametersAreDifferent(endpointName, runParameters, toolState))
             {
                 var sb = new StringBuilder();
