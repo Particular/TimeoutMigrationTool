@@ -25,7 +25,6 @@
                     command.CommandText = dialect.GetScriptLoadPendingMigrations();
 
                     string endpoint;
-                    MigrationStatus status;
                     Dictionary<string, string> runParameters;
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
@@ -38,7 +37,6 @@
                         //HACK until we have a "session"
                         migrationRunId = reader.GetString(0);
                         endpoint = reader.GetString(1);
-                        status = ParseMigrationStatus(reader.GetString(2));
                         runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(3));
 
                         if (reader.Read())
@@ -49,7 +47,7 @@
 
                     var batches = await LoadBatches(connection).ConfigureAwait(false);
 
-                    return new ToolState(runParameters, endpoint, batches);
+                    return new SqlPToolState(runParameters, endpoint, batches);
                 }
             }
         }

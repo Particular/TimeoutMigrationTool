@@ -37,14 +37,4 @@ namespace Particular.TimeoutMigrationTool
             return Batches.First(x => x.State != BatchState.Completed);
         }
     }
-
-    public interface IToolState
-    {
-        IDictionary<string, string> RunParameters { get; }
-        string EndpointName { get; }
-        int NumberOfBatches { get; }
-
-        bool HasMoreBatches();
-        BatchInfo GetCurrentBatch();
-    }
 }
