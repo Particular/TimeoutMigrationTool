@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     public class SqlPToolState : IToolState
     {
@@ -19,23 +20,21 @@
 
         public int NumberOfBatches { get; }
 
-        public bool HasMoreBatches() => batches.Any(x => x.State != BatchState.Completed);
-
-        public BatchInfo GetCurrentBatch()
+        public Task<BatchInfo> TryGetNextBatch()
         {
             if (batches.All(x => x.State == BatchState.Completed))
             {
-                return null;
+                return Task.FromResult<BatchInfo>(null);
             }
 
             var stagedBatch = batches.SingleOrDefault(x => x.State == BatchState.Staged);
 
             if (stagedBatch != null)
             {
-                return stagedBatch;
+                return Task.FromResult(stagedBatch);
             }
 
-            return batches.First(x => x.State != BatchState.Completed);
+            return Task.FromResult( batches.First(x => x.State != BatchState.Completed));
         }
 
         IEnumerable<BatchInfo> batches;

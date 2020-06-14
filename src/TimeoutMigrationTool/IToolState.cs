@@ -1,6 +1,7 @@
 ﻿namespace Particular.TimeoutMigrationTool
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IToolState
     {
@@ -8,7 +9,6 @@
         string EndpointName { get; }
         int NumberOfBatches { get; }
 
-        bool HasMoreBatches();
-        BatchInfo GetCurrentBatch();
+        Task<BatchInfo> TryGetNextBatch();
     }
 }

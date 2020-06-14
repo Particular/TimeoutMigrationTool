@@ -174,17 +174,17 @@
             var timeoutStorage = GetTimeoutStorage();
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            while(toolState.HasMoreBatches())
-            {
-                var batch = toolState.GetCurrentBatch();
+            BatchInfo batch;
 
+            while ((batch = await toolState.TryGetNextBatch()) != null)
+            {
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
                 batch.State = BatchState.Completed;
             }
 
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
-            Assert.IsFalse(loadedState.HasMoreBatches());
+            Assert.IsNull(await loadedState.TryGetNextBatch());
         }
 
         [Test]
@@ -204,25 +204,16 @@
             var timeoutStorage = GetTimeoutStorage();
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            while (toolState.HasMoreBatches())
-            {
-                var batch = toolState.GetCurrentBatch();
+            var batch = await toolState.TryGetNextBatch();
 
-                await timeoutStorage.MarkBatchAsStaged(batch.Number);
-                batch.State = BatchState.Completed;
-            }
+            await timeoutStorage.MarkBatchAsStaged(batch.Number);
+
 
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
-            Assert.AreEqual(toolState.NumberOfBatches, loadedState.NumberOfBatches);
+            var stagedBatch = await loadedState.TryGetNextBatch();
 
-            while (toolState.HasMoreBatches())
-            {
-                var batch = toolState.GetCurrentBatch();
-
-                Assert.AreEqual(BatchState.Staged, batch.State);
-                batch.State = BatchState.Completed;
-            }
+            Assert.AreEqual(BatchState.Staged, stagedBatch.State);
         }
 
         [Test]
@@ -242,10 +233,11 @@
             var timeoutStorage = GetTimeoutStorage(3);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            while (toolState.HasMoreBatches())
-            {
-                var batch = toolState.GetCurrentBatch();
 
+            BatchInfo batch;
+
+            while ((batch = await toolState.TryGetNextBatch()) != null)
+            {
                 var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
                 var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
 

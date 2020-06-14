@@ -77,9 +77,10 @@ namespace Particular.TimeoutMigrationTool
                 logger.LogInformation("Storage has been prepared for migration.");
             }
 
-            while (toolState.HasMoreBatches())
+            BatchInfo batch;
+
+            while((batch = await toolState.TryGetNextBatch()) != null)
             {
-                var batch = toolState.GetCurrentBatch();
                 logger.LogInformation($"Migrating batch {batch.Number}");
 
                 if (batch.State == BatchState.Pending)
@@ -123,7 +124,7 @@ namespace Particular.TimeoutMigrationTool
             {
                 return;
             }
-          
+
             if (RunParametersAreDifferent(endpointName, runParameters, toolState))
             {
                 var sb = new StringBuilder();
