@@ -16,6 +16,8 @@ namespace Particular.TimeoutMigrationTool
         public IDictionary<string, string> RunParameters { get; }
         public string EndpointName { get; set; }
 
+        public int NumberOfBatches => Batches.Count();
+
         public bool HasMoreBatches() => Batches.Any(x => x.State != BatchState.Completed);
 
         public BatchInfo GetCurrentBatch()
@@ -40,7 +42,7 @@ namespace Particular.TimeoutMigrationTool
     {
         IDictionary<string, string> RunParameters { get; }
         string EndpointName { get; }
-        IEnumerable<BatchInfo> Batches { get; }
+        int NumberOfBatches { get; }
 
         bool HasMoreBatches();
         BatchInfo GetCurrentBatch();

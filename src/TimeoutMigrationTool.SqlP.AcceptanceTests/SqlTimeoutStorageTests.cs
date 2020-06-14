@@ -32,7 +32,7 @@
             var timeoutStorage = GetTimeoutStorage();
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(1, toolState.Batches.Count());
+            Assert.AreEqual(1, toolState.NumberOfBatches);
         }
 
         [Test]
@@ -52,7 +52,7 @@
             var timeoutStorage = GetTimeoutStorage(3);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(4, toolState.Batches.Count());
+            Assert.AreEqual(4, toolState.NumberOfBatches);
         }
 
         [Test]
@@ -72,7 +72,7 @@
             var timeoutStorage = GetTimeoutStorage(1);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(6, toolState.Batches.Count());
+            Assert.AreEqual(6, toolState.NumberOfBatches);
         }
 
         [Test]
@@ -173,14 +173,18 @@
 
             var timeoutStorage = GetTimeoutStorage();
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
-            foreach (var batch in toolState.Batches)
+
+            while(toolState.HasMoreBatches())
             {
+                var batch = toolState.GetCurrentBatch();
+
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
+                batch.State = BatchState.Completed;
             }
 
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
-            Assert.IsTrue(loadedState.Batches.All(b => b.State == BatchState.Completed));
+            Assert.IsFalse(loadedState.HasMoreBatches());
         }
 
         [Test]
@@ -200,14 +204,25 @@
             var timeoutStorage = GetTimeoutStorage();
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            foreach (var batch in toolState.Batches)
+            while (toolState.HasMoreBatches())
             {
+                var batch = toolState.GetCurrentBatch();
+
                 await timeoutStorage.MarkBatchAsStaged(batch.Number);
+                batch.State = BatchState.Completed;
             }
 
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
-            Assert.IsTrue(loadedState.Batches.All(b => b.State == BatchState.Staged));
+            Assert.AreEqual(toolState.NumberOfBatches, loadedState.NumberOfBatches);
+
+            while (toolState.HasMoreBatches())
+            {
+                var batch = toolState.GetCurrentBatch();
+
+                Assert.AreEqual(BatchState.Staged, batch.State);
+                batch.State = BatchState.Completed;
+            }
         }
 
         [Test]
@@ -227,12 +242,17 @@
             var timeoutStorage = GetTimeoutStorage(3);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            foreach (var batch in toolState.Batches)
+            while (toolState.HasMoreBatches())
             {
+                var batch = toolState.GetCurrentBatch();
+
                 var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
                 var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
 
                 CollectionAssert.AreEquivalent(timeoutIdsCreatedDuringSplit, timeoutIdsFromDatabase);
+
+                await timeoutStorage.MarkBatchAsStaged(batch.Number);
+                batch.State = BatchState.Completed;
             }
         }
 
@@ -300,7 +320,7 @@
             var timeoutStorage = GetTimeoutStorage(1);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(5, toolState.Batches.Count());
+            Assert.AreEqual(5, toolState.NumberOfBatches);
         }
 
         [Test]
