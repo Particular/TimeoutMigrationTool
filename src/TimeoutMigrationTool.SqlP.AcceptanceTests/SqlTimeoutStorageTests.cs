@@ -232,22 +232,21 @@
             var timeoutStorage = GetTimeoutStorage(3);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
+            var timeoutsStored = 0;
 
             BatchInfo batch;
-            var timeoutIdsFromDatabase = new List<string>();
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
-                var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
-                var batchTimeoutIds = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
+                var timeouts = await timeoutStorage.ReadBatch(batch.Number);
 
-                await timeoutStorage.MarkBatchAsStaged(batch.Number);
-                batch.State = BatchState.Completed;
+                Assert.AreEqual(batch.NumberOfTimeouts, timeouts.Count());
+                timeoutsStored += batch.NumberOfTimeouts;
 
-                timeoutIdsFromDatabase.AddRange(batchTimeoutIds);
+                await timeoutStorage.MarkBatchAsCompleted(batch.Number);
             }
 
-            CollectionAssert.AreEquivalent(context.TimeoutIds, timeoutIdsFromDatabase);
+            Assert.AreEqual(10, timeoutsStored);
         }
 
         [Test]
@@ -343,7 +342,6 @@
         public class Context : ScenarioContext
         {
             public int NumberOfTimeouts { get; set; } = 1;
-            public List<string> TimeoutIds{ get; set; } = new List<string>();
         }
 
         public class SqlPEndpoint : EndpointConfigurationBuilder
@@ -363,11 +361,7 @@
                 {
                     for (var x = 0; x < TestContext.NumberOfTimeouts; x++)
                     {
-                        var timeoutId = Guid.NewGuid();
-
-                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = timeoutId });
-
-                        TestContext.TimeoutIds.Add(timeoutId.ToString());
+                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
                     }
                 }
 
