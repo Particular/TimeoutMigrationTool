@@ -130,7 +130,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task ArchiveDocument(string archivedToolStateId, ToolState toolState)
+        public async Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState)
         {
             var ravenToolStateDto = RavenToolStateDto.FromToolState(toolState);
             var insertCommand = new

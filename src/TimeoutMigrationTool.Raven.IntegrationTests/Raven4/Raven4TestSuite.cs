@@ -83,7 +83,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             }
         }
 
-        public ToolState SetupToolState(DateTime cutoffTime)
+        public RavenToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {
@@ -110,7 +110,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 }
             };
 
-            return new ToolState(runParameters, EndpointName, batches);
+            return new RavenToolState(runParameters, EndpointName, batches);
         }
 
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
@@ -120,7 +120,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             return batches;
         }
 
-        public async Task SaveToolState(ToolState toolState)
+        public async Task SaveToolState(RavenToolState toolState)
         {
             var bulkInsertUrl = $"{ServerName}/databases/{DatabaseName}/bulk_docs";
 
@@ -150,7 +150,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             result.EnsureSuccessStatusCode();
         }
 
-        public async Task<ToolState> GetToolState()
+        public async Task<RavenToolState> GetToolState()
         {
             var url = $"{ServerName}/databases/{DatabaseName}/docs?id={RavenConstants.ToolStateId}";
             var response = await httpClient.GetAsync(url);

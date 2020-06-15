@@ -4,9 +4,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     using System.Linq;
     using System.Threading.Tasks;
 
-    public class ToolState : IToolState
+    public class RavenToolState : IToolState
     {
-        public ToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<RavenBatch> batches)
+        public RavenToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<RavenBatch> batches)
         {
             RunParameters = runParameters;
             EndpointName = endpointName;
