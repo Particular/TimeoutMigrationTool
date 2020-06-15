@@ -183,7 +183,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages) where T : class
+        public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages = 0) where T : class
         {
             var items = new List<T>();
             var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={RavenConstants.DefaultPagingSize}";
@@ -201,15 +201,19 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
                     var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
-                    if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < RavenConstants.DefaultPagingSize)
-                        checkForMoreResults = false;
 
                     items.AddRange(pagedTimeouts);
                     fetchStartFrom += pagedTimeouts.Count;
                     iteration++;
 
-                    if (iteration <= nrOfPages)
+                    if (iteration == nrOfPages)
+                    {
                         checkForMoreResults = false;
+                    }
+                    else if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < RavenConstants.DefaultPagingSize)
+                    {
+                        checkForMoreResults = false;
+                    }
                 }
             }
 

@@ -38,24 +38,24 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var findMoreTimeouts = true;
             var endpoints = new List<EndpointInfo>();
             var nrOfTimeoutsRetrieved = 0;
+            var nrOfPages = 3;
 
             while (findMoreTimeouts)
             {
-                var startFrom = nrOfTimeoutsRetrieved + 1;
-                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, 3);
-                var elegibleTimeouts = timeouts.Where(filter).ToList();
+                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, nrOfPages);
+                var eligibleTimeouts = timeouts.Where(filter).ToList();
                 nrOfTimeoutsRetrieved += timeouts.Count;
 
-                var endpointsFetched = elegibleTimeouts.GroupBy(
+                var endpointsFetched = eligibleTimeouts.GroupBy(
                     key => key.OwningTimeoutManager.Replace(RavenConstants.MigrationDonePrefix, "").Replace(RavenConstants.MigrationOngoingPrefix, ""),
                     elements => elements,
                     (owningTimeoutManager, destinationTimeouts) => new EndpointInfo
                     {
                         EndpointName = owningTimeoutManager,
-                        NrOfTimeouts = elegibleTimeouts.Count(),
-                        ShortestTimeout = elegibleTimeouts.Min(x => x.Time),
-                        LongestTimeout = elegibleTimeouts.Max(x => x.Time),
-                        Destinations = elegibleTimeouts.GroupBy(x => x.Destination).Select(g => g.Key).ToList()
+                        NrOfTimeouts = eligibleTimeouts.Count(),
+                        ShortestTimeout = eligibleTimeouts.Min(x => x.Time),
+                        LongestTimeout = eligibleTimeouts.Max(x => x.Time),
+                        Destinations = eligibleTimeouts.GroupBy(x => x.Destination).Select(g => g.Key).ToList()
                     }).ToList();
 
                 endpointsFetched.ForEach(ep =>

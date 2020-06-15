@@ -17,7 +17,7 @@
             var serverName = args[0];
             var databaseName = args[1];
             var skipDbCreation = args.Length > 2 && Convert.ToBoolean(args[2]);
-            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 1000000 : Convert.ToInt32(args[3]);
+            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 10000 : Convert.ToInt32(args[3]);
 
             if (!skipDbCreation)
             {
@@ -46,7 +46,7 @@
                 var commands = new List<PutCommand>();
                 var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk_docs";
 
-                for (var j = 0; j < RavenConstants.DefaultPagingSize; j++)
+                for (var j = 0; j < RavenConstants.DefaultPagingSize && timeoutIdCounter < nrOfTimeoutsToInsert; j++)
                 {
                     timeoutIdCounter++;
                     var endpoint = j < (RavenConstants.DefaultPagingSize / 3) ? "EndpointA" : j < (RavenConstants.DefaultPagingSize / 3 / 3) * 2 ? "EndpointB" : "EndpointC";
@@ -65,6 +65,8 @@
                     new StringContent(serializeObject, Encoding.UTF8, "application/json"));
                 result.EnsureSuccessStatusCode();
             }
+
+            Console.WriteLine($"{timeoutIdCounter} timeouts were created");
         }
 
         static PutCommand CreateTimeoutInsertCommand(string timeoutsPrefix, int timeoutIdCounter, string endpoint)
@@ -78,7 +80,7 @@
                 Destination = "DestinationEndpoint",
                 SagaId = Guid.NewGuid(),
                 OwningTimeoutManager = "EndpointA",
-                Time = DateTime.Now.AddDays(daysToTrigger),
+                Time = DateTime.UtcNow.AddDays(daysToTrigger),
                 Headers = new Dictionary<string, string>(),
                 State = Encoding.ASCII.GetBytes("This is my state")
             };
