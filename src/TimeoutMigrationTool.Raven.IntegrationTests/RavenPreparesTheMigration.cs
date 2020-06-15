@@ -67,6 +67,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             Assert.That(batchData.Count(), Is.EqualTo(RavenConstants.DefaultPagingSize));
 
             firstBatch.State = BatchState.Completed;
+            await timeoutStorage.MarkBatchAsCompleted(firstBatch.Number);
 
             var nextBatch = await toolState.TryGetNextBatch();
             var nextBatchData = await timeoutStorage.ReadBatch(nextBatch.Number);

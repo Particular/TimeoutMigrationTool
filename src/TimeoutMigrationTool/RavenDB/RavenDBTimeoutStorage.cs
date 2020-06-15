@@ -123,11 +123,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                         .Take(RavenConstants.DefaultPagingSize)
                         .Select(t => t.Id).ToArray();
 
-                var batch = new RavenBatch
+                var batch = new RavenBatch(i+1, BatchState.Pending, timeoutsIds.Length)
                 {
-                    Number = i + 1,
-                    State = BatchState.Pending,
-                    TimeoutIds = timeoutsIds
+                   TimeoutIds = timeoutsIds
                 };
 
                 batches.Add(batch);

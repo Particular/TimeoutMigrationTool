@@ -1,10 +1,11 @@
 ﻿namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    public class RavenBatch
+    public class RavenBatch : BatchInfo
     {
-        public int Number { get; set; }
+        public RavenBatch(int number, BatchState state, int numberOfTimeouts) : base(number, state, numberOfTimeouts)
+        {
 
-        public BatchState State { get; set; }
+        }
 
         public string[] TimeoutIds { get; set; }
     }

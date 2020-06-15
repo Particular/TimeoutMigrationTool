@@ -35,7 +35,7 @@
                 return Task.FromResult(stagedBatch);
             }
 
-            var pendingBatch = Batches.First(x => x.State != BatchState.Completed);
+            var pendingBatch = Batches.First(x => x.State == BatchState.Pending);
 
             return Task.FromResult(pendingBatch);
         }

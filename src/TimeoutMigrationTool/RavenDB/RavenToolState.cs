@@ -30,12 +30,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             if (stagedBatch != null)
             {
-                return Task.FromResult(new BatchInfo(stagedBatch.Number, stagedBatch.State, stagedBatch.TimeoutIds.Count()));
+                return Task.FromResult<BatchInfo>(stagedBatch);
             }
 
-            var pendingBatch = Batches.First(x => x.State != BatchState.Completed);
+            var pendingBatch = Batches.First(x => x.State == BatchState.Pending);
 
-            return Task.FromResult(new BatchInfo(pendingBatch.Number, pendingBatch.State, pendingBatch.TimeoutIds.Count()));
+            return Task.FromResult<BatchInfo>(pendingBatch);
         }
     }
 }
