@@ -94,15 +94,15 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix}
             };
 
-            var batches = new List<RavenBatchInfo>
+            var batches = new List<RavenBatch>
             {
-                new RavenBatchInfo
+                new RavenBatch
                 {
                     Number = 1,
                     State = BatchState.Pending,
                     TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
                 },
-                new RavenBatchInfo
+                new RavenBatch
                 {
                     Number = 2,
                     State = BatchState.Pending,
@@ -113,7 +113,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             return new ToolState(runParameters, EndpointName, batches);
         }
 
-        public async Task<List<RavenBatchInfo>> SetupExistingBatchInfoInDatabase()
+        public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
             var timeoutStorage = new RavenDBTimeoutStorage(ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
@@ -137,7 +137,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 Id = $"{RavenConstants.ToolStateId}",
                 Type = "PUT",
                 ChangeVector = null,
-                Document = RavenToolState.FromToolState(toolState)
+                Document = RavenToolStateDto.FromToolState(toolState)
             });
 
             var request = new
@@ -165,15 +165,15 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var jObject = JObject.Parse(contentString);
             var resultSet = jObject.SelectToken("Results");
 
-            var ravenToolState = JsonConvert.DeserializeObject<RavenToolState[]>(resultSet.ToString()).Single();
+            var ravenToolState = JsonConvert.DeserializeObject<RavenToolStateDto[]>(resultSet.ToString()).Single();
             var batches = await GetBatches(ravenToolState.Batches.ToArray());
 
             return ravenToolState.ToToolState(batches);
         }
 
-        public async Task<List<RavenBatchInfo>> GetBatches(string[] ids)
+        public async Task<List<RavenBatch>> GetBatches(string[] ids)
         {
-            var batches = new List<RavenBatchInfo>();
+            var batches = new List<RavenBatch>();
 
             foreach (var id in ids)
             {
@@ -184,7 +184,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 var jObject = JObject.Parse(contentString);
                 var resultSet = jObject.SelectToken("Results");
 
-                var timeout = JsonConvert.DeserializeObject<RavenBatchInfo[]>(resultSet.ToString()).SingleOrDefault();
+                var timeout = JsonConvert.DeserializeObject<RavenBatch[]>(resultSet.ToString()).SingleOrDefault();
                 batches.Add(timeout);
             }
 

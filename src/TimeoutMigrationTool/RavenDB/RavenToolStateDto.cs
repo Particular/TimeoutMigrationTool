@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    public class RavenToolState
+    public class RavenToolStateDto
     {
         public List<string> Batches { get; set; } = new List<string>();
         public IDictionary<string, string> RunParameters { get; set; } = new Dictionary<string, string>();
@@ -11,9 +11,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public string Endpoint { get;  set; }
 
-        internal static RavenToolState FromToolState(ToolState toolState)
+        internal static RavenToolStateDto FromToolState(ToolState toolState)
         {
-            return new RavenToolState()
+            return new RavenToolStateDto()
             {
                 RunParameters = toolState.RunParameters,
                 Batches = toolState.Batches.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToList(),
@@ -21,7 +21,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             };
         }
 
-        internal ToolState ToToolState(List<RavenBatchInfo> batches)
+        internal ToolState ToToolState(List<RavenBatch> batches)
         {
             return new ToolState(RunParameters, Endpoint, batches);
         }

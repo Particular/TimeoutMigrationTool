@@ -6,14 +6,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
     public class ToolState : IToolState
     {
-        public ToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<RavenBatchInfo> batches)
+        public ToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<RavenBatch> batches)
         {
             RunParameters = runParameters;
             EndpointName = endpointName;
             Batches = batches;
         }
 
-        public IEnumerable<RavenBatchInfo> Batches { get; }
+        public IEnumerable<RavenBatch> Batches { get; }
         public IDictionary<string, string> RunParameters { get; }
         public string EndpointName { get; set; }
 

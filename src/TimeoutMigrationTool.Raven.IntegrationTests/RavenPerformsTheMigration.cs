@@ -117,7 +117,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.Complete();
 
-            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolState>(RavenConstants.ToolStateId,
+            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId,
                 (timeoutData, id) => { });
 
             var batches = await testSuite.RavenAdapter.GetDocuments<BatchInfo>((info => { return true;}), RavenConstants.BatchPrefix, (batch, id) => { });

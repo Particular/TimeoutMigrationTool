@@ -1,6 +1,6 @@
 ﻿namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    public class RavenBatchInfo
+    public class RavenBatch
     {
         public int Number { get; set; }
 
