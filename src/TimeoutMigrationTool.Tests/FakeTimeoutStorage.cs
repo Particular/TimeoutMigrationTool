@@ -9,7 +9,7 @@ namespace TimeoutMigrationTool.Tests
 
     public class FakeTimeoutStorage : ITimeoutStorage
     {
-        private ToolState existingToolState;
+        private IToolState existingToolState;
         private List<BatchInfo> preparedBatches = new List<BatchInfo>();
         private List<EndpointInfo> endpoints = new List<EndpointInfo>();
         private List<BatchInfo> readBatchResults = new List<BatchInfo>();
@@ -29,14 +29,19 @@ namespace TimeoutMigrationTool.Tests
         public Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             ToolStateWasCreated = true;
-            var toolState = new ToolState(runParameters, endpointName, preparedBatches);
-            return Task.FromResult<IToolState>(toolState);
+
+            return Task.FromResult<IToolState>(new FakeToolState
+            {
+                RunParameters = runParameters,
+                EndpointName = endpointName,
+                Batches = preparedBatches
+            });
         }
 
         public Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
             BatchWasRead = true;
-            var timeoutsInBatch = readBatchResults.First(x => x.Number == batchNumber).TimeoutIds.Length;
+            var timeoutsInBatch = readBatchResults.First(x => x.Number == batchNumber).NumberOfTimeouts;
 
             var timeouts = new List<TimeoutData>(timeoutsInBatch);
             for (var i= 0; i < timeoutsInBatch; i++ )
@@ -69,7 +74,7 @@ namespace TimeoutMigrationTool.Tests
             return Task.FromResult(endpoints);
         }
 
-        public void SetupToolStateToReturn(ToolState toolState)
+        public void SetupToolStateToReturn(IToolState toolState)
         {
             this.existingToolState = toolState;
         }

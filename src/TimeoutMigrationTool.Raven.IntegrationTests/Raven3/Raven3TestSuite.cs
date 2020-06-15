@@ -68,14 +68,14 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
             }
         }
 
-        public async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
+        public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
             var timeoutStorage = new RavenDBTimeoutStorage(serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }
 
-        public ToolState SetupToolState(DateTime cutoffTime)
+        public RavenToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {
@@ -86,22 +86,22 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix}
             };
 
-            var batches = new List<BatchInfo>
+            var batches = new List<RavenBatch>
             {
-                new BatchInfo(1, BatchState.Pending, 2)
+                new RavenBatch(1, BatchState.Pending, 2)
                 {
-                    TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
+                   TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
                 },
-                new BatchInfo(2, BatchState.Pending, 2)
+                new RavenBatch(2, BatchState.Pending, 2)
                 {
-                    TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
+                   TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
                 }
             };
 
-            return new ToolState(runParameters, EndpointName, batches);
+            return new RavenToolState(runParameters, EndpointName, batches);
         }
 
-        public async Task SaveToolState(ToolState toolState)
+        public async Task SaveToolState(RavenToolState toolState)
         {
             var bulkInsertUrl = $"{serverName}/databases/{DatabaseName}/bulk_docs";
 
@@ -118,7 +118,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                 {
                     Method = "PUT",
                     Key = RavenConstants.ToolStateId,
-                    Document = RavenToolState.FromToolState(toolState),
+                    Document = RavenToolStateDto.FromToolState(toolState),
                     Metadata = new object()
                 });
 
@@ -128,7 +128,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
             result.EnsureSuccessStatusCode();
         }
 
-        public async Task<ToolState> GetToolState()
+        public async Task<RavenToolState> GetToolState()
         {
             var url = $"{serverName}/databases/{DatabaseName}/docs?id={RavenConstants.ToolStateId}";
 
@@ -139,15 +139,15 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
             }
 
             var contentString = await response.Content.ReadAsStringAsync();
-            var ravenToolState = JsonConvert.DeserializeObject<RavenToolState>(contentString);
+            var ravenToolState = JsonConvert.DeserializeObject<RavenToolStateDto>(contentString);
             var batches = await GetBatches(ravenToolState.Batches.ToArray());
 
             return ravenToolState.ToToolState(batches);
         }
 
-        public async Task<List<BatchInfo>> GetBatches(string[] ids)
+        public async Task<List<RavenBatch>> GetBatches(string[] ids)
         {
-            var batches = new List<BatchInfo>();
+            var batches = new List<RavenBatch>();
 
             foreach (var id in ids)
             {
@@ -155,7 +155,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                 var response = await httpClient.GetAsync(url);
                 var contentString = await response.Content.ReadAsStringAsync();
 
-                var batch = JsonConvert.DeserializeObject<BatchInfo>(contentString);
+                var batch = JsonConvert.DeserializeObject<RavenBatch>(contentString);
                 batches.Add(batch);
             }
 

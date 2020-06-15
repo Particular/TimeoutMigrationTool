@@ -59,7 +59,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.MarkBatchAsStaged(batchToVerify.Number);
 
-            var updatedBatch = await testSuite.RavenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
+            var updatedBatch = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
 
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Staged));
         }
@@ -76,7 +76,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.MarkBatchAsCompleted(batchToVerify.Number);
 
-            var updatedBatch = await testSuite.RavenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
+            var updatedBatch = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
 
             toolState = await sut.TryLoadOngoingMigration();
             var currentBatch = await toolState.TryGetNextBatch();
@@ -94,7 +94,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             var batchToVerify = await toolState.TryGetNextBatch();
-            var timeoutIdToVerify = batchToVerify.TimeoutIds.First();
+
+            var batchData = await timeoutStorage.ReadBatch(batchToVerify.Number);
+
+            var timeoutIdToVerify = batchData.First().Id;
 
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.MarkBatchAsCompleted(batchToVerify.Number);
@@ -114,10 +117,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.Complete();
 
-            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolState>(RavenConstants.ToolStateId,
+            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId,
                 (timeoutData, id) => { });
 
-            var batches = await testSuite.RavenAdapter.GetDocuments<BatchInfo>((info => { return true;}), RavenConstants.BatchPrefix, (batch, id) => { });
+            var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>((info => { return true;}), RavenConstants.BatchPrefix, (batch, id) => { });
 
             Assert.IsNull(updatedToolState);
             Assert.That(batches.Count, Is.EqualTo(0));

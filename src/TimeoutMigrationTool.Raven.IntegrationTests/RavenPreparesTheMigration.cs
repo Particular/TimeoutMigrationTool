@@ -62,12 +62,17 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var firstBatch = await toolState.TryGetNextBatch();
 
-            Assert.That(firstBatch.TimeoutIds.Length, Is.EqualTo(RavenConstants.DefaultPagingSize));
+            var batchData = await timeoutStorage.ReadBatch(firstBatch.Number);
+
+            Assert.That(batchData.Count(), Is.EqualTo(RavenConstants.DefaultPagingSize));
 
             firstBatch.State = BatchState.Completed;
+            await timeoutStorage.MarkBatchAsCompleted(firstBatch.Number);
 
-            Assert.That((await toolState.TryGetNextBatch()).TimeoutIds.Length,
-                Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
+            var nextBatch = await toolState.TryGetNextBatch();
+            var nextBatchData = await timeoutStorage.ReadBatch(nextBatch.Number);
+
+            Assert.That(nextBatchData.Count(), Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
         }
 
         [Test]
@@ -81,7 +86,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(1));
-            Assert.That((await toolState.TryGetNextBatch()).TimeoutIds.Length, Is.EqualTo(500));
+
+            var nextBatch = await toolState.TryGetNextBatch();
+            var nextBatchData = await timeoutStorage.ReadBatch(nextBatch.Number);
+            Assert.That(nextBatchData.Count(), Is.EqualTo(500));
         }
 
         [Test]

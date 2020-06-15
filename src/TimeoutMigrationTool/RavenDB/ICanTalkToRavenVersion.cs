@@ -8,13 +8,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     {
         Task UpdateDocument(string key, object document);
         Task DeleteDocument(string key);
-        Task CreateBatchAndUpdateTimeouts(BatchInfo batch);
-        Task DeleteBatchAndUpdateTimeouts(BatchInfo batch);
+        Task CreateBatchAndUpdateTimeouts(RavenBatch batch);
+        Task DeleteBatchAndUpdateTimeouts(RavenBatch batch);
         Task BatchDelete(string[] keys);
         Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class;
         Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class;
         Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class;
-        Task CompleteBatchAndUpdateTimeouts(BatchInfo batch);
+        Task CompleteBatchAndUpdateTimeouts(RavenBatch batch);
         Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState);
     }
 }

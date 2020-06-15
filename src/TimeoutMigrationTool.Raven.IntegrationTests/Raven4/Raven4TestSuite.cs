@@ -83,7 +83,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             }
         }
 
-        public ToolState SetupToolState(DateTime cutoffTime)
+        public RavenToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {
@@ -94,29 +94,28 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 {ApplicationOptions.RavenTimeoutPrefix, RavenConstants.DefaultTimeoutPrefix}
             };
 
-            var batches = new List<BatchInfo>
+            var batches = new List<RavenBatch>
             {
-                new BatchInfo(1, BatchState.Pending, 2)
+                new RavenBatch(1, BatchState.Pending, 2)
                 {
                     TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
                 },
-                new BatchInfo(2, BatchState.Pending, 2)
+                new RavenBatch(2, BatchState.Pending, 2)
                 {
                     TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
                 }
             };
-
-            return new ToolState(runParameters, EndpointName, batches);
+            return new RavenToolState(runParameters, EndpointName, batches);
         }
 
-        public async Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase()
+        public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
             var timeoutStorage = new RavenDBTimeoutStorage(ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }
 
-        public async Task SaveToolState(ToolState toolState)
+        public async Task SaveToolState(RavenToolState toolState)
         {
             var bulkInsertUrl = $"{ServerName}/databases/{DatabaseName}/bulk_docs";
 
@@ -133,7 +132,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 Id = $"{RavenConstants.ToolStateId}",
                 Type = "PUT",
                 ChangeVector = null,
-                Document = RavenToolState.FromToolState(toolState)
+                Document = RavenToolStateDto.FromToolState(toolState)
             });
 
             var request = new
@@ -146,7 +145,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             result.EnsureSuccessStatusCode();
         }
 
-        public async Task<ToolState> GetToolState()
+        public async Task<RavenToolState> GetToolState()
         {
             var url = $"{ServerName}/databases/{DatabaseName}/docs?id={RavenConstants.ToolStateId}";
             var response = await httpClient.GetAsync(url);
@@ -161,15 +160,15 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var jObject = JObject.Parse(contentString);
             var resultSet = jObject.SelectToken("Results");
 
-            var ravenToolState = JsonConvert.DeserializeObject<RavenToolState[]>(resultSet.ToString()).Single();
+            var ravenToolState = JsonConvert.DeserializeObject<RavenToolStateDto[]>(resultSet.ToString()).Single();
             var batches = await GetBatches(ravenToolState.Batches.ToArray());
 
             return ravenToolState.ToToolState(batches);
         }
 
-        public async Task<List<BatchInfo>> GetBatches(string[] ids)
+        public async Task<List<RavenBatch>> GetBatches(string[] ids)
         {
-            var batches = new List<BatchInfo>();
+            var batches = new List<RavenBatch>();
 
             foreach (var id in ids)
             {
@@ -180,7 +179,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 var jObject = JObject.Parse(contentString);
                 var resultSet = jObject.SelectToken("Results");
 
-                var timeout = JsonConvert.DeserializeObject<BatchInfo[]>(resultSet.ToString()).SingleOrDefault();
+                var timeout = JsonConvert.DeserializeObject<RavenBatch[]>(resultSet.ToString()).SingleOrDefault();
                 batches.Add(timeout);
             }
 

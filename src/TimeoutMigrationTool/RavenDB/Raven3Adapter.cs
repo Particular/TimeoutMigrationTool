@@ -54,7 +54,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             result.EnsureSuccessStatusCode();
         }
 
-        public async Task CreateBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task CreateBatchAndUpdateTimeouts(RavenBatch batch)
         {
             var commands = batch.TimeoutIds.Select(timeoutId =>
             {
@@ -82,7 +82,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task DeleteBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task DeleteBatchAndUpdateTimeouts(RavenBatch batch)
         {
             var deleteCommand = GetDeleteCommand($"{RavenConstants.BatchPrefix}/{batch.Number}");
             var commands = batch.TimeoutIds.Select(timeoutId =>
@@ -104,7 +104,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task CompleteBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task CompleteBatchAndUpdateTimeouts(RavenBatch batch)
         {
             var updateCommand = new
             {
@@ -134,16 +134,17 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState)
         {
+            var ravenToolStateDto = RavenToolStateDto.FromToolState(toolState);
             var insertCommand = new
             {
                 Method = "PUT",
                 Key = archivedToolStateId,
-                Document = toolState,
+                Document = ravenToolStateDto,
                 Metadata = new object()
             };
             var deleteCommand = GetDeleteCommand(RavenConstants.ToolStateId);
 
-            var commands = toolState.Batches.Select(b => GetDeleteCommand(b)).Cast<object>().ToList();
+            var commands = ravenToolStateDto.Batches.Select(b => GetDeleteCommand(b)).Cast<object>().ToList();
             commands.Add(insertCommand);
             commands.Add(deleteCommand);
 

@@ -51,7 +51,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             };
         }
 
-        public async Task CreateBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task CreateBatchAndUpdateTimeouts(RavenBatch batch)
         {
             var insertCommand = new PutCommand
             {
@@ -80,7 +80,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task DeleteBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task DeleteBatchAndUpdateTimeouts(RavenBatch batch)
         {
             var deleteCommand = GetDeleteCommand($"{RavenConstants.BatchPrefix}/{batch.Number}");
             var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
@@ -102,7 +102,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task CompleteBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task CompleteBatchAndUpdateTimeouts(RavenBatch batch)
         {
             var insertCommand = new PutCommand
             {
@@ -132,16 +132,17 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState)
         {
+            var ravenToolStateDto = RavenToolStateDto.FromToolState(toolState);
             var insertCommand = new
             {
                 Id = archivedToolStateId,
                 Type = "PUT",
-                Document = toolState,
+                Document = ravenToolStateDto,
                 ChangeVector = (object)null
             };
 
             var deleteCommand = GetDeleteCommand(RavenConstants.ToolStateId);
-            var commands = toolState.Batches.Select(b => GetDeleteCommand(b)).ToList();
+            var commands = ravenToolStateDto.Batches.Select(b => GetDeleteCommand(b)).ToList();
             commands.Add(insertCommand);
             commands.Add(deleteCommand);
 
