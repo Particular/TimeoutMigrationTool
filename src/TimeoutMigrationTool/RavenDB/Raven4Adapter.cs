@@ -183,6 +183,39 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
+        public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages) where T : class
+        {
+            var items = new List<T>();
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={RavenConstants.DefaultPagingSize}";
+
+            var checkForMoreResults = true;
+            var fetchStartFrom = startFrom;
+            var iteration = 0;
+
+            while (checkForMoreResults)
+            {
+                var skipFirst = $"&start={fetchStartFrom}";
+                var getUrl = fetchStartFrom == 0 ? url : url + skipFirst;
+                var result = await httpClient.GetAsync(getUrl);
+
+                if (result.StatusCode == HttpStatusCode.OK)
+                {
+                    var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
+                    if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < RavenConstants.DefaultPagingSize)
+                        checkForMoreResults = false;
+
+                    items.AddRange(pagedTimeouts);
+                    fetchStartFrom += pagedTimeouts.Count;
+                    iteration++;
+
+                    if (iteration <= nrOfPages)
+                        checkForMoreResults = false;
+                }
+            }
+
+            return items;
+        }
+
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
             var documents = await GetDocuments(new[] { id }, idSetter);

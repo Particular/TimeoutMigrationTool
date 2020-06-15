@@ -69,7 +69,7 @@
 
         static PutCommand CreateTimeoutInsertCommand(string timeoutsPrefix, int timeoutIdCounter, string endpoint)
         {
-            var daysToTrigger = random.Next(0, 60); // randomize the Time property
+            var daysToTrigger = random.Next(2, 60); // randomize the Time property
 
             // Create the timeout
             var timeoutData = new TimeoutData
@@ -77,7 +77,7 @@
                 Id = $"{timeoutsPrefix}/{timeoutIdCounter}",
                 Destination = "DestinationEndpoint",
                 SagaId = Guid.NewGuid(),
-                OwningTimeoutManager = endpoint,
+                OwningTimeoutManager = "EndpointA",
                 Time = DateTime.Now.AddDays(daysToTrigger),
                 Headers = new Dictionary<string, string>(),
                 State = Encoding.ASCII.GetBytes("This is my state")

@@ -35,21 +35,50 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     StringComparison.OrdinalIgnoreCase);
             }
 
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(filter,
-                timeoutDocumentPrefix,
-                (doc, id) => doc.Id = id);
+            var findMoreTimeouts = true;
+            var endpoints = new List<EndpointInfo>();
+            var nrOfTimeoutsRetrieved = 0;
 
-            var endpoints = timeouts.GroupBy(
-                key => key.OwningTimeoutManager.Replace(RavenConstants.MigrationOngoingPrefix, ""),
-                elements => elements,
-                (owningTimeoutManager, destinationTimeouts) => new EndpointInfo
+            while (findMoreTimeouts)
+            {
+                var startFrom = nrOfTimeoutsRetrieved + 1;
+                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, 3);
+                var elegibleTimeouts = timeouts.Where(filter).ToList();
+                nrOfTimeoutsRetrieved += timeouts.Count;
+
+                var endpointsFetched = elegibleTimeouts.GroupBy(
+                    key => key.OwningTimeoutManager.Replace(RavenConstants.MigrationDonePrefix, "").Replace(RavenConstants.MigrationOngoingPrefix, ""),
+                    elements => elements,
+                    (owningTimeoutManager, destinationTimeouts) => new EndpointInfo
+                    {
+                        EndpointName = owningTimeoutManager,
+                        NrOfTimeouts = elegibleTimeouts.Count(),
+                        ShortestTimeout = elegibleTimeouts.Min(x => x.Time),
+                        LongestTimeout = elegibleTimeouts.Max(x => x.Time),
+                        Destinations = elegibleTimeouts.GroupBy(x => x.Destination).Select(g => g.Key).ToList()
+                    }).ToList();
+
+                endpointsFetched.ForEach(ep =>
                 {
-                    EndpointName = owningTimeoutManager,
-                    NrOfTimeouts = timeouts.Count(),
-                    ShortestTimeout = timeouts.Min(x => x.Time),
-                    LongestTimeout = timeouts.Max(x => x.Time),
-                    Destinations = timeouts.GroupBy(x => x.Destination).Select(g => g.Key).ToList()
-                }).ToList();
+                    if (endpoints.Any(x => x.EndpointName == ep.EndpointName))
+                    {
+                        var endpoint = endpoints.Single(x => x.EndpointName == ep.EndpointName);
+                        endpoint.NrOfTimeouts += ep.NrOfTimeouts;
+                        var destinations = endpoint.Destinations.ToList();
+                        destinations.AddRange(ep.Destinations);
+                        endpoint.Destinations = destinations.Distinct().ToArray();
+                        endpoint.ShortestTimeout = ep.ShortestTimeout < endpoint.ShortestTimeout ? ep.ShortestTimeout : endpoint.ShortestTimeout;
+                        endpoint.LongestTimeout = ep.LongestTimeout > endpoint.LongestTimeout ? ep.LongestTimeout : endpoint.LongestTimeout;
+                    }
+                    else
+                    {
+                        endpoints.Add(ep);
+                    }
+                });
+
+                if (timeouts.Count == 0)
+                    findMoreTimeouts = false;
+            }
 
             return endpoints;
         }
@@ -108,32 +137,31 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             bool filter(TimeoutData td)
             {
-                return td.OwningTimeoutManager == endpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix,
+                return td.OwningTimeoutManager == endpointName && td.Time >= maxCutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix,
                     StringComparison.OrdinalIgnoreCase);
             }
 
-            var timeouts =
-                await ravenAdapter.GetDocuments<TimeoutData>(filter, timeoutDocumentPrefix, (doc, id) => doc.Id = id);
-
-            var nrOfBatches = Math.Ceiling(timeouts.Count / (decimal)RavenConstants.DefaultPagingSize);
+            var findMoreTimeouts = true;
+            var iteration = 0;
+            var maxNrOfTimeouts = RavenConstants.MaxNrOfDocumentsToRetrieve;
             var batches = new List<RavenBatch>();
-            for (var i = 0; i < nrOfBatches; i++)
-            {
-                var timeoutsIds = timeouts.Skip(i * RavenConstants.DefaultPagingSize)
-                        .Take(RavenConstants.DefaultPagingSize)
-                        .Select(t => t.Id).ToArray();
 
-                var batch = new RavenBatch(i+1, BatchState.Pending, timeoutsIds.Length)
+            while (findMoreTimeouts)
+            {
+                var startFrom = iteration * maxNrOfTimeouts;
+                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, maxNrOfTimeouts);
+                var elegibleTimeouts = timeouts.Where(filter).ToList();
+
+                var batch = new RavenBatch(iteration + 1, BatchState.Pending, elegibleTimeouts.Count())
                 {
-                   TimeoutIds = timeoutsIds
+                    TimeoutIds = elegibleTimeouts.Select(t => t.Id).ToArray()
                 };
-
-                batches.Add(batch);
-            }
-
-            foreach (var batch in batches)
-            {
                 await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
+                batches.Add(batch);
+
+                if (timeouts.Count == 0)
+                    findMoreTimeouts = false;
+                iteration++;
             }
 
             return batches;

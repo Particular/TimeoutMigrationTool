@@ -34,6 +34,7 @@ namespace Particular.TimeoutMigrationTool
                 }
             }
 
+            logger.LogInformation("Listing the endpoints");
             var allEndpoints = await timeoutStorage.ListEndpoints(cutOffTime);
 
             var endpointsToMigrate = allEndpoints.Where(e => e.NrOfTimeouts > 0 && endpointFilter.ShouldInclude(e.EndpointName))
@@ -63,6 +64,10 @@ namespace Particular.TimeoutMigrationTool
                 if (!migrationCheckResult.CanMigrate)
                 {
                     problematicEndpoints.Add((endpoint, migrationCheckResult.Problems));
+                }
+                else
+                {
+                    logger.LogInformation($"For endpoint {endpoint.EndpointName}, {endpoint.NrOfTimeouts} are elegible to migrate.");
                 }
             }
 
@@ -101,9 +106,7 @@ namespace Particular.TimeoutMigrationTool
         async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             var toolState = await timeoutStorage.Prepare(cutOffTime, endpointName, runParameters);
-
             logger.LogInformation("Storage has been prepared for migration.");
-
             await Run(toolState);
         }
 
