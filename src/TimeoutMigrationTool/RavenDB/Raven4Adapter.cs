@@ -235,14 +235,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             var qs = ids.Aggregate("", (queryString, id) => queryString + $"id={id}&", queryString=>queryString.TrimEnd('&'));
             var url = $"{serverUrl}/databases/{databaseName}/docs?{qs}";
-            var response = await httpClient.GetAsync(url);
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                return new List<T>();
+            using (var response = await httpClient.GetAsync(url))
+            {
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    return new List<T>();
 
-            var results = await GetDocumentsFromResponse(response.Content, idSetter);
-
-            return results;
+                var results = await GetDocumentsFromResponse(response.Content, idSetter);
+                return results;
+            }
         }
 
         private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
@@ -270,11 +271,19 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 Commands = commands.ToArray()
             };
+
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var serializedCommands = JsonConvert.SerializeObject(bulkCommand);
-            var result = await httpClient.PostAsync(bulkUpdateUrl,
-                new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
-            result.EnsureSuccessStatusCode();
+
+            using (var httpContent = new StringContent(serializedCommands, Encoding.UTF8, "application/json"))
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, bulkUpdateUrl);
+                request.Version = HttpVersion.Version10;
+                request.Content = httpContent;
+
+                var result = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                result.EnsureSuccessStatusCode();
+            }
         }
     }
 }

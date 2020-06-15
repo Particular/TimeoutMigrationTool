@@ -5,14 +5,18 @@ using System.Threading.Tasks;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using Microsoft.Extensions.Logging;
+
     public class RavenDBTimeoutStorage : ITimeoutStorage
     {
+        readonly ILogger logger;
         private readonly string timeoutDocumentPrefix;
         private readonly ICanTalkToRavenVersion ravenAdapter;
 
-        public RavenDBTimeoutStorage(string serverUrl, string databaseName, string timeoutDocumentPrefix,
+        public RavenDBTimeoutStorage(ILogger logger, string serverUrl, string databaseName, string timeoutDocumentPrefix,
             RavenDbVersion ravenVersion)
         {
+            this.logger = logger;
             this.timeoutDocumentPrefix = timeoutDocumentPrefix;
             ravenAdapter = RavenDataReaderFactory.Resolve(serverUrl, databaseName, ravenVersion);
         }
@@ -149,14 +153,18 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             while (findMoreTimeouts)
             {
                 var startFrom = iteration * maxNrOfTimeouts;
-                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, maxNrOfTimeouts);
+                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, 1);
+                logger.LogInformation($"Retrieved {timeouts.Count} timeouts from the storage, starting from {startFrom}");
+
                 var elegibleTimeouts = timeouts.Where(filter).ToList();
+                logger.LogInformation($"This resulted in {elegibleTimeouts.Count} elegible timeouts");
 
                 var batch = new RavenBatch(iteration + 1, BatchState.Pending, elegibleTimeouts.Count())
                 {
                     TimeoutIds = elegibleTimeouts.Select(t => t.Id).ToArray()
                 };
                 await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
+                logger.LogInformation($"Batch {batch.Number} was created to handle {elegibleTimeouts.Count} timeouts");
                 batches.Add(batch);
 
                 if (timeouts.Count == 0)

@@ -188,7 +188,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages) where T : class
         {
             var items = new List<T>();
-            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={pagingSize}";
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={RavenConstants.DefaultPagingSize}";
 
             var checkForMoreResults = true;
             var fetchStartFrom = startFrom;
