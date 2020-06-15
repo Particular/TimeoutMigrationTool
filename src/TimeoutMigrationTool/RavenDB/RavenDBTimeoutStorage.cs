@@ -143,12 +143,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task Complete()
         {
-            var toolState = await TryLoadOngoingMigration();
-            var ravenToolState = (RavenToolState)toolState;
-            var toolStateDto = RavenToolStateDto.FromToolState(ravenToolState);
-            toolStateDto.Status = MigrationStatus.Completed;
+            var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
+            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
+            ravenToolState.Status = MigrationStatus.Completed;
 
-            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(toolState.EndpointName), toolStateDto.ToToolState(ravenToolState.Batches.ToList()));
+            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState.ToToolState(batches));
         }
 
         internal async Task CleanupExistingBatchesAndResetTimeouts(List<RavenBatch> batchesToRemove, List<RavenBatch> batchesForWhichToResetTimeouts)
