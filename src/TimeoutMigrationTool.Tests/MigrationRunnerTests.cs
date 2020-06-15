@@ -51,40 +51,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
-        // [Test]
-        // public async Task WhenRunningWithStateNeverRun()
-        // {
-        //     var batchInfo = new BatchInfo
-        //     {
-        //         Number = 1,
-        //         State = BatchState.Pending,
-        //         TimeoutIds = new[] {"timeouts/1"}
-        //     };
-        //     var batches = new List<BatchInfo>
-        //     {
-        //         batchInfo
-        //     };
-        //     var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, batches)
-        //     {
-        //         Status = MigrationStatus.NeverRun
-        //     };
-        //
-        //     timeoutStorage.SetupToolStateToReturn(toolState);
-        //
-        //     timeoutStorage.SetupTimeoutsToReadForBatch(batchInfo);
-        //     await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
-        //
-        //     Assert.That(timeoutStorage.EndpointsWereListed);
-        //     Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
-        //     Assert.That(transportTimeoutsCreator.EndpointWasVerified);
-        //     Assert.That(timeoutStorage.ToolStateMovedToStoragePrepared);
-        //     Assert.That(timeoutStorage.BatchWasRead);
-        //     Assert.That(transportTimeoutsCreator.BatchWasStaged);
-        //     Assert.That(timeoutStorage.BatchWasCompleted);
-        //     Assert.That(timeoutStorage.ToolStateMovedToCompleted);
-        //     Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
-        // }
-
         [Test]
         public void WhenRunningWithStateStoragePreparedAndParametersMismatch()
         {
@@ -92,18 +58,19 @@ namespace TimeoutMigrationTool.Tests
             {
                 Batches = GetBatches(),
                 EndpointName = "Invoicing",
-                RunParameters = new Dictionary<string,string>()
+                RunParameters = new Dictionary<string, string> { { "somekey", "somevalue" } }
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutStorage.SetupEndpoints(new List<EndpointInfo>());
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
                 await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
             });
 
-            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.EndpointsWereListed, Is.False);
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
-            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified, Is.False);
             Assert.That(timeoutStorage.BatchWasRead, Is.False);
             Assert.That(transportTimeoutsCreator.BatchWasStaged, Is.False);
             Assert.That(timeoutStorage.BatchWasCompleted, Is.False);
@@ -124,11 +91,13 @@ namespace TimeoutMigrationTool.Tests
             timeoutStorage.SetupToolStateToReturn(toolState);
             timeoutStorage.SetupTimeoutsToReadForBatch(batches.First());
 
+            timeoutStorage.SetupEndpoints(new List<EndpointInfo>());
+
             await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
             Assert.That(timeoutStorage.EndpointsWereListed);
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
-            Assert.That(transportTimeoutsCreator.EndpointWasVerified);
+            Assert.That(transportTimeoutsCreator.EndpointWasVerified, Is.False);
             Assert.That(timeoutStorage.BatchWasRead);
             Assert.That(transportTimeoutsCreator.BatchWasStaged);
             Assert.That(timeoutStorage.BatchWasCompleted);
