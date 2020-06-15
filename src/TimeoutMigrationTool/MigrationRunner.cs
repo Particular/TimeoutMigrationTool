@@ -18,10 +18,36 @@ namespace Particular.TimeoutMigrationTool
 
         public async Task Run(DateTime cutOffTime, EndpointFilter endpointFilter, IDictionary<string, string> runParameters)
         {
+            var toolState = await timeoutStorage.TryLoadOngoingMigration();
+
+            if (toolState != null)
+            {
+                GuardAgainstInvalidState(runParameters, toolState);
+
+                logger.LogInformation($"Existing migration for {toolState.EndpointName} found. Resuming...");
+
+                await Run(toolState);
+            }
+
             var allEndpoints = await timeoutStorage.ListEndpoints(cutOffTime);
 
             var endpointsToMigrate = allEndpoints.Where(e => e.NrOfTimeouts > 0 && endpointFilter.ShouldInclude(e.EndpointName))
                 .ToList();
+
+            if (!endpointsToMigrate.Any())
+            {
+                if (allEndpoints.Any())
+                {
+                    var endpointNames = string.Join(",", allEndpoints.Select(e => e.EndpointName));
+
+                    logger.LogInformation($"None of the endpoints ({endpointNames}) found matched the filter criteria.");
+                }
+                else
+                {
+                    logger.LogInformation($"No endpoints found in storage with timeouts that needs migration");
+                }
+                return;
+            }
 
             var problematicEndpoints = new List<(EndpointInfo Endpoint, List<string> Problems)>();
             foreach (var endpoint in endpointsToMigrate)
@@ -55,31 +81,32 @@ namespace Particular.TimeoutMigrationTool
 
             foreach (var endpointToMigrate in endpointsToMigrate)
             {
-                if(endpointToMigrate.NrOfTimeouts == 0)
+                if (endpointToMigrate.NrOfTimeouts == 0)
                 {
                     logger.LogInformation($"No timeouts found for {endpointToMigrate.EndpointName} migration will be skipped");
                     continue;
                 }
 
                 logger.LogInformation($"Starting migration for {endpointToMigrate.EndpointName}, {endpointToMigrate.NrOfTimeouts}");
+
                 await Run(cutOffTime, endpointToMigrate.EndpointName, runParameters);
             }
         }
 
         async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
-            var toolState = await timeoutStorage.TryLoadOngoingMigration();
-            GuardAgainstInvalidState(endpointName, runParameters, toolState);
+            var toolState = await timeoutStorage.Prepare(cutOffTime, endpointName, runParameters);
 
-            if (toolState == null)
-            {
-                toolState = await timeoutStorage.Prepare(cutOffTime, endpointName, runParameters);
-                logger.LogInformation("Storage has been prepared for migration.");
-            }
+            logger.LogInformation("Storage has been prepared for migration.");
 
+            await Run(toolState);
+        }
+
+        async Task Run(IToolState toolState)
+        {
             BatchInfo batch;
 
-            while((batch = await toolState.TryGetNextBatch()) != null)
+            while ((batch = await toolState.TryGetNextBatch()) != null)
             {
                 logger.LogInformation($"Migrating batch {batch.Number}");
 
@@ -90,7 +117,7 @@ namespace Particular.TimeoutMigrationTool
 
                     logger.LogDebug("Staging batch");
                     var stagedTimeoutCount = await transportTimeoutsCreator.StageBatch(timeouts);
-                    if (batch.NumberOfTimeouts!= stagedTimeoutCount)
+                    if (batch.NumberOfTimeouts != stagedTimeoutCount)
                     {
                         throw new InvalidOperationException($"The amount of staged timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {stagedTimeoutCount}, batch contains {batch.NumberOfTimeouts}.");
                     }
@@ -118,19 +145,14 @@ namespace Particular.TimeoutMigrationTool
             logger.LogInformation("Migration completed successfully");
         }
 
-        void GuardAgainstInvalidState(string endpointName, IDictionary<string, string> runParameters, IToolState toolState)
+        void GuardAgainstInvalidState(IDictionary<string, string> runParameters, IToolState toolState)
         {
-            if (toolState == null)
-            {
-                return;
-            }
-
-            if (RunParametersAreDifferent(endpointName, runParameters, toolState))
+            if (RunParametersAreDifferent(runParameters, toolState))
             {
                 var sb = new StringBuilder();
 
                 sb.AppendLine("In progress migration parameters didn't match, either rerun with the --abort option or adjust the parameters to match to continue the current migration:");
-                sb.AppendLine($"\t'--endpoint': '{endpointName}'.");
+                sb.AppendLine($"\t'--endpoint': '{toolState.EndpointName}'.");
 
                 foreach (var setting in toolState.RunParameters)
                 {
@@ -144,13 +166,8 @@ namespace Particular.TimeoutMigrationTool
         }
 
 
-        bool RunParametersAreDifferent(string endpointName, IDictionary<string, string> runParameters, IToolState currentRunState)
+        bool RunParametersAreDifferent(IDictionary<string, string> runParameters, IToolState currentRunState)
         {
-            if (endpointName != currentRunState.EndpointName)
-            {
-                return true;
-            }
-
             var currentRunParameters = currentRunState.RunParameters;
 
             if (runParameters.Count != currentRunParameters.Count)

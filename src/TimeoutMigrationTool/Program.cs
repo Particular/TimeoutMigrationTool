@@ -90,11 +90,20 @@
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
 
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
-                    var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
 
-                    var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+                    var abort = abortMigrationOption.HasValue();
 
-                    await RunMigration(logger, endpointFilter, runParameters, timeoutStorage, transportAdapter);
+                    if (abort)
+                    {
+                        await AbortMigration(timeoutStorage);
+                    }
+                    else
+                    {
+                        var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
+                        var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                        await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage, transportAdapter);
+                    }
                 });
             });
 
@@ -165,7 +174,7 @@
                         var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
                         var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
-                        await RunMigration(logger, endpointFilter, runParameters, timeoutStorage, transportAdapter);
+                        await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage, transportAdapter);
                     }
                 });
             });
@@ -206,18 +215,10 @@
             await timeoutStorage.Abort();
         }
 
-        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
+        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime cutOffTime, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
         {
             var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportTimeoutCreator);
 
-            var cutOffTime = DateTime.Now.AddDays(-1);
-            if (runParameters.TryGetValue(ApplicationOptions.CutoffTime, out var cutOffTimeValue))
-            {
-                if (!DateTime.TryParse(cutOffTimeValue, out cutOffTime))
-                {
-                    throw new ArgumentException($"{ApplicationOptions.CutoffTime} is not a valid System.DateTime value.");
-                }
-            }
 
             return migrationRunner.Run(cutOffTime, endpointFilter, runParameters);
         }
