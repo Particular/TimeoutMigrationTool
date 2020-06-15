@@ -42,22 +42,7 @@
                             return null;
                         }
 
-                        return new BatchInfo {
-Number = reader.GetInt32(0),
-State = GetBatchStatus(reader.GetInt32(1)),
-NumberOfTimeouts = reader.GetInt32(2)
-                        };
-
-                        //var batchRows = ReadBatchRows(reader);
-
-                        ////TODO Do a group by in the DB?
-                        //batches = batchRows.GroupBy(row => row.BatchNumber).Select(batchNumber => new BatchInfo
-                        //{
-                        //    Number = batchNumber.Key,
-                        //    State = batchNumber.First().Status,
-                        //    TimeoutIds = batchNumber.Select(message => message.MessageId.ToString()).ToArray()
-                        //}).ToList();
-
+                        return new BatchInfo(reader.GetInt32(0), GetBatchStatus(reader.GetInt32(1)), reader.GetInt32(2));
                     }
                 }
             }

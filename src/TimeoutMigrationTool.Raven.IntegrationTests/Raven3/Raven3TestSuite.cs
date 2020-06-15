@@ -88,18 +88,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
             var batches = new List<BatchInfo>
             {
-                new BatchInfo
-                {
-                    Number = 1,
-                    State = BatchState.Pending,
-                    TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
-                },
-                new BatchInfo
-                {
-                    Number = 2,
-                    State = BatchState.Pending,
-                    TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
-                }
+                new BatchInfo(1,BatchState.Pending,2),
+                new BatchInfo(2,BatchState.Pending,2)
             };
 
             return new ToolState(runParameters, EndpointName, batches);

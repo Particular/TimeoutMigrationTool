@@ -96,16 +96,12 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
             var batches = new List<BatchInfo>
             {
-                new BatchInfo
+                new BatchInfo(1, BatchState.Pending, 2)
                 {
-                    Number = 1,
-                    State = BatchState.Pending,
                     TimeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2"}
                 },
-                new BatchInfo
+                new BatchInfo(2, BatchState.Pending, 2)
                 {
-                    Number = 2,
-                    State = BatchState.Pending,
                     TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
                 }
             };
@@ -196,7 +192,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var killDb = $"{ServerName}/admin/databases";
             var deleteDb = new DeleteDbParamsForRaven4
             {
-                DatabaseNames = new[] {DatabaseName},
+                DatabaseNames = new[] { DatabaseName },
                 HardDelete = true
             };
             var httpRequest = new HttpRequestMessage
