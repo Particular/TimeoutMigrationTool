@@ -88,7 +88,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
-            var completeBatchFromStorage = await testSuite.RavenAdapter.GetDocument<BatchInfo>($"{RavenConstants.BatchPrefix}/{completeBatch.Number}", (doc, id) => { });
+            var completeBatchFromStorage = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{completeBatch.Number}", (doc, id) => { });
             var resetTimeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(x => completeBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(completeBatchFromStorage, Is.Null);
