@@ -136,10 +136,8 @@ namespace TimeoutMigrationTool.Tests
         {
             var batches = new List<BatchInfo>
             {
-                new BatchInfo
+                new BatchInfo(1, BatchState.Pending, 1)
                 {
-                    Number = 1,
-                    State = BatchState.Pending,
                     TimeoutIds = new[] {"timeouts/1"}
                 }
             };

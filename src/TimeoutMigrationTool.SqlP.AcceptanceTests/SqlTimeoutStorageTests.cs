@@ -208,7 +208,6 @@
 
             await timeoutStorage.MarkBatchAsStaged(batch.Number);
 
-
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
             var stagedBatch = await loadedState.TryGetNextBatch();
@@ -219,7 +218,7 @@
         [Test]
         public async Task Timeouts_Split_Can_Be_Read_By_Batch()
         {
-            await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
+            var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
@@ -233,19 +232,21 @@
             var timeoutStorage = GetTimeoutStorage(3);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
+            var timeoutsStored = 0;
 
             BatchInfo batch;
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
-                var timeoutIdsCreatedDuringSplit = batch.TimeoutIds;
-                var timeoutIdsFromDatabase = (await timeoutStorage.ReadBatch(batch.Number)).Select(timeout => timeout.Id).ToList();
+                var timeouts = await timeoutStorage.ReadBatch(batch.Number);
 
-                CollectionAssert.AreEquivalent(timeoutIdsCreatedDuringSplit, timeoutIdsFromDatabase);
+                Assert.AreEqual(batch.NumberOfTimeouts, timeouts.Count());
+                timeoutsStored += batch.NumberOfTimeouts;
 
-                await timeoutStorage.MarkBatchAsStaged(batch.Number);
-                batch.State = BatchState.Completed;
+                await timeoutStorage.MarkBatchAsCompleted(batch.Number);
             }
+
+            Assert.AreEqual(10, timeoutsStored);
         }
 
         [Test]

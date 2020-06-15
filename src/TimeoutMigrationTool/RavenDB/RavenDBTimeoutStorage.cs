@@ -118,14 +118,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var batches = new List<BatchInfo>();
             for (var i = 0; i < nrOfBatches; i++)
             {
-                batches.Add(new BatchInfo
-                {
-                    Number = i + 1,
-                    State = BatchState.Pending,
-                    TimeoutIds = timeouts.Skip(i * RavenConstants.DefaultPagingSize)
+                var timeoutsIds = timeouts.Skip(i * RavenConstants.DefaultPagingSize)
                         .Take(RavenConstants.DefaultPagingSize)
-                        .Select(t => t.Id).ToArray()
-                });
+                        .Select(t => t.Id).ToArray();
+
+                var batch = new BatchInfo(i + 1, BatchState.Pending, timeoutsIds.Count())
+                {
+                    TimeoutIds = timeoutsIds
+                };
+
+                batches.Add(batch);
             }
 
             foreach (var batch in batches)
