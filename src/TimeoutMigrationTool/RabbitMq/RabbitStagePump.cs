@@ -161,7 +161,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             using (var tokenSource = new CancellationTokenSource())
             {
-                message.BasicProperties.Expiration = (delayInSeconds * 1000).ToString(CultureInfo.InvariantCulture);
+                message.BasicProperties.Expiration = ((long)delayInSeconds * 1000).ToString(CultureInfo.InvariantCulture);
                 consumer.Model.BasicPublish(delayExchangeName, routingKey, true, message.BasicProperties, message.Body);
 
                 if (tokenSource.IsCancellationRequested)
