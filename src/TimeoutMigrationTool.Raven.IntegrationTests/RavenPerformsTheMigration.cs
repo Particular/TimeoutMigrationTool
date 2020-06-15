@@ -94,7 +94,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             var batchToVerify = await toolState.TryGetNextBatch();
-            var timeoutIdToVerify = batchToVerify.TimeoutIds.First();
+
+            var batchData = await timeoutStorage.ReadBatch(batchToVerify.Number);
+
+            var timeoutIdToVerify = batchData.First().Id;
 
             var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             await sut.MarkBatchAsCompleted(batchToVerify.Number);

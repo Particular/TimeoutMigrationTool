@@ -1,4 +1,4 @@
-namespace Particular.TimeoutMigrationTool
+namespace Particular.TimeoutMigrationTool.RavenDB
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -6,14 +6,14 @@ namespace Particular.TimeoutMigrationTool
 
     public class ToolState : IToolState
     {
-        public ToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<BatchInfo> batches)
+        public ToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<RavenBatchInfo> batches)
         {
             RunParameters = runParameters;
             EndpointName = endpointName;
             Batches = batches;
         }
 
-        public IEnumerable<BatchInfo> Batches { get; }
+        public IEnumerable<RavenBatchInfo> Batches { get; }
         public IDictionary<string, string> RunParameters { get; }
         public string EndpointName { get; set; }
 
@@ -30,10 +30,12 @@ namespace Particular.TimeoutMigrationTool
 
             if (stagedBatch != null)
             {
-                return Task.FromResult(stagedBatch);
+                return Task.FromResult(new BatchInfo(stagedBatch.Number, stagedBatch.State, stagedBatch.TimeoutIds.Count()));
             }
 
-            return Task.FromResult(Batches.First(x => x.State != BatchState.Completed));
+            var pendingBatch = Batches.First(x => x.State != BatchState.Completed);
+
+            return Task.FromResult(new BatchInfo(pendingBatch.Number, pendingBatch.State, pendingBatch.TimeoutIds.Count()));
         }
     }
 }

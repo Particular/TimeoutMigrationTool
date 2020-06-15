@@ -16,10 +16,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         Task SetupDatabase();
         Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false);
         ToolState SetupToolState(DateTime cutoffTime);
-        Task<List<BatchInfo>> SetupExistingBatchInfoInDatabase();
+        Task<List<RavenBatchInfo>> SetupExistingBatchInfoInDatabase();
         Task SaveToolState(ToolState toolState);
         Task<ToolState> GetToolState();
-        Task<List<BatchInfo>> GetBatches(string[] ids);
+        Task<List<RavenBatchInfo>> GetBatches(string[] ids);
         Task TeardownDatabase();
     }
 }

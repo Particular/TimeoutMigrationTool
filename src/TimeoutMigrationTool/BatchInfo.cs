@@ -15,8 +15,5 @@
         public BatchState State { get; set; }
 
         public int NumberOfTimeouts { get; private set; }
-
-        //TODO - remove since only raven needs it
-        public string[] TimeoutIds { get; set; }
     }
 }

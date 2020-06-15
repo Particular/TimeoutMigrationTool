@@ -88,9 +88,11 @@ namespace TimeoutMigrationTool.Tests
         [Test]
         public void WhenRunningWithStateStoragePreparedAndParametersMismatch()
         {
-            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, GetBatches())
+            var toolState = new FakeToolState
             {
-                EndpointName = "Invoicing"
+                Batches = GetBatches(),
+                EndpointName = "Invoicing",
+                RunParameters = new Dictionary<string,string>()
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
 
@@ -113,9 +115,11 @@ namespace TimeoutMigrationTool.Tests
         public async Task WhenRunningWithStateStoragePreparedAndParametersMatch()
         {
             var batches = GetBatches();
-            var toolState = new ToolState(new Dictionary<string, string>(), testEndpoint, batches)
+            var toolState = new FakeToolState
             {
-                EndpointName = testEndpoint
+                EndpointName = testEndpoint,
+                Batches = batches,
+                RunParameters = new Dictionary<string, string>()
             };
             timeoutStorage.SetupToolStateToReturn(toolState);
             timeoutStorage.SetupTimeoutsToReadForBatch(batches.First());
@@ -137,9 +141,6 @@ namespace TimeoutMigrationTool.Tests
             var batches = new List<BatchInfo>
             {
                 new BatchInfo(1, BatchState.Pending, 1)
-                {
-                    TimeoutIds = new[] {"timeouts/1"}
-                }
             };
             return batches;
         }

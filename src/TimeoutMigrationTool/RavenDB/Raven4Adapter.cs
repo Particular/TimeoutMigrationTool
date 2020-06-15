@@ -51,7 +51,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             };
         }
 
-        public async Task CreateBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task CreateBatchAndUpdateTimeouts(RavenBatchInfo batch)
         {
             var insertCommand = new PutCommand
             {
@@ -80,7 +80,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task DeleteBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task DeleteBatchAndUpdateTimeouts(RavenBatchInfo batch)
         {
             var deleteCommand = GetDeleteCommand($"{RavenConstants.BatchPrefix}/{batch.Number}");
             var timeoutUpdateCommands = batch.TimeoutIds.Select(timeoutId => new PatchCommand
@@ -102,7 +102,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task CompleteBatchAndUpdateTimeouts(BatchInfo batch)
+        public async Task CompleteBatchAndUpdateTimeouts(RavenBatchInfo batch)
         {
             var insertCommand = new PutCommand
             {
