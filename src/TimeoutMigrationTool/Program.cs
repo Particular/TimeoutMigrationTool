@@ -78,11 +78,6 @@
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
                     var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
-                    if (abortMigrationOption.HasValue())
-                    {
-                        runParameters.Add(ApplicationOptions.AbortMigration, "");
-                    }
-
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.ToString(CutoffTimeFormat));
 
@@ -90,11 +85,18 @@
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
 
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
-                    var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
 
-                    var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+                    if (abortMigrationOption.HasValue())
+                    {
+                        await AbortMigration(timeoutStorage);
+                    }
+                    else
+                    {
+                        var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
+                        var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
-                    await RunMigration(logger, endpointFilter, runParameters, timeoutStorage, transportAdapter);
+                        await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage, transportAdapter);
+                    }
                 });
             });
 
@@ -153,10 +155,9 @@
                     runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
                     runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
 
-                    var abort = abortMigrationOption.HasValue();
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
 
-                    if (abort)
+                    if (abortMigrationOption.HasValue())
                     {
                         await AbortMigration(timeoutStorage);
                     }
@@ -165,7 +166,7 @@
                         var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
                         var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
-                        await RunMigration(logger, endpointFilter, runParameters, timeoutStorage, transportAdapter);
+                        await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage, transportAdapter);
                     }
                 });
             });
@@ -206,18 +207,10 @@
             await timeoutStorage.Abort();
         }
 
-        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
+        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime cutOffTime, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
         {
             var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportTimeoutCreator);
 
-            var cutOffTime = DateTime.Now.AddDays(-1);
-            if (runParameters.TryGetValue(ApplicationOptions.CutoffTime, out var cutOffTimeValue))
-            {
-                if (!DateTime.TryParse(cutOffTimeValue, out cutOffTime))
-                {
-                    throw new ArgumentException($"{ApplicationOptions.CutoffTime} is not a valid System.DateTime value.");
-                }
-            }
 
             return migrationRunner.Run(cutOffTime, endpointFilter, runParameters);
         }

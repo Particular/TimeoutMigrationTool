@@ -194,9 +194,12 @@ FROM
 WHERE
 	name LIKE '%_TimeoutData';
 
+IF LEN(@SqlQuery) > 0 BEGIN
 SET @SqlQuery = SUBSTRING(@SqlQuery, 0, LEN(@SqlQuery) - LEN('UNION'));
 
-EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime";
+EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime
+
+END;" ;
         }
 
         public override string GetScriptToMarkBatchAsStaged(string migrationRunId)
