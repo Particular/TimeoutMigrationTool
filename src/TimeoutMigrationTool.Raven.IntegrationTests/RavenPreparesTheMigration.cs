@@ -78,6 +78,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatchesWhenMoreEndpointsAreAvailable()
         {
+            nrOfTimeouts = 3000;
             testSuite.EndpointName = "B";
             await testSuite.InitTimeouts(nrOfTimeouts, true);
 
@@ -85,11 +86,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
                 new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
-            Assert.That(toolState.NumberOfBatches, Is.EqualTo(1));
-
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
             var nextBatch = await toolState.TryGetNextBatch();
             var nextBatchData = await timeoutStorage.ReadBatch(nextBatch.Number);
-            Assert.That(nextBatchData.Count(), Is.EqualTo(500));
+            Assert.That(nextBatchData.Count(), Is.EqualTo(920));
         }
 
         [Test]
@@ -105,7 +105,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             Assert.That(updatedToolState.EndpointName, Is.EqualTo(testSuite.EndpointName));
         }
 
-        private readonly int nrOfTimeouts = 1500;
+        private int nrOfTimeouts = 1500;
     }
 
     [TestFixture]
