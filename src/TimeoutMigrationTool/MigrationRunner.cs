@@ -122,6 +122,10 @@ namespace Particular.TimeoutMigrationTool
                 {
                     logger.LogDebug("Reading batch");
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number);
+                    if (timeouts.Count != batch.NumberOfTimeouts)
+                    {
+                        throw new Exception($"Expected to retrieve {batch.NumberOfTimeouts} timeouts but only found {timeouts.Count}");
+                    }
 
                     logger.LogDebug("Staging batch");
                     var stagedTimeoutCount = await transportTimeoutsCreator.StageBatch(timeouts);
