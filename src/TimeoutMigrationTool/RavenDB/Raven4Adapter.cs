@@ -27,7 +27,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task UpdateDocument(string key, object document)
         {
-            var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
+            var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(key)}";
             var serializeObject = JsonConvert.SerializeObject(document);
             var httpContent = new StringContent(serializeObject);
 
@@ -37,7 +37,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task DeleteDocument(string key)
         {
-            var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
+            var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(key)}";
             var result = await httpClient.DeleteAsync(deleteStateUrl);
             result.EnsureSuccessStatusCode();
         }
@@ -159,7 +159,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string prefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
-            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={prefix}&pageSize={pageSize}";
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(prefix)}&pageSize={pageSize}";
             var checkForMoreResults = true;
             var iteration = 0;
 
@@ -187,7 +187,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages = 0) where T : class
         {
             var items = new List<T>();
-            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={RavenConstants.DefaultPagingSize}";
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={RavenConstants.DefaultPagingSize}";
 
             var checkForMoreResults = true;
             var fetchStartFrom = startFrom;
@@ -235,7 +235,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             var url = $"{serverUrl}/databases/{databaseName}/docs?";
-            var queryStringIds = ids.Select(id => $"id={id}").ToList();
+            var queryStringIds = ids.Select(id => $"id={Uri.EscapeDataString(id)}").ToList();
             var uris = new List<string>();
             var uriBuilder = new StringBuilder(RavenConstants.MaxUriLength, RavenConstants.MaxUriLength);
             uriBuilder.Append(url);

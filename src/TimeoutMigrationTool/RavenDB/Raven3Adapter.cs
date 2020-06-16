@@ -160,7 +160,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
-            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={pageSize}";
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={pageSize}";
             var checkForMoreResults = true;
             var iteration = 0;
 
@@ -188,7 +188,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages) where T : class
         {
             var items = new List<T>();
-            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={documentPrefix}&pageSize={RavenConstants.DefaultPagingSize}";
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={RavenConstants.DefaultPagingSize}";
 
             var checkForMoreResults = true;
             var fetchStartFrom = startFrom;
@@ -224,7 +224,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
-            var url = $"{serverUrl}/databases/{databaseName}/docs?id={id}";
+            var url = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(id)}";
             var response = await httpClient.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
