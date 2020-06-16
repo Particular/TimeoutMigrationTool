@@ -91,11 +91,9 @@ namespace TimeoutMigrationTool.Tests
             timeoutStorage.SetupToolStateToReturn(toolState);
             timeoutStorage.SetupTimeoutsToReadForBatch(batches.First());
 
-            timeoutStorage.SetupEndpoints(new List<EndpointInfo>());
+            await runner.Run(DateTime.Now, EndpointFilter.SpecificEndpoint(testEndpoint), new Dictionary<string, string>());
 
-            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
-
-            Assert.That(timeoutStorage.EndpointsWereListed);
+            Assert.That(timeoutStorage.EndpointsWereListed, Is.False);
             Assert.That(timeoutStorage.ToolStateWasCreated, Is.False);
             Assert.That(transportTimeoutsCreator.EndpointWasVerified, Is.False);
             Assert.That(timeoutStorage.BatchWasRead);

@@ -12,6 +12,8 @@
             }
         }
 
+        public bool IncludeAllEndpoints { get; private set; }
+
         public static EndpointFilter SpecificEndpoint(string endpoint)
         {
             return new EndpointFilter(endpoint);
@@ -19,7 +21,7 @@
 
         public bool ShouldInclude(string endpoint)
         {
-            if (includeAll)
+            if (IncludeAllEndpoints)
             {
                 return true;
             }
@@ -29,7 +31,7 @@
 
         EndpointFilter(bool includeAll)
         {
-            this.includeAll = includeAll;
+            IncludeAllEndpoints = includeAll;
         }
 
         EndpointFilter(string endpointName)
@@ -43,6 +45,5 @@
         }
 
         readonly string endpointName;
-        readonly bool includeAll;
     }
 }

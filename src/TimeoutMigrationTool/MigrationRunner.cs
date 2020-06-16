@@ -27,6 +27,11 @@ namespace Particular.TimeoutMigrationTool
                 logger.LogInformation($"Existing migration for {toolState.EndpointName} found. Resuming...");
 
                 await Run(toolState);
+
+                if (!endpointFilter.IncludeAllEndpoints)
+                {
+                    return;
+                }
             }
 
             var allEndpoints = await timeoutStorage.ListEndpoints(cutOffTime);

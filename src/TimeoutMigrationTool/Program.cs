@@ -78,11 +78,6 @@
                     var dialect = SqlDialect.Parse(sourceDialect.Value());
                     var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
-                    if (abortMigrationOption.HasValue())
-                    {
-                        runParameters.Add(ApplicationOptions.AbortMigration, "");
-                    }
-
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
                     runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.ToString(CutoffTimeFormat));
 
@@ -91,9 +86,7 @@
 
                     var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
 
-                    var abort = abortMigrationOption.HasValue();
-
-                    if (abort)
+                    if (abortMigrationOption.HasValue())
                     {
                         await AbortMigration(timeoutStorage);
                     }
@@ -162,10 +155,9 @@
                     runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
                     runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
 
-                    var abort = abortMigrationOption.HasValue();
                     var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
 
-                    if (abort)
+                    if (abortMigrationOption.HasValue())
                     {
                         await AbortMigration(timeoutStorage);
                     }
