@@ -83,7 +83,6 @@
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
-
                         return session.SendLocal(startSagaMessage);
                     }))
                 .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
@@ -93,6 +92,7 @@
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
             CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint);
+            Assert.AreEqual(1, endpoints.Single(e => e.EndpointName == sourceEndpoint).Destinations.Count());
         }
 
         [Test]
