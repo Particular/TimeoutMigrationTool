@@ -92,7 +92,7 @@ namespace Particular.TimeoutMigrationTool
                     continue;
                 }
 
-                logger.LogInformation($"Starting migration for {endpointToMigrate.EndpointName}, {endpointToMigrate.NrOfTimeouts}");
+                logger.LogInformation($"Starting migration for {endpointToMigrate.EndpointName}({endpointToMigrate.NrOfTimeouts} timeout(s) between {endpointToMigrate.ShortestTimeout} - {endpointToMigrate.LongestTimeout})");
 
                 await Run(cutOffTime, endpointToMigrate.EndpointName, runParameters);
             }
