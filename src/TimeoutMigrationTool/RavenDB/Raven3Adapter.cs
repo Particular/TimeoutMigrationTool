@@ -37,7 +37,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             };
 
             var serializedCommands = JsonConvert.SerializeObject(command);
-            var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+            using var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
         }
 
@@ -50,7 +50,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 deleteCommand
             };
             var serializedCommands = JsonConvert.SerializeObject(command);
-            var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+            using var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
         }
 
@@ -168,7 +168,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var skipFirst = $"&start={iteration * pageSize}";
                 var getUrl = iteration == 0 ? url : url + skipFirst;
-                var result = await httpClient.GetAsync(getUrl);
+                using var result = await httpClient.GetAsync(getUrl);
 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
@@ -198,7 +198,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var skipFirst = $"&start={fetchStartFrom}";
                 var getUrl = fetchStartFrom == 0 ? url : url + skipFirst;
-                var result = await httpClient.GetAsync(getUrl);
+                using var result = await httpClient.GetAsync(getUrl);
 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
@@ -225,7 +225,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
             var url = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(id)}";
-            var response = await httpClient.GetAsync(url);
+            using var response = await httpClient.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return default(T);
@@ -280,8 +280,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var serializedCommands = JsonConvert.SerializeObject(commands);
-            var result = await httpClient.PostAsync(bulkUpdateUrl,
-                new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+            using var result = await httpClient.PostAsync(bulkUpdateUrl, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
         }
 

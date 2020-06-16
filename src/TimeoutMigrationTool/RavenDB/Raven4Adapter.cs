@@ -29,16 +29,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(key)}";
             var serializeObject = JsonConvert.SerializeObject(document);
-            var httpContent = new StringContent(serializeObject);
-
-            var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent);
+            using var httpContent = new StringContent(serializeObject);
+            using var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent);
             saveResult.EnsureSuccessStatusCode();
         }
 
         public async Task DeleteDocument(string key)
         {
             var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(key)}";
-            var result = await httpClient.DeleteAsync(deleteStateUrl);
+            using var result = await httpClient.DeleteAsync(deleteStateUrl);
             result.EnsureSuccessStatusCode();
         }
 
@@ -167,7 +166,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var skipFirst = $"&start={iteration * pageSize}";
                 var getUrl = iteration == 0 ? url : url + skipFirst;
-                var result = await httpClient.GetAsync(getUrl);
+                using var result = await httpClient.GetAsync(getUrl);
 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
@@ -197,7 +196,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var skipFirst = $"&start={fetchStartFrom}";
                 var getUrl = fetchStartFrom == 0 ? url : url + skipFirst;
-                var result = await httpClient.GetAsync(getUrl);
+                using var result = await httpClient.GetAsync(getUrl);
 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
@@ -256,20 +255,17 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     uriBuilder.Append(url);
                 }
             }
-
             uris.Add(uriBuilder.ToString().TrimEnd('&'));
 
             var results = new List<T>();
             foreach (var uri in uris)
             {
-                using (var response = await httpClient.GetAsync(uri))
-                {
-                    if (response.StatusCode == HttpStatusCode.NotFound)
-                        continue;
+                using var response = await httpClient.GetAsync(uri);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    continue;
 
-                    var resultsFromUri = await GetDocumentsFromResponse(response.Content, idSetter);
-                    results.AddRange(resultsFromUri);
-                }
+                var resultsFromUri = await GetDocumentsFromResponse(response.Content, idSetter);
+                results.AddRange(resultsFromUri);
             }
 
             return results;
@@ -305,15 +301,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var serializedCommands = JsonConvert.SerializeObject(bulkCommand);
 
-            using (var httpContent = new StringContent(serializedCommands, Encoding.UTF8, "application/json"))
-            {
-                var request = new HttpRequestMessage(HttpMethod.Post, bulkUpdateUrl);
-                request.Version = HttpVersion.Version10;
-                request.Content = httpContent;
+            using var httpContent = new StringContent(serializedCommands, Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(HttpMethod.Post, bulkUpdateUrl);
+            request.Version = HttpVersion.Version10;
+            request.Content = httpContent;
 
-                var result = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-                result.EnsureSuccessStatusCode();
-            }
+            using var result = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            result.EnsureSuccessStatusCode();
         }
     }
 }
