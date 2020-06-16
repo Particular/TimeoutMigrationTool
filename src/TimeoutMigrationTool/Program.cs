@@ -14,6 +14,8 @@
         const string CutoffTimeFormat = "yyyy-MM-dd HH:mm:ss:ffffff Z";
         static int Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledAppdomainExceptionHandler);
+
             var app = new CommandLineApplication
             {
                 Name = "migrate-timeouts"
@@ -223,6 +225,13 @@
             }
 
             return EndpointFilter.SpecificEndpoint(endpointFilterOption.Value());
+        }
+
+        static void UnhandledAppdomainExceptionHandler(object sender, UnhandledExceptionEventArgs args)
+        {
+            var exception = (Exception)args.ExceptionObject;
+            Console.WriteLine("Unhandled appdomain exception: " + exception.ToString());
+            Console.WriteLine("Runtime terminating: {0}", args.IsTerminating);
         }
     }
 }
