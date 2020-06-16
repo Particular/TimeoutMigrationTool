@@ -178,8 +178,7 @@ SELECT
 	COUNT(*) NrOfTimeouts,
 	MAX(Time) LongestTimeout,
 	MIN(Time) ShortestTimeout,
-    (SELECT
-        Destination + '', ''
+    (SELECT DISTINCT(Destination) + '', ''
     FROM
         ' + name + '
     FOR XML PATH('''')) Destinations
