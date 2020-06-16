@@ -1,6 +1,7 @@
 ﻿namespace TimeoutMigrationTool.Raven.IntegrationTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
@@ -26,6 +27,35 @@
         }
 
         protected abstract IRavenTestSuite CreateTestSuite();
+
+        [Test]
+        public async Task CanReadDocumentsBySpecifiedIds()
+        {
+            var nrOfTimeouts = 5;
+            await testSuite.InitTimeouts(nrOfTimeouts);
+            var timeoutIds = new[] {"TimeoutDatas/1", "TimeoutDatas/2", "TimeoutDatas/3", "TimeoutDatas/4", "TimeoutDatas/0"};
+
+            var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeoutIds, (doc, id) => doc.Id = id);
+
+            Assert.That(timeouts.Count, Is.EqualTo(5));
+        }
+
+        [Test]
+        public async Task CanReadDocumentsBySpecifiedIdsWhenNumberOfIdsWouldResultInTooLongUri()
+        {
+            var nrOfTimeouts = 500;
+            await testSuite.InitTimeouts(nrOfTimeouts);
+            var timeoutIds = new List<string>();
+
+            for (var i = 0; i < 500; i++)
+            {
+                timeoutIds.Add($"TimeoutDatas/{i}");
+            }
+
+            var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeoutIds, (doc, id) => doc.Id = id);
+
+            Assert.That(timeouts.Count, Is.EqualTo(500));
+        }
 
         [Test]
         public async Task WhenReadingTimeouts()

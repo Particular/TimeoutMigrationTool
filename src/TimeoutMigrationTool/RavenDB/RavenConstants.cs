@@ -4,6 +4,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     {
         public const string ToolStateId = "TimeoutMigrationTool/State";
         public const string ArchivedToolStateIdPrefix = "TimeoutMigrationTool/MigrationRun-";
+        public const int MaxUriLength = 2000;
         public const int MaxNrOfDocumentsToRetrieve = 2048;
         public const int DefaultPagingSize = 1024;
         public const string MigrationOngoingPrefix = "__hidden__";

@@ -98,8 +98,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
             var batch = await ravenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(t => batch.TimeoutIds.Contains(t.Id), timeoutDocumentPrefix,
-                (doc, id) => doc.Id = id);
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(batch.TimeoutIds, (doc, id) => doc.Id = id);
             return timeouts;
         }
 
@@ -159,13 +158,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 var elegibleTimeouts = timeouts.Where(filter).ToList();
                 logger.LogInformation($"This resulted in {elegibleTimeouts.Count} elegible timeouts");
 
-                var batch = new RavenBatch(iteration + 1, BatchState.Pending, elegibleTimeouts.Count())
+                if (elegibleTimeouts.Any())
                 {
-                    TimeoutIds = elegibleTimeouts.Select(t => t.Id).ToArray()
-                };
-                await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
-                logger.LogInformation($"Batch {batch.Number} was created to handle {elegibleTimeouts.Count} timeouts");
-                batches.Add(batch);
+                    var batch = new RavenBatch(iteration + 1, BatchState.Pending, elegibleTimeouts.Count())
+                    {
+                        TimeoutIds = elegibleTimeouts.Select(t => t.Id).ToArray()
+                    };
+                    await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
+                    logger.LogInformation($"Batch {batch.Number} was created to handle {elegibleTimeouts.Count} timeouts");
+                    batches.Add(batch);
+                }
 
                 if (timeouts.Count == 0)
                     findMoreTimeouts = false;
