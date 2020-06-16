@@ -26,11 +26,13 @@
                 using (var model = connection.CreateModel())
                 {
                     PurgueQueueIfNotEmpty(model);
+                    model.ConfirmSelect();
                     foreach (var timeout in timeouts)
                     {
                         PublishTimeout(model, timeout, stageExchangeName);
                     }
 
+                    model.WaitForConfirmsOrDie(TimeSpan.FromSeconds(30));
                     messageCount = Convert.ToInt32(QueueCreator.GetStatingQueueMessageLength(model));
                 }
             }
