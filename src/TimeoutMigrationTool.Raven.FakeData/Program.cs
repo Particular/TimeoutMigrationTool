@@ -17,7 +17,7 @@
             var serverName = args[0];
             var databaseName = args[1];
             var skipDbCreation = args.Length > 2 && Convert.ToBoolean(args[2]);
-            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 1000000 : Convert.ToInt32(args[3]);
+            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 100000 : Convert.ToInt32(args[3]);
 
             if (!skipDbCreation)
             {

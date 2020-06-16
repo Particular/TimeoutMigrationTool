@@ -113,6 +113,7 @@ namespace Particular.TimeoutMigrationTool
         async Task Run(IToolState toolState)
         {
             BatchInfo batch;
+            var start = DateTime.UtcNow;
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
@@ -120,14 +121,14 @@ namespace Particular.TimeoutMigrationTool
 
                 if (batch.State == BatchState.Pending)
                 {
-                    logger.LogDebug("Reading batch");
+                    logger.LogDebug($"Reading batch number {batch.Number}");
                     var timeouts = await timeoutStorage.ReadBatch(batch.Number);
                     if (timeouts.Count != batch.NumberOfTimeouts)
                     {
                         throw new Exception($"Expected to retrieve {batch.NumberOfTimeouts} timeouts but only found {timeouts.Count}");
                     }
 
-                    logger.LogDebug("Staging batch");
+                    logger.LogDebug($"Staging batch number {batch.Number}");
                     var stagedTimeoutCount = await transportTimeoutsCreator.StageBatch(timeouts);
                     if (batch.NumberOfTimeouts != stagedTimeoutCount)
                     {
@@ -136,10 +137,9 @@ namespace Particular.TimeoutMigrationTool
 
                     batch.State = BatchState.Staged;
                     await timeoutStorage.MarkBatchAsStaged(batch.Number);
-                    logger.LogDebug("Batch marked as staged");
                 }
 
-                logger.LogDebug("Completing batch");
+                logger.LogDebug($"Migrating batch number {batch.Number} from staging to destination");
                 var completedTimeoutsCount = await transportTimeoutsCreator.CompleteBatch(batch.Number);
 
                 if (batch.NumberOfTimeouts != completedTimeoutsCount)
@@ -150,11 +150,15 @@ namespace Particular.TimeoutMigrationTool
                 batch.State = BatchState.Completed;
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
 
-                logger.LogDebug("Batch fully migrated");
+                logger.LogDebug($"Batch number {batch.Number} fully migrated");
             }
 
             await timeoutStorage.Complete();
+
+            var end = DateTime.UtcNow;
+            var duration = end.Subtract(start);
             logger.LogInformation("Migration completed successfully");
+            logger.LogInformation($"Migration completed in {duration.Hours}:{duration.Minutes}:{duration.Seconds}");
         }
 
         void GuardAgainstInvalidState(IDictionary<string, string> runParameters, IToolState toolState)

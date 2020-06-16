@@ -153,10 +153,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var startFrom = iteration * (nrOfPages * RavenConstants.DefaultPagingSize);
                 var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, nrOfPages);
-                logger.LogInformation($"Retrieved {timeouts.Count} timeouts from the storage, starting from {startFrom}");
 
                 var elegibleTimeouts = timeouts.Where(filter).ToList();
-                logger.LogInformation($"This resulted in {elegibleTimeouts.Count} elegible timeouts");
 
                 if (elegibleTimeouts.Any())
                 {
