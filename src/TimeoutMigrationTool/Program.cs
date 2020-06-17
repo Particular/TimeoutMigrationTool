@@ -10,12 +10,12 @@
     using Microsoft.Extensions.Logging;
 
     // usage:
-    //  migrate-timeouts ravendb preview [--raven-specific-options] [--target-specific-options]
-    //  migrate-timeouts ravendb migrate [--raven-specific-options] [--target-specific-options] [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts ravendb abort [--raven-specific-options]
-    //  migrate-timeouts sqlp preview [--sqlp-specific-options] [--target-specific-options]
-    //  migrate-timeouts sqlp migrate [--sqlp-specific-options] [--target-specific-options] [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts sqlp abort [--sqlp-specific-options]
+    //  migrate-timeouts ravendb preview --raven-specific-options --target-specific-options
+    //  migrate-timeouts ravendb migrate --raven-specific-options --target-specific-options [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts ravendb abort --raven-specific-options
+    //  migrate-timeouts sqlp preview --sqlp-specific-options --target-specific-options
+    //  migrate-timeouts sqlp migrate --sqlp-specific-options --target-specific-options [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts sqlp abort --sqlp-specific-options
     //
     // Examples:
     //  ravendb preview --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 --target amqp://guest:guest@localhost:5672
