@@ -19,7 +19,7 @@
     //
     // Examples:
     //  ravendb preview --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 --target amqp://guest:guest@localhost:5672
-    //  sqlp preview --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --target amqp://guest:guest@localhost:5672
+    //  sqlp preview --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --dialect MsSqlServer --target amqp://guest:guest@localhost:5672
     class Program
     {
         const string CutoffTimeFormat = "yyyy-MM-dd HH:mm:ss:ffffff Z";
@@ -69,6 +69,8 @@
                     Description = "The sql dialect to use",
                     Inherited = true
                 };
+
+                sourceDialect.Validators.Add(new SqlDialectValidator());
 
                 sqlpCommand.Options.Add(sourceOption);
                 sqlpCommand.Options.Add(sourceDialect);
