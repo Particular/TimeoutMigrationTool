@@ -81,7 +81,6 @@
                     var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
-                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.ToString(CutoffTimeFormat));
 
                     runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
                     runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceDialect.Value());
@@ -150,7 +149,6 @@
                     var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
                     runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
-                    runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.ToString(CutoffTimeFormat));
 
                     runParameters.Add(ApplicationOptions.RavenServerUrl, serverUrl);
                     runParameters.Add(ApplicationOptions.RavenDatabaseName, databaseName);
@@ -183,19 +181,19 @@
             return app.Execute(args);
         }
 
-        static DateTime GetCutoffTime(CommandOption cutoffTimeOption)
+        static DateTime? GetCutoffTime(CommandOption cutoffTimeOption)
         {
-            DateTime cutoffTime;
             if (!cutoffTimeOption.HasValue())
             {
-                cutoffTime = DateTime.UtcNow.AddDays(1);
-            }
-            else if (!DateTime.TryParse(cutoffTimeOption.Value(), out cutoffTime))
-            {
-                throw new Exception($"Unable to parse the cutofftime, please supply the cutoffTime in the following format '{CutoffTimeFormat}'");
+                return null;
             }
 
-            return cutoffTime;
+            if(DateTime.TryParse(cutoffTimeOption.Value(), out var cutoffTime))
+            {
+                return cutoffTime;
+            }
+
+            throw new Exception($"Unable to parse the cutofftime, please supply the cutoffTime in the following format '{CutoffTimeFormat}'");
         }
 
         static async Task AbortMigration(ITimeoutStorage timeoutStorage)
@@ -209,12 +207,21 @@
             await timeoutStorage.Abort();
         }
 
-        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime cutOffTime, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
+        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime? cutOffTime, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
         {
             var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportTimeoutCreator);
 
+            if(cutOffTime.HasValue)
+            {
+                runParameters.Add(ApplicationOptions.CutoffTime, cutOffTime.Value.ToString(CutoffTimeFormat));
+            }
+            else
+            {
+                cutOffTime = DateTime.UtcNow.AddDays(-1);
+            }
 
-            return migrationRunner.Run(cutOffTime, endpointFilter, runParameters);
+
+            return migrationRunner.Run(cutOffTime.Value, endpointFilter, runParameters);
         }
 
         static EndpointFilter ParseEndpointFilter(CommandOption allEndpointsOption, CommandOption endpointFilterOption)
