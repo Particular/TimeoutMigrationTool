@@ -20,18 +20,24 @@
         public Task<int> WriteTimeoutsToStagingQueue(List<TimeoutData> timeouts, string stageExchangeName)
         {
             //todo: check the count and purge the queue if not empty + log the situation
+            int messageCount;
             using (var connection = GetConnection(this.rabbitConnectionString))
             {
                 using (var model = connection.CreateModel())
                 {
                     PurgueQueueIfNotEmpty(model);
+                    model.ConfirmSelect();
                     foreach (var timeout in timeouts)
                     {
                         PublishTimeout(model, timeout, stageExchangeName);
                     }
+
+                    model.WaitForConfirmsOrDie(TimeSpan.FromSeconds(30));
+                    messageCount = Convert.ToInt32(QueueCreator.GetStatingQueueMessageLength(model));
                 }
             }
-            return Task.FromResult(timeouts.Count);
+
+            return Task.FromResult(messageCount);
         }
 
         void PurgueQueueIfNotEmpty(IModel model)

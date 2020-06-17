@@ -58,7 +58,7 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
+                    var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
                     await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());

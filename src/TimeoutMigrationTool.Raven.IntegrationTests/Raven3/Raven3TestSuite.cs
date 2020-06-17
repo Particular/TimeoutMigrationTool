@@ -7,6 +7,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
     using System.Net.Http;
     using System.Text;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
@@ -15,6 +16,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
     public class Raven3TestSuite : IRavenTestSuite
     {
         public ICanTalkToRavenVersion RavenAdapter => new Raven3Adapter(ServerName, DatabaseName);
+        public ILogger Logger => new ConsoleLogger(false);
 
         public string ServerName
         {
@@ -70,7 +72,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var timeoutStorage = new RavenDBTimeoutStorage(Logger, serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }

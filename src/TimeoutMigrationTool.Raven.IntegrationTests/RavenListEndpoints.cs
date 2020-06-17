@@ -32,7 +32,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenThereAreNoTimeoutsListEndpointsReturnsAnEmptyList()
         {
-            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -44,7 +44,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             await testSuite.InitTimeouts(nrOfTimeouts, true);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -56,7 +56,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             await testSuite.InitTimeouts(nrOfTimeouts, true);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now.AddDays(8));
 
             Assert.IsNotNull(endpoints);
@@ -72,7 +72,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationDonePrefix}{timeout.OwningTimeoutManager}";
             await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -89,7 +89,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationOngoingPrefix}{timeout.OwningTimeoutManager}";
             await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);

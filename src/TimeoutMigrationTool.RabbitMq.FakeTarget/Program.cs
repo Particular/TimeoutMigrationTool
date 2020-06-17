@@ -16,9 +16,18 @@ namespace TimeoutMigrationTool.RabbitMq.FakeTarget
             var endpointConfigC = new EndpointConfiguration("EndpointC");
             SetupEndpointConfig(endpointConfigC);
 
-            await Endpoint.Start(endpointConfigA);
-            await Endpoint.Start(endpointConfigB);
-            await Endpoint.Start(endpointConfigC);
+            var destinationEndpointConfig = new EndpointConfiguration("DestinationEndpoint");
+            SetupEndpointConfig(destinationEndpointConfig);
+
+            var endpointA = await Endpoint.Start(endpointConfigA);
+            var endpointB = await Endpoint.Start(endpointConfigB);
+            var endpointC = await Endpoint.Start(endpointConfigC);
+            var destinationEndpoint = await Endpoint.Start(destinationEndpointConfig);
+
+            await endpointA.Stop();
+            await endpointB.Stop();
+            await endpointC.Stop();
+            await destinationEndpoint.Stop();
         }
 
         private static void SetupEndpointConfig(EndpointConfiguration endpointConfig)

@@ -26,8 +26,14 @@
             {
                 return;
             }
+            var logStatment = formatter(state, exception);
 
-            Console.WriteLine(formatter(state, exception));
+            if(verbose)
+            {
+                logStatment = $"{DateTime.UtcNow}: {logStatment}";
+            }
+
+            Console.WriteLine(logStatment);
         }
 
         readonly bool verbose;

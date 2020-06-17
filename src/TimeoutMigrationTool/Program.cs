@@ -157,7 +157,7 @@
                     runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
                     runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
 
-                    var timeoutStorage = new RavenDBTimeoutStorage(serverUrl, databaseName, prefix, ravenVersion);
+                    var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion);
 
                     if (abortMigrationOption.HasValue())
                     {
