@@ -47,7 +47,7 @@
         {
             var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
 
-            persistence.SqlDialect<SqlDialect.MsSqlServer>();
+            persistence.SqlDialect<NServiceBus.SqlDialect.MsSqlServer>();
             persistence.ConnectionBuilder(
                 connectionBuilder: () =>
                 {
@@ -92,7 +92,7 @@
 
         protected SqlTimeoutStorage GetTimeoutStorage(int batchSize = 1024)
         {
-            var storage = new SqlTimeoutStorage(connectionString, Particular.TimeoutMigrationTool.SqlDialect.Parse("MsSql"), batchSize);
+            var storage = new SqlTimeoutStorage(connectionString, Particular.TimeoutMigrationTool.SqlP.SqlDialect.Parse("MsSql"), batchSize);
 
             //TODO: Add a propoer Init()
             storage.TryLoadOngoingMigration().GetAwaiter().GetResult();
