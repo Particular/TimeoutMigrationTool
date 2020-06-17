@@ -224,6 +224,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new InvalidOperationException("Cannot retrieve a document with empty id");
+            }
+
             var url = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(id)}";
             using var response = await httpClient.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -241,6 +246,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             if (!ids.Any())
             {
                 return new List<T>();
+            }
+            if (ids.Any(id => string.IsNullOrEmpty(id)))
+            {
+                throw new InvalidOperationException("Cannot retrieve a document with empty id");
             }
 
             var url = $"{serverUrl}/databases/{databaseName}/docs?";
