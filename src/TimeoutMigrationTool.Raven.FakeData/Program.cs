@@ -13,66 +13,98 @@
     {
         static async Task Main(string[] args)
         {
-            if (args.Length < 2) throw new InvalidOperationException("At least 3 arguments are needed in order to run: Servername and DatabaseName. If you want to skip db-creation, add a third argument set to true");
+            if (args.Length < 3) throw new InvalidOperationException("At least 3 arguments are needed in order to run: Servername and DatabaseName. If you want to skip db-creation, add a third argument set to true");
             var serverName = args[0];
             var databaseName = args[1];
-            var skipDbCreation = args.Length > 2 && Convert.ToBoolean(args[2]);
-            var nrOfTimeoutsToInsert = (args.Length < 4 || string.IsNullOrEmpty(args[3])) ? 100000 : Convert.ToInt32(args[3]);
+            var ravenVersion = args[2] == "4" ? RavenDbVersion.Four : RavenDbVersion.ThreeDotFive;
+            var nrOfTimeoutsToInsert = (args.Length == 3 || string.IsNullOrEmpty(args[3])) ? 100000 : Convert.ToInt32(args[3]);
 
-            if (!skipDbCreation)
+            var createDbUrl = ravenVersion == RavenDbVersion.Four ? $"{serverName}/admin/databases?name={databaseName}" : $"{serverName}/admin/databases/{databaseName}";
+            var httpContent = BuildHttpContentForDbCreation(ravenVersion, databaseName);
+
+            var dbCreationResult = await httpClient.PutAsync(createDbUrl, httpContent);
+            if (!dbCreationResult.IsSuccessStatusCode)
             {
-                var createDbUrl = $"{serverName}/admin/databases?name={databaseName}";
-                // Create the db
-                var db = new DatabaseRecord
-                {
-                    Disabled = false,
-                    DatabaseName = databaseName
-                };
-
-                var stringContent = new StringContent(JsonConvert.SerializeObject(db));
-                var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
-                if (!dbCreationResult.IsSuccessStatusCode)
-                    throw new Exception(
-                        $"Something went wrong while creating the database. Error code {dbCreationResult.StatusCode}");
+                throw new Exception($"Something went wrong while creating the database. Error code {dbCreationResult.StatusCode}");
             }
 
             var timeoutsPrefix = "TimeoutDatas";
-
             var nrOfBatches = Math.Ceiling(nrOfTimeoutsToInsert / (decimal)RavenConstants.DefaultPagingSize);
-            var timeoutIdCounter = 0;
-
-            for (var i = 1; i <= nrOfBatches; i++) // batch inserts per paging size
-            {
-                var commands = new List<PutCommand>();
-                var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk_docs";
-
-                for (var j = 0; j < RavenConstants.DefaultPagingSize && timeoutIdCounter < nrOfTimeoutsToInsert; j++)
-                {
-                    timeoutIdCounter++;
-                    var endpoint = j < (RavenConstants.DefaultPagingSize / 3) ? "EndpointA" : j < (RavenConstants.DefaultPagingSize / 3 / 3) * 2 ? "EndpointB" : "EndpointC";
-
-                    var insertCommand = CreateTimeoutInsertCommand(timeoutsPrefix, timeoutIdCounter, endpoint);
-                    commands.Add(insertCommand);
-                }
-
-                var request = new
-                {
-                    Commands = commands.ToArray()
-                };
-
-                var serializeObject = JsonConvert.SerializeObject(request);
-                var result = await httpClient.PostAsync(bulkInsertUrl,
-                    new StringContent(serializeObject, Encoding.UTF8, "application/json"));
-                result.EnsureSuccessStatusCode();
-            }
+            var timeoutIdCounter = await InitTimeouts(nrOfBatches, serverName, databaseName, nrOfTimeoutsToInsert, timeoutsPrefix, ravenVersion);
 
             Console.WriteLine($"{timeoutIdCounter} timeouts were created");
         }
 
-        static PutCommand CreateTimeoutInsertCommand(string timeoutsPrefix, int timeoutIdCounter, string endpoint)
+        static async Task<int> InitTimeouts(decimal nrOfBatches, string serverName, string databaseName, int nrOfTimeoutsToInsert, string timeoutsPrefix, RavenDbVersion ravenVersion)
+        {
+            var timeoutIdCounter = 0;
+
+
+                for (var i = 1; i <= nrOfBatches; i++) // batch inserts per paging size
+                {
+                    var commands = new List<object>();
+                    var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk_docs";
+
+                    for (var j = 0; j < RavenConstants.DefaultPagingSize && timeoutIdCounter < nrOfTimeoutsToInsert; j++)
+                    {
+                        timeoutIdCounter++;
+                        var timeout = CreateTimeoutData(timeoutsPrefix, timeoutIdCounter);
+
+                        var insertCommand = ravenVersion == RavenDbVersion.Four ? CreateRaven4TimeoutInsertCommand(timeout) : CreateRaven3TimeoutInsertCommand(timeout);
+                        commands.Add(insertCommand);
+                    }
+
+                    object request;
+                    if (ravenVersion == RavenDbVersion.Four)
+                    {
+                        request = new
+                        {
+                            Commands = commands.ToArray()
+                        };
+                    }
+                    else
+                    {
+                        request = commands.ToArray();
+                    }
+
+                    var serializeObject = JsonConvert.SerializeObject(request);
+                    var result = await httpClient.PostAsync(bulkInsertUrl,
+                        new StringContent(serializeObject, Encoding.UTF8, "application/json"));
+                    result.EnsureSuccessStatusCode();
+                }
+
+                return timeoutIdCounter;
+        }
+
+        static object CreateRaven3TimeoutInsertCommand(TimeoutData timeout)
+        {
+            // Create insert command for timeout
+            var insertCommand = new Raven3InsertCommand()
+            {
+                Key = timeout.Id,
+                Method = "PUT",
+                MetaData = new object(),
+                Document = timeout
+            };
+            return insertCommand;
+        }
+
+        static object CreateRaven4TimeoutInsertCommand(TimeoutData timeout)
+        {
+            // Create insert command for timeout
+            var insertCommand = new Raven4InsertCommand()
+            {
+                Id = timeout.Id,
+                Type = "PUT",
+                ChangeVector = null,
+                Document = timeout
+            };
+            return insertCommand;
+        }
+
+        static TimeoutData CreateTimeoutData(string timeoutsPrefix, int timeoutIdCounter)
         {
             var daysToTrigger = random.Next(2, 60); // randomize the Time property
-
             // Create the timeout
             var timeoutData = new TimeoutData
             {
@@ -84,33 +116,30 @@
                 Headers = new Dictionary<string, string>(),
                 State = Encoding.ASCII.GetBytes("This is my state")
             };
+            return timeoutData;
+        }
 
-            // Create insert command for timeout
-            var insertCommand = new PutCommand()
+        static StringContent BuildHttpContentForDbCreation(RavenDbVersion ravenVersion, string databaseName)
+        {
+            StringContent stringContent;
+            if (ravenVersion == RavenDbVersion.Four)
             {
-                Id = $"{timeoutsPrefix}/{timeoutIdCounter}",
-                Type = "PUT",
-                ChangeVector = null,
-                Document = timeoutData
-            };
-            return insertCommand;
+                // Create the db
+                var dbRaven4 = new DatabaseRecordRaven4
+                {
+                    Disabled = false,
+                    DatabaseName = databaseName
+                };
+                stringContent = new StringContent(JsonConvert.SerializeObject(dbRaven4));
+                return stringContent;
+            }
+
+            var dbRaven3 = new DatabaseRecordRaven3(databaseName);
+            stringContent = new StringContent(JsonConvert.SerializeObject(dbRaven3));
+            return stringContent;
         }
 
         static readonly HttpClient httpClient = new HttpClient();
         static Random random = new Random();
-    }
-
-    public class DatabaseRecord
-    {
-        public string DatabaseName { get; set; }
-        public bool Disabled { get; set; }
-    }
-
-    class PutCommand
-    {
-        public string Id { get; set; }
-        public string Type { get; set; }
-        public object ChangeVector { get; set; }
-        public TimeoutData Document { get; set; }
     }
 }

@@ -11,8 +11,6 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    using System.IO;
-
     public class Raven4Adapter : ICanTalkToRavenVersion
     {
         readonly string serverUrl;
@@ -222,11 +220,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
-            var documents = await GetDocuments(new[] { id }, idSetter);
-            return documents.SingleOrDefault();
+            var documents = await GetDocuments<T>(new[] { id });
+            var document = documents.SingleOrDefault();
+            idSetter(document, id);
+            return document;
         }
 
-        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
+        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
         {
             if (!ids.Any())
             {
@@ -264,7 +264,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (response.StatusCode == HttpStatusCode.NotFound)
                     continue;
 
-                var resultsFromUri = await GetDocumentsFromResponse(response.Content, idSetter);
+                var resultsFromUri = await GetDocumentsFromResponse<T>(response.Content);
                 results.AddRange(resultsFromUri);
             }
 
@@ -285,6 +285,24 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
+                results.Add(document);
+            }
+
+            return results;
+        }
+
+        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
+        {
+            var results = new List<T>();
+
+            var contentString = await resultContent.ReadAsStringAsync();
+            var jObject = JObject.Parse(contentString);
+            var resultSet = jObject.SelectToken("Results");
+
+            foreach (var item in resultSet)
+            {
+                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
+                var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 results.Add(document);
             }
 

@@ -27,7 +27,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             if (ravenToolState == null) return null;
 
             //TODO: replace with an Include
-            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
+            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches);
             return ravenToolState.ToToolState(batches);
         }
 
@@ -98,7 +98,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
             var batch = await ravenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(batch.TimeoutIds, (doc, id) => doc.Id = id);
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(batch.TimeoutIds);
             return timeouts;
         }
 
@@ -127,7 +127,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 throw new ArgumentNullException(nameof(ravenToolState), "Can't abort without a tool state");
             }
 
-            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
+            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches);
             var toolState = ravenToolState.ToToolState(batches);
 
             // Only restoring the timeouts in pending batches to their original state
@@ -178,7 +178,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task Complete()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
-            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
+            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches);
             ravenToolState.Status = MigrationStatus.Completed;
 
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState.ToToolState(batches));
