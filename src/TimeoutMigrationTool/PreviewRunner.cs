@@ -20,13 +20,21 @@
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Parse("2012-01-01"));
 
             var endpointProblems = new Dictionary<string,List<string>>();
-            logger.LogInformation("Running preview");
-            PrintLine();
-            PrintRow("Endpoint", "Number of timeouts", "Shortest", "Longest", "Destinations");
-            PrintLine();
+            if(!endpoints.Any())
+            {
+                logger.LogInformation($"No endpoints found in storage");
+                return;
+            }
+
+            logger.LogInformation($"The following endpoints was found:\n");
+
             foreach (var endpoint in endpoints)
             {
-                PrintRow(endpoint.EndpointName, endpoint.NrOfTimeouts, endpoint.ShortestTimeout, endpoint.LongestTimeout,string.Join(",", endpoint.Destinations));
+                logger.LogInformation($"{endpoint.EndpointName}");
+                logger.LogInformation($"\t-Total number of timeouts: {endpoint.NrOfTimeouts}");
+                logger.LogInformation($"\t-Shortest timeout: {endpoint.ShortestTimeout}");
+                logger.LogInformation($"\t-Longest timeout: {endpoint.LongestTimeout}");
+                logger.LogInformation($"\t-Timeout destinations: {string.Join(",",endpoint.Destinations)}");
 
                 endpointProblems[endpoint.EndpointName] = new List<string>();
 
@@ -42,7 +50,6 @@
                     endpointProblems[endpoint.EndpointName].Add($"Shortest timeout is {endpoint.ShortestTimeout} is about to trigger and can trigger to late should the migration take a long time.");
                 }
             }
-            PrintLine();
 
             foreach (var endpoint in endpointProblems)
             {
@@ -56,44 +63,8 @@
                 {
                     logger.LogInformation($"\t-{problem}");
                 }
-
-                PrintLine();
             }
         }
-
-        void PrintLine()
-        {
-            logger.LogInformation(new string('-', tableWidth));
-        }
-
-        void PrintRow(params object[] columns)
-        {
-            int width = (tableWidth - columns.Length) / columns.Length;
-            string row = "|";
-
-            foreach (var column in columns)
-            {
-                row += AlignCentre(column.ToString(), width) + "|";
-            }
-
-            logger.LogInformation(row);
-        }
-
-        string AlignCentre(string text, int width)
-        {
-            text = text.Length > width ? text.Substring(0, width - 3) + "..." : text;
-
-            if (string.IsNullOrEmpty(text))
-            {
-                return new string(' ', width);
-            }
-            else
-            {
-                return text.PadRight(width - (width - text.Length) / 2).PadLeft(width);
-            }
-        }
-
-        static int tableWidth = 120;
 
         readonly ILogger logger;
         readonly ITimeoutStorage timeoutStorage;
