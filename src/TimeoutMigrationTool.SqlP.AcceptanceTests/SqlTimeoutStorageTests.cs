@@ -285,13 +285,18 @@
                 .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
-            var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), sourceEndpoint, new Dictionary<string, string>());
+            var timeoutStorage = GetTimeoutStorage(3);
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), sourceEndpoint, new Dictionary<string, string>());
+
+            var batch1 = await toolState.TryGetNextBatch();
+
+            await timeoutStorage.MarkBatchAsCompleted(batch1.Number);
+
             await timeoutStorage.Abort();
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint}_TimeoutData");
 
-            Assert.AreEqual(10, numberOfTimeouts);
+            Assert.AreEqual(10-batch1.NumberOfTimeouts, numberOfTimeouts);
 
             Assert.AreEqual(1, await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutsMigration_State WHERE Status = 3"), "Status should be set to aborted");
         }

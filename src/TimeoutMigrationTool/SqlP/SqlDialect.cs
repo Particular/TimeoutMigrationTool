@@ -133,28 +133,29 @@ COMMIT;";
 
         public override string GetScriptToAbortMigration(string migrationRunId, string endpointName)
         {
-            return $@"BEGIN TRANSACTION
+            var migrationTableName = GetMigrationTableName(migrationRunId);
+            return $@"
+BEGIN TRANSACTION
+    DELETE ['{migrationTableName}']
+        OUTPUT DELETED.Id,
+            DELETED.Destination,
+            DELETED.SagaId,
+            DELETED.State,
+            DELETED.Time,
+            DELETED.Headers,
+            DELETED.PersistenceVersion
+    INTO [{endpointName}_TimeoutData]
+    WHERE ['{migrationTableName}'].Status <> 2;
 
-DELETE ['{GetMigrationTableName(migrationRunId)}']
-    OUTPUT DELETED.Id,
-        DELETED.Destination,
-        DELETED.SagaId,
-        DELETED.State,
-        DELETED.Time,
-        DELETED.Headers,
-        DELETED.PersistenceVersion
-    INTO [{endpointName}_TimeoutData];
 
-    UPDATE
-        TimeoutsMigration_State
+    UPDATE TimeoutsMigration_State
     SET
         Status = 3,
         CompletedAt = @CompletedAt
     WHERE
         MigrationRunId = '{migrationRunId}';
 
-    DROP TABLE ['{GetMigrationTableName(migrationRunId)}'];
-
+    DROP TABLE ['{migrationTableName}'];
 COMMIT;";
         }
 
