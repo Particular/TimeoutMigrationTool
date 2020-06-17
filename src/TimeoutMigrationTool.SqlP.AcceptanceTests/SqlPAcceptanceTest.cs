@@ -92,7 +92,7 @@
 
         protected SqlTimeoutStorage GetTimeoutStorage(int batchSize = 1024)
         {
-            var storage = new SqlTimeoutStorage(connectionString, Particular.TimeoutMigrationTool.SqlP.SqlDialect.Parse("MsSql"), batchSize);
+            var storage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), batchSize);
 
             //TODO: Add a propoer Init()
             storage.TryLoadOngoingMigration().GetAwaiter().GetResult();
