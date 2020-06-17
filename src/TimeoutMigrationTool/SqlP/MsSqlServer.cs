@@ -36,10 +36,11 @@ WHERE
             return $@"
 SELECT top 1 BatchNumber,
     Status,
-    (SELECT COUNT(*) FROM ['{GetMigrationTableName(migrationRunId)}'] as bc WHERE bc.BatchNumber = batch.BatchNumber) as NumberOfTimeouts 
+    COUNT(1) as NumberOfTimeouts 
 FROM ['{GetMigrationTableName(migrationRunId)}'] AS batch
-WHERE Status < 2
-ORDER BY Status DESC";
+GROUP BY BatchNumber, Status
+HAVING Status < 2
+ORDER BY BatchNumber";
         }
 
         public override string GetScriptLoadPendingMigrations()
@@ -101,7 +102,7 @@ BEGIN TRANSACTION
     WHERE [{endpointName}_TimeoutData].Time >= @CutOffTime;
 
     UPDATE BatchMigration
-    SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber
+    SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber + 1
     FROM (
         SELECT BatchNumber, ROW_NUMBER() OVER (ORDER BY (select 0)) / {batchSize} AS CalculatedBatchNumber
         FROM ['{migrationTableName}']

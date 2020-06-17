@@ -59,27 +59,30 @@
 
             using (var connection = dialect.Connect(connectionString))
             {
-                var command = connection.CreateCommand();
-                command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpointName, batchSize);
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandTimeout = longRunningQueuerTimeout;
+                    command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpointName, batchSize);
 
-                var runParametersParameter = command.CreateParameter();
-                runParametersParameter.ParameterName = "RunParameters";
-                runParametersParameter.Value = JsonConvert.SerializeObject(runParameters);
-                command.Parameters.Add(runParametersParameter);
+                    var runParametersParameter = command.CreateParameter();
+                    runParametersParameter.ParameterName = "RunParameters";
+                    runParametersParameter.Value = JsonConvert.SerializeObject(runParameters);
+                    command.Parameters.Add(runParametersParameter);
 
-                var cutOffTimeParameter = command.CreateParameter();
-                cutOffTimeParameter.ParameterName = "CutOffTime";
-                cutOffTimeParameter.Value = cutOffTime;
-                command.Parameters.Add(cutOffTimeParameter);
+                    var cutOffTimeParameter = command.CreateParameter();
+                    cutOffTimeParameter.ParameterName = "CutOffTime";
+                    cutOffTimeParameter.Value = cutOffTime;
+                    command.Parameters.Add(cutOffTimeParameter);
 
-                var startedAtParameter = command.CreateParameter();
-                startedAtParameter.ParameterName = "StartedAt";
-                startedAtParameter.Value = DateTime.UtcNow;
-                command.Parameters.Add(startedAtParameter);
+                    var startedAtParameter = command.CreateParameter();
+                    startedAtParameter.ParameterName = "StartedAt";
+                    startedAtParameter.Value = DateTime.UtcNow;
+                    command.Parameters.Add(startedAtParameter);
 
-                await command.ExecuteNonQueryAsync();
+                    await command.ExecuteNonQueryAsync();
 
-                return await TryLoadOngoingMigration();
+                    return await TryLoadOngoingMigration();
+                }
             }
         }
 
@@ -179,6 +182,7 @@
             {
                 using (var command = connection.CreateCommand())
                 {
+                    command.CommandTimeout = longRunningQueuerTimeout;
                     command.CommandText = dialect.GetScriptToAbortMigration(migrationRunId, toolState.EndpointName);
 
                     var completedAtParameter = command.CreateParameter();
@@ -287,6 +291,7 @@
         });
 
         string migrationRunId;
+        int longRunningQueuerTimeout = 1200;
 
         readonly SqlDialect dialect;
         readonly string connectionString;
