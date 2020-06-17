@@ -1,15 +1,15 @@
-using System;
-using System.Globalization;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Exceptions;
-
 namespace Particular.TimeoutMigrationTool.RabbitMq
 {
+    using System;
+    using System.Globalization;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+    using RabbitMQ.Client;
+    using RabbitMQ.Client.Events;
+    using RabbitMQ.Client.Exceptions;
+
     public class RabbitStagePump : IDisposable
     {
         public RabbitStagePump(ILogger logger, string targetConnectionString, string queueName)
@@ -35,6 +35,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         CancellationTokenSource messageProcessing;
         IConnection connection;
         EventingBasicConsumer consumer;
+        IModel channel;
 
         // Stop
         TaskCompletionSource<bool> connectionShutdownCompleted;
@@ -47,8 +48,9 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             connection = factory.CreateConnection("TimoutMigration - CompleteBatch");
 
-            var channel = connection.CreateModel();
+            channel = connection.CreateModel();
 
+            channel.ConfirmSelect();
             messageCount = QueueCreator.GetStatingQueueMessageLength(channel);
 
             logger.LogDebug($"Pushing {messageCount} to the native timeout structure");
@@ -193,6 +195,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         {
             semaphore?.Dispose();
             messageProcessing?.Dispose();
+            channel?.Dispose();
             connection?.Dispose();
         }
 
@@ -210,17 +213,21 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 logger.LogError("The migration was cancelled due to error when completing the batch.");
             }
 
-            if (!messageProcessing.IsCancellationRequested && QueueCreator.GetStatingQueueMessageLength(consumer.Model) > 0 )
+            if (!messageProcessing.IsCancellationRequested && QueueCreator.GetStatingQueueMessageLength(consumer.Model) > 0)
             {
                 throw new InvalidOperationException("Staging queue is not empty after finishing CompleteBatch");
             }
 
+            channel.WaitForConfirms(TimeSpan.FromSeconds(10));
+
             await Stop();
+
             return processedMessages;
         }
 
         ConnectionFactory factory;
-        private readonly ILogger logger;
         string queueName;
+
+        readonly ILogger logger;
     }
 }

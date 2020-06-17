@@ -13,7 +13,6 @@
             this.logger = logger;
             this.targetConnectionString = targetConnectionString;
             batchWriter = new RabbitBatchWriter(logger, targetConnectionString);
-            messagePump = new RabbitStagePump(logger, targetConnectionString, QueueCreator.StagingQueueName);
         }
 
         public async Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
@@ -33,9 +32,12 @@
             return batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
         }
 
-        public Task<int> CompleteBatch(int number)
+        public async Task<int> CompleteBatch(int number)
         {
-            return messagePump.CompleteBatch(number);
+            using (var messagePump = new RabbitStagePump(logger, targetConnectionString, QueueCreator.StagingQueueName))
+            {
+                return await messagePump.CompleteBatch(number);
+            }
         }
 
         Task<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
@@ -109,7 +111,6 @@
         ConnectionFactory factory;
 
         readonly ILogger logger;
-        readonly RabbitStagePump messagePump;
         readonly RabbitBatchWriter batchWriter;
 
         const int MaxDelayInSeconds = (1 << MaxLevel) - 1;
