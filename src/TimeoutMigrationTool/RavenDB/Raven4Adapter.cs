@@ -11,6 +11,7 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System.IO;
 
     public class Raven4Adapter : ICanTalkToRavenVersion
     {
@@ -26,18 +27,17 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task UpdateDocument(string key, object document)
         {
-            var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
+            var updateBatchUrl = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(key)}";
             var serializeObject = JsonConvert.SerializeObject(document);
-            var httpContent = new StringContent(serializeObject);
-
-            var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent);
+            using var httpContent = new StringContent(serializeObject);
+            using var saveResult = await httpClient.PutAsync(updateBatchUrl, httpContent);
             saveResult.EnsureSuccessStatusCode();
         }
 
         public async Task DeleteDocument(string key)
         {
-            var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={key}";
-            var result = await httpClient.DeleteAsync(deleteStateUrl);
+            var deleteStateUrl = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(key)}";
+            using var result = await httpClient.DeleteAsync(deleteStateUrl);
             result.EnsureSuccessStatusCode();
         }
 
@@ -158,7 +158,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string prefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
-            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={prefix}&pageSize={pageSize}";
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(prefix)}&pageSize={pageSize}";
             var checkForMoreResults = true;
             var iteration = 0;
 
@@ -166,7 +166,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var skipFirst = $"&start={iteration * pageSize}";
                 var getUrl = iteration == 0 ? url : url + skipFirst;
-                var result = await httpClient.GetAsync(getUrl);
+                using var result = await httpClient.GetAsync(getUrl);
 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
@@ -177,6 +177,43 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     var elegibleItems = pagedTimeouts.Where(filterPredicate);
                     items.AddRange(elegibleItems);
                     iteration++;
+                }
+            }
+
+            return items;
+        }
+
+        public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages = 0) where T : class
+        {
+            var items = new List<T>();
+            var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={RavenConstants.DefaultPagingSize}";
+
+            var checkForMoreResults = true;
+            var fetchStartFrom = startFrom;
+            var iteration = 0;
+
+            while (checkForMoreResults)
+            {
+                var skipFirst = $"&start={fetchStartFrom}";
+                var getUrl = fetchStartFrom == 0 ? url : url + skipFirst;
+                using var result = await httpClient.GetAsync(getUrl);
+
+                if (result.StatusCode == HttpStatusCode.OK)
+                {
+                    var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
+
+                    items.AddRange(pagedTimeouts);
+                    fetchStartFrom += pagedTimeouts.Count;
+                    iteration++;
+
+                    if (iteration == nrOfPages)
+                    {
+                        checkForMoreResults = false;
+                    }
+                    else if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < RavenConstants.DefaultPagingSize)
+                    {
+                        checkForMoreResults = false;
+                    }
                 }
             }
 
@@ -196,14 +233,40 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 return new List<T>();
             }
 
-            var qs = ids.Aggregate("", (queryString, id) => queryString + $"id={id}&", queryString=>queryString.TrimEnd('&'));
-            var url = $"{serverUrl}/databases/{databaseName}/docs?{qs}";
-            var response = await httpClient.GetAsync(url);
+            var url = $"{serverUrl}/databases/{databaseName}/docs?";
+            var queryStringIds = ids.Select(id => $"id={Uri.EscapeDataString(id)}").ToList();
+            var uris = new List<string>();
+            var uriBuilder = new StringBuilder(RavenConstants.MaxUriLength, RavenConstants.MaxUriLength);
+            uriBuilder.Append(url);
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                return new List<T>();
+            while (queryStringIds.Any())
+            {
+                try
+                {
+                    var idQry = queryStringIds.First();
+                    uriBuilder.Append($"{idQry}&");
+                    queryStringIds.Remove(idQry);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    var uri = uriBuilder.ToString().TrimEnd('&');
+                    uris.Add(uri);
+                    uriBuilder = new StringBuilder(RavenConstants.MaxUriLength, RavenConstants.MaxUriLength);
+                    uriBuilder.Append(url);
+                }
+            }
+            uris.Add(uriBuilder.ToString().TrimEnd('&'));
 
-            var results = await GetDocumentsFromResponse(response.Content, idSetter);
+            var results = new List<T>();
+            foreach (var uri in uris)
+            {
+                using var response = await httpClient.GetAsync(uri);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    continue;
+
+                var resultsFromUri = await GetDocumentsFromResponse(response.Content, idSetter);
+                results.AddRange(resultsFromUri);
+            }
 
             return results;
         }
@@ -218,6 +281,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var item in resultSet)
             {
+                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
@@ -233,10 +297,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 Commands = commands.ToArray()
             };
+
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var serializedCommands = JsonConvert.SerializeObject(bulkCommand);
-            var result = await httpClient.PostAsync(bulkUpdateUrl,
-                new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+
+            using var httpContent = new StringContent(serializedCommands, Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(HttpMethod.Post, bulkUpdateUrl);
+            request.Version = HttpVersion.Version10;
+            request.Content = httpContent;
+
+            using var result = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             result.EnsureSuccessStatusCode();
         }
     }

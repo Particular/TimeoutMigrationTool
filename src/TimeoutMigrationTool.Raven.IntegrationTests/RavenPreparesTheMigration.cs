@@ -33,7 +33,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenGettingTimeoutStateAndNoneIsFoundNullIsReturned()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var toolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(toolState, Is.Null);
@@ -44,7 +44,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             await testSuite.SaveToolState(testSuite.SetupToolState(DateTime.Now.AddDays(-1)));
 
-            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var retrievedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(retrievedToolState, Is.Not.Null);
@@ -55,7 +55,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
         {
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
@@ -78,18 +78,18 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatchesWhenMoreEndpointsAreAvailable()
         {
+            nrOfTimeouts = 3000;
             testSuite.EndpointName = "B";
             await testSuite.InitTimeouts(nrOfTimeouts, true);
 
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
-            Assert.That(toolState.NumberOfBatches, Is.EqualTo(1));
-
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
             var nextBatch = await toolState.TryGetNextBatch();
             var nextBatchData = await timeoutStorage.ReadBatch(nextBatch.Number);
-            Assert.That(nextBatchData.Count(), Is.EqualTo(500));
+            Assert.That(nextBatchData.Count(), Is.EqualTo(920));
         }
 
         [Test]
@@ -99,13 +99,13 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.SaveToolState(toolState);
 
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
 
             var updatedToolState = await timeoutStorage.TryLoadOngoingMigration();
             Assert.That(updatedToolState.EndpointName, Is.EqualTo(testSuite.EndpointName));
         }
 
-        private readonly int nrOfTimeouts = 1500;
+        private int nrOfTimeouts = 1500;
     }
 
     [TestFixture]
