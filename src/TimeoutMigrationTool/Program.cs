@@ -22,7 +22,6 @@
     //  sqlp preview --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --dialect MsSqlServer --target amqp://guest:guest@localhost:5672
     class Program
     {
-        const string CutoffTimeFormat = "yyyy-MM-dd HH:mm:ss:ffffff Z";
         static int Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledAppdomainExceptionHandler);
@@ -300,25 +299,26 @@
                 return cutoffTime;
             }
 
-            throw new Exception($"Unable to parse the cutofftime, please supply the cutoffTime in the following format '{CutoffTimeFormat}'");
+            throw new Exception($"Unable to parse the cutofftime, please supply the cutoffTime in the following format 'yyyy-MM-dd hh:mm:ss'");
         }
 
 
-        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime? cutOffTime, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
+        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime? cutoffTime, Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutCreator)
         {
             var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportTimeoutCreator);
 
-            if (cutOffTime.HasValue)
+            if (cutoffTime.HasValue)
             {
-                runParameters.Add(ApplicationOptions.CutoffTime, cutOffTime.Value.ToString(CutoffTimeFormat));
+                runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.Value.ToShortTimeString());
+                logger.LogDebug($"Cutoff time: {cutoffTime.Value}");
             }
             else
             {
-                cutOffTime = DateTime.UtcNow.AddDays(-1);
+                cutoffTime = DateTime.Parse("2012-01-01");
             }
 
 
-            return migrationRunner.Run(cutOffTime.Value, endpointFilter, runParameters);
+            return migrationRunner.Run(cutoffTime.Value, endpointFilter, runParameters);
         }
 
         static EndpointFilter ParseEndpointFilter(CommandOption allEndpointsOption, CommandOption endpointFilterOption)
