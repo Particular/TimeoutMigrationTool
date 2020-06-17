@@ -88,6 +88,10 @@ BEGIN TRANSACTION
         PersistenceVersion VARCHAR(23) NOT NULL
     );
 
+    CREATE NONCLUSTERED INDEX INDEX_Status_BatchNumber
+    ON [dbo].['{migrationTableName}'] ([Status])
+    INCLUDE ([BatchNumber]);
+
     DELETE [{endpointName}_TimeoutData]
     OUTPUT DELETED.Id,
         -1,
