@@ -241,7 +241,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return document;
         }
 
-        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
+        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
         {
             if (!ids.Any())
             {
@@ -252,40 +252,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 throw new InvalidOperationException("Cannot retrieve a document with empty id");
             }
 
-            var url = $"{serverUrl}/databases/{databaseName}/docs?";
-            var queryStringIds = ids.Select(id => $"id={Uri.EscapeDataString(id)}").ToList();
-            var uris = new List<string>();
-            var uriBuilder = new StringBuilder(RavenConstants.MaxUriLength, RavenConstants.MaxUriLength);
-            uriBuilder.Append(url);
+            var url = $"{serverUrl}/databases/{databaseName}/queries";
+            var serializedCommands = JsonConvert.SerializeObject(ids);
+            using var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
 
-            while (queryStringIds.Any())
-            {
-                try
-                {
-                    var idQry = queryStringIds.First();
-                    uriBuilder.Append($"{idQry}&");
-                    queryStringIds.Remove(idQry);
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    var uri = uriBuilder.ToString().TrimEnd('&');
-                    uris.Add(uri);
-                    uriBuilder = new StringBuilder(RavenConstants.MaxUriLength, RavenConstants.MaxUriLength);
-                    uriBuilder.Append(url);
-                }
-            }
-            uris.Add(uriBuilder.ToString().TrimEnd('&'));
 
-            var results = new List<T>();
-            foreach (var uri in uris)
-            {
-                using var response = await httpClient.GetAsync(uri);
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                    continue;
+            var results =await  GetDocumentsFromQueryResponse<T>(result.Content, (arg1, s) => { });
 
-                var resultsFromUri = await GetDocumentsFromResponse<T>(response.Content);
-                results.AddRange(resultsFromUri);
-            }
 
             return results;
         }
@@ -308,16 +281,20 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
+        private async Task<List<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
             var contentString = await resultContent.ReadAsStringAsync();
-            var jArray = JArray.Parse(contentString);
+            var jObject = JObject.Parse(contentString);
+            var resultSet = jObject.SelectToken("Results");
 
-            foreach (var item in jArray)
+            foreach (var item in resultSet)
             {
+                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
+                var id = (string)((dynamic)item)["@metadata"]["@id"];
+                idSetter(document, id);
                 results.Add(document);
             }
 

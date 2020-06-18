@@ -224,13 +224,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 throw new InvalidOperationException("Cannot retrieve a document with empty id");
             }
-            var documents = await GetDocuments<T>(new[] { id });
+            var documents = await GetDocuments(new[] { id }, idSetter);
             var document = documents.SingleOrDefault();
             idSetter(document, id);
             return document;
         }
 
-        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids) where T : class
+        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
         {
             if (!ids.Any())
             {

@@ -68,8 +68,7 @@
                     }
 
                     var serializeObject = JsonConvert.SerializeObject(request);
-                    var result = await httpClient.PostAsync(bulkInsertUrl,
-                        new StringContent(serializeObject, Encoding.UTF8, "application/json"));
+                    var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializeObject, Encoding.UTF8, "application/json"));
                     result.EnsureSuccessStatusCode();
                 }
 
@@ -83,7 +82,7 @@
             {
                 Key = timeout.Id,
                 Method = "PUT",
-                MetaData = new object(),
+                Metadata = new object(),
                 Document = timeout
             };
             return insertCommand;
