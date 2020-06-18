@@ -272,7 +272,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (response.StatusCode == HttpStatusCode.NotFound)
                     continue;
 
-                var resultsFromUri = await GetDocumentsFromResponse<T>(response.Content);
+                var resultsFromUri = await GetDocumentsFromResponse(response.Content, idSetter);
                 results.AddRange(resultsFromUri);
             }
 
@@ -293,24 +293,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
-                results.Add(document);
-            }
-
-            return results;
-        }
-
-        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent) where T : class
-        {
-            var results = new List<T>();
-
-            var contentString = await resultContent.ReadAsStringAsync();
-            var jObject = JObject.Parse(contentString);
-            var resultSet = jObject.SelectToken("Results");
-
-            foreach (var item in resultSet)
-            {
-                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
-                var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 results.Add(document);
             }
 
