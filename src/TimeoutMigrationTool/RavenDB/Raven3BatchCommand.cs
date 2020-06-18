@@ -2,7 +2,7 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    internal class Raven3BatchCommand
+    class Raven3BatchCommand
     {
         public string Key { get; set; }
         public string Method { get; set; }

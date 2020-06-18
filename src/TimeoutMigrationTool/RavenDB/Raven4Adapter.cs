@@ -11,8 +11,6 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
-    using System.IO;
-
     public class Raven4Adapter : ICanTalkToRavenVersion
     {
         readonly string serverUrl;
@@ -222,8 +220,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new InvalidOperationException("Cannot retrieve a document with empty id");
+            }
             var documents = await GetDocuments(new[] { id }, idSetter);
-            return documents.SingleOrDefault();
+            var document = documents.SingleOrDefault();
+            idSetter(document, id);
+            return document;
         }
 
         public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
@@ -231,6 +235,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             if (!ids.Any())
             {
                 return new List<T>();
+            }
+            if (ids.Any(id => string.IsNullOrEmpty(id)))
+            {
+                throw new InvalidOperationException("Cannot retrieve a document with empty id");
             }
 
             var url = $"{serverUrl}/databases/{databaseName}/docs?";

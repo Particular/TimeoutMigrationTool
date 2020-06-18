@@ -98,7 +98,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
         {
             var batch = await ravenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(batch.TimeoutIds, (doc, id) => doc.Id = id);
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(batch.TimeoutIds, (doc, id) => { doc.Id = id; });
             return timeouts;
         }
 

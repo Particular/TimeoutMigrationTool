@@ -224,12 +224,18 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new InvalidOperationException("Cannot retrieve a document with empty id");
+            }
+
             var url = $"{serverUrl}/databases/{databaseName}/docs?id={Uri.EscapeDataString(id)}";
             using var response = await httpClient.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return default(T);
             }
+
             var document = await GetDocumentFromResponse<T>(response.Content);
             idSetter(document, id);
             return document;
@@ -237,18 +243,22 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
         {
-            var docs = new List<T>();
             if (!ids.Any())
             {
-                return docs;
+                return new List<T>();
+            }
+            if (ids.Any(id => string.IsNullOrEmpty(id)))
+            {
+                throw new InvalidOperationException("Cannot retrieve a document with empty id");
             }
 
-            foreach (var id in ids)
-            {
-                var document = await GetDocument(id, idSetter);
-                docs.Add(document);
-            }
-            return docs;
+            var url = $"{serverUrl}/databases/{databaseName}/queries";
+            var serializedCommands = JsonConvert.SerializeObject(ids);
+            using var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
+            
+            var results =await  GetDocumentsFromQueryResponse(result.Content, idSetter);
+            
+            return results;
         }
 
         private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
@@ -260,6 +270,26 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var item in jArray)
             {
+                var document = JsonConvert.DeserializeObject<T>(item.ToString());
+                var id = (string)((dynamic)item)["@metadata"]["@id"];
+                idSetter(document, id);
+                results.Add(document);
+            }
+
+            return results;
+        }
+
+        private async Task<List<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        {
+            var results = new List<T>();
+
+            var contentString = await resultContent.ReadAsStringAsync();
+            var jObject = JObject.Parse(contentString);
+            var resultSet = jObject.SelectToken("Results");
+
+            foreach (var item in resultSet)
+            {
+                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
