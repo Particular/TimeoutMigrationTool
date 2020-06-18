@@ -255,11 +255,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var url = $"{serverUrl}/databases/{databaseName}/queries";
             var serializedCommands = JsonConvert.SerializeObject(ids);
             using var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
-
-
-            var results =await  GetDocumentsFromQueryResponse<T>(result.Content, (arg1, s) => { });
-
-
+            
+            var results =await  GetDocumentsFromResponse<T>(result.Content, (arg1, s) => { });
+            
             return results;
         }
 
