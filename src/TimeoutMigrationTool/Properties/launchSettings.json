@@ -2,7 +2,7 @@
   "profiles": {
     "TimeoutMigrationTool": {
       "commandName": "Project",
-      "commandLineArgs": "ravendb migrate -v --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 --target amqp://guest:guest@localhost:5672 --allEndpoints --cutoffTime \"2020-01-01 01:01:01\""
+      "commandLineArgs": "ravendb migrate -v --serverUrl http://localhost:8383 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 3.5 --target amqp://guest:guest@localhost:5672 --allEndpoints --cutoffTime \"2020-01-01 01:01:01\""
     }
   }
 }

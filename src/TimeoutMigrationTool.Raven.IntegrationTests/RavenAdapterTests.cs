@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
@@ -38,6 +39,7 @@
             var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeoutIds, (doc, id) => doc.Id = id);
 
             Assert.That(timeouts.Count, Is.EqualTo(5));
+            Assert.That(string.IsNullOrEmpty(timeouts.First().Id), Is.False);
         }
 
         [Test]
