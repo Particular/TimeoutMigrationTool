@@ -55,12 +55,13 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.Created));
         }
 
-        public async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false)
+        public async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false, string prefixIdsWith = null)
         {
             var timeoutsPrefix = "TimeoutDatas";
             for (var i = 0; i < nrOfTimeouts; i++)
             {
-                var insertTimeoutUrl = $"{ServerName}/databases/{DatabaseName}/docs?id={timeoutsPrefix}/{i}";
+                var idPrefix = string.IsNullOrEmpty(prefixIdsWith) ? "" : prefixIdsWith;
+                var insertTimeoutUrl = $"{ServerName}/databases/{DatabaseName}/docs?id={timeoutsPrefix}/{idPrefix + i}";
 
                 // Insert the timeout data
                 var timeoutData = new TimeoutData
