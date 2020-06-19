@@ -55,6 +55,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatches()
         {
+            nrOfTimeouts = RavenConstants.DefaultPagingSize + 5;
             await testSuite.InitTimeouts(nrOfTimeouts);
             var timeoutStorage =
                 new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
@@ -63,9 +64,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
 
             var firstBatch = await toolState.TryGetNextBatch();
-
             var batchData = await timeoutStorage.ReadBatch(firstBatch.Number);
-
             Assert.That(batchData.Count(), Is.EqualTo(RavenConstants.DefaultPagingSize));
 
             firstBatch.State = BatchState.Completed;
