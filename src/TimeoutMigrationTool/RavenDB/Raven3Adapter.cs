@@ -222,6 +222,34 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
+        public async Task<Tuple<bool, List<T>>> GetDocmentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
+        {
+            var url = $"{serverUrl}/databases/{databaseName}/indexes/TimeoutsIndex?start={startFrom}&pageSize={RavenConstants.DefaultPagingSize}";
+            using var result = await httpClient.GetAsync(url);
+
+            if (result.StatusCode != HttpStatusCode.OK)
+            {
+                return new Tuple<bool, List<T>>(true, new List<T>());
+            }
+
+            var results = new List<T>();
+            var contentString = await result.Content.ReadAsStringAsync();
+            var jObject = JObject.Parse(contentString);
+            var resultSet = jObject.SelectToken("Results");
+            var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+
+            foreach (var item in resultSet)
+            {
+                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
+                var document = JsonConvert.DeserializeObject<T>(item.ToString());
+                var id = (string)((dynamic)item)["@metadata"]["@id"];
+                idSetter(document, id);
+                results.Add(document);
+            }
+
+            return new Tuple<bool, List<T>>(isStale, results);
+        }
+
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
         {
             if (string.IsNullOrEmpty(id))
@@ -255,9 +283,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var url = $"{serverUrl}/databases/{databaseName}/queries";
             var serializedCommands = JsonConvert.SerializeObject(ids);
             using var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
-            
+
             var results =await  GetDocumentsFromQueryResponse(result.Content, idSetter);
-            
+
             return results;
         }
 
