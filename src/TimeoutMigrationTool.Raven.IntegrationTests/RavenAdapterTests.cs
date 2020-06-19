@@ -5,7 +5,6 @@
     using System.Linq;
     using System.Threading.Tasks;
     using NUnit.Framework;
-    using NUnit.Framework.Constraints;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
     using Raven3;
@@ -136,7 +135,7 @@
         }
 
         [Test]
-        public async Task CanReadDocumentsByIndex()
+        public async Task CanReadDocumentsByIndexWhenItDoesntExist()
         {
             var nrOfTimeouts = 500;
 
@@ -144,9 +143,26 @@
             await suite.InitTimeouts(nrOfTimeouts);
 
             var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
-            var result = await ravenAdapter.GetDocmentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
+            Assert.ThrowsAsync<Exception>(() => ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0));
+            var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
 
             Assert.That(result.Item1, Is.False);
+            Assert.That(result.Item2.Count, Is.EqualTo(500));
+        }
+
+        [Test]
+        public async Task CanReadDocumentsByIndexWhenIndexExist()
+        {
+            var nrOfTimeouts = 500;
+
+            var suite = new Raven3TestSuite();
+            await suite.InitTimeouts(nrOfTimeouts);
+            await suite.CreateIndex();
+
+            var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
+            Assert.ThrowsAsync<Exception>(() => ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0));
+            var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
+
             Assert.That(result.Item2.Count, Is.EqualTo(500));
         }
     }

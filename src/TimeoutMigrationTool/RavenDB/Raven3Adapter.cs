@@ -222,11 +222,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<Tuple<bool, List<T>>> GetDocmentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
+        public async Task<Tuple<bool, List<T>>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
         {
-            var url = $"{serverUrl}/databases/{databaseName}/indexes/TimeoutsIndex?start={startFrom}&pageSize={RavenConstants.DefaultPagingSize}";
-            using var result = await httpClient.GetAsync(url);
+            var indexExists = await DoesTimeoutIndexExist();
+            if (!indexExists)
+            {
+                throw new Exception($"Could not find the TimeoutIndex named '{RavenConstants.TimeoutIndexName}' on the database, unable to continue an index-based migration");
+            }
 
+            var url = $"{serverUrl}/databases/{databaseName}/indexes/{RavenConstants.TimeoutIndexName}?start={startFrom}&pageSize={RavenConstants.DefaultPagingSize}";
+            using var result = await httpClient.GetAsync(url);
             if (result.StatusCode != HttpStatusCode.OK)
             {
                 return new Tuple<bool, List<T>>(true, new List<T>());
@@ -248,6 +253,23 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             return new Tuple<bool, List<T>>(isStale, results);
+        }
+
+        async Task<bool> DoesTimeoutIndexExist()
+        {
+            var indexUrl = $"{serverUrl}/databases/{databaseName}/indexes-stats";
+            using var indexResults = await httpClient.GetAsync(indexUrl);
+            indexResults.EnsureSuccessStatusCode();
+            var indexContentString = await indexResults.Content.ReadAsStringAsync();
+            var jArray = JArray.Parse(indexContentString);
+            foreach (var item in jArray)
+            {
+                var indexName = (string)((dynamic)item)["Name"];
+                if (indexName == RavenConstants.TimeoutIndexName)
+                    return true;
+            }
+
+            return false;
         }
 
         public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
