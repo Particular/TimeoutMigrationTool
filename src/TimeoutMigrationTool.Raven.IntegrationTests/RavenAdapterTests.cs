@@ -140,14 +140,13 @@
             var nrOfTimeouts = 500;
 
             var suite = new Raven3TestSuite();
+            await suite.SetupDatabase();
             await suite.InitTimeouts(nrOfTimeouts);
 
             var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
             Assert.ThrowsAsync<Exception>(() => ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0));
-            var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
-
-            Assert.That(result.Item1, Is.False);
-            Assert.That(result.Item2.Count, Is.EqualTo(500));
+            
+            await suite.TeardownDatabase();
         }
 
         [Test]
@@ -156,14 +155,17 @@
             var nrOfTimeouts = 500;
 
             var suite = new Raven3TestSuite();
+            await suite.SetupDatabase();
             await suite.InitTimeouts(nrOfTimeouts);
             await suite.CreateIndex();
 
             var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
-            Assert.ThrowsAsync<Exception>(() => ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0));
+            await Task.Delay(TimeSpan.FromSeconds(2));
             var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
 
+            Assert.That(result.Item1, Is.False);
             Assert.That(result.Item2.Count, Is.EqualTo(500));
+            await suite.TeardownDatabase();
         }
     }
 
