@@ -3,7 +3,10 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net.Http;
+    using System.Text;
     using System.Threading.Tasks;
+    using Newtonsoft.Json;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
@@ -163,8 +166,60 @@
             await Task.Delay(TimeSpan.FromSeconds(2));
             var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
 
-            Assert.That(result.Item1, Is.False);
-            Assert.That(result.Item2.Count, Is.EqualTo(500));
+           // Assert.That(result.Item1, Is.False);
+            Assert.That(result.Count, Is.EqualTo(500));
+            await suite.TeardownDatabase();
+        }
+        
+        [Test]
+        public async Task CanPageDocumentsAndGetUniqueResultsWhenQueryingByIndex()
+        {
+            var nrOfTimeouts = 1500;
+
+            var suite = new Raven3TestSuite();
+            await suite.SetupDatabase();
+            await suite.InitTimeouts(nrOfTimeouts);
+            await suite.CreateIndex();
+
+            var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            var resultsPage1 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
+            var timeoutData = resultsPage1.First();
+            timeoutData.OwningTimeoutManager = "bla";
+            await ravenAdapter.UpdateDocument(timeoutData.Id, timeoutData);
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            var resultsPage2 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, RavenConstants.DefaultPagingSize);
+
+            Assert.That(resultsPage1.Count, Is.EqualTo(1024));
+            Assert.That(resultsPage2.Count, Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
+            var timeoutIds = resultsPage1.Select(x => x.Id).ToList();
+            timeoutIds.AddRange(resultsPage2.Select(x => x.Id));
+            var uniqueTimeoutIds = timeoutIds.Distinct();
+            Assert.That(uniqueTimeoutIds.Count(), Is.EqualTo(nrOfTimeouts));
+            
+            await suite.TeardownDatabase();
+        }
+        
+        [Test]
+        public async Task CanPathAMillionTimeoutsAtOnce()
+        {
+            var nrOfTimeouts = 10;
+
+            var suite = new Raven3TestSuite();
+            await suite.SetupDatabase();
+            await suite.InitTimeouts(nrOfTimeouts);
+            await suite.CreateIndex();
+
+            var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            
+            var succeeded = await ravenAdapter.HideTimeouts(DateTime.UtcNow);
+            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(data => true, "TimeoutDatas", (timeout, id) => timeout.Id = id);
+           
+            Assert.That(succeeded, Is.True);
+            Assert.That(timeouts.All(t => t.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix)), Is.True);
+            
             await suite.TeardownDatabase();
         }
     }

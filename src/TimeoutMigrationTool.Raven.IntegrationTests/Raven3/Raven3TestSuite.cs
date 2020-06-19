@@ -206,7 +206,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
         public async Task CreateIndex()
         {
-            var map = "from doc in docs select new {  doc.Time, doc.SagaId, doc.OwningTimeoutManager }";
+            var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
             var index = new
             {
                 Analyzers = (object)null,

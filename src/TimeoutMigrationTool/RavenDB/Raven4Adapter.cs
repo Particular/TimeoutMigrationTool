@@ -147,6 +147,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
+        public Task<List<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> HideTimeouts(DateTime cutoffDate)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task BatchDelete(string[] keys)
         {
             var commands = keys.Select(GetDeleteCommand);

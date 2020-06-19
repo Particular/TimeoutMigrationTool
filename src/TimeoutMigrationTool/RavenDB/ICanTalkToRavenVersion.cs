@@ -17,5 +17,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class;
         Task CompleteBatchAndUpdateTimeouts(RavenBatch batch);
         Task ArchiveDocument(string archivedToolStateId, RavenToolState toolState);
+        Task<List<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class;
+        Task<bool> HideTimeouts(DateTime cutoffDate);
     }
 }

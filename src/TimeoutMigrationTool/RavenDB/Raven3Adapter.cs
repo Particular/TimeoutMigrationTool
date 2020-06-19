@@ -189,25 +189,25 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var items = new List<T>();
             var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={RavenConstants.DefaultPagingSize}";
-
+            
             var checkForMoreResults = true;
             var fetchStartFrom = startFrom;
             var iteration = 0;
-
+            
             while (checkForMoreResults)
             {
                 var skipFirst = $"&start={fetchStartFrom}";
                 var getUrl = fetchStartFrom == 0 ? url : url + skipFirst;
                 using var result = await httpClient.GetAsync(getUrl);
-
+            
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
                     var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
-
+            
                     items.AddRange(pagedTimeouts);
                     fetchStartFrom += pagedTimeouts.Count;
                     iteration++;
-
+            
                     if (iteration == nrOfPages)
                     {
                         checkForMoreResults = false;
@@ -218,11 +218,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     }
                 }
             }
-
+            
             return items;
         }
 
-        public async Task<Tuple<bool, List<T>>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
+        public async Task<List<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
         {
             var indexExists = await DoesTimeoutIndexExist();
             if (!indexExists)
@@ -234,7 +234,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             using var result = await httpClient.GetAsync(url);
             if (result.StatusCode != HttpStatusCode.OK)
             {
-                return new Tuple<bool, List<T>>(true, new List<T>());
+                return new List<T>();
             }
 
             var results = new List<T>();
@@ -242,6 +242,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var jObject = JObject.Parse(contentString);
             var resultSet = jObject.SelectToken("Results");
             var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+            if (isStale) throw new Exception("bla");
 
             foreach (var item in resultSet)
             {
@@ -252,7 +253,29 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 results.Add(document);
             }
 
-            return new Tuple<bool, List<T>>(isStale, results);
+            return results;
+        }
+
+        public async Task<bool> HideTimeouts(DateTime cutoffDate)
+        {
+            var cutoffDateParameter = cutoffDate.ToString("YYYY-MM-DDThh:mm:ssZ");
+            cutoffDateParameter = cutoffDateParameter.Replace(":", "\\:"); // escape characters for lucene
+            var dateRangeSpecification = $"Time:[{cutoffDateParameter} TO *]";
+            var patch = new Patch()
+            {
+                Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationOngoingPrefix.Length});",
+                Values = new { }
+            };
+            
+            var patchCommand = JsonConvert.SerializeObject(patch);
+            var url = $"{serverUrl}/databases{databaseName}/bulk_docs/TimeoutsIndex?query={Uri.EscapeDataString(dateRangeSpecification)}&allowStale=false";
+            using var request = new HttpRequestMessage(new HttpMethod("EVAL"), url){  Content = new StringContent(patchCommand, Encoding.UTF8, "application/json")};
+            using var hideHttpClient = new HttpClient();
+            // hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Encoding", "gzip");
+            // hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
+            var result = await hideHttpClient.SendAsync(request);
+
+            return result.IsSuccessStatusCode;
         }
 
         async Task<bool> DoesTimeoutIndexExist()
