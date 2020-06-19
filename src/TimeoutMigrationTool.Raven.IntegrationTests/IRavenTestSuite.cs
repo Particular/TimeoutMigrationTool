@@ -16,7 +16,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         RavenDbVersion RavenVersion { get; }
         string EndpointName { get; set; }
         Task SetupDatabase();
-        Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false);
+        Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false, string prefixIdsWith = null);
         RavenToolState SetupToolState(DateTime cutoffTime);
         Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase();
         Task SaveToolState(RavenToolState toolState);
