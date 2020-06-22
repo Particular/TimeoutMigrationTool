@@ -113,7 +113,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(Logger, ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var timeoutStorage = new RavenDBTimeoutStorage(Logger, ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four, false);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }
@@ -218,15 +218,18 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 Type = "Map",
                 LockMode = "Unlock",
                 Priority = "Normal",
-                Configuration = (object)null,
-                Fields = (object)null,
-                OutputReduceToCollection = (object)null,
-                PatternForOutputReduceToCollectionReferences = (object)null,
-                PatternReferencesCollectionNam = (object)null, AdditionalSources = (object)null
+                Configuration = new object(),
+                Fields = new object(),
+                OutputReduceToCollection = new object(),
+                PatternForOutputReduceToCollectionReferences = new object(),
+                PatternReferencesCollectionNam = new object(),
+                AdditionalSources = new object()
             };
 
-            var indexes = new List<object>
-                {index};
+            var indexes = new
+            {
+                Indexes = new List<object> {index}
+            };
 
             var createIndexUrl = $"{ServerName}/databases/{DatabaseName}/admin/indexes";
             var content = JsonConvert.SerializeObject(indexes);

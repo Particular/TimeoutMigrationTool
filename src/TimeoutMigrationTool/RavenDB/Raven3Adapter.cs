@@ -192,25 +192,25 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var items = new List<T>();
             var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={RavenConstants.DefaultPagingSize}";
-            
+
             var checkForMoreResults = true;
             var fetchStartFrom = startFrom;
             var iteration = 0;
-            
+
             while (checkForMoreResults)
             {
                 var skipFirst = $"&start={fetchStartFrom}";
                 var getUrl = fetchStartFrom == 0 ? url : url + skipFirst;
                 using var result = await httpClient.GetAsync(getUrl);
-            
+
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
                     var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
-            
+
                     items.AddRange(pagedTimeouts);
                     fetchStartFrom += pagedTimeouts.Count;
                     iteration++;
-            
+
                     if (iteration == nrOfPages)
                     {
                         checkForMoreResults = false;
@@ -221,11 +221,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     }
                 }
             }
-            
+
             return items;
         }
 
-        public async Task<GetByIndexResult> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
+        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom, TimeSpan timeToWait) where T : class
         {
             var indexExists = await DoesTimeoutIndexExist();
             if (!indexExists)
@@ -237,7 +237,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             using var result = await httpClient.GetAsync(url);
             if (result.StatusCode != HttpStatusCode.OK)
             {
-                return new List<T>();
+                throw new Exception($"Was not able to get documents using index '{RavenConstants.TimeoutIndexName}', which should exist when using NServiceBus with RavenDB as persistence mechanism.");
             }
 
             var results = new List<T>();
@@ -245,7 +245,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var jObject = JObject.Parse(contentString);
             var resultSet = jObject.SelectToken("Results");
             var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
-            if (isStale) throw new Exception("bla");
+            var totalNrOfDocuments = Convert.ToInt32(jObject.SelectToken("TotalResults"));
+            var indexETag = Convert.ToString(jObject.SelectToken("IndexETag"));
 
             foreach (var item in resultSet)
             {
@@ -256,7 +257,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 results.Add(document);
             }
 
-            return results;
+            return new GetByIndexResult<T>
+            {
+                Documents = results,
+                IsStale = isStale,
+                NrOfDocuments = totalNrOfDocuments,
+                IndexETag = indexETag
+            };
         }
 
         public async Task<bool> HideTimeouts(DateTime cutoffDate)
@@ -269,7 +276,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationOngoingPrefix.Length});",
                 Values = new { }
             };
-            
+
             var patchCommand = JsonConvert.SerializeObject(patch);
             var url = $"{serverUrl}/databases{databaseName}/bulk_docs/TimeoutsIndex?query={Uri.EscapeDataString(dateRangeSpecification)}&allowStale=false";
 
@@ -277,7 +284,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var compressed = Compress(encoded);
             using var httpContent = new StringContent(Convert.ToBase64String(compressed), Encoding.UTF8, "application/json");
             using var request = new HttpRequestMessage(new HttpMethod("EVAL"), url){  Content = httpContent};
-            using var hideHttpClient = new HttpClient(); 
+            using var hideHttpClient = new HttpClient();
             hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Encoding", "gzip");
             hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
             //httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
@@ -285,7 +292,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             return result.IsSuccessStatusCode;
         }
-        
+
         public static byte[] Compress(byte[] input)
         {
             using var result = new MemoryStream();

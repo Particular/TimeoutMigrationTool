@@ -205,8 +205,9 @@
                         var ravenVersion = ravenDbVersion.Value() == "3.5"
                             ? RavenDbVersion.ThreeDotFive
                             : RavenDbVersion.Four;
+                        var forceUseIndex = false; // todo: FIX THIS
 
-                        var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion);
+                        var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
                         var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
                         var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
@@ -235,6 +236,7 @@
                         var ravenVersion = ravenDbVersion.Value() == "3.5"
                             ? RavenDbVersion.ThreeDotFive
                             : RavenDbVersion.Four;
+                        var forceUseIndex = false; // TODO: fix this
 
                         var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
@@ -245,7 +247,7 @@
                         runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
                         runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
 
-                        var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion);
+                        var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
 
                         var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
                         var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
@@ -269,7 +271,7 @@
                            ? RavenDbVersion.ThreeDotFive
                            : RavenDbVersion.Four;
 
-                        var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion);
+                        var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion, false);
                         var runner = new AbortRunner(logger, timeoutStorage);
 
                         await runner.Run();
