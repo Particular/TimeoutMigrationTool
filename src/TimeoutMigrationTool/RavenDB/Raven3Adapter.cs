@@ -225,7 +225,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<List<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
+        public async Task<GetByIndexResult> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom) where T : class
         {
             var indexExists = await DoesTimeoutIndexExist();
             if (!indexExists)

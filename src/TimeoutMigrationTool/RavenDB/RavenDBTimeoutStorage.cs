@@ -46,7 +46,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             while (findMoreTimeouts)
             {
-                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, nrOfPages);
+                //var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, nrOfPages);
+                var timeouts = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, nrOfTimeoutsRetrieved);
                 var eligibleTimeouts = timeouts.Where(filter).ToList();
                 nrOfTimeoutsRetrieved += timeouts.Count;
 
