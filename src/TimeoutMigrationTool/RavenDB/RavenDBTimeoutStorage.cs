@@ -10,11 +10,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
     public class RavenDBTimeoutStorage : ITimeoutStorage
     {
-        readonly ILogger logger;
-        private readonly string timeoutDocumentPrefix;
-        readonly bool useIndex;
-        private readonly ICanTalkToRavenVersion ravenAdapter;
-
         public RavenDBTimeoutStorage(ILogger logger, string serverUrl, string databaseName, string timeoutDocumentPrefix,
             RavenDbVersion ravenVersion, bool useIndex)
         {
@@ -27,7 +22,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task<IToolState> TryLoadOngoingMigration()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
-            if (ravenToolState == null) return null;
+            if (ravenToolState == null)
+            {
+                return null;
+            }
 
             //TODO: replace with an Include
             var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
@@ -58,15 +56,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var endpoints = new List<EndpointInfo>();
             var nrOfTimeoutsRetrieved = 0;
             var nrOfPages = 3;
-            
+
             var tcs = new CancellationTokenSource();
-            var printTask = Task.Run(async () => { 
+            var printTask = Task.Run(async () =>
+            {
                 while (!tcs.Token.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(5));
                     logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeoutsFound} have been scanned.");
                 }
-            } , tcs.Token);
+            }, tcs.Token);
 
             do
             {
@@ -94,17 +93,18 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var initialIndexEtag = string.Empty;
             var nrOfTimeouts = 0;
             var tcs = new CancellationTokenSource();
-            var printTask = Task.Run(async () => { 
+            var printTask = Task.Run(async () =>
+            {
                 while (!tcs.Token.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(5));
                     logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeouts} have been scanned.");
                 }
-            } , tcs.Token);
-            
+            }, tcs.Token);
+
             do
             {
-                var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>( (doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, TimeSpan.FromSeconds(5));
+                var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, TimeSpan.FromSeconds(5));
                 if (string.IsNullOrEmpty(initialIndexEtag))
                 {
                     initialIndexEtag = result.IndexETag;
@@ -123,7 +123,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     findMoreTimeouts = false;
 
             } while (findMoreTimeouts);
-            
+
             tcs.Cancel();
             await printTask;
             return endpoints;
@@ -222,7 +222,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
-            var toolState = ravenToolState.ToToolState(batches);
 
             // Only restoring the timeouts in pending batches to their original state
             var incompleteBatches = batches.Where(bi => bi.State != BatchState.Completed).ToList();
@@ -231,7 +230,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             ravenToolState.CompletedAt = DateTime.UtcNow;
             ravenToolState.Status = MigrationStatus.Aborted;
 
-            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), toolState);
+            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
         }
 
         internal async Task<List<RavenBatch>> PrepareBatchesAndTimeouts(DateTime cutoffTime, string endpointName)
@@ -310,12 +309,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task Complete()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
-            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
 
             ravenToolState.Status = MigrationStatus.Completed;
             ravenToolState.CompletedAt = DateTime.UtcNow;
 
-            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState.ToToolState(batches));
+            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
         }
 
         internal async Task CleanupExistingBatchesAndResetTimeouts(List<RavenBatch> batchesToRemove, List<RavenBatch> batchesForWhichToResetTimeouts)
@@ -337,5 +335,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             return $"{RavenConstants.ArchivedToolStateIdPrefix}{endpointName}-{DateTime.Now:yyyy-MM-dd hh-mm-ss}";
         }
+
+        readonly ILogger logger;
+        readonly string timeoutDocumentPrefix;
+        readonly ICanTalkToRavenVersion ravenAdapter;
+        readonly bool useIndex;
     }
 }
