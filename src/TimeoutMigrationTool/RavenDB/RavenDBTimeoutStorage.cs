@@ -181,6 +181,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var toolState = new RavenToolState(runParameters, endpointName, batches);
 
             var ravenToolState = RavenToolStateDto.FromToolState(toolState);
+
+            ravenToolState.StartedAt = DateTime.UtcNow;
+
             await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
 
             return toolState;
@@ -224,6 +227,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             // Only restoring the timeouts in pending batches to their original state
             var incompleteBatches = batches.Where(bi => bi.State != BatchState.Completed).ToList();
             await CleanupExistingBatchesAndResetTimeouts(batches, incompleteBatches);
+
+            ravenToolState.CompletedAt = DateTime.UtcNow;
+            ravenToolState.Status = MigrationStatus.Aborted;
+
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), toolState);
         }
 
@@ -304,7 +311,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
             var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
+
             ravenToolState.Status = MigrationStatus.Completed;
+            ravenToolState.CompletedAt = DateTime.UtcNow;
 
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState.ToToolState(batches));
         }
