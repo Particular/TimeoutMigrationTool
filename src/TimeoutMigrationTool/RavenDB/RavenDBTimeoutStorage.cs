@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System.Threading;
     using Microsoft.Extensions.Logging;
 
     public class RavenDBTimeoutStorage : ITimeoutStorage
@@ -35,7 +36,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public async Task<List<EndpointInfo>> ListEndpoints(DateTime cutoffTime)
         {
-            await GuardAgainstTooManyTimeoutsWithoutIndexUsage();
+            var nrOfTimeoutsFound = await GuardAgainstTooManyTimeoutsWithoutIndexUsage();
 
             bool filter(TimeoutData td)
             {
@@ -48,15 +49,24 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 return await ListEndpointsUsingIndex(filter);
             }
 
-            return await ListEndpointsWithoutIndex(filter);
+            return await ListEndpointsWithoutIndex(filter, nrOfTimeoutsFound);
         }
 
-        async Task<List<EndpointInfo>> ListEndpointsWithoutIndex(Func<TimeoutData, bool> filter)
+        async Task<List<EndpointInfo>> ListEndpointsWithoutIndex(Func<TimeoutData, bool> filter, int nrOfTimeoutsFound)
         {
             var findMoreTimeouts = true;
             var endpoints = new List<EndpointInfo>();
             var nrOfTimeoutsRetrieved = 0;
             var nrOfPages = 3;
+            
+            var tcs = new CancellationTokenSource();
+            var printTask = Task.Run(async () => { 
+                while (!tcs.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeoutsFound} have been scanned.");
+                }
+            } , tcs.Token);
 
             do
             {
@@ -70,6 +80,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             } while (findMoreTimeouts);
 
+            tcs.Cancel();
+            await printTask;
+
             return endpoints;
         }
 
@@ -79,13 +92,23 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var endpoints = new List<EndpointInfo>();
             var nrOfTimeoutsRetrieved = 0;
             var initialIndexEtag = string.Empty;
-
+            var nrOfTimeouts = 0;
+            var tcs = new CancellationTokenSource();
+            var printTask = Task.Run(async () => { 
+                while (!tcs.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeouts} have been scanned.");
+                }
+            } , tcs.Token);
+            
             do
             {
                 var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>( (doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, TimeSpan.FromSeconds(5));
                 if (string.IsNullOrEmpty(initialIndexEtag))
                 {
                     initialIndexEtag = result.IndexETag;
+                    nrOfTimeouts = result.NrOfDocuments;
                 }
 
                 if (result.IsStale || result.IndexETag != initialIndexEtag)
@@ -100,7 +123,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     findMoreTimeouts = false;
 
             } while (findMoreTimeouts);
-
+            
+            tcs.Cancel();
+            await printTask;
             return endpoints;
         }
 
@@ -139,13 +164,15 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             });
         }
 
-        async Task GuardAgainstTooManyTimeoutsWithoutIndexUsage()
+        async Task<int> GuardAgainstTooManyTimeoutsWithoutIndexUsage()
         {
             var nrOfTimeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.FromSeconds(5));
             if (nrOfTimeoutsResult.NrOfDocuments > RavenConstants.MaxNrOfTimeoutsWithoutIndex && !useIndex)
             {
-                throw new Exception($"We've encountered around {nrOfTimeoutsResult.NrOfDocuments} timeouts to process. Given the amount of timeouts to migrate, please shut down your endpoints before migrating and use the --forceIndex option.");
+                throw new Exception($"We've encountered around {nrOfTimeoutsResult.NrOfDocuments} timeouts to process. Given the amount of timeouts to migrate, please shut down your endpoints before migrating and use the --{ApplicationOptions.ForceUseIndex} option.");
             }
+
+            return nrOfTimeoutsResult.NrOfDocuments;
         }
 
         public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)

@@ -26,7 +26,7 @@
                 return;
             }
 
-            logger.LogInformation($"The following endpoints was found:\n");
+            logger.LogInformation($"The following endpoints were found:\n");
 
             foreach (var endpoint in endpoints)
             {
