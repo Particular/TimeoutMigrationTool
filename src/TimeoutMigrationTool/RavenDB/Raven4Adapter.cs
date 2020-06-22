@@ -167,7 +167,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var resultSet = jObject.SelectToken("Results");
             var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
             var totalNrOfDocuments = Convert.ToInt32(jObject.SelectToken("TotalResults"));
-            var indexETag = Convert.ToString(jObject.SelectToken("IndexETag"));
+            var indexETag = Convert.ToString(jObject.SelectToken("ResultEtag"));
 
             foreach (var item in resultSet)
             {

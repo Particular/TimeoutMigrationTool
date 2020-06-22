@@ -75,7 +75,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 };
                 if (alternateEndpoints)
                 {
-                    timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
+                    timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 2) ? "A" : "B";
                 }
 
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
@@ -208,7 +208,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
-        public async Task CreateIndex()
+        public async Task CreateLegacyTimeoutManagerIndex()
         {
             var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
             var index = new
@@ -236,6 +236,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var result = await httpClient
                 .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
+
+            await EnsureIndexIsNotStale();
         }
 
         public string DatabaseName { get; private set; }
@@ -247,5 +249,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
         public string EndpointName { get; set; }
         protected static readonly HttpClient httpClient = new HttpClient();
+
+        static async Task EnsureIndexIsNotStale()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1));
+        }
     }
 }

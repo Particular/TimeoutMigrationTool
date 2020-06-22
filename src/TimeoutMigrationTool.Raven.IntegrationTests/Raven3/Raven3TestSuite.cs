@@ -204,7 +204,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
         public string serverName = (Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383").TrimEnd('/');
         protected static readonly HttpClient httpClient = new HttpClient();
 
-        public async Task CreateIndex()
+        public async Task CreateLegacyTimeoutManagerIndex()
         {
             var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
             var index = new
