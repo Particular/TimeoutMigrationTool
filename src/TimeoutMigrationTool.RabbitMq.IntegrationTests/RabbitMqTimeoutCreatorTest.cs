@@ -39,8 +39,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                     model.QueueDeclare(ExistingEndpointNameUsingDirect, true, false, false, null);
 
                     model.QueueDeclare(EndpointWithShortTimeout, true, false, false, null);
-                    model.ExchangeDeclare(DelayDeliveryExchange, "fanout", true, false, null);
-                    model.ExchangeDeclare("nsb.delay-level-00", "fanout", true, false, null);
+                    model.ExchangeDeclare(DelayDeliveryExchange, "topic", true, false, null);
+                    model.ExchangeDeclare("nsb.delay-level-00", "topic", true, false, null);
                 }
             }
         }
