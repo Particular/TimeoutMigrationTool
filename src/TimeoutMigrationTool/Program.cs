@@ -183,6 +183,12 @@
                     Inherited = true
                 };
 
+                var forceUseIndexOption = new CommandOption($"--{ApplicationOptions.ForceUseIndex}", CommandOptionType.NoValue)
+                {
+                    Description = "Force the usage of an index to boost performance. Can only be used when endpoints are shut down.",
+                    Inherited = true
+                };
+
                 ravenDBCommand.Options.Add(serverUrlOption);
                 ravenDBCommand.Options.Add(databaseNameOption);
                 ravenDBCommand.Options.Add(prefixOption);
@@ -193,6 +199,7 @@
                     previewCommand.Description = "Lists endpoints that can be migrated.";
 
                     previewCommand.Options.Add(targetOption);
+                    previewCommand.Options.Add(forceUseIndexOption);
 
                     previewCommand.OnExecuteAsync(async ct =>
                     {
@@ -205,7 +212,7 @@
                         var ravenVersion = ravenDbVersion.Value() == "3.5"
                             ? RavenDbVersion.ThreeDotFive
                             : RavenDbVersion.Four;
-                        var forceUseIndex = false; // todo: FIX THIS
+                        var forceUseIndex = forceUseIndexOption.HasValue();
 
                         var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
                         var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
@@ -224,6 +231,7 @@
                     migrateCommand.Options.Add(allEndpointsOption);
                     migrateCommand.Options.Add(endpointFilterOption);
                     migrateCommand.Options.Add(cutoffTimeOption);
+                    migrateCommand.Options.Add(forceUseIndexOption);
 
                     migrateCommand.OnExecuteAsync(async ct =>
                     {
@@ -236,7 +244,7 @@
                         var ravenVersion = ravenDbVersion.Value() == "3.5"
                             ? RavenDbVersion.ThreeDotFive
                             : RavenDbVersion.Four;
-                        var forceUseIndex = false; // TODO: fix this
+                        var forceUseIndex = forceUseIndexOption.HasValue();
 
                         var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
