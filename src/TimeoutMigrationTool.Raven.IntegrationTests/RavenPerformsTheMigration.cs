@@ -130,8 +130,6 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var archivedToolState = archivedToolStates.Single();
             Assert.That(archivedToolState.Status, Is.EqualTo(MigrationStatus.Completed));
-            Assert.That(archivedToolState.NumberOfTimeouts, Is.EqualTo(nrOfTimeouts));
-            Assert.That(archivedToolState.NumberOfBatches, Is.EqualTo(2));
             Assert.That(archivedToolState.CompletedAt, Is.GreaterThan(timeStarted));
         }
     }
