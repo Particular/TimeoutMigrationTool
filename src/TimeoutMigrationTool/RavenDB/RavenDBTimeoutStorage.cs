@@ -15,6 +15,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             this.logger = logger;
             this.timeoutDocumentPrefix = timeoutDocumentPrefix;
+            this.ravenVersion = ravenVersion;
             this.useIndex = useIndex;
             ravenAdapter = RavenDataReaderFactory.Resolve(serverUrl, databaseName, ravenVersion);
         }
@@ -27,7 +28,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 return null;
             }
 
-            //TODO: replace with an Include
             var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
             return ravenToolState.ToToolState(batches);
         }
@@ -181,7 +181,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         async Task<int> GuardAgainstTooManyTimeoutsWithoutIndexUsage()
         {
             var nrOfTimeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.FromSeconds(5));
-            if (nrOfTimeoutsResult.NrOfDocuments > RavenConstants.MaxNrOfTimeoutsWithoutIndex && !useIndex)
+            if (nrOfTimeoutsResult.NrOfDocuments > RavenConstants.GetMaxNrOfTimeoutsWithoutIndexByRavenVersion(ravenVersion) && !useIndex)
             {
                 throw new Exception($"We've encountered around {nrOfTimeoutsResult.NrOfDocuments} timeouts to process. Given the amount of timeouts to migrate, please shut down your endpoints before migrating and use the --{ApplicationOptions.ForceUseIndex} option.");
             }
@@ -439,5 +439,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         readonly string timeoutDocumentPrefix;
         readonly ICanTalkToRavenVersion ravenAdapter;
         readonly bool useIndex;
+        readonly RavenDbVersion ravenVersion;
     }
 }

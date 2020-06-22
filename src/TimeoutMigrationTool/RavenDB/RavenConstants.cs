@@ -1,5 +1,7 @@
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System;
+
     public class RavenConstants
     {
         public const string ToolStateId = "TimeoutMigrationTool/State";
@@ -12,6 +14,18 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public const string MigrationDonePrefix = "__migrated__";
         public const string DefaultTimeoutPrefix  = "TimeoutDatas";
         public const string BatchPrefix = "batch";
-        public const int MaxNrOfTimeoutsWithoutIndex = 100000;
+
+        public static int GetMaxNrOfTimeoutsWithoutIndexByRavenVersion(RavenDbVersion version)
+        {
+            switch (version)
+            {
+                case RavenDbVersion.ThreeDotFive:
+                    return 100000;
+                case RavenDbVersion.Four:
+                    return 1000000;
+                default:
+                    throw new ArgumentOutOfRangeException("Unsupported version of RavenDB");
+            }
+        }
     }
 }
