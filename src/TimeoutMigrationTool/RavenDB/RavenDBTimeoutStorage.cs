@@ -182,6 +182,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             var ravenToolState = RavenToolStateDto.FromToolState(toolState);
 
+            ravenToolState.Status = MigrationStatus.StoragePrepared;
             ravenToolState.StartedAt = DateTime.UtcNow;
             ravenToolState.NumberOfBatches = batches.Count();
             ravenToolState.NumberOfTimeouts = batches.Sum(b=>b.NumberOfTimeouts);
