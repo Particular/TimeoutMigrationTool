@@ -91,7 +91,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpointName);
             var toolState = new RavenToolState(runParameters, endpointName, batches);
-            await StoreToolState(toolState);
+
+            var ravenToolState = RavenToolStateDto.FromToolState(toolState);
+            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
+
             return toolState;
         }
 
@@ -223,12 +226,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     await ravenAdapter.DeleteDocument($"{RavenConstants.BatchPrefix}/{batch.Number}");
                 }
             }
-        }
-
-        async Task StoreToolState(IToolState toolState)
-        {
-            var ravenToolState = RavenToolStateDto.FromToolState((RavenToolState)toolState);
-            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
         }
 
         string GetArchivedToolStateId(string endpointName)
