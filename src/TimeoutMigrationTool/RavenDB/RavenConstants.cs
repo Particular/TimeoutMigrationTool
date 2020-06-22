@@ -4,6 +4,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     {
         public const string ToolStateId = "TimeoutMigrationTool/State";
         public const string ArchivedToolStateIdPrefix = "TimeoutMigrationTool/MigrationRun-";
+        public const string TimeoutIndexName = "TimeoutsIndex";
         public const int MaxUriLength = 2000;
         public const int MaxNrOfDocumentsToRetrieve = 2048;
         public const int DefaultPagingSize = 1024;
@@ -11,5 +12,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public const string MigrationDonePrefix = "__migrated__";
         public const string DefaultTimeoutPrefix  = "TimeoutDatas";
         public const string BatchPrefix = "batch";
+        public const int MaxNrOfTimeoutsWithoutIndex = 100000;
     }
 }

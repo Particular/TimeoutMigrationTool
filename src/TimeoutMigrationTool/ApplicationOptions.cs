@@ -5,6 +5,7 @@ namespace Particular.TimeoutMigrationTool
         public const string RavenDatabaseName = "databaseName";
         public const string RavenServerUrl = "serverUrl";
         public const string RavenVersion = "ravenVersion";
+        public const string ForceUseIndex = "forceUseIndex";
         public const string RavenTimeoutPrefix = "prefix";
         public const string CutoffTime = "cutoffTime";
         public const string RabbitMqTargetConnectionString = "target";

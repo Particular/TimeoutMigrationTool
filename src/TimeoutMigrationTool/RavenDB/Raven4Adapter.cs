@@ -147,6 +147,52 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
+        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom, TimeSpan timeToWaitForNonStaleResults) where T : class
+        {
+            var indexExists = await DoesTimeoutIndexExist();
+            if (!indexExists)
+            {
+                throw new Exception($"Could not find the TimeoutIndex named '{RavenConstants.TimeoutIndexName}' on the database, unable to continue an index-based migration");
+            }
+
+            var url = $"{serverUrl}/databases/{databaseName}/queries?query=from%20index%20%27{RavenConstants.TimeoutIndexName}%27&parameters=%7B%7D&start={startFrom}&pageSize={RavenConstants.DefaultPagingSize}&metadataOnly=false";
+            using var result = await httpClient.GetAsync(url);
+            if (result.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception($"Was not able to get documents using index '{RavenConstants.TimeoutIndexName}', which should exist when using NServiceBus with RavenDB as persistence mechanism.");
+            }
+
+            var results = new List<T>();
+            var contentString = await result.Content.ReadAsStringAsync();
+            var jObject = JObject.Parse(contentString);
+            var resultSet = jObject.SelectToken("Results");
+            var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+            var totalNrOfDocuments = Convert.ToInt32(jObject.SelectToken("TotalResults"));
+            var indexETag = Convert.ToString(jObject.SelectToken("IndexETag"));
+
+            foreach (var item in resultSet)
+            {
+                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
+                var document = JsonConvert.DeserializeObject<T>(item.ToString());
+                var id = (string)((dynamic)item)["@metadata"]["@id"];
+                idSetter(document, id);
+                results.Add(document);
+            }
+
+            return new GetByIndexResult<T>
+            {
+                Documents = results,
+                IsStale = isStale,
+                NrOfDocuments = totalNrOfDocuments,
+                IndexETag = indexETag
+            };
+        }
+
+        public Task<bool> HideTimeouts(DateTime cutoffDate)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task BatchDelete(string[] keys)
         {
             var commands = keys.Select(GetDeleteCommand);
@@ -279,7 +325,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -299,7 +345,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task PostToBulkDocs(IEnumerable<object> commands)
+        async Task PostToBulkDocs(IEnumerable<object> commands)
         {
             var bulkCommand = new
             {
@@ -316,6 +362,26 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             using var result = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             result.EnsureSuccessStatusCode();
+        }
+
+        async Task<bool> DoesTimeoutIndexExist()
+        {
+            var indexUrl = $"{serverUrl}/databases/{databaseName}/indexes?namesOnly";
+            using var indexResults = await httpClient.GetAsync(indexUrl);
+            indexResults.EnsureSuccessStatusCode();
+
+            var indexContentString = await indexResults.Content.ReadAsStringAsync();
+            var jObject = JObject.Parse(indexContentString);
+            var resultSet = jObject.SelectToken("Results");
+
+            foreach (var item in resultSet)
+            {
+                var indexName = (string)((dynamic)item)["Name"];
+                if (indexName == RavenConstants.TimeoutIndexName)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

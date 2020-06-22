@@ -73,7 +73,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(Logger, serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive);
+            var timeoutStorage = new RavenDBTimeoutStorage(Logger, serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive, false);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }
@@ -203,5 +203,39 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
         public string serverName = (Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383").TrimEnd('/');
         protected static readonly HttpClient httpClient = new HttpClient();
+
+        public async Task CreateIndex()
+        {
+            var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
+            var index = new
+            {
+                Analyzers = (object)null,
+                Fields = new List<object>(),
+                Indexes = (object)null,
+                InternalFieldsMapping = (object)null,
+                IsTestIndex = false,
+                IsSideBySideIndex = false,
+                IsCompiled = false,
+                IsMapReduce = false,
+                LockMode = "Unlock",
+                Map = map,
+                Maps = new List<string> {map},
+                Name = RavenConstants.TimeoutIndexName,
+                Reduce = (object)null,
+                SortOptions = (object)null,
+                SpatialIndexes = (object)null,
+                Stores = (object)null,
+                SuggestionsOptions = new List<object>(),
+                TermVectors = (object)null,
+                Type = "Map",
+                MaxIndexOutputsPerDocument = (object)null
+            };
+
+            var createIndexUrl = $"{serverName}/databases/{DatabaseName}/indexes/{RavenConstants.TimeoutIndexName}?definition=yes";
+            var content = JsonConvert.SerializeObject(index);
+            var result = await httpClient
+                .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
+            result.EnsureSuccessStatusCode();
+        }
     }
 }

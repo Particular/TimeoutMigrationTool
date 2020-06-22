@@ -33,7 +33,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenGettingTimeoutStateAndNoneIsFoundNullIsReturned()
         {
             await testSuite.InitTimeouts(nrOfTimeouts);
-            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var toolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(toolState, Is.Null);
@@ -45,7 +45,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.InitTimeouts(nrOfTimeouts);
             await testSuite.SaveToolState(testSuite.SetupToolState(DateTime.Now.AddDays(-1)));
 
-            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+            var timeoutStorage = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var retrievedToolState = await timeoutStorage.TryLoadOngoingMigration();
 
             Assert.That(retrievedToolState, Is.Not.Null);
@@ -58,7 +58,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             nrOfTimeouts = RavenConstants.DefaultPagingSize + 5;
             await testSuite.InitTimeouts(nrOfTimeouts);
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
@@ -84,7 +84,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.InitTimeouts(nrOfTimeouts, true);
 
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
@@ -101,7 +101,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var cutoffTime = DateTime.Now.AddDays(-1);
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await timeoutStorage.Prepare(cutoffTime, testSuite.EndpointName, new Dictionary<string, string>());
             await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
 
@@ -126,7 +126,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var cutoffTime = DateTime.Now.AddDays(-1);
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await timeoutStorage.Prepare(cutoffTime, testSuite.EndpointName, new Dictionary<string, string>());
             await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
 
@@ -147,7 +147,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.SaveToolState(toolState);
 
             var timeoutStorage =
-                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion);
+                new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
 
             var updatedToolState = await timeoutStorage.TryLoadOngoingMigration();
             Assert.That(updatedToolState.EndpointName, Is.EqualTo(testSuite.EndpointName));

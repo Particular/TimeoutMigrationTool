@@ -113,7 +113,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(Logger, ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four);
+            var timeoutStorage = new RavenDBTimeoutStorage(Logger, ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four, false);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }
@@ -194,7 +194,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var killDb = $"{ServerName}/admin/databases";
             var deleteDb = new DeleteDbParamsForRaven4
             {
-                DatabaseNames = new[] { DatabaseName },
+                DatabaseNames = new[] {DatabaseName},
                 HardDelete = true
             };
             var httpRequest = new HttpRequestMessage
@@ -206,6 +206,36 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
             var killDbResult = await httpClient.SendAsync(httpRequest);
             Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        }
+
+        public async Task CreateIndex()
+        {
+            var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
+            var index = new
+            {
+                Name = RavenConstants.TimeoutIndexName,
+                Maps = new List<string> {map},
+                Type = "Map",
+                LockMode = "Unlock",
+                Priority = "Normal",
+                Configuration = new object(),
+                Fields = new object(),
+                OutputReduceToCollection = new object(),
+                PatternForOutputReduceToCollectionReferences = new object(),
+                PatternReferencesCollectionNam = new object(),
+                AdditionalSources = new object()
+            };
+
+            var indexes = new
+            {
+                Indexes = new List<object> {index}
+            };
+
+            var createIndexUrl = $"{ServerName}/databases/{DatabaseName}/admin/indexes";
+            var content = JsonConvert.SerializeObject(indexes);
+            var result = await httpClient
+                .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
+            result.EnsureSuccessStatusCode();
         }
 
         public string DatabaseName { get; private set; }
