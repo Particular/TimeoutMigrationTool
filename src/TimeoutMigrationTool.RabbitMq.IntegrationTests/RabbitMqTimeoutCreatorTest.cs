@@ -4,6 +4,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using NUnit.Framework;
+    using NUnit.Framework.Internal.Commands;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RabbitMq;
     using RabbitMQ.Client;
@@ -17,6 +18,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         string ExistingEndpointNameUsingDirect = "ExistingEndpointNameDirect";
         string NonExistingEndpointName = "NonExistingEndpointName";
         string EndpointWithShortTimeout = "EndpointWithShortTimeout";
+        string DelayDeliveryExchange = "nsb.delay-delivery";
 
         [OneTimeSetUp]
         public void TestSuitSetup()
@@ -37,6 +39,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                     model.QueueDeclare(ExistingEndpointNameUsingDirect, true, false, false, null);
 
                     model.QueueDeclare(EndpointWithShortTimeout, true, false, false, null);
+                    model.ExchangeDeclare(DelayDeliveryExchange, "fanout", true, false, null);
+                    model.ExchangeDeclare("nsb.delay-level-00", "fanout", true, false, null);
                 }
             }
         }
@@ -51,6 +55,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                     model.QueueDelete(ExistingEndpointNameUsingConventional);
                     model.QueueDelete(ExistingEndpointNameUsingDirect);
                     model.ExchangeDelete(ExistingEndpointNameUsingConventional);
+                    model.QueueDelete(EndpointWithShortTimeout);
                 }
             }
         }
@@ -68,6 +73,33 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             var result = await sut.AbleToMigrate(info);
 
             Assert.IsTrue(result.CanMigrate);
+        }
+
+        [Test]
+        public async Task AbleToMigrate_DelayedDeliveryDoesNotExist_ReturnsProblems()
+        {
+            var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
+            DeleteDelayDelivery();
+
+            var info = new EndpointInfo();
+            info.EndpointName = ExistingEndpointNameUsingConventional;
+            info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
+            info.LongestTimeout = DateTime.UtcNow.AddDays(5);
+            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect};
+            var result = await sut.AbleToMigrate(info);
+
+            Assert.IsFalse(result.CanMigrate);
+        }
+
+        void DeleteDelayDelivery()
+        {
+            using (var connection = factory.CreateConnection())
+            {
+                using (var model = connection.CreateModel())
+                {
+                    model.ExchangeDelete(DelayDeliveryExchange);
+                }
+            }
         }
 
         [Test]

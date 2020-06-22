@@ -63,6 +63,17 @@
                         continue;
                     }
 
+                    try
+                    {
+                        channel.ExchangeDeclarePassive("nsb.delay-delivery");
+                    }
+                    catch (Exception)
+                    {
+                        result.Problems.Add($"The delivery infrastructure on rabbit broker does not exist. It means that the endpoint is running old version of Rabbit Transport package.");
+                        return Task.FromResult(result);
+                    }
+
+
                     if (CheckIfEndpointIsUsingConventionalRoutingTopology(destination))
                     {
                         channel.ExchangeBind(destination, "nsb.delay-delivery", $"#.{destination}");
