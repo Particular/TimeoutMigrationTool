@@ -183,6 +183,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var ravenToolState = RavenToolStateDto.FromToolState(toolState);
 
             ravenToolState.StartedAt = DateTime.UtcNow;
+            ravenToolState.NumberOfBatches = batches.Count();
+            ravenToolState.NumberOfTimeouts = batches.Sum(b=>b.NumberOfTimeouts);
 
             await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
 

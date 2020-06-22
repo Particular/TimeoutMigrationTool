@@ -12,6 +12,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public DateTime StartedAt { get; set; }
         public DateTime CompletedAt { get; set; }
         public string Endpoint { get;  set; }
+        public int NumberOfBatches { get; set; }
+        public int NumberOfTimeouts { get; set; }
 
         public static RavenToolStateDto FromToolState(RavenToolState toolState)
         {
