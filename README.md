@@ -21,3 +21,16 @@ The solution is divided up into a single tool project with multiple test project
 * Unit tests, `TimeoutMigrationTool.Tests`, are quick tests not needing any infrastructure and can be used by all sources and targets
 * Integrations tests are named `TimeoutMigrationTool.{Source|Target}.IntegrationTests` and requires infrastructure for the specific source/target to be present
 * Acceptance tests run full NServiceBus endpoints and are named `TimeoutMigrationTool.{Source}.AcceptanceTests`. They contain end to end tests for all supported permutations of targets. So when TargetX is added we would add new test(s) into all existing acceptance tests projects. They require infastrucure for the specific source and all supported targets to be present.
+
+
+### Manual Test Scenarios
+
+* Single endpoint test
+  * A project to generate fake data should be used to generate timeouts for 1 endpoint
+  * A preview of the migration should be run 
+  * Migration should be run using the cutoffDate to verify that only subset of timeouts is migrated (another preview can be done to make sure that maximum timeout date is no greater than used cutoffDate)
+* Multiple endpoints test
+  * A project to generate fake data should be run multiple times with changed endpoint names
+  * A preview of the migration should be run to see all ednpoints that are available to be migrated
+  * A migration should be run for only one of the endpoints to verify that only subset of timeouts is migrated
+  * A migration for all remaining endpoints should be run to move the remaining timeouts.
