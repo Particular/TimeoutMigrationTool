@@ -138,76 +138,75 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         internal async Task<List<RavenBatch>> PrepareBatchesAndTimeouts(DateTime cutoffTime, string endpointName)
         {
-            var now = DateTime.UtcNow;
-            while (DateTime.UtcNow.Subtract(now) < TimeSpan.FromSeconds(15))
+            // var now = DateTime.UtcNow;
+            // while (DateTime.UtcNow.Subtract(now) < TimeSpan.FromSeconds(15))
+            // {
+            //     var succeeded = await ravenAdapter.HideTimeouts(cutoffTime);
+            //     if (succeeded)
+            //         break;
+            // }
+            //
+            var batches = new List<RavenBatch>();
+            var batchesExisted = false;
+            
+            bool elegibleFilter(TimeoutData td)
             {
-                var succeeded = await ravenAdapter.HideTimeouts(cutoffTime);
-                if (succeeded)
-                    break;
+                return td.OwningTimeoutManager.ToLower() == endpointName.ToLower() && td.Time >= cutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix,
+                    StringComparison.OrdinalIgnoreCase);
             }
-            //
-            // var batches = new List<RavenBatch>();
-            // var batchesExisted = false;
-            //
-            // bool elegibleFilter(TimeoutData td)
-            // {
-            //     return td.OwningTimeoutManager.ToLower() == endpointName.ToLower() && td.Time >= cutoffTime && !td.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix,
-            //         StringComparison.OrdinalIgnoreCase);
-            // }
-            // bool doesNotExistInBatchesFilter(TimeoutData td)
-            // {
-            //     return batches.SelectMany(x => x.TimeoutIds).All(t => t != td.Id);
-            // }
-            //
-            // var findMoreTimeouts = true;
-            // var iteration = 0;
-            // var nrOfPages = 1;
-            //
-            // var existingBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => { return true; }, RavenConstants.BatchPrefix, (batch, idSetter) => { });
-            // if (existingBatches.Any())
-            // {
-            //     var batch = existingBatches.First();
-            //     if (batch.CutoffDate != cutoffTime || batch.EndpointName.ToLower() != endpointName.ToLower())
-            //     {
-            //         throw new Exception($"Found remaining batches from previous run, using a different cutoff date or endpoint than current run. Please abort the previous migration with parameters Cutoffdate = {batch.CutoffDate} and EndpointName = {batch.EndpointName}");
-            //     }
-            //
-            //     logger.LogInformation($"Found existing batches, resuming prepare for endpoint {endpointName}");
-            //     batches.AddRange(existingBatches);
-            //     batchesExisted = true;
-            // }
-            //
-            // while (findMoreTimeouts)
-            // {
-            //     var startFrom = iteration * (nrOfPages * RavenConstants.DefaultPagingSize);
-            //     var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, nrOfPages);
-            //
-            //     var elegibleTimeouts = timeouts.Where(elegibleFilter).ToList();
-            //     if (batchesExisted)
-            //     {
-            //         elegibleTimeouts = elegibleTimeouts.Where(doesNotExistInBatchesFilter).ToList();
-            //     }
-            //
-            //     if (elegibleTimeouts.Any())
-            //     {
-            //         var batch = new RavenBatch(batches.Count + 1, BatchState.Pending, elegibleTimeouts.Count())
-            //         {
-            //             TimeoutIds = elegibleTimeouts.Select(t => t.Id).ToArray(),
-            //             CutoffDate = cutoffTime,
-            //             EndpointName = endpointName
-            //         };
-            //         await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
-            //         logger.LogInformation($"Batch {batch.Number} was created to handle {elegibleTimeouts.Count} timeouts");
-            //         batches.Add(batch);
-            //     }
-            //
-            //     if (timeouts.Count == 0)
-            //         findMoreTimeouts = false;
-            //     iteration++;
-            // }
-            //
-            // return batches;
-            return new List<RavenBatch>();
+            bool doesNotExistInBatchesFilter(TimeoutData td)
+            {
+                return batches.SelectMany(x => x.TimeoutIds).All(t => t != td.Id);
+            }
+            
+            var findMoreTimeouts = true;
+            var iteration = 0;
+            var nrOfPages = 1;
+            
+            var existingBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => { return true; }, RavenConstants.BatchPrefix, (batch, idSetter) => { });
+            if (existingBatches.Any())
+            {
+                var batch = existingBatches.First();
+                if (batch.CutoffDate != cutoffTime || batch.EndpointName.ToLower() != endpointName.ToLower())
+                {
+                    throw new Exception($"Found remaining batches from previous run, using a different cutoff date or endpoint than current run. Please abort the previous migration with parameters Cutoffdate = {batch.CutoffDate} and EndpointName = {batch.EndpointName}");
+                }
+            
+                logger.LogInformation($"Found existing batches, resuming prepare for endpoint {endpointName}");
+                batches.AddRange(existingBatches);
+                batchesExisted = true;
+            }
+            
+            while (findMoreTimeouts)
+            {
+                var startFrom = iteration * (nrOfPages * RavenConstants.DefaultPagingSize);
+                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, nrOfPages);
+            
+                var elegibleTimeouts = timeouts.Where(elegibleFilter).ToList();
+                if (batchesExisted)
+                {
+                    elegibleTimeouts = elegibleTimeouts.Where(doesNotExistInBatchesFilter).ToList();
+                }
+            
+                if (elegibleTimeouts.Any())
+                {
+                    var batch = new RavenBatch(batches.Count + 1, BatchState.Pending, elegibleTimeouts.Count())
+                    {
+                        TimeoutIds = elegibleTimeouts.Select(t => t.Id).ToArray(),
+                        CutoffDate = cutoffTime,
+                        EndpointName = endpointName
+                    };
+                    await ravenAdapter.CreateBatchAndUpdateTimeouts(batch);
+                    logger.LogInformation($"Batch {batch.Number} was created to handle {elegibleTimeouts.Count} timeouts");
+                    batches.Add(batch);
+                }
+            
+                if (timeouts.Count == 0)
+                    findMoreTimeouts = false;
+                iteration++;
+            }
+            
+            return batches;
         }
 
         public async Task Complete()

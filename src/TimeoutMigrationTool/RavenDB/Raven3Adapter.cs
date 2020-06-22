@@ -11,6 +11,9 @@ using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
 
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System.IO;
+    using System.IO.Compression;
+
     public class Raven3Adapter : ICanTalkToRavenVersion
     {
         readonly string serverUrl;
@@ -269,13 +272,32 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             
             var patchCommand = JsonConvert.SerializeObject(patch);
             var url = $"{serverUrl}/databases{databaseName}/bulk_docs/TimeoutsIndex?query={Uri.EscapeDataString(dateRangeSpecification)}&allowStale=false";
-            using var request = new HttpRequestMessage(new HttpMethod("EVAL"), url){  Content = new StringContent(patchCommand, Encoding.UTF8, "application/json")};
-            using var hideHttpClient = new HttpClient();
-            // hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Encoding", "gzip");
-            // hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
+
+            var encoded = Encoding.UTF8.GetBytes(patchCommand);
+            var compressed = Compress(encoded);
+            using var httpContent = new StringContent(Convert.ToBase64String(compressed), Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(new HttpMethod("EVAL"), url){  Content = httpContent};
+            using var hideHttpClient = new HttpClient(); 
+            hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Encoding", "gzip");
+            hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
+            //httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
             var result = await hideHttpClient.SendAsync(request);
 
             return result.IsSuccessStatusCode;
+        }
+        
+        public static byte[] Compress(byte[] input)
+        {
+            using var result = new MemoryStream();
+            var lengthBytes = BitConverter.GetBytes(input.Length);
+            result.Write(lengthBytes, 0, 4);
+
+            using (var compressionStream = new GZipStream(result, CompressionMode.Compress))
+            {
+                compressionStream.Write(input, 0, input.Length);
+                compressionStream.Flush();
+            }
+            return result.ToArray();
         }
 
         async Task<bool> DoesTimeoutIndexExist()

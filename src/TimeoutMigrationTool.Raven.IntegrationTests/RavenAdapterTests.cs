@@ -127,6 +127,28 @@
             var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", (doc, id) => doc.Id = id, 0, 1);
             Assert.That(timeouts.Count, Is.EqualTo(RavenConstants.DefaultPagingSize));
         }
+        
+        [Test]
+        public async Task CanReadDocumentsByIndexWhenItDoesntExist()
+        {
+            var nrOfTimeouts = 500;
+            await testSuite.InitTimeouts(nrOfTimeouts);
+
+            Assert.ThrowsAsync<Exception>(() => testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0));
+        }
+
+        [Test]
+        public async Task CanReadDocumentsByIndexWhenIndexExist()
+        {
+            var nrOfTimeouts = 500;
+            await testSuite.InitTimeouts(nrOfTimeouts);
+            await testSuite.CreateIndex();
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            var result = await testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
+
+            Assert.That(result.Count, Is.EqualTo(500));
+        }
     }
 
     [TestFixture]
@@ -138,40 +160,7 @@
         }
 
         [Test]
-        public async Task CanReadDocumentsByIndexWhenItDoesntExist()
-        {
-            var nrOfTimeouts = 500;
-
-            var suite = new Raven3TestSuite();
-            await suite.SetupDatabase();
-            await suite.InitTimeouts(nrOfTimeouts);
-
-            var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
-            Assert.ThrowsAsync<Exception>(() => ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0));
-            
-            await suite.TeardownDatabase();
-        }
-
-        [Test]
-        public async Task CanReadDocumentsByIndexWhenIndexExist()
-        {
-            var nrOfTimeouts = 500;
-
-            var suite = new Raven3TestSuite();
-            await suite.SetupDatabase();
-            await suite.InitTimeouts(nrOfTimeouts);
-            await suite.CreateIndex();
-
-            var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0);
-
-           // Assert.That(result.Item1, Is.False);
-            Assert.That(result.Count, Is.EqualTo(500));
-            await suite.TeardownDatabase();
-        }
-        
-        [Test]
+        [Ignore("This test just proves that we're unable to use indexes to do this")]
         public async Task CanPageDocumentsAndGetUniqueResultsWhenQueryingByIndex()
         {
             var nrOfTimeouts = 1500;
@@ -202,7 +191,8 @@
         }
         
         [Test]
-        public async Task CanPathAMillionTimeoutsAtOnce()
+        [Ignore("Not hiding timeouts this way for now")]
+        public async Task CanHideTimeoutsFromLegacyTimeoutManager()
         {
             var nrOfTimeouts = 10;
 
