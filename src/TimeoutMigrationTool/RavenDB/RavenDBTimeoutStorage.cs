@@ -357,6 +357,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var timeoutIds = new List<string>();
             var nrOfTimeoutsRetrieved = 0;
             var initialIndexEtag = string.Empty;
+            var nrOfTimeouts =0;
+            
+            var tcs = new CancellationTokenSource();
+            var printTask = Task.Run(async () => {
+                while (!tcs.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeouts} have been scanned for preparation.");
+                }
+            } , tcs.Token);
 
             bool doesNotExistInBatchesFilter(TimeoutData td)
             {
@@ -392,6 +402,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (string.IsNullOrEmpty(initialIndexEtag))
                 {
                     initialIndexEtag = timeoutsResult.IndexETag;
+                    nrOfTimeouts = timeoutsResult.NrOfDocuments;
                 }
                 if (timeoutsResult.IsStale || timeoutsResult.IndexETag != initialIndexEtag)
                 {
@@ -411,6 +422,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 if (timeoutsResult.Documents.Count == 0)
                     findMoreTimeouts = false;
             }
+            
+            tcs.Cancel();
+            await printTask;
 
             var nrOfBatches = Math.Ceiling(timeoutIds.Count / (decimal)RavenConstants.DefaultPagingSize);
             for (var i = 0; i < nrOfBatches; i++)
