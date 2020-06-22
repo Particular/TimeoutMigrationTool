@@ -119,12 +119,18 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId,
                 (timeoutData, id) => { });
 
-            var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>((info => { return true; }), RavenConstants.BatchPrefix, (batch, id) => { });
-
             Assert.IsNull(updatedToolState);
+
+            var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>((info => { return true; }), RavenConstants.BatchPrefix, (batch, id) => { });
             Assert.That(batches.Count, Is.EqualTo(0));
-            Assert.That(updatedToolState.CompletedAt, Is.GreaterThan(timeStarted));
-            Assert.That(updatedToolState.Status, Is.EqualTo(MigrationStatus.Completed));
+
+            var archivedToolStates = await testSuite.RavenAdapter.GetDocuments<RavenToolStateDto>(_ => true, RavenConstants.ArchivedToolStateIdPrefix, (batch, id) => { });
+
+            Assert.That(archivedToolStates.Count, Is.EqualTo(1));
+
+            var archivedToolState = archivedToolStates.Single();
+            Assert.That(archivedToolState.Status, Is.EqualTo(MigrationStatus.Completed));
+            Assert.That(archivedToolState.CompletedAt, Is.GreaterThan(timeStarted));
         }
     }
 
