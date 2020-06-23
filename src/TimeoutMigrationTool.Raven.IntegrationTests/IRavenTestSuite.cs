@@ -4,7 +4,6 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
 
     public interface IRavenTestSuite
