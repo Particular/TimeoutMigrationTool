@@ -65,7 +65,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     await Task.Delay(TimeSpan.FromSeconds(5));
                     logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeoutsFound} have been scanned.");
                 }
-            }, tcs.Token);
+            });
 
             do
             {
@@ -100,7 +100,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     await Task.Delay(TimeSpan.FromSeconds(5));
                     logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeouts} have been scanned.");
                 }
-            }, tcs.Token);
+            });
 
             do
             {
