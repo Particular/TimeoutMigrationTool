@@ -37,31 +37,39 @@ The solution is divided up into a single tool project with multiple test project
   
 ## Bulk test results
 
+These tests were run on development machines, with both the storage and the broker running on the same machine, so although these results don't represent a functional production environment, they provide a rough estimate of migration duration times.
+
 ### Raven 3
 
 * For 1 million timeouts, using the index:
    * Listing endpoints: 8 minutes
-   * Full prepare: 30min
-   * Migration: 31 min
-   * Total migration time: 1h1m
+   * Prepare: 22 minutes
+   * Migration: 31 minutes
+   * Total migration time: 1 hour and 1 minute
 
 * For 100K timeouts, not using the index:
-   * Listing endpoints: 
-   * Full prepare: 
-   * Migration: 
-   * Total migration time: 
+   * Listing endpoints: 2 minutes
+   * Prepare: 2 minutes
+   * Migration: 2 minutes
+   * Total migration time: 6 minutes
+
+* For 300K timeouts, not using the index:
+   * Listing endpoints: 10 minutes
+   * Prepare: 19 minutes
+   * Migration: 8 minutes
+   * Total migration time: 37 minutes
 
 ### Raven 4
 
 * For 1 million timeouts, using the index:
    * Listing endpoints: 2 minutes
-   * Full prepare: 4 minutes
+   * Prepare: 4 minutes
    * Migration: 30 minutes
    * Total migration time: 36 minutes
    
 * For 1 million timeouts, not using the index:
    * Listing endpoints: 5 minutes
-   * Full prepare: 14 minutes
+   * Prepare: 14 minutes
    * Migration: 30 minutes
    * Total migration time: 49 minutes 
 
