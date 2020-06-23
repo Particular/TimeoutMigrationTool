@@ -19,7 +19,6 @@
 
         public Task<int> WriteTimeoutsToStagingQueue(List<TimeoutData> timeouts, string stageExchangeName)
         {
-            //todo: check the count and purge the queue if not empty + log the situation
             int messageCount;
             using (var connection = GetConnection(this.rabbitConnectionString))
             {
@@ -54,7 +53,6 @@
         {
             int level;
 
-            //TODO: guard for negative timespan
             var delay = (timeout.Time - DateTime.UtcNow);
             var delayInSeconds = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
             if (delayInSeconds < 0)
@@ -70,8 +68,6 @@
 
             properties.Headers["TimeoutMigrationTool.DelayExchange"] = LevelName(level);
             properties.Headers["TimeoutMigrationTool.RoutingKey"] = routingKey;
-
-            //TODO: Blow up when the time > 8.5 years[max value].
 
             model.BasicPublish(stageExchangeName, routingKey, true, properties, timeout.State);
         }

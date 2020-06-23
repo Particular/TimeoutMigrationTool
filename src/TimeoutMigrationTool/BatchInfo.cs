@@ -11,7 +11,6 @@
 
         public int Number { get; private set; }
 
-        //TODO - make setter private once refactor to "migration session" is done
         public BatchState State { get; set; }
 
         public int NumberOfTimeouts { get; private set; }
