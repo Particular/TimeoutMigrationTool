@@ -35,15 +35,23 @@ The solution is divided up into a single tool project with multiple test project
   * A migration for all remaining endpoints should be run to move the remaining timeouts.
   
   
-### Bulk test results
+## Bulk test results
 
-## Raven 3
+### Raven 3
 
 For 1 million timeouts, using the index
 - 8m to list endpoints
 - 30min total to do a full prepare
 - Total migration time: 1h1m
 
-## Raven 4
+For 100K timeouts, not using the index
 
-## Sql P
+### Raven 4
+
+
+For 1 million timeouts, using the index
+
+
+For 1 million timeouts, not using the index
+
+### Sql P
