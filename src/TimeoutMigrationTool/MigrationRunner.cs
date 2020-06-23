@@ -135,7 +135,6 @@ namespace Particular.TimeoutMigrationTool
                         throw new InvalidOperationException($"The amount of staged timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {stagedTimeoutCount}, batch contains {batch.NumberOfTimeouts}.");
                     }
 
-                    batch.State = BatchState.Staged;
                     await timeoutStorage.MarkBatchAsStaged(batch.Number);
                 }
 
@@ -147,7 +146,6 @@ namespace Particular.TimeoutMigrationTool
                     throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Completed amount of timeouts: {completedTimeoutsCount}, batch contains {batch.NumberOfTimeouts}.");
                 }
 
-                batch.State = BatchState.Completed;
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
 
                 logger.LogDebug($"Batch number {batch.Number} fully migrated");

@@ -103,11 +103,11 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutStorage.ToolStateWasAborted, Is.False);
         }
 
-        static List<BatchInfo> GetBatches()
+        static List<FakeBatchInfo> GetBatches()
         {
-            var batches = new List<BatchInfo>
+            var batches = new List<FakeBatchInfo>
             {
-                new BatchInfo(1, BatchState.Pending, 1)
+                new FakeBatchInfo(1, BatchState.Pending, 1)
             };
             return batches;
         }

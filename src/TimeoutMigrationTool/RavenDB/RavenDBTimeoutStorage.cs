@@ -217,18 +217,21 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task MarkBatchAsCompleted(int batchNumber)
         {
             var batch = await ravenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
-            batch.State = BatchState.Completed;
 
             await ravenAdapter.CompleteBatchAndUpdateTimeouts(batch);
+
+            batch.MarkAsCompleted();
         }
 
         public async Task MarkBatchAsStaged(int batchNumber)
         {
             var batchId = $"{RavenConstants.BatchPrefix}/{batchNumber}";
             var batch = await ravenAdapter.GetDocument<RavenBatch>(batchId, (doc, id) => { });
-            batch.State = BatchState.Staged;
 
             await ravenAdapter.UpdateDocument(batchId, batch);
+
+            batch.MarkAsStaged();
+
         }
 
         public async Task Abort()

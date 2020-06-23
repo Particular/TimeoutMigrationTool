@@ -12,5 +12,15 @@
         public string[] TimeoutIds { get; set; }
         public DateTime CutoffDate { get; set; }
         public string EndpointName { get; set; }
+
+        public void MarkAsCompleted()
+        {
+            State = BatchState.Completed;
+        }
+
+        public void MarkAsStaged()
+        {
+            State = BatchState.Staged;
+        }
     }
 }

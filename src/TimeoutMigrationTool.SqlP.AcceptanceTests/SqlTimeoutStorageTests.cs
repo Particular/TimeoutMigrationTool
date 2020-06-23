@@ -179,7 +179,6 @@
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
-                batch.State = BatchState.Completed;
             }
 
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();

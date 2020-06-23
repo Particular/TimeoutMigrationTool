@@ -2,7 +2,7 @@
 {
     public class BatchInfo
     {
-        public BatchInfo(int number,BatchState state, int numberOfTimeouts)
+        public BatchInfo(int number, BatchState state, int numberOfTimeouts)
         {
             Number = number;
             State = state;
@@ -11,8 +11,7 @@
 
         public int Number { get; private set; }
 
-        //TODO - make setter private once refactor to "migration session" is done
-        public BatchState State { get; set; }
+        public BatchState State { get; protected set; }
 
         public int NumberOfTimeouts { get; private set; }
     }
