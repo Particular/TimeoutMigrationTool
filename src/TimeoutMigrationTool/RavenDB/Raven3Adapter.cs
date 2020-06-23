@@ -224,7 +224,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom, TimeSpan timeToWait) where T : class
+        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom, TimeSpan timeToWaitForNonStaleResults) where T : class
         {
             var indexExists = await DoesTimeoutIndexExist();
             if (!indexExists)
@@ -238,12 +238,22 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 throw new Exception($"Was not able to get documents using index '{RavenConstants.TimeoutIndexName}', which should exist when using NServiceBus with RavenDB as persistence mechanism.");
             }
-
-            var results = new List<T>();
+            
             var contentString = await result.Content.ReadAsStringAsync();
             var jObject = JObject.Parse(contentString);
-            var resultSet = jObject.SelectToken("Results");
             var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+            
+            if (isStale && timeToWaitForNonStaleResults > TimeSpan.Zero)
+            {
+                await Task.Delay(timeToWaitForNonStaleResults);
+                using var waitResult = await httpClient.GetAsync(url);
+                contentString = await waitResult.Content.ReadAsStringAsync();
+                jObject = JObject.Parse(contentString);
+                isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+            }
+            
+            var results = new List<T>();
+            var resultSet = jObject.SelectToken("Results");
             var totalNrOfDocuments = Convert.ToInt32(jObject.SelectToken("TotalResults"));
             var indexETag = Convert.ToString(jObject.SelectToken("IndexETag"));
 

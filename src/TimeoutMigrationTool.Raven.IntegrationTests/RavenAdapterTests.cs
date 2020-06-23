@@ -139,9 +139,8 @@
         {
             var nrOfTimeouts = 500;
             await testSuite.InitTimeouts(nrOfTimeouts);
-            await testSuite.CreateIndex();
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            await testSuite.CreateLegacyTimeoutManagerIndex(true);
+           
             var result = await testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.Zero);
 
             Assert.That(result.Documents.Count, Is.EqualTo(500));
@@ -165,8 +164,7 @@
             var suite = new Raven3TestSuite();
             await suite.SetupDatabase();
             await suite.InitTimeouts(nrOfTimeouts);
-            await suite.CreateIndex();
-
+            
             var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
             await Task.Delay(TimeSpan.FromSeconds(2));
             var resultsPage1 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.Zero);
@@ -196,8 +194,7 @@
             var suite = new Raven3TestSuite();
             await suite.SetupDatabase();
             await suite.InitTimeouts(nrOfTimeouts);
-            await suite.CreateIndex();
-
+            
             var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
             await Task.Delay(TimeSpan.FromSeconds(2));
 

@@ -75,7 +75,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 };
                 if (alternateEndpoints)
                 {
-                    timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
+                    timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 2) ? "A" : "B";
                 }
 
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
@@ -208,7 +208,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
-        public async Task CreateIndex()
+        public async Task CreateLegacyTimeoutManagerIndex(bool waitForIndexToBeUpToDate)
         {
             var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
             var index = new
@@ -236,6 +236,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var result = await httpClient
                 .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
+
+            if (waitForIndexToBeUpToDate)
+            {
+                await EnsureIndexIsNotStale();
+            }
         }
 
         public string DatabaseName { get; private set; }
@@ -247,5 +252,20 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
         public string EndpointName { get; set; }
         protected static readonly HttpClient httpClient = new HttpClient();
+
+        public async Task EnsureIndexIsNotStale()
+        {
+            var isIndexStale = true;
+            while (isIndexStale)
+            {
+                var url = $"{ServerName}/databases/{DatabaseName}/queries?query=from%20index%20%27{RavenConstants.TimeoutIndexName}%27&parameters=%7B%7D&start={0}&pageSize={1}&metadataOnly=true";
+                using var result = await httpClient
+                    .GetAsync(url);
+                var contentString = await result.Content.ReadAsStringAsync();
+                var jObject = JObject.Parse(contentString);
+                isIndexStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+                if (isIndexStale) await Task.Delay(TimeSpan.FromMilliseconds(500));
+            }
+        }
     }
 }

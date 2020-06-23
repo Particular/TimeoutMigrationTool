@@ -19,7 +19,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             testSuite = CreateTestSuite();
             await testSuite.SetupDatabase();
-            await testSuite.CreateIndex();
+            await testSuite.CreateLegacyTimeoutManagerIndex(true);
         }
 
         [TearDown]
@@ -49,16 +49,16 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
-            Assert.That(endpoints.Count, Is.EqualTo(3));
+            Assert.That(endpoints.Count, Is.EqualTo(2));
         }
 
         [Test]
-        public async Task WhenThereTimeoutsListEndpointsRespectsTheCutoffDate()
+        public async Task WhenThereAreTimeoutsListEndpointsRespectsTheCutoffDate()
         {
             await testSuite.InitTimeouts(nrOfTimeouts, true);
 
             var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
-            var endpoints = await sut.ListEndpoints(DateTime.Now.AddDays(8));
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(2));
