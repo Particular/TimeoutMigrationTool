@@ -119,6 +119,7 @@ namespace Particular.TimeoutMigrationTool
             {
                 logger.LogInformation($"Migrating batch {batch.Number}");
 
+                var needToRecover = false;
                 if (batch.State == BatchState.Pending)
                 {
                     logger.LogDebug($"Reading batch number {batch.Number}");
@@ -138,11 +139,16 @@ namespace Particular.TimeoutMigrationTool
                     batch.State = BatchState.Staged;
                     await timeoutStorage.MarkBatchAsStaged(batch.Number);
                 }
+                else
+                {
+                    needToRecover = true;
+                    logger.LogWarning($"Batch {batch.Number} is recovering.");
+                }
 
                 logger.LogDebug($"Migrating batch number {batch.Number} from staging to destination");
                 var completedTimeoutsCount = await transportTimeoutsCreator.CompleteBatch(batch.Number);
 
-                if (batch.NumberOfTimeouts != completedTimeoutsCount)
+                if (!needToRecover && batch.NumberOfTimeouts != completedTimeoutsCount)
                 {
                     throw new InvalidOperationException($"The amount of completed timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Completed amount of timeouts: {completedTimeoutsCount}, batch contains {batch.NumberOfTimeouts}.");
                 }
