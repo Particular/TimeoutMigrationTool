@@ -3,6 +3,7 @@ namespace Particular.TimeoutMigrationTool
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System;
+    using System.Diagnostics;
     using System.Linq;
     using System.Text;
     using Microsoft.Extensions.Logging;
@@ -18,6 +19,9 @@ namespace Particular.TimeoutMigrationTool
 
         public async Task Run(DateTime cutOffTime, EndpointFilter endpointFilter, IDictionary<string, string> runParameters)
         {
+            var watch = new Stopwatch();
+            watch.Start();
+            
             var toolState = await timeoutStorage.TryLoadOngoingMigration();
 
             if (toolState != null)
@@ -50,7 +54,7 @@ namespace Particular.TimeoutMigrationTool
                 }
                 else
                 {
-                    logger.LogInformation($"No endpoints found in storage with timeouts that needs migration");
+                    logger.LogInformation("No endpoints found in storage with timeouts that needs migration");
                 }
                 return;
             }
@@ -101,6 +105,9 @@ namespace Particular.TimeoutMigrationTool
 
                 await Run(cutOffTime, endpointToMigrate.EndpointName, runParameters);
             }
+
+            watch.Stop();
+            logger.LogInformation($"Migration completed successfully in {watch.Elapsed.ToString("hh\\:mm\\:ss")}.");
         }
 
         async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
@@ -113,8 +120,7 @@ namespace Particular.TimeoutMigrationTool
         async Task Run(IToolState toolState)
         {
             BatchInfo batch;
-            var start = DateTime.UtcNow;
-
+            
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
                 logger.LogInformation($"Migrating batch {batch.Number}");
@@ -160,11 +166,6 @@ namespace Particular.TimeoutMigrationTool
             }
 
             await timeoutStorage.Complete();
-
-            var end = DateTime.UtcNow;
-            var duration = end.Subtract(start);
-            logger.LogInformation("Migration completed successfully");
-            logger.LogInformation($"Migration completed in {duration.Hours}:{duration.Minutes}:{duration.Seconds}");
         }
 
         void GuardAgainstInvalidState(IDictionary<string, string> runParameters, IToolState toolState)

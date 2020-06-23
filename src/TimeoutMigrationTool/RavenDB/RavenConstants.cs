@@ -20,7 +20,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             switch (version)
             {
                 case RavenDbVersion.ThreeDotFive:
-                    return 100000;
+                    return 300000;
                 case RavenDbVersion.Four:
                     return 1000000;
                 default:
