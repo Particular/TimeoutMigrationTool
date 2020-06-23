@@ -17,7 +17,7 @@
             var serverName = args[0];
             var databaseName = args[1];
             var ravenVersion = args[2] == "4" ? RavenDbVersion.Four : RavenDbVersion.ThreeDotFive;
-            var nrOfTimeoutsToInsert = (args.Length == 3 || string.IsNullOrEmpty(args[3])) ? 1000000 : Convert.ToInt32(args[3]);
+            var nrOfTimeoutsToInsert = (args.Length == 3 || string.IsNullOrEmpty(args[3])) ? 10000 : Convert.ToInt32(args[3]);
 
             var createDbUrl = ravenVersion == RavenDbVersion.Four ? $"{serverName}/admin/databases?name={databaseName}" : $"{serverName}/admin/databases/{databaseName}";
             var httpContent = BuildHttpContentForDbCreation(ravenVersion, databaseName);
@@ -34,7 +34,7 @@
 
             Console.WriteLine($"{timeoutIdCounter} timeouts were created");
             Console.WriteLine("Creating the index....");
-            await CreateIndex(serverName, databaseName);
+            await CreateIndex(serverName, databaseName, ravenVersion);
             Console.WriteLine("Index created.");
         }
 
@@ -141,7 +141,49 @@
             return stringContent;
         }
 
-        static async Task CreateIndex(string serverName, string databaseName)
+        static async Task CreateIndex(string serverName, string databaseName, RavenDbVersion version)
+        {
+            if (version == RavenDbVersion.ThreeDotFive)
+            {
+                await CreateRaven3Index(serverName, databaseName);
+            }
+            else
+            {
+                await CreateRaven4Index(serverName, databaseName);
+            }
+        }
+
+        static async Task CreateRaven4Index(string serverName, string databaseName)
+        {
+            var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
+            var index = new
+            {
+                Name = RavenConstants.TimeoutIndexName,
+                Maps = new List<string> {map},
+                Type = "Map",
+                LockMode = "Unlock",
+                Priority = "Normal",
+                Configuration = new object(),
+                Fields = new object(),
+                OutputReduceToCollection = new object(),
+                PatternForOutputReduceToCollectionReferences = new object(),
+                PatternReferencesCollectionNam = new object(),
+                AdditionalSources = new object()
+            };
+
+            var indexes = new
+            {
+                Indexes = new List<object> {index}
+            };
+
+            var createIndexUrl = $"{serverName}/databases/{databaseName}/admin/indexes";
+            var content = JsonConvert.SerializeObject(indexes);
+            var result = await httpClient
+                .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
+            result.EnsureSuccessStatusCode();
+        }
+
+        static async Task CreateRaven3Index(string serverName, string databaseName)
         {
             var map = "from doc in docs select new {  doc.Time, doc.SagaId, doc.OwningTimeoutManager }";
             var index = new
