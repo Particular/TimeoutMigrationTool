@@ -361,13 +361,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var nrOfTimeouts =0;
 
             var tcs = new CancellationTokenSource();
-            var printTask = Task.Run(async () => {
+            var printTask = Task.Run(async () =>
+            {
                 while (!tcs.Token.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-                    logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeouts} have been scanned for preparation.");
+                    await Task.Delay(TimeSpan.FromSeconds(5), tcs.Token);
+                    logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeouts} have been scanned.");
                 }
-            } , tcs.Token);
+            }, CancellationToken.None);
 
             bool doesNotExistInBatchesFilter(TimeoutData td)
             {
@@ -429,7 +430,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             tcs.Cancel();
-            await printTask;
+
+            try
+            {
+                await printTask;
+            }
+            catch (OperationCanceledException)
+            {
+            }
 
             var timeoutsToProcess = timeoutIds.Select(x => x.Key).ToList();
             var nrOfBatches = Math.Ceiling(timeoutsToProcess.Count / (decimal)RavenConstants.DefaultPagingSize);
