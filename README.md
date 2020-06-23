@@ -39,19 +39,19 @@ The solution is divided up into a single tool project with multiple test project
 
 ### Raven 3
 
-For 1 million timeouts, using the index
-- 8m to list endpoints
-- 30min total to do a full prepare
-- Total migration time: 1h1m
+* For 1 million timeouts, using the index
+   * 8m to list endpoints
+   * 30min total to do a full prepare
+   * Total migration time: 1h1m
 
-For 100K timeouts, not using the index
+* For 100K timeouts, not using the index
 
 ### Raven 4
 
 
-For 1 million timeouts, using the index
+* For 1 million timeouts, using the index
 
 
-For 1 million timeouts, not using the index
+* For 1 million timeouts, not using the index
 
 ### Sql P
