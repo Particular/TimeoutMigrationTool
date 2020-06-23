@@ -54,16 +54,16 @@ The solution is divided up into a single tool project with multiple test project
 ### Raven 4
 
 * For 1 million timeouts, using the index:
-   * Listing endpoints: 
-   * Full prepare: 
-   * Migration: 
-   * Total migration time: 
+   * Listing endpoints: 2 minutes
+   * Full prepare: 4 minutes
+   * Migration: 30 minutes
+   * Total migration time: 36 minutes
    
 * For 1 million timeouts, not using the index:
-   * Listing endpoints: 
-   * Full prepare: 
-   * Migration: 
-   * Total migration time: 
+   * Listing endpoints: 5 minutes
+   * Full prepare: 14 minutes
+   * Migration: 30 minutes
+   * Total migration time: 49 minutes 
 
 ### Sql P
 
