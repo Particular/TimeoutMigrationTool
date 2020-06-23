@@ -62,10 +62,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 while (!tcs.Token.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    await Task.Delay(TimeSpan.FromSeconds(5), tcs.Token);
                     logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeoutsFound} have been scanned.");
                 }
-            });
+            }, CancellationToken.None);
 
             do
             {
@@ -80,7 +80,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             } while (findMoreTimeouts);
 
             tcs.Cancel();
-            await printTask;
+
+            try
+            {
+                await printTask;
+            }
+            catch (OperationCanceledException)
+            {
+            }
 
             return endpoints;
         }
@@ -97,10 +104,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 while (!tcs.Token.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    await Task.Delay(TimeSpan.FromSeconds(5), tcs.Token);
                     logger.LogInformation($"{nrOfTimeoutsRetrieved} of {nrOfTimeouts} have been scanned.");
                 }
-            });
+            }, CancellationToken.None);
 
             do
             {
@@ -125,7 +132,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             } while (findMoreTimeouts);
 
             tcs.Cancel();
-            await printTask;
+
+            try
+            {
+                await printTask;
+            }
+            catch (OperationCanceledException)
+            {
+            }
             return endpoints;
         }
 
@@ -185,7 +199,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             ravenToolState.Status = MigrationStatus.StoragePrepared;
             ravenToolState.StartedAt = DateTime.UtcNow;
             ravenToolState.NumberOfBatches = batches.Count();
-            ravenToolState.NumberOfTimeouts = batches.Sum(b=>b.NumberOfTimeouts);
+            ravenToolState.NumberOfTimeouts = batches.Sum(b => b.NumberOfTimeouts);
 
             await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
 
