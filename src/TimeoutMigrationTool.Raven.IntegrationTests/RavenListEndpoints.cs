@@ -19,7 +19,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             testSuite = CreateTestSuite();
             await testSuite.SetupDatabase();
-            await testSuite.CreateLegacyTimeoutManagerIndex();
+            await testSuite.CreateLegacyTimeoutManagerIndex(true);
         }
 
         [TearDown]
@@ -53,7 +53,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         }
 
         [Test]
-        public async Task WhenThereTimeoutsListEndpointsRespectsTheCutoffDate()
+        public async Task WhenThereAreTimeoutsListEndpointsRespectsTheCutoffDate()
         {
             await testSuite.InitTimeouts(nrOfTimeouts, true);
 

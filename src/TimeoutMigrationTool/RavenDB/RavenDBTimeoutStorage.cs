@@ -181,7 +181,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         async Task<int> GuardAgainstTooManyTimeoutsWithoutIndexUsage()
         {
-            var nrOfTimeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.FromSeconds(5));
+            var nrOfTimeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.FromSeconds(0));
             if (nrOfTimeoutsResult.NrOfDocuments > RavenConstants.GetMaxNrOfTimeoutsWithoutIndexByRavenVersion(ravenVersion) && !useIndex)
             {
                 throw new Exception($"We've encountered around {nrOfTimeoutsResult.NrOfDocuments} timeouts to process. Given the amount of timeouts to migrate, please shut down your endpoints before migrating and use the --{ApplicationOptions.ForceUseIndex} option.");

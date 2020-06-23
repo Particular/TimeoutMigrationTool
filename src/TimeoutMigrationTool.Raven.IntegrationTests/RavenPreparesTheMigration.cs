@@ -19,7 +19,6 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             testSuite = CreateTestSuite();
             await testSuite.SetupDatabase();
-            await testSuite.CreateLegacyTimeoutManagerIndex();
         }
 
         [TearDown]
@@ -94,6 +93,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             nrOfTimeouts = RavenConstants.DefaultPagingSize + 5;
             await testSuite.InitTimeouts(nrOfTimeouts);
+            await testSuite.CreateLegacyTimeoutManagerIndex(useIndex);
+            
             var timeoutStorage =
                 new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             var startTime = DateTime.UtcNow;
@@ -127,6 +128,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             nrOfTimeouts = 3000;
             testSuite.EndpointName = "B";
             await testSuite.InitTimeouts(nrOfTimeouts, true);
+            await testSuite.CreateLegacyTimeoutManagerIndex(useIndex);
 
             var timeoutStorage =
                 new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
@@ -152,6 +154,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             nrOfTimeouts = 10;
             await testSuite.InitTimeouts(nrOfTimeouts);
+            await testSuite.CreateLegacyTimeoutManagerIndex(useIndex);
 
             var cutoffTime = DateTime.Now.AddDays(-1);
             var timeoutStorage =
@@ -161,6 +164,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var secondBatchNrOfTimeouts = 5;
             await testSuite.InitTimeouts(secondBatchNrOfTimeouts, false, "secondBatch");
+            await testSuite.EnsureIndexIsNotStale();
             var toolState = await timeoutStorage.Prepare(cutoffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));

@@ -22,6 +22,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         Task<RavenToolState> GetToolState();
         Task<List<RavenBatch>> GetBatches(string[] ids);
         Task TeardownDatabase();
-        Task CreateLegacyTimeoutManagerIndex();
+        Task CreateLegacyTimeoutManagerIndex(bool waitForIndexToBeUpToDate);
+        Task EnsureIndexIsNotStale();
     }
 }

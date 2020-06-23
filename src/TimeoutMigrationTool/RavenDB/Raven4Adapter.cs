@@ -156,16 +156,22 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             var url = $"{serverUrl}/databases/{databaseName}/queries?query=from%20index%20%27{RavenConstants.TimeoutIndexName}%27&parameters=%7B%7D&start={startFrom}&pageSize={RavenConstants.DefaultPagingSize}&metadataOnly=false";
             using var result = await httpClient.GetAsync(url);
-            if (result.StatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception($"Was not able to get documents using index '{RavenConstants.TimeoutIndexName}', which should exist when using NServiceBus with RavenDB as persistence mechanism.");
-            }
 
-            var results = new List<T>();
             var contentString = await result.Content.ReadAsStringAsync();
             var jObject = JObject.Parse(contentString);
-            var resultSet = jObject.SelectToken("Results");
             var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+            
+            if (isStale && timeToWaitForNonStaleResults > TimeSpan.Zero)
+            {
+                await Task.Delay(timeToWaitForNonStaleResults);
+                using var waitResult = await httpClient.GetAsync(url);
+                contentString = await waitResult.Content.ReadAsStringAsync();
+                jObject = JObject.Parse(contentString);
+                isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+            }
+            
+            var results = new List<T>();
+            var resultSet = jObject.SelectToken("Results");
             var totalNrOfDocuments = Convert.ToInt32(jObject.SelectToken("TotalResults"));
             var indexETag = Convert.ToString(jObject.SelectToken("ResultEtag"));
 

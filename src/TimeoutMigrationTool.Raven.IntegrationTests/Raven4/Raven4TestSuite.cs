@@ -208,7 +208,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
-        public async Task CreateLegacyTimeoutManagerIndex()
+        public async Task CreateLegacyTimeoutManagerIndex(bool waitForIndexToBeUpToDate)
         {
             var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
             var index = new
@@ -237,7 +237,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
 
-            await EnsureIndexIsNotStale();
+            if (waitForIndexToBeUpToDate)
+            {
+                await EnsureIndexIsNotStale();
+            }
         }
 
         public string DatabaseName { get; private set; }
@@ -250,9 +253,19 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
         public string EndpointName { get; set; }
         protected static readonly HttpClient httpClient = new HttpClient();
 
-        static async Task EnsureIndexIsNotStale()
+        public async Task EnsureIndexIsNotStale()
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            var isIndexStale = true;
+            while (isIndexStale)
+            {
+                var url = $"{ServerName}/databases/{DatabaseName}/queries?query=from%20index%20%27{RavenConstants.TimeoutIndexName}%27&parameters=%7B%7D&start={0}&pageSize={1}&metadataOnly=true";
+                using var result = await httpClient
+                    .GetAsync(url);
+                var contentString = await result.Content.ReadAsStringAsync();
+                var jObject = JObject.Parse(contentString);
+                isIndexStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+                if (isIndexStale) await Task.Delay(TimeSpan.FromMilliseconds(500));
+            }
         }
     }
 }

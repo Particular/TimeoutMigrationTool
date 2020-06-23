@@ -9,6 +9,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
@@ -60,7 +61,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                 };
                 if (alternateEndpoints)
                 {
-                    timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 3) ? "A" : i < (nrOfTimeouts / 3) * 2 ? "B" : "C";
+                    timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 2) ? "A" : "B";
                 }
 
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
@@ -204,7 +205,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
         public string serverName = (Environment.GetEnvironmentVariable("Raven35Url") ?? "http://localhost:8383").TrimEnd('/');
         protected static readonly HttpClient httpClient = new HttpClient();
 
-        public async Task CreateLegacyTimeoutManagerIndex()
+        public async Task CreateLegacyTimeoutManagerIndex(bool waitForIndexToBeUpToDate)
         {
             var map = "from doc in docs select new {  doc.Time, doc.SagaId }";
             var index = new
@@ -233,9 +234,29 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
             var createIndexUrl = $"{serverName}/databases/{DatabaseName}/indexes/{RavenConstants.TimeoutIndexName}?definition=yes";
             var content = JsonConvert.SerializeObject(index);
-            var result = await httpClient
+            using var result = await httpClient
                 .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
+
+            if (waitForIndexToBeUpToDate)
+            {
+                await EnsureIndexIsNotStale();
+            }
+        }
+        
+        public async Task EnsureIndexIsNotStale()
+        {
+            var isIndexStale = true;
+            while (isIndexStale)
+            {
+                var url = $"{serverName}/databases/{DatabaseName}/indexes/{RavenConstants.TimeoutIndexName}?start={0}&pageSize={1}";
+                using var result = await httpClient
+                    .GetAsync(url);
+                var contentString = await result.Content.ReadAsStringAsync();
+                var jObject = JObject.Parse(contentString);
+                isIndexStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+                if (isIndexStale) await Task.Delay(TimeSpan.FromMilliseconds(500));
+            }
         }
     }
 }
