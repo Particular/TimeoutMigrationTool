@@ -309,7 +309,7 @@
                 return cutoffTime;
             }
 
-            throw new Exception($"Unable to parse the cutofftime, please supply the cutoffTime in the following format 'yyyy-MM-dd hh:mm:ss'");
+            throw new ArgumentException($"Unable to parse the cutofftime, please supply the cutoffTime in the following format 'yyyy-MM-dd hh:mm:ss'");
         }
 
 
@@ -336,6 +336,11 @@
             if (allEndpointsOption.HasValue())
             {
                 return EndpointFilter.IncludeAll;
+            }
+
+            if (!endpointFilterOption.HasValue())
+            {
+                throw new ArgumentException($"Either specify a specific endpoint using --{ApplicationOptions.EndpointFilter} or use the --{ApplicationOptions.AllEndpoints} option");
             }
 
             return EndpointFilter.SpecificEndpoint(endpointFilterOption.Value());
