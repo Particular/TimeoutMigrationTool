@@ -65,7 +65,11 @@ namespace TimeoutMigrationTool.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+                await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>
+                {
+                    { "someotherkey", "someothervalue" },
+                    { "somekey", "someothervalue" }
+                });
             });
 
             Assert.That(timeoutStorage.EndpointsWereListed, Is.False);
