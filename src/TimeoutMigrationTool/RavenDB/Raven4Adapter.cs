@@ -193,11 +193,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             };
         }
 
-        public Task<bool> HideTimeouts(DateTime cutoffDate)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task BatchDelete(string[] keys)
         {
             var commands = keys.Select(GetDeleteCommand);

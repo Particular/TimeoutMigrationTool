@@ -140,7 +140,7 @@
             var nrOfTimeouts = 500;
             await testSuite.InitTimeouts(nrOfTimeouts);
             await testSuite.CreateLegacyTimeoutManagerIndex(true);
-           
+
             var result = await testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.Zero);
 
             Assert.That(result.Documents.Count, Is.EqualTo(500));
@@ -164,7 +164,7 @@
             var suite = new Raven3TestSuite();
             await suite.SetupDatabase();
             await suite.InitTimeouts(nrOfTimeouts);
-            
+
             var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
             await Task.Delay(TimeSpan.FromSeconds(2));
             var resultsPage1 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.Zero);
@@ -181,28 +181,6 @@
             timeoutIds.AddRange(resultsPage2.Documents.Select(x => x.Id));
             var uniqueTimeoutIds = timeoutIds.Distinct();
             Assert.That(uniqueTimeoutIds.Count(), Is.EqualTo(nrOfTimeouts));
-
-            await suite.TeardownDatabase();
-        }
-
-        [Test]
-        [Ignore("Not hiding timeouts this way for now")]
-        public async Task CanHideTimeoutsFromLegacyTimeoutManager()
-        {
-            var nrOfTimeouts = 10;
-
-            var suite = new Raven3TestSuite();
-            await suite.SetupDatabase();
-            await suite.InitTimeouts(nrOfTimeouts);
-            
-            var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
-            await Task.Delay(TimeSpan.FromSeconds(2));
-
-            var succeeded = await ravenAdapter.HideTimeouts(DateTime.UtcNow);
-            var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(data => true, "TimeoutDatas", (timeout, id) => timeout.Id = id);
-
-            Assert.That(succeeded, Is.True);
-            Assert.That(timeouts.All(t => t.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix)), Is.True);
 
             await suite.TeardownDatabase();
         }

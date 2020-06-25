@@ -238,11 +238,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 throw new Exception($"Was not able to get documents using index '{RavenConstants.TimeoutIndexName}', which should exist when using NServiceBus with RavenDB as persistence mechanism.");
             }
-            
+
             var contentString = await result.Content.ReadAsStringAsync();
             var jObject = JObject.Parse(contentString);
             var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
-            
+
             if (isStale && timeToWaitForNonStaleResults > TimeSpan.Zero)
             {
                 await Task.Delay(timeToWaitForNonStaleResults);
@@ -251,7 +251,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 jObject = JObject.Parse(contentString);
                 isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
             }
-            
+
             var results = new List<T>();
             var resultSet = jObject.SelectToken("Results");
             var totalNrOfDocuments = Convert.ToInt32(jObject.SelectToken("TotalResults"));
@@ -273,33 +273,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 NrOfDocuments = totalNrOfDocuments,
                 IndexETag = indexETag
             };
-        }
-
-        public async Task<bool> HideTimeouts(DateTime cutoffDate)
-        {
-            var cutoffDateParameter = cutoffDate.ToString("YYYY-MM-DDThh:mm:ssZ");
-            cutoffDateParameter = cutoffDateParameter.Replace(":", "\\:"); // escape characters for lucene
-            var dateRangeSpecification = $"Time:[{cutoffDateParameter} TO *]";
-            var patch = new Patch()
-            {
-                Script = $"this.OwningTimeoutManager = this.OwningTimeoutManager.substr({RavenConstants.MigrationOngoingPrefix.Length});",
-                Values = new { }
-            };
-
-            var patchCommand = JsonConvert.SerializeObject(patch);
-            var url = $"{serverUrl}/databases{databaseName}/bulk_docs/TimeoutsIndex?query={Uri.EscapeDataString(dateRangeSpecification)}&allowStale=false";
-
-            var encoded = Encoding.UTF8.GetBytes(patchCommand);
-            var compressed = Compress(encoded);
-            using var httpContent = new StringContent(Convert.ToBase64String(compressed), Encoding.UTF8, "application/json");
-            using var request = new HttpRequestMessage(new HttpMethod("EVAL"), url){  Content = httpContent};
-            using var hideHttpClient = new HttpClient();
-            hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Encoding", "gzip");
-            hideHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
-            //httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-            var result = await hideHttpClient.SendAsync(request);
-
-            return result.IsSuccessStatusCode;
         }
 
         public static byte[] Compress(byte[] input)
