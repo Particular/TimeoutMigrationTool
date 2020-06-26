@@ -17,11 +17,11 @@
             var serverName = args[0];
             var databaseName = args[1];
             var ravenVersion = args[2] == "4" ? RavenDbVersion.Four : RavenDbVersion.ThreeDotFive;
-            var nrOfTimeoutsToInsert = (args.Length == 3 || string.IsNullOrEmpty(args[3])) ? 300 : Convert.ToInt32(args[3]);
+            var nrOfTimeoutsToInsert = (args.Length == 3 || string.IsNullOrEmpty(args[3])) ? 1000 : Convert.ToInt32(args[3]);
 
             var createDbUrl = ravenVersion == RavenDbVersion.Four ? $"{serverName}/admin/databases?name={databaseName}" : $"{serverName}/admin/databases/{databaseName}";
             var httpContent = BuildHttpContentForDbCreation(ravenVersion, databaseName);
-
+            
             var dbCreationResult = await httpClient.PutAsync(createDbUrl, httpContent);
             if (!dbCreationResult.IsSuccessStatusCode)
             {
@@ -41,8 +41,7 @@
         static async Task<int> InitTimeouts(decimal nrOfBatches, string serverName, string databaseName, int nrOfTimeoutsToInsert, string timeoutsPrefix, RavenDbVersion ravenVersion)
         {
             var timeoutIdCounter = 0;
-
-
+            
             for (var i = 1; i <= nrOfBatches; i++) // batch inserts per paging size
             {
                 var commands = new List<object>();

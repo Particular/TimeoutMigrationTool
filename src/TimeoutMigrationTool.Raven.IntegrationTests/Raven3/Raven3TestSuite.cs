@@ -40,13 +40,12 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
             Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
-        public async Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false, string prefixIdsWith = null)
+        public async Task InitTimeouts(int nrOfTimeouts)
         {
             var timeoutsPrefix = "TimeoutDatas";
             for (var i = 0; i < nrOfTimeouts; i++)
             {
-                var idPrefix = string.IsNullOrEmpty(prefixIdsWith) ? "" : prefixIdsWith;
-                var insertTimeoutUrl = $"{serverName}/databases/{DatabaseName}/docs/{timeoutsPrefix}/{idPrefix +i}";
+               var insertTimeoutUrl = $"{serverName}/databases/{DatabaseName}/docs/{timeoutsPrefix}/{i}";
 
                 // Insert the timeout data
                 var timeoutData = new TimeoutData
@@ -59,11 +58,34 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                     Headers = new Dictionary<string, string>(),
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
-                if (alternateEndpoints)
-                {
-                    timeoutData.OwningTimeoutManager = i < (nrOfTimeouts / 2) ? "A" : "B";
-                }
 
+                var serializeObject = JsonConvert.SerializeObject(timeoutData);
+                var httpContent = new StringContent(serializeObject);
+
+                var result = await httpClient.PutAsync(insertTimeoutUrl, httpContent);
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+            }
+        }
+        
+        public async Task InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId)
+        {
+            var timeoutsPrefix = "TimeoutDatas";
+            for (var i = 0; i < nrOfTimeouts; i++)
+            {
+                var insertTimeoutUrl = $"{serverName}/databases/{DatabaseName}/docs/{timeoutsPrefix}/{startFromId +i}";
+
+                // Insert the timeout data
+                var timeoutData = new TimeoutData
+                {
+                    Id = $"{timeoutsPrefix}/{i}",
+                    Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
+                    SagaId = Guid.NewGuid(),
+                    OwningTimeoutManager = endpointName,
+                    Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
+                    Headers = new Dictionary<string, string>(),
+                    State = Encoding.ASCII.GetBytes("This is my state")
+                };
+                
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
                 var httpContent = new StringContent(serializeObject);
 

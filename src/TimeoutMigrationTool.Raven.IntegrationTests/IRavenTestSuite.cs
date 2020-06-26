@@ -15,7 +15,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         RavenDbVersion RavenVersion { get; }
         string EndpointName { get; set; }
         Task SetupDatabase();
-        Task InitTimeouts(int nrOfTimeouts, bool alternateEndpoints = false, string prefixIdsWith = null);
+        Task InitTimeouts(int nrOfTimeouts);
         RavenToolState SetupToolState(DateTime cutoffTime);
         Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase();
         Task SaveToolState(RavenToolState toolState);
@@ -24,5 +24,6 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         Task TeardownDatabase();
         Task CreateLegacyTimeoutManagerIndex(bool waitForIndexToBeUpToDate);
         Task EnsureIndexIsNotStale();
+        Task InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId);
     }
 }
