@@ -56,7 +56,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenPrepareDiesHalfWayThroughWhenRunWithDifferentParametersThrowsException()
         {
             nrOfTimeouts = 10;
-            await testSuite.InitTimeouts(nrOfTimeouts);
+            testSuite.EndpointName = "EndpointA";
+            await testSuite.InitTimeouts(nrOfTimeouts, "EndpointA", 0);
 
             var cutoffTime = DateTime.Now.AddDays(-1);
             var timeoutStorage =
@@ -65,10 +66,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
 
             var secondBatchNrOfTimeouts = 5;
-            await testSuite.InitTimeouts(secondBatchNrOfTimeouts, false, "secondBatch");
+            await testSuite.InitTimeouts(secondBatchNrOfTimeouts, "EndpointA", nrOfTimeouts);
 
             Assert.ThrowsAsync<Exception>(async () => { await timeoutStorage.Prepare(cutoffTime, "someOtherEndpoint", new Dictionary<string, string>()); });
-            var timeoutsFromSecondBatch = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(data => data.Id.Contains("secondBatch"), "TimeoutDatas", (doc, id) => doc.Id = id);
+            var timeoutsFromSecondBatch = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(data =>  Convert.ToInt32(data.Id.Replace("TimeoutDatas/", "")) >= nrOfTimeouts, "TimeoutDatas", (doc, id) => doc.Id = id);
             Assert.That(timeoutsFromSecondBatch.Count(), Is.EqualTo(secondBatchNrOfTimeouts));
             Assert.That(timeoutsFromSecondBatch.All(x => !x.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix)), Is.True);
         }
@@ -125,9 +126,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [TestCase(false)]
         public async Task WhenTheStorageHasNotBeenPreparedWeWantToInitBatchesWhenMoreEndpointsAreAvailable(bool useIndex)
         {
-            nrOfTimeouts = 3000;
-            testSuite.EndpointName = "B";
-            await testSuite.InitTimeouts(nrOfTimeouts, true);
+            await testSuite.InitTimeouts(2000, testSuite.EndpointName, 0);
+            await testSuite.InitTimeouts(1000, "SomeOtherEndpoint", 2000);
             await testSuite.CreateLegacyTimeoutManagerIndex(useIndex);
 
             var timeoutStorage =
@@ -145,7 +145,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
                 batch = await toolState.TryGetNextBatch();
             }
 
-            Assert.That(timeoutsInBatches.Distinct().Count(), Is.EqualTo(3000/2));
+            Assert.That(timeoutsInBatches.Distinct().Count(), Is.EqualTo(2000));
         }
 
         [TestCase(true)]
@@ -153,7 +153,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenPrepareDiesHalfWayThroughWeCanStillSuccessfullyPrepare(bool useIndex)
         {
             nrOfTimeouts = 10;
-            await testSuite.InitTimeouts(nrOfTimeouts);
+            await testSuite.InitTimeouts(nrOfTimeouts, testSuite.EndpointName, 0);
             await testSuite.CreateLegacyTimeoutManagerIndex(useIndex);
 
             var cutoffTime = DateTime.Now.AddDays(-1);
@@ -163,7 +163,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
 
             var secondBatchNrOfTimeouts = 5;
-            await testSuite.InitTimeouts(secondBatchNrOfTimeouts, false, "secondBatch");
+            await testSuite.InitTimeouts(secondBatchNrOfTimeouts, testSuite.EndpointName, nrOfTimeouts);
             await testSuite.EnsureIndexIsNotStale();
             var toolState = await timeoutStorage.Prepare(cutoffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
@@ -172,8 +172,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var secondBatch = await timeoutStorage.ReadBatch(2);
             Assert.That(firstBatch.Count(), Is.EqualTo(10));
             Assert.That(secondBatch.Count(), Is.EqualTo(secondBatchNrOfTimeouts));
-            Assert.That(secondBatch.All(t => t.Id.Contains("secondBatch")));
-            Assert.That(firstBatch.All(t => !t.Id.Contains("secondBatch")));
+            Assert.That(secondBatch.All(t => Convert.ToInt32(t.Id.Replace("TimeoutDatas/", "")) >= 10));
+            Assert.That(firstBatch.All(t =>  Convert.ToInt32(t.Id.Replace("TimeoutDatas/", "")) < 10));
         }
 
         int nrOfTimeouts = 1500;

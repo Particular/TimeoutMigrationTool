@@ -151,10 +151,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var endpointsFetched = eligibleTimeouts.GroupBy(
                 key => key.OwningTimeoutManager.Replace(RavenConstants.MigrationDonePrefix, "").Replace(RavenConstants.MigrationOngoingPrefix, ""),
                 elements => elements,
-                (owningTimeoutManager, destinationTimeouts) => new EndpointInfo
+                (endpointName, destinationTimeouts) => new EndpointInfo
                 {
-                    EndpointName = owningTimeoutManager,
-                    NrOfTimeouts = eligibleTimeouts.Count(),
+                    EndpointName = endpointName,
+                    NrOfTimeouts = eligibleTimeouts.Count(x => x.OwningTimeoutManager.Replace(RavenConstants.MigrationDonePrefix, "").Replace(RavenConstants.MigrationOngoingPrefix, "") == endpointName),
                     ShortestTimeout = eligibleTimeouts.Min(x => x.Time),
                     LongestTimeout = eligibleTimeouts.Max(x => x.Time),
                     Destinations = eligibleTimeouts.GroupBy(x => x.Destination).Select(g => g.Key).ToList()
