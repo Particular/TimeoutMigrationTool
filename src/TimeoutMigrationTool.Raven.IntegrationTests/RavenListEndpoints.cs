@@ -43,19 +43,27 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenThereTimeoutsListEndpointsReturnsEndpointsList()
         {
-            await testSuite.InitTimeouts(nrOfTimeouts, true);
+            await testSuite.InitTimeouts(nrOfTimeouts, "EndpointA", 0);
+            await testSuite.InitTimeouts(500, "EndpointB", nrOfTimeouts);
 
             var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(2));
+            var endpointA = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointA");
+            var endpointB = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointB");
+            Assert.IsNotNull(endpointA);
+            Assert.That(endpointA.NrOfTimeouts, Is.EqualTo(nrOfTimeouts));
+            Assert.IsNotNull(endpointB);
+            Assert.That(endpointB.NrOfTimeouts, Is.EqualTo(500));
         }
 
         [Test]
         public async Task WhenThereAreTimeoutsListEndpointsRespectsTheCutoffDate()
         {
-            await testSuite.InitTimeouts(nrOfTimeouts, true);
+            await testSuite.InitTimeouts(nrOfTimeouts, "EndpointA", 0);
+            await testSuite.InitTimeouts(50, "EndpointB", nrOfTimeouts);
 
             var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
@@ -67,7 +75,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenThereAreCompletedTimeoutsTheseAreIgnoredWhenListingEndpoints()
         {
-            await testSuite.InitTimeouts(50, false);
+            await testSuite.InitTimeouts(50);
 
             var timeout = await testSuite.RavenAdapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationDonePrefix}{timeout.OwningTimeoutManager}";
@@ -84,7 +92,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenThereAreInProgressTimeoutsTheseAreIncludedWhenListingEndpoints()
         {
-            await testSuite.InitTimeouts(50, false);
+            await testSuite.InitTimeouts(50);
 
             var timeout = await testSuite.RavenAdapter.GetDocument<TimeoutData>("TimeoutDatas/0", (data, id) => data.Id = id);
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationOngoingPrefix}{timeout.OwningTimeoutManager}";
