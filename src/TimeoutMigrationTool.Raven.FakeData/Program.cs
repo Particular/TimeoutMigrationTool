@@ -19,14 +19,14 @@
             var ravenVersion = args[2] == "4" ? RavenDbVersion.Four : RavenDbVersion.ThreeDotFive;
             var nrOfTimeoutsToInsert = (args.Length == 3 || string.IsNullOrEmpty(args[3])) ? 1000 : Convert.ToInt32(args[3]);
 
-            // var createDbUrl = ravenVersion == RavenDbVersion.Four ? $"{serverName}/admin/databases?name={databaseName}" : $"{serverName}/admin/databases/{databaseName}";
-            // var httpContent = BuildHttpContentForDbCreation(ravenVersion, databaseName);
-            //
-            // var dbCreationResult = await httpClient.PutAsync(createDbUrl, httpContent);
-            // if (!dbCreationResult.IsSuccessStatusCode)
-            // {
-            //     throw new Exception($"Something went wrong while creating the database. Error code {dbCreationResult.StatusCode}");
-            // }
+            var createDbUrl = ravenVersion == RavenDbVersion.Four ? $"{serverName}/admin/databases?name={databaseName}" : $"{serverName}/admin/databases/{databaseName}";
+            var httpContent = BuildHttpContentForDbCreation(ravenVersion, databaseName);
+            
+            var dbCreationResult = await httpClient.PutAsync(createDbUrl, httpContent);
+            if (!dbCreationResult.IsSuccessStatusCode)
+            {
+                throw new Exception($"Something went wrong while creating the database. Error code {dbCreationResult.StatusCode}");
+            }
 
             var timeoutsPrefix = "TimeoutDatas";
             var nrOfBatches = Math.Ceiling(nrOfTimeoutsToInsert / (decimal)RavenConstants.DefaultPagingSize);
@@ -41,8 +41,7 @@
         static async Task<int> InitTimeouts(decimal nrOfBatches, string serverName, string databaseName, int nrOfTimeoutsToInsert, string timeoutsPrefix, RavenDbVersion ravenVersion)
         {
             var timeoutIdCounter = 0;
-
-
+            
             for (var i = 1; i <= nrOfBatches; i++) // batch inserts per paging size
             {
                 var commands = new List<object>();
