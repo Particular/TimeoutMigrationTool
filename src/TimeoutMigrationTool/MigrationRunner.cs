@@ -21,15 +21,13 @@ namespace Particular.TimeoutMigrationTool
         {
             var watch = new Stopwatch();
             watch.Start();
-            
+
             var toolState = await timeoutStorage.TryLoadOngoingMigration();
 
             if (toolState != null)
             {
                 GuardAgainstInvalidState(runParameters, toolState);
-
                 logger.LogInformation($"Existing migration for {toolState.EndpointName} found. Resuming...");
-
                 await Run(toolState);
 
                 if (!endpointFilter.IncludeAllEndpoints)
@@ -49,7 +47,6 @@ namespace Particular.TimeoutMigrationTool
                 if (allEndpoints.Any())
                 {
                     var endpointNames = string.Join(",", allEndpoints.Select(e => e.EndpointName));
-
                     logger.LogInformation($"None of the endpoints ({endpointNames}) found matched the filter criteria.");
                 }
                 else
@@ -120,7 +117,7 @@ namespace Particular.TimeoutMigrationTool
         async Task Run(IToolState toolState)
         {
             BatchInfo batch;
-            
+
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
                 logger.LogInformation($"Migrating batch {batch.Number}");
