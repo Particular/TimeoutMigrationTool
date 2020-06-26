@@ -19,6 +19,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
     {
         public ICanTalkToRavenVersion RavenAdapter => new Raven4Adapter(ServerName, DatabaseName);
         public ILogger Logger => new ConsoleLogger(false);
+        static Random random = new Random();
 
         public string ServerName
         {
@@ -81,9 +82,13 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             }
         }
         
-        public async Task InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId)
+        public async Task<InitiTimeoutsResult> InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId)
         {
             var timeoutsPrefix = "TimeoutDatas";
+            var shortestTimeout = DateTime.MaxValue;
+            var longestTimeout = DateTime.MinValue;
+            var daysToTrigger = random.Next(2, 60); // randomize the Time property
+            
             for (var i = 0; i < nrOfTimeouts; i++)
             {
                 var insertTimeoutUrl = $"{ServerName}/databases/{DatabaseName}/docs?id={timeoutsPrefix}/{startFromId + i}";
@@ -94,7 +99,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
                     SagaId = Guid.NewGuid(),
                     OwningTimeoutManager = endpointName,
-                    Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
+                    Time = DateTime.Now.AddDays(daysToTrigger),
                     Headers = new Dictionary<string, string>(),
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
@@ -104,7 +109,15 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
                 var result = await httpClient.PutAsync(insertTimeoutUrl, httpContent);
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+                if (shortestTimeout > timeoutData.Time) shortestTimeout = timeoutData.Time;
+                if (longestTimeout < timeoutData.Time) longestTimeout = timeoutData.Time;
             }
+            
+            return new InitiTimeoutsResult               
+            {
+                ShortestTimeout = shortestTimeout,
+                LongestTimeout = longestTimeout
+            };
         }
 
         public RavenToolState SetupToolState(DateTime cutoffTime)

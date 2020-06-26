@@ -24,6 +24,6 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         Task TeardownDatabase();
         Task CreateLegacyTimeoutManagerIndex(bool waitForIndexToBeUpToDate);
         Task EnsureIndexIsNotStale();
-        Task InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId);
+        Task<InitiTimeoutsResult> InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId);
     }
 }
