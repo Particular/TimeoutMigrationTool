@@ -45,20 +45,26 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [TestCase(false)]
         public async Task WhenThereTimeoutsListEndpointsReturnsEndpointsList(bool useIndex)
         {
-            await testSuite.InitTimeouts(nrOfTimeouts, "EndpointA", 0);
-            await testSuite.InitTimeouts(500, "EndpointB", nrOfTimeouts);
+            var endpointATimes = await testSuite.InitTimeouts(nrOfTimeouts, "EndpointA", 0);
+            var endpointBTimes = await testSuite.InitTimeouts(500, "EndpointB", nrOfTimeouts);
 
             var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(2));
+            
             var endpointA = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointA");
-            var endpointB = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointB");
             Assert.IsNotNull(endpointA);
             Assert.That(endpointA.NrOfTimeouts, Is.EqualTo(nrOfTimeouts));
+            Assert.That(endpointA.ShortestTimeout, Is.EqualTo(endpointATimes.ShortestTimeout));
+            Assert.That(endpointA.LongestTimeout, Is.EqualTo(endpointATimes.LongestTimeout));
+            
+            var endpointB = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointB");
             Assert.IsNotNull(endpointB);
             Assert.That(endpointB.NrOfTimeouts, Is.EqualTo(500));
+            Assert.That(endpointB.ShortestTimeout, Is.EqualTo(endpointBTimes.ShortestTimeout));
+            Assert.That(endpointB.LongestTimeout, Is.EqualTo(endpointBTimes.LongestTimeout));
         }
 
         [TestCase(true)]
