@@ -14,15 +14,25 @@
 
         public async Task Run()
         {
-            var toolState = await timeoutStorage.TryLoadOngoingMigration();
-            if (toolState == null)
+            var shouldAbort = await timeoutStorage.CheckIfAMigrationIsInProgress();
+            if (!shouldAbort)
             {
                 throw new Exception("Could not find a previous migration to abort.");
             }
 
-            logger.LogInformation($"Aborting ongoing migration for {toolState.EndpointName}");
+            var toolState = await timeoutStorage.TryLoadOngoingMigration();
+            if (toolState != null)
+            {
+                logger.LogInformation($"Aborting ongoing migration for {toolState.EndpointName}");
+            }
+            else
+            {
+                logger.LogInformation("Cleaning up changes made in the previous interrupted migration");
+            }
 
             await timeoutStorage.Abort();
+
+            logger.LogInformation("Previous migration was successfully aborted. That means that the timeouts hidden away from the TimeoutManager, have been made available again");
         }
 
         readonly ILogger logger;
