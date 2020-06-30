@@ -14,5 +14,6 @@
         Task Abort();
         Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime);
         Task Complete();
+        Task<bool> CheckIfAMigrationIsInProgress();
     }
 }

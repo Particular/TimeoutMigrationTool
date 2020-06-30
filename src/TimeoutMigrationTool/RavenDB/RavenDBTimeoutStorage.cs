@@ -282,6 +282,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
         }
 
+        public async Task<bool> CheckIfAMigrationIsInProgress()
+        {
+            var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
+            var anyBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => batch.State == BatchState.Pending, RavenConstants.BatchPrefix, (batch, id) => { });
+
+            return ravenToolState != null || anyBatches.Any();
+        }
+
         internal async Task CleanupExistingBatchesAndResetTimeouts(List<RavenBatch> batchesToRemove, List<RavenBatch> batchesForWhichToResetTimeouts)
         {
             foreach (var batch in batchesToRemove)

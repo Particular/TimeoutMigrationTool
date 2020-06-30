@@ -147,6 +147,12 @@
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task<bool> CheckIfAMigrationIsInProgress()
+        {
+            var toolState = await TryLoadOngoingMigration();
+            return toolState != null;
+        }
+
         public async Task Abort()
         {
             var toolState = await TryLoadOngoingMigration();
