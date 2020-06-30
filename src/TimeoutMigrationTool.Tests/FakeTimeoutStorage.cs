@@ -99,5 +99,10 @@ namespace TimeoutMigrationTool.Tests
             ToolStateMovedToCompleted = true;
             return Task.CompletedTask;
         }
+
+        public Task<bool> CheckIfAMigrationIsInProgress()
+        {
+            return Task.FromResult(this.existingToolState != null);
+        }
     }
 }

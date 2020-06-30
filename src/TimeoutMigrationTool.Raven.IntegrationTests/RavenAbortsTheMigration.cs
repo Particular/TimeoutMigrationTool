@@ -78,6 +78,47 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         }
 
         [Test]
+        public async Task WhenCheckingIfThereIsSomethingToAbortAndThereIsNoToolStateButWeHaveBatches()
+        {
+            var cutOffTime = DateTime.Now.AddDays(-1);
+            await testSuite.InitTimeouts(nrOfTimeouts);
+
+            var storage = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
+
+            await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
+
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var migrationIsInProgress = await sut.CheckIfAMigrationIsInProgress();
+
+            Assert.That(migrationIsInProgress, Is.True);
+        }
+
+        [Test]
+        public async Task WhenCheckingIfThereIsSomethingToAbortAndThereIsAToolState()
+        {
+            var cutOffTime = DateTime.Now.AddDays(-1);
+            await testSuite.InitTimeouts(nrOfTimeouts);
+
+            var storage = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
+
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var migrationIsInProgress = await sut.CheckIfAMigrationIsInProgress();
+
+            Assert.That(migrationIsInProgress, Is.True);
+        }
+
+        [Test]
+        public async Task WhenCheckingIfThereIsSomethingToAbortInACleanSystem()
+        {
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var migrationIsInProgress = await sut.CheckIfAMigrationIsInProgress();
+
+            Assert.That(migrationIsInProgress, Is.False);
+        }
+
+        [Test]
         public async Task WhenCleaningUpBatchesThenTimeoutsInIncompleteBatchesAreReset()
         {
             await testSuite.InitTimeouts(nrOfTimeouts);
