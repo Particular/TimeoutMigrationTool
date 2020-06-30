@@ -238,21 +238,29 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task Abort()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
-            if (ravenToolState == null)
+            var anyBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => batch.State == BatchState.Pending, RavenConstants.BatchPrefix, (batch, id) => { });
+            if (ravenToolState == null && !anyBatches.Any())
             {
                 throw new ArgumentNullException(nameof(ravenToolState), "Can't abort without a tool state");
             }
 
-            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
+            if (ravenToolState != null)
+            {
+                var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
 
-            // Only restoring the timeouts in pending batches to their original state
-            var incompleteBatches = batches.Where(bi => bi.State != BatchState.Completed).ToList();
-            await CleanupExistingBatchesAndResetTimeouts(batches, incompleteBatches);
+                // Only restoring the timeouts in pending batches to their original state
+                var incompleteBatches = batches.Where(bi => bi.State != BatchState.Completed).ToList();
+                await CleanupExistingBatchesAndResetTimeouts(batches, incompleteBatches);
 
-            ravenToolState.CompletedAt = DateTime.UtcNow;
-            ravenToolState.Status = MigrationStatus.Aborted;
+                ravenToolState.CompletedAt = DateTime.UtcNow;
+                ravenToolState.Status = MigrationStatus.Aborted;
 
-            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
+                await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
+            }
+            else
+            {
+                await CleanupExistingBatchesAndResetTimeouts(anyBatches, anyBatches);
+            }
         }
 
         internal async Task<List<RavenBatch>> PrepareBatchesAndTimeouts(DateTime cutoffTime, string endpointName)

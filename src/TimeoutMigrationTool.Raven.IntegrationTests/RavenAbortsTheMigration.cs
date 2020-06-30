@@ -58,6 +58,26 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         }
 
         [Test]
+        public async Task WhenAbortingWithoutAToolStateToolWillStillCleanupBatches()
+        {
+            var cutOffTime = DateTime.Now.AddDays(-1);
+            await testSuite.InitTimeouts(nrOfTimeouts);
+
+            var storage = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
+
+            await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
+
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            await sut.Abort();
+
+            var batchesInStore = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(batch => true, RavenConstants.BatchPrefix, (batch, id) => { });
+            var hiddenTimeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeout => timeout.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix), RavenConstants.DefaultTimeoutPrefix, (timeout, id) => { timeout.Id = id;});
+            Assert.That(batchesInStore.Count, Is.EqualTo(0));
+            Assert.That(hiddenTimeouts.Count, Is.EqualTo(0));
+        }
+
+        [Test]
         public async Task WhenCleaningUpBatchesThenTimeoutsInIncompleteBatchesAreReset()
         {
             await testSuite.InitTimeouts(nrOfTimeouts);
