@@ -359,12 +359,16 @@
             [SqlSaga(correlationProperty: nameof(TestSaga.Id))]
             public class TimeoutSaga : Saga<TestSaga>, IAmStartedByMessages<StartSagaMessage>, IHandleTimeouts<Timeout>
             {
-                // ReSharper disable once MemberCanBePrivate.Global
-                public Context TestContext { get; set; }
+                private Context testContext;
+
+                public TimeoutSaga(Context testContext)
+                {
+                    this.testContext = testContext;
+                }
 
                 public async Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
-                    for (var x = 0; x < TestContext.NumberOfTimeouts; x++)
+                    for (var x = 0; x < testContext.NumberOfTimeouts; x++)
                     {
                         await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
                     }
