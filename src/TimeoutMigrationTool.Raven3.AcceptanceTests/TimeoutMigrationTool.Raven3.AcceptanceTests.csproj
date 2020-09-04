@@ -4,8 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
 
     <IsPackable>false</IsPackable>
-
-    <RootNamespace>TimeoutMigrationTool.Raven3.AcceptanceTests</RootNamespace>
+    
   </PropertyGroup>
 
   <ItemGroup>
