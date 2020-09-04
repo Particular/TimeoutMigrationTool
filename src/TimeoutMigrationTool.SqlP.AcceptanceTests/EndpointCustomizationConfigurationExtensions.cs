@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.AcceptanceTests
+﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
     using System;
     using System.Collections.Generic;

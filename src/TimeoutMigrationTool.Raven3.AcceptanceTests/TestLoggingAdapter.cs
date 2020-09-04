@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.AcceptanceTests
+﻿namespace TimeoutMigrationTool.Raven3.AcceptanceTests
 {
     using Microsoft.Extensions.Logging;
     using System;

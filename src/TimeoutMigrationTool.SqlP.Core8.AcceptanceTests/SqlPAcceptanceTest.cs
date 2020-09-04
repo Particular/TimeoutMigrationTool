@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.AcceptanceTests
+﻿namespace TimeoutMigrationTool.SqlP.Core8.AcceptanceTests
 {
     using Microsoft.Data.SqlClient;
     using NServiceBus;

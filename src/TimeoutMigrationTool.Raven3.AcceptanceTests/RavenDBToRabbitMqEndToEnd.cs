@@ -8,8 +8,7 @@
     using Particular.TimeoutMigrationTool.RavenDB;
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using TimeoutMigrationTool.AcceptanceTests;
+    using System.Threading.Tasks;    
 
     [TestFixture]
     class RavenDBToRabbitMqEndToEnd : RavenDBAcceptanceTest
