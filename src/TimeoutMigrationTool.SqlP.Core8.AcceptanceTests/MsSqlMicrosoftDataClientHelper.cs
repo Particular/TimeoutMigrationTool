@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
+﻿namespace TimeoutMigrationTool.SqlP.Core8.AcceptanceTests
 {
     using System;
     using System.Threading.Tasks;

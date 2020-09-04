@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.AcceptanceTests
+﻿namespace TimeoutMigrationTool.Raven4.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;

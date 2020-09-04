@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.Raven4.AcceptanceTests
+﻿namespace TimeoutMigrationTool.SqlP.Core8.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Customization;
@@ -21,7 +21,7 @@
                 .Delayed(delayed => delayed.NumberOfRetries(0))
                 .Immediate(immediate => immediate.NumberOfRetries(0));
 
-            var storageDir = Path.Combine(RavenDBAcceptanceTest.StorageRootDir, TestContext.CurrentContext.Test.ID);
+            var storageDir = Path.Combine(SqlPToRabbitMqEndToEnd.StorageRootDir, TestContext.CurrentContext.Test.ID);
 
             endpointConfiguration.EnableInstallers();
 

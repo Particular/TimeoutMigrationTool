@@ -1,36 +1,35 @@
-﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
+﻿namespace TimeoutMigrationTool.Raven4.Core8.AcceptanceTests
 {
-    using Microsoft.Data.SqlClient;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RabbitMq;
-    using Particular.TimeoutMigrationTool.SqlP;
+    using Particular.TimeoutMigrationTool.RavenDB;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
     [TestFixture]
-    class SqlPToRabbitMqEndToEnd : SqlPAcceptanceTest
+    class RavenDBToRabbitMqEndToEnd : RavenDBAcceptanceTest
     {
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint));
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacyRavenDBEndpoint));
             var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
 
-            await Scenario.Define<SourceTestContext>()
-                 .WithEndpoint<LegacySqlPEndpoint>(b => b.CustomConfig(ec =>
-                 {
-                     var persistence = ec.UsePersistence<SqlPersistence>();
+            var ravenTimeoutPrefix = "TimeoutDatas";
+            var ravenVersion = RavenDbVersion.Four;
 
-                     persistence.SqlDialect<NServiceBus.SqlDialect.MsSqlServer>();
-                     persistence.ConnectionBuilder(
-                         connectionBuilder: () =>
-                         {
-                             return new SqlConnection(connectionString);
-                         });
+            var ravenAdapter = new Raven4Adapter(serverUrl, databaseName);
+
+            await Scenario.Define<SourceTestContext>()
+                 .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
+                 {
+                     ec.UsePersistence<RavenDBPersistence>()
+                         .SetDefaultDocumentStore(GetDocumentStore(serverUrl, databaseName));
+
                  })
                  .When(async (session, c) =>
                  {
@@ -38,17 +37,17 @@
 
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(20));
                      options.SetDestination(targetEndpoint);
 
                      await session.Send(delayedMessage, options);
 
-                     await WaitUntilTheTimeoutIsSavedInSql(sourceEndpoint);
+                     await WaitUntilTheTimeoutIsSavedInRaven(ravenAdapter, sourceEndpoint);
 
                      c.TimeoutSet = true;
                  }))
                  .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(30));
+                 .Run(TimeSpan.FromSeconds(15));
 
             var context = await Scenario.Define<TargetTestContext>()
                 .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
@@ -59,11 +58,10 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), 1024);
+                    var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion, false);
                     var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
-
-                    await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
+                    await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(30));
@@ -71,13 +69,15 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        async Task WaitUntilTheTimeoutIsSavedInSql(string endpoint)
+        static async Task WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
         {
-            while (true)
+            while(true)
             {
-                var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
+                var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(x =>
+                    x.OwningTimeoutManager.Equals(endpoint,
+                        StringComparison.OrdinalIgnoreCase), "TimeoutDatas", (doc, id) => doc.Id = id);
 
-                if(numberOfTimeouts > 0)
+                if(timeouts.Count > 0)
                 {
                     return;
                 }
@@ -94,9 +94,9 @@
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class LegacySqlPEndpoint : EndpointConfigurationBuilder
+        public class LegacyRavenDBEndpoint : EndpointConfigurationBuilder
         {
-            public LegacySqlPEndpoint()
+            public LegacyRavenDBEndpoint()
             {
                 EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }

@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.AcceptanceTests
+﻿namespace TimeoutMigrationTool.Raven3.AcceptanceTests
 {
     using NUnit.Framework;
     using Raven.Client;
