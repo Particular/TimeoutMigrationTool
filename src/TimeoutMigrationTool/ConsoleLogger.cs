@@ -22,13 +22,13 @@
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            if(!verbose && logLevel <  LogLevel.Information)
+            if (!verbose && logLevel < LogLevel.Information)
             {
                 return;
             }
             var logStatment = formatter(state, exception);
 
-            if(verbose)
+            if (verbose)
             {
                 logStatment = $"{DateTime.UtcNow}: {logLevel} {logStatment}";
             }

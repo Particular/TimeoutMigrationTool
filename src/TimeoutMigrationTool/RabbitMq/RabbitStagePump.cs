@@ -206,7 +206,8 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             do
             {
                 Thread.Sleep(100);
-            } while (processedMessages < messageCount && !messageProcessing.IsCancellationRequested);
+            } 
+            while (processedMessages < messageCount && !messageProcessing.IsCancellationRequested);
 
             if (messageProcessing.IsCancellationRequested)
             {

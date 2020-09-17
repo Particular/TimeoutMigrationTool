@@ -52,7 +52,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             };
 
             var stringContent = new StringContent(JsonConvert.SerializeObject(db));
-            var dbCreationResult = await httpClient.PutAsync(createDbUrl, stringContent);
+            var dbCreationResult = await HttpClient.PutAsync(createDbUrl, stringContent);
             Assert.That(dbCreationResult.StatusCode, Is.EqualTo(HttpStatusCode.Created));
         }
 
@@ -77,7 +77,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
                 var httpContent = new StringContent(serializeObject);
 
-                var result = await httpClient.PutAsync(insertTimeoutUrl, httpContent);
+                var result = await HttpClient.PutAsync(insertTimeoutUrl, httpContent);
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
             }
         }
@@ -107,7 +107,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
                 var httpContent = new StringContent(serializeObject);
 
-                var result = await httpClient.PutAsync(insertTimeoutUrl, httpContent);
+                var result = await HttpClient.PutAsync(insertTimeoutUrl, httpContent);
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
                 if (shortestTimeout > timeoutData.Time) shortestTimeout = timeoutData.Time;
                 if (longestTimeout < timeoutData.Time) longestTimeout = timeoutData.Time;
@@ -178,14 +178,14 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             };
 
             var serializeObject = JsonConvert.SerializeObject(request);
-            var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializeObject, Encoding.UTF8, "application/json"));
+            var result = await HttpClient.PostAsync(bulkInsertUrl, new StringContent(serializeObject, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
         }
 
         public async Task<RavenToolState> GetToolState()
         {
             var url = $"{ServerName}/databases/{DatabaseName}/docs?id={RavenConstants.ToolStateId}";
-            var response = await httpClient.GetAsync(url);
+            var response = await HttpClient.GetAsync(url);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
@@ -210,7 +210,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             foreach (var id in ids)
             {
                 var url = $"{ServerName}/databases/{DatabaseName}/docs?id={id}";
-                var response = await httpClient.GetAsync(url);
+                var response = await HttpClient.GetAsync(url);
                 var contentString = await response.Content.ReadAsStringAsync();
 
                 var jObject = JObject.Parse(contentString);
@@ -238,7 +238,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 RequestUri = new Uri(killDb)
             };
 
-            var killDbResult = await httpClient.SendAsync(httpRequest);
+            var killDbResult = await HttpClient.SendAsync(httpRequest);
             Assert.That(killDbResult.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
@@ -267,7 +267,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
             var createIndexUrl = $"{ServerName}/databases/{DatabaseName}/admin/indexes";
             var content = JsonConvert.SerializeObject(indexes);
-            var result = await httpClient
+            var result = await HttpClient
                 .PutAsync(createIndexUrl, new StringContent(content, Encoding.UTF8, "application/json"));
             result.EnsureSuccessStatusCode();
 
@@ -285,7 +285,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
         }
 
         public string EndpointName { get; set; }
-        protected static readonly HttpClient httpClient = new HttpClient();
+        protected static readonly HttpClient HttpClient = new HttpClient();
 
         public async Task EnsureIndexIsNotStale()
         {
@@ -293,7 +293,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             while (isIndexStale)
             {
                 var url = $"{ServerName}/databases/{DatabaseName}/queries?query=from%20index%20%27{RavenConstants.TimeoutIndexName}%27&parameters=%7B%7D&start={0}&pageSize={1}&metadataOnly=true";
-                using var result = await httpClient
+                using var result = await HttpClient
                     .GetAsync(url);
                 var contentString = await result.Content.ReadAsStringAsync();
                 var jObject = JObject.Parse(contentString);

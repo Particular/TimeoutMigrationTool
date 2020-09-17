@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
-
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System;
+    using System.Collections.Generic;
+
     public static class RavenStoreParameterExtensions
     {
         public static RavenStoreParameters ToRavenParams(this IDictionary<string, string> toolStateParameters)

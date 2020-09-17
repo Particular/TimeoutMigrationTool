@@ -99,7 +99,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.MarkBatchAsCompleted(batchToVerify.Number);
 
-            var updatedTimeout = await testSuite.RavenAdapter.GetDocument<TimeoutData>(timeoutIdToVerify,
+            var updatedTimeout = await testSuite.RavenAdapter.GetDocument<TimeoutData>(
+                timeoutIdToVerify,
                 (timeoutData, id) => { timeoutData.Id = id; });
 
             Assert.That(updatedTimeout.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix), Is.True);
@@ -116,12 +117,13 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.Complete();
 
-            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId,
+            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(
+                RavenConstants.ToolStateId,
                 (timeoutData, id) => { });
 
             Assert.IsNull(updatedToolState);
 
-            var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>((info => { return true; }), RavenConstants.BatchPrefix, (batch, id) => { });
+            var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(info => { return true; }, RavenConstants.BatchPrefix, (batch, id) => { });
             Assert.That(batches.Count, Is.EqualTo(0));
 
             var archivedToolStates = await testSuite.RavenAdapter.GetDocuments<RavenToolStateDto>(_ => true, RavenConstants.ArchivedToolStateIdPrefix, (batch, id) => { });

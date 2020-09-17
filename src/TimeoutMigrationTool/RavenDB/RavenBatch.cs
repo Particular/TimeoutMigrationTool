@@ -6,7 +6,6 @@
     {
         public RavenBatch(int number, BatchState state, int numberOfTimeouts) : base(number, state, numberOfTimeouts)
         {
-
         }
 
         public string[] TimeoutIds { get; set; }

@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks;
-using NServiceBus;
-
-namespace TimeoutMigrationTool.RabbitMq.FakeTarget
+﻿namespace TimeoutMigrationTool.RabbitMq.FakeTarget
 {
+    using System.Threading.Tasks;
+    using NServiceBus;
+
     class Program
     {
         static async Task Main(string[] args)

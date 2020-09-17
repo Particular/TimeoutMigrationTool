@@ -24,7 +24,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         public void TestSuitSetup()
         {
             rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
-            factory = new ConnectionFactory(){Uri = new Uri(rabbitUrl)};
+            factory = new ConnectionFactory() {Uri = new Uri(rabbitUrl)};
         }
 
         [SetUp]
@@ -69,7 +69,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             info.EndpointName = ExistingEndpointNameUsingConventional;
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddDays(5);
-            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect};
+            info.Destinations = new List<string> {ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect};
             var result = await sut.AbleToMigrate(info);
 
             Assert.IsTrue(result.CanMigrate);
@@ -85,7 +85,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             info.EndpointName = ExistingEndpointNameUsingConventional;
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddDays(5);
-            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect};
+            info.Destinations = new List<string> {ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect};
             var result = await sut.AbleToMigrate(info);
 
             Assert.IsFalse(result.CanMigrate);
@@ -111,7 +111,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             info.EndpointName = ExistingEndpointNameUsingConventional;
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddDays(5);
-            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional, NonExistingEndpointName};
+            info.Destinations = new List<string> {ExistingEndpointNameUsingConventional, NonExistingEndpointName};
             var result = await sut.AbleToMigrate(info);
 
             Assert.IsFalse(result.CanMigrate);
@@ -126,7 +126,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             info.EndpointName = ExistingEndpointNameUsingConventional;
             info.ShortestTimeout = DateTime.UtcNow.AddDays(3);
             info.LongestTimeout = DateTime.UtcNow.AddYears(9);
-            info.Destinations = new List<string>{ExistingEndpointNameUsingConventional};
+            info.Destinations = new List<string> {ExistingEndpointNameUsingConventional};
             var result = await sut.AbleToMigrate(info);
 
             Assert.IsFalse(result.CanMigrate);
@@ -137,15 +137,16 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         {
             var sut = new RabbitMqTimeoutCreator(new TestLoggingAdapter(), rabbitUrl);
 
-            await sut.StageBatch(new List<TimeoutData> {
-            new TimeoutData
+            await sut.StageBatch(new List<TimeoutData>
             {
-                Id = "SomeID",
-                Headers = new Dictionary<string, string>(),
-                Destination = EndpointWithShortTimeout,
-                State = new byte[2],
-                Time = DateTime.Now -  TimeSpan.FromDays(1)
-            }
+                new TimeoutData
+                {
+                    Id = "SomeID",
+                    Headers = new Dictionary<string, string>(),
+                    Destination = EndpointWithShortTimeout,
+                    State = new byte[2],
+                    Time = DateTime.Now - TimeSpan.FromDays(1)
+                }
             });
 
             var numPumped = await sut.CompleteBatch(33);

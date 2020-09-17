@@ -19,7 +19,7 @@
         {
             testSuite = CreateTestSuite();
             await testSuite.SetupDatabase();
-            }
+        }
 
         [TearDown]
         public async Task TearDown()
@@ -80,6 +80,7 @@
             {
                 Assert.That(timeout.Id, Is.Not.Null);
             }
+
             Assert.That(timeouts.Count, Is.EqualTo(125));
         }
 
@@ -96,7 +97,7 @@
         [Test]
         public async Task WhenPagingThroughTimeoutsForNrOfPagesThatAreLessThanActualAmountOfDocuments()
         {
-            var nrOfTimeouts = RavenConstants.DefaultPagingSize *4;
+            var nrOfTimeouts = RavenConstants.DefaultPagingSize * 4;
             var nrOfPages = 3;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
@@ -107,18 +108,18 @@
         [Test]
         public async Task WhenPagingThroughTimeoutsStartingFromASpecificNumberWeGetAllDocuments()
         {
-            var nrOfTimeouts = RavenConstants.DefaultPagingSize *4;
+            var nrOfTimeouts = RavenConstants.DefaultPagingSize * 4;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var startFrom = 125;
             var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", (doc, id) => doc.Id = id, startFrom);
-            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts-startFrom));
+            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts - startFrom));
         }
 
         [Test]
         public async Task WhenPagingThroughTimeoutsStartingFromTheBeginningWithOnePageWeGetDefaultBatchSizeAmountOfDocuments()
         {
-            var nrOfTimeouts = RavenConstants.DefaultPagingSize *4;
+            var nrOfTimeouts = RavenConstants.DefaultPagingSize * 4;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", (doc, id) => doc.Id = id, 0, 1);

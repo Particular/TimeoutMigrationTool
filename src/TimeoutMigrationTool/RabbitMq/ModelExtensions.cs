@@ -1,7 +1,6 @@
-using System.Threading;
-
 namespace Particular.TimeoutMigrationTool.RabbitMq
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Exceptions;
@@ -16,19 +15,23 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         }
 
         public static Task BasicAckSingle(this IModel channel, ulong deliveryTag, TaskScheduler scheduler) =>
-            Task.Factory.StartNew(state =>
+            Task.Factory.StartNew(
+                state =>
                 {
-                    var messageState = (MessageState) state;
+                    var messageState = (MessageState)state;
                     messageState.Channel.BasicAck(messageState.DeliveryTag, false);
-                }, new MessageState {Channel = channel, DeliveryTag = deliveryTag}, CancellationToken.None,
-                TaskCreationOptions.DenyChildAttach, scheduler);
+                }, 
+                new MessageState {Channel = channel, DeliveryTag = deliveryTag}, 
+                CancellationToken.None,
+                TaskCreationOptions.DenyChildAttach, 
+                scheduler);
 
         public static Task
             BasicRejectAndRequeueIfOpen(this IModel channel, ulong deliveryTag, TaskScheduler scheduler) =>
             Task.Factory.StartNew(
                 state =>
                 {
-                    var messageState = (MessageState) state;
+                    var messageState = (MessageState)state;
 
                     if (messageState.Channel.IsOpen)
                     {

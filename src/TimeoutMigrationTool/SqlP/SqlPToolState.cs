@@ -6,7 +6,8 @@
 
     public class SqlPToolState : IToolState
     {
-        public SqlPToolState(string connectionString,
+        public SqlPToolState(
+            string connectionString,
             SqlDialect dialect,
             string migrationRunId,
             IDictionary<string, string> runParameters,

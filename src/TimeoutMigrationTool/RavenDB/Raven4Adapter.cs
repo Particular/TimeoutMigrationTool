@@ -1,16 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
-
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading.Tasks;
+    using HttpCommands;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+
     public class Raven4Adapter : ICanTalkToRavenVersion
     {
         readonly string serverUrl;
@@ -44,7 +44,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return new
             {
                 Id = key,
-                ChangeVector = (object) null,
+                ChangeVector = (object)null,
                 Type = "DELETE"
             };
         }
@@ -160,7 +160,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var contentString = await result.Content.ReadAsStringAsync();
             var jObject = JObject.Parse(contentString);
             var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
-            
+
             if (isStale && timeToWaitForNonStaleResults > TimeSpan.Zero)
             {
                 await Task.Delay(timeToWaitForNonStaleResults);
@@ -169,7 +169,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 jObject = JObject.Parse(contentString);
                 isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
             }
-            
+
             var results = new List<T>();
             var resultSet = jObject.SelectToken("Results");
             var totalNrOfDocuments = Convert.ToInt32(jObject.SelectToken("TotalResults"));
@@ -270,7 +270,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 throw new InvalidOperationException("Cannot retrieve a document with empty id");
             }
-            var documents = await GetDocuments(new[] { id }, idSetter);
+
+            var documents = await GetDocuments(new[] {id}, idSetter);
             var document = documents.SingleOrDefault();
             idSetter(document, id);
             return document;
@@ -282,6 +283,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 return new List<T>();
             }
+
             if (ids.Any(id => string.IsNullOrEmpty(id)))
             {
                 throw new InvalidOperationException("Cannot retrieve a document with empty id");
@@ -309,6 +311,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     uriBuilder.Append(url);
                 }
             }
+
             uris.Add(uriBuilder.ToString().TrimEnd('&'));
 
             var results = new List<T>();

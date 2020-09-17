@@ -41,8 +41,9 @@
         static async Task<int> InitTimeouts(decimal nrOfBatches, string serverName, string databaseName, int nrOfTimeoutsToInsert, string timeoutsPrefix, RavenDbVersion ravenVersion)
         {
             var timeoutIdCounter = 0;
-            
-            for (var i = 1; i <= nrOfBatches; i++) // batch inserts per paging size
+
+            // batch inserts per paging size
+            for (var i = 1; i <= nrOfBatches; i++) 
             {
                 var commands = new List<object>();
                 var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk_docs";

@@ -1,8 +1,8 @@
 ﻿namespace TimeoutMigrationTool.Raven4.Core8.AcceptanceTests
 {
+    using Microsoft.Extensions.DependencyInjection;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Support;
-    using Microsoft.Extensions.DependencyInjection;
     
     public static class ConfigureExtensions
     {

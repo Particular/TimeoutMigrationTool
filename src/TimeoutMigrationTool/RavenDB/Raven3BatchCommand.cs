@@ -1,7 +1,7 @@
-using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
-
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
+
     class Raven3BatchCommand
     {
         public string Key { get; set; }

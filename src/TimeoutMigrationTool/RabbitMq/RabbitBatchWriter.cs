@@ -53,7 +53,7 @@
         {
             int level;
 
-            var delay = (timeout.Time - DateTime.UtcNow);
+            var delay = timeout.Time - DateTime.UtcNow;
             var delayInSeconds = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
             if (delayInSeconds < 0)
             {//when the timeout is due we zero the delay

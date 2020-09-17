@@ -2,7 +2,7 @@
 {
     public class BatchInfo
     {
-        public BatchInfo(int number,BatchState state, int numberOfTimeouts)
+        public BatchInfo(int number, BatchState state, int numberOfTimeouts)
         {
             Number = number;
             State = state;
