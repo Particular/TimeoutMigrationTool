@@ -1,4 +1,3 @@
-
 namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 {
     using System;

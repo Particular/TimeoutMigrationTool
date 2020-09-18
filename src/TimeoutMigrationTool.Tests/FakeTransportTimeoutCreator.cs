@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Particular.TimeoutMigrationTool;
-
 namespace TimeoutMigrationTool.Tests
 {
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Particular.TimeoutMigrationTool;
+
     public class FakeTransportTimeoutCreator : ICreateTransportTimeouts
     {
         private List<string> problemsToReturn;

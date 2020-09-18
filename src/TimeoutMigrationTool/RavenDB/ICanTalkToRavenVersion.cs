@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
     public interface ICanTalkToRavenVersion
     {
         Task UpdateDocument(string key, object document);

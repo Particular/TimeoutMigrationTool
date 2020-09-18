@@ -34,7 +34,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [TestCase(false)]
         public async Task WhenThereAreNoTimeoutsListEndpointsReturnsAnEmptyList(bool useIndex)
         {
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -48,18 +48,18 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpointATimes = await testSuite.InitTimeouts(nrOfTimeouts, "EndpointA", 0);
             var endpointBTimes = await testSuite.InitTimeouts(500, "EndpointB", nrOfTimeouts);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(2));
-            
+
             var endpointA = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointA");
             Assert.IsNotNull(endpointA);
             Assert.That(endpointA.NrOfTimeouts, Is.EqualTo(nrOfTimeouts));
             Assert.That(endpointA.ShortestTimeout, Is.EqualTo(endpointATimes.ShortestTimeout));
             Assert.That(endpointA.LongestTimeout, Is.EqualTo(endpointATimes.LongestTimeout));
-            
+
             var endpointB = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointB");
             Assert.IsNotNull(endpointB);
             Assert.That(endpointB.NrOfTimeouts, Is.EqualTo(500));
@@ -74,7 +74,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.InitTimeouts(nrOfTimeouts, "EndpointA", 0);
             await testSuite.InitTimeouts(50, "EndpointB", nrOfTimeouts);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -91,7 +91,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationDonePrefix}{timeout.OwningTimeoutManager}";
             await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
@@ -109,7 +109,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             timeout.OwningTimeoutManager = $"{RavenConstants.MigrationOngoingPrefix}{timeout.OwningTimeoutManager}";
             await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger,testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
+            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);

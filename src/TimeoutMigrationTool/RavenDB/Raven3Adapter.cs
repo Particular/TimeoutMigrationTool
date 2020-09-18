@@ -1,18 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Particular.TimeoutMigrationTool.RavenDB.HttpCommands;
-
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.IO.Compression;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading.Tasks;
+    using HttpCommands;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     public class Raven3Adapter : ICanTalkToRavenVersion
     {
@@ -29,7 +28,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public async Task UpdateDocument(string key, object document)
         {
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
-            var command = new[] {
+            var command = new[]
+            {
                 new
                 {
                     Key = key,
@@ -286,6 +286,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 compressionStream.Write(input, 0, input.Length);
                 compressionStream.Flush();
             }
+
             return result.ToArray();
         }
 
@@ -331,6 +332,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 return new List<T>();
             }
+
             if (ids.Any(id => string.IsNullOrEmpty(id)))
             {
                 throw new InvalidOperationException("Cannot retrieve a document with empty id");
@@ -340,7 +342,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var serializedCommands = JsonConvert.SerializeObject(ids);
             using var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
 
-            var results =await  GetDocumentsFromQueryResponse(result.Content, idSetter);
+            var results = await GetDocumentsFromQueryResponse(result.Content, idSetter);
 
             return results;
         }

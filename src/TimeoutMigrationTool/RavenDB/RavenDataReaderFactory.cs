@@ -1,7 +1,7 @@
-using System;
-
 namespace Particular.TimeoutMigrationTool.RavenDB
 {
+    using System;
+
     internal static class RavenDataReaderFactory
     {
         public static ICanTalkToRavenVersion Resolve(string serverUrl, string databaseName, RavenDbVersion version)

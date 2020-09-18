@@ -77,7 +77,7 @@
             {
                 var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
 
-                if(numberOfTimeouts > 0)
+                if (numberOfTimeouts > 0)
                 {
                     return;
                 }

@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Particular.TimeoutMigrationTool;
-
 namespace TimeoutMigrationTool.Tests
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
+    using Particular.TimeoutMigrationTool;
 
     public class FakeTimeoutStorage : ITimeoutStorage
     {
@@ -44,7 +43,7 @@ namespace TimeoutMigrationTool.Tests
             var timeoutsInBatch = readBatchResults.First(x => x.Number == batchNumber).NumberOfTimeouts;
 
             var timeouts = new List<TimeoutData>(timeoutsInBatch);
-            for (var i= 0; i < timeoutsInBatch; i++ )
+            for (var i = 0; i < timeoutsInBatch; i++)
                 timeouts.Add(new TimeoutData());
 
             return Task.FromResult(timeouts);

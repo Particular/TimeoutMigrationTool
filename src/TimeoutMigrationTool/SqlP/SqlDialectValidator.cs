@@ -9,14 +9,14 @@
     {
         public ValidationResult GetValidationResult(CommandOption option, ValidationContext context)
         {
-            if(!option.HasValue())
+            if (!option.HasValue())
             {
                 return new ValidationResult("SqlDialect must be specified");
             }
 
             var dialectString = option.Value();
 
-            if (dialectString.Equals(MsSqlServer.Name,StringComparison.InvariantCultureIgnoreCase))
+            if (dialectString.Equals(MsSqlServer.Name, StringComparison.InvariantCultureIgnoreCase))
             {
                 return ValidationResult.Success;
             }

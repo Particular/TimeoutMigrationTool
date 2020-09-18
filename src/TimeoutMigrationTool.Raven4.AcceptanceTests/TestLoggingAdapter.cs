@@ -27,6 +27,5 @@
         }
 
         readonly ScenarioContext scenarioContext;
-
     }
 }

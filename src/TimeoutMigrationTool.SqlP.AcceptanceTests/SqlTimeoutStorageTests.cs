@@ -22,7 +22,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -42,7 +42,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -62,7 +62,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -82,7 +82,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
                         return session.SendLocal(startSagaMessage);
                     }))
                 .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
@@ -129,13 +129,12 @@
 
                         await session.Send(delayedMessage, options);
                     }))
-                    .Done(c => 3 == NumberOfTimeouts(sourceEndpoint))
-
+                .Done(c => NumberOfTimeouts(sourceEndpoint) == 3)
                 .Run();
 
             var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(-10));
 
-            CollectionAssert.AreEquivalent(new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" }, endpoints.First().Destinations);
+            CollectionAssert.AreEquivalent(new List<string> {"FirstDestination", "SecondDestination", "ThirdDestination"}, endpoints.First().Destinations);
         }
 
         [Test]
@@ -143,9 +142,9 @@
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
-                .When(session =>
+                    .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -164,7 +163,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -194,7 +193,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -222,7 +221,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -256,7 +255,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -278,7 +277,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -296,7 +295,7 @@
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint}_TimeoutData");
 
-            Assert.AreEqual(10-batch1.NumberOfTimeouts, numberOfTimeouts);
+            Assert.AreEqual(10 - batch1.NumberOfTimeouts, numberOfTimeouts);
 
             Assert.AreEqual(1, await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutsMigration_State WHERE Status = 3"), "Status should be set to aborted");
         }
@@ -308,7 +307,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -328,7 +327,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
+                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -359,14 +358,13 @@
             [SqlSaga(correlationProperty: nameof(TestSaga.Id))]
             public class TimeoutSaga : Saga<TestSaga>, IAmStartedByMessages<StartSagaMessage>, IHandleTimeouts<Timeout>
             {
-                // ReSharper disable once MemberCanBePrivate.Global
                 public Context TestContext { get; set; }
 
                 public async Task Handle(StartSagaMessage message, IMessageHandlerContext context)
                 {
                     for (var x = 0; x < TestContext.NumberOfTimeouts; x++)
                     {
-                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
+                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout {Id = message.Id});
                     }
                 }
 

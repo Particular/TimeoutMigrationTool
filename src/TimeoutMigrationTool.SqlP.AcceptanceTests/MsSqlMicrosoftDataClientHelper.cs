@@ -41,7 +41,7 @@
                     command.CommandText = $"select * from master.dbo.sysdatabases where name='{databaseName}'";
                     using (var reader = command.ExecuteReader())
                     {
-                        if (reader.HasRows) // exists
+                        if (reader.HasRows)
                         {
                             return;
                         }

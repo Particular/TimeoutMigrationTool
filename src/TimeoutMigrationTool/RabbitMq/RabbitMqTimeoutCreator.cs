@@ -1,10 +1,10 @@
 ﻿namespace Particular.TimeoutMigrationTool.RabbitMq
 {
     using System;
-    using RabbitMQ.Client;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
+    using RabbitMQ.Client;
 
     public class RabbitMqTimeoutCreator : ICreateTransportTimeouts
     {
@@ -69,7 +69,7 @@
                     }
                     catch (Exception)
                     {
-                        result.Problems.Add($"The delivery infrastructure on rabbit broker does not exist. It means that the endpoint is running old version of Rabbit Transport package.");
+                        result.Problems.Add("The delivery infrastructure on rabbit broker does not exist. It means that the endpoint is running old version of Rabbit Transport package.");
                         return Task.FromResult(result);
                     }
 
@@ -82,7 +82,6 @@
                     {
                         channel.QueueBind(destination, "nsb.delay-delivery", $"#.{destination}");
                     }
-
                 }
             }
 
@@ -104,7 +103,6 @@
                     return false;
                 }
             }
-
         }
 
         Task CreateStagingQueue()

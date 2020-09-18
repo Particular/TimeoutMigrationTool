@@ -2,12 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using McMaster.Extensions.CommandLineUtils;
-    using SqlP;
+    using Microsoft.Extensions.Logging;
     using RabbitMq;
     using RavenDB;
-    using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
+    using SqlP;
 
     // usage:
     //  migrate-timeouts ravendb preview --raven-specific-options --target-specific-options

@@ -31,15 +31,15 @@
             var endpointInstance = await Endpoint.Start(endpointConfiguration)
                 .ConfigureAwait(false);
 
-            var message = new FakeMessage { Topic="bla" };
-            Random random = new Random();
-            for (int i = 0; i < noOfTimeouts; i++)
+            var message = new FakeMessage { Topic = "bla" };
+            var random = new Random();
+            for (var i = 0; i < noOfTimeouts; i++)
             {
                 var daysToTrigger = random.Next(2, 60); // randomize the Time property
 
                 var options = new SendOptions();
                 options.DelayDeliveryWith(TimeSpan.FromDays(daysToTrigger));
-                options.SetDestination( i % 10 == 0 ? "DestinationEndpoint" : "EndpointB");
+                options.SetDestination(i % 10 == 0 ? "DestinationEndpoint" : "EndpointB");
 
                 await endpointInstance.Send(message, options).ConfigureAwait(false);
             }
@@ -47,7 +47,6 @@
             await endpointInstance.Stop()
                 .ConfigureAwait(false);
         }
-
     }
 
     class FakeMessage : IMessage

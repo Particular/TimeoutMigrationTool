@@ -185,7 +185,7 @@ SET @SqlQuery = SUBSTRING(@SqlQuery, 0, LEN(@SqlQuery) - LEN('UNION'));
 
 EXEC sp_executesql @SqlQuery, N'@CutOffTime DATETIME', @CutOffTime
 
-END;" ;
+END;";
         }
 
         public override string GetScriptToMarkBatchAsStaged(string migrationRunId)
