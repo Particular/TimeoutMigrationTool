@@ -50,7 +50,7 @@
             await using var connection = dialect.Connect(connectionString);
             await using var command = connection.CreateCommand();
 
-            command.CommandTimeout = longRunningQueuerTimeout;
+            command.CommandTimeout = longRunningQueryTimeout;
             command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpointName, batchSize);
 
             var runParametersParameter = command.CreateParameter();
@@ -165,7 +165,7 @@
             await using var connection = dialect.Connect(connectionString);
             await using var command = connection.CreateCommand();
 
-            command.CommandTimeout = longRunningQueuerTimeout;
+            command.CommandTimeout = longRunningQueryTimeout;
             command.CommandText = dialect.GetScriptToAbortMigration(migrationRunId, toolState.EndpointName);
 
             var completedAtParameter = command.CreateParameter();
@@ -262,7 +262,7 @@
         });
 
         string migrationRunId;
-        int longRunningQueuerTimeout = 1200;
+        int longRunningQueryTimeout = 1200;
 
         readonly SqlDialect dialect;
         readonly string connectionString;
