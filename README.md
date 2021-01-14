@@ -2,11 +2,19 @@
 
 ## How to Test Locally
 
+### For the source
+
 Run a RavenDb Docker container for v4:
 
 `docker run -d -p 8080:8080 -p 38888:38888 ravendb/ravendb`
 
 Run a local RavenDb server instance for v3.5 on port 8383.
+
+### For the target
+
+Run a SQL Server Docker container:
+
+docker run --name SqlServer -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=some-password" -p 1433:1433 -d  mcr.microsoft.com/mssql/server:2019-latest
 
 Run a RabbitMQ Docker container:
 
@@ -26,15 +34,15 @@ The solution is divided up into a single tool project with multiple test project
 
 * Single endpoint test
   * A project to generate fake data should be used to generate timeouts for 1 endpoint
-  * A preview of the migration should be run 
+  * A preview of the migration should be run
   * Migration should be run using the cutoffDate to verify that only subset of timeouts is migrated (another preview can be done to make sure that maximum timeout date is no greater than used cutoffDate)
 * Multiple endpoints test
   * A project to generate fake data should be run multiple times with changed endpoint names
   * A preview of the migration should be run to see all ednpoints that are available to be migrated
   * A migration should be run for only one of the endpoints to verify that only subset of timeouts is migrated
   * A migration for all remaining endpoints should be run to move the remaining timeouts.
-  
-  
+
+
 ## Bulk test results
 
 These tests were run on development machines, with both the storage and the broker running on the same machine, so although these results don't represent a functional production environment, they provide a rough estimate of migration duration times.
@@ -66,12 +74,12 @@ These tests were run on development machines, with both the storage and the brok
    * Prepare: 4 minutes
    * Migration: 30 minutes
    * Total migration time: 36 minutes
-   
+
 * For 1 million timeouts, not using the index:
    * Listing endpoints: 5 minutes
    * Prepare: 14 minutes
    * Migration: 30 minutes
-   * Total migration time: 49 minutes 
+   * Total migration time: 49 minutes
 
 ### Sql P
 
