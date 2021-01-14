@@ -2,7 +2,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 {
     using RabbitMQ.Client;
 
-    public class QueueCreator
+    public static class QueueCreator
     {
         public static string StagingQueueName = "TimeoutMigrationTool_Staging";
         public static string StagingExchangeName = "TimeoutMigrationTool_Staging";
@@ -19,7 +19,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             return model.QueueDeclarePassive(StagingQueueName).MessageCount;
         }
 
-        public static void PurgeStatingQueue(IModel model)
+        public static void PurgeStagingQueue(IModel model)
         {
             model.QueuePurge(StagingQueueName);
         }

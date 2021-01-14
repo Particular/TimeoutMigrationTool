@@ -45,7 +45,7 @@
             if (statingQueueMessageLength > 0)
             {
                 logger.LogWarning("Purging staging queue - staging queue contains messages.");
-                QueueCreator.PurgeStatingQueue(model);
+                QueueCreator.PurgeStagingQueue(model);
             }
         }
 
