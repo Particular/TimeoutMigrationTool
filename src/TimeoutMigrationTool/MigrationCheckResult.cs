@@ -7,12 +7,6 @@
     {
         public List<string> Problems { get; set; } = new List<string>();
 
-        public bool CanMigrate
-        {
-            get
-            {
-                return !Problems.Any();
-            }
-        }
+        public bool CanMigrate => !Problems.Any();
     }
 }
