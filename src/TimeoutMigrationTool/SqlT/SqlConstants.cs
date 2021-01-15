@@ -50,6 +50,12 @@ INTO {1};
 IF (@NOCOUNT = 'ON') SET NOCOUNT ON;
 IF (@NOCOUNT = 'OFF') SET NOCOUNT OFF;";
 
+         public static readonly string DelayedMessageStoreExistsText = @"
+   SELECT COUNT(*)
+   FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{0}' AND TABLE_CATALOG = '{2}'
+        ";
+
 
         public static readonly string CreateDelayedMessageStoreText = @"
 IF EXISTS (

@@ -130,6 +130,13 @@
                     Description = "The connection string for the SQL Server transport"
                 };
 
+            var targetSqlTSchemaName =
+                new CommandOption($"-s|--{ApplicationOptions.SqlTTargetSchema}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The default schema used for the SQL Server transport",
+                };
+
             var runParameters = new Dictionary<string, string>();
 
             app.Command("preview", previewCommand =>
@@ -211,6 +218,7 @@
                     sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
                     {
                         sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        sqlpToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
                         sqlpToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -220,9 +228,10 @@
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
 
                             var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
-                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString);
+                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString, schema ?? "dbo");
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
                             await runner.Run();
@@ -363,6 +372,7 @@
                     sqlpCommand.Command("sqlt", sqlPToSqlTCommand =>
                     {
                         sqlPToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        sqlPToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
                         sqlPToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -371,6 +381,7 @@
                             var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
                             var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
 
                             var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
@@ -382,7 +393,7 @@
 
                             var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
 
-                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString);
+                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString, schema ?? "dbo");
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,

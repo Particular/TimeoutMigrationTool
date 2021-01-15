@@ -14,8 +14,19 @@
             {
                 CommandType = CommandType.Text
             };
-            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await command.ExecuteScalarAsync().ConfigureAwait(false);
             await transaction.CommitAsync().ConfigureAwait(false);
+        }
+
+        public static async Task<bool> DoesDelayedDeliveryTableExist(SqlConnection connection, string tableName, string schema, string databaseName)
+        {
+            var sql = string.Format(SqlConstants.DelayedMessageStoreExistsText, tableName, schema, databaseName);
+            await using var command = new SqlCommand(sql, connection)
+            {
+                CommandType = CommandType.Text
+            };
+            var result = await command.ExecuteScalarAsync().ConfigureAwait(false) as int?;
+            return result == 1;
         }
     }
 }

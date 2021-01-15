@@ -9,8 +9,9 @@
 
     public class SqlTTimeoutCreator : ICreateTransportTimeouts
     {
-        public SqlTTimeoutCreator(ILogger logger, string connectionString)
+        public SqlTTimeoutCreator(ILogger logger, string connectionString, string schema)
         {
+            this.schema = schema;
             this.logger = logger;
             this.connectionString = connectionString;
             connection = new SqlConnection(connectionString);
@@ -43,13 +44,25 @@
                 }
             }
 
+            databaseName = connection.Database;
+
             try
             {
-                await SqlTQueueCreator.CreateStagingQueue(connection, timeoutmigrationStagingTable, connection.Database);
+                await SqlTQueueCreator.CreateStagingQueue(connection, timeoutmigrationStagingTable, databaseName);
             }
             catch (Exception e)
             {
                 migrationCheckResult.Problems.Add($"Unable to create the staging queue '{timeoutmigrationStagingTable}'. The following exception occured: {e.Message}");
+            }
+
+            var suffix = "Delayed";
+            var endpointDelayedTableName = $"{endpoint.EndpointName}.{suffix}";
+
+            if (!await SqlTQueueCreator
+                .DoesDelayedDeliveryTableExist(connection, endpointDelayedTableName, schema, databaseName)
+                .ConfigureAwait(false))
+            {
+                migrationCheckResult.Problems.Add($"Could not find delayed queue table with name '{endpointDelayedTableName}' for the endpoint '{endpoint.EndpointName}'");
             }
 
             return migrationCheckResult;
@@ -59,5 +72,7 @@
         private string connectionString;
         private readonly ILogger logger;
         private readonly string timeoutmigrationStagingTable = "timeoutmigrationtoolstagingtable";
+        private string schema;
+        private string databaseName;
     }
 }
