@@ -45,7 +45,7 @@
 
             try
             {
-                await SqlTQueueCreator.CreateStagingQueue(connection, timeoutmigrationStagingTable, "databaseName");
+                await SqlTQueueCreator.CreateStagingQueue(connection, timeoutmigrationStagingTable, connection.Database);
             }
             catch (Exception e)
             {

@@ -33,13 +33,6 @@
             };
 
             var verboseOption = app.Option("-v|--verbose", "Show verbose output", CommandOptionType.NoValue, true);
-            var targetRabbitConnectionString =
-                new CommandOption($"-t|--{ApplicationOptions.RabbitMqTargetConnectionString}",
-                    CommandOptionType.SingleValue)
-                {
-                    Description = "The connection string for the target transport"
-                };
-
             var cutoffTimeOption =
                 new CommandOption($"-c|--{ApplicationOptions.CutoffTime}", CommandOptionType.SingleValue)
                 {
@@ -121,6 +114,20 @@
                     Description =
                         "Force the usage of an index to boost performance. Can only be used when endpoints are shut down.",
                     Inherited = true
+                };
+
+            var targetRabbitConnectionString =
+                new CommandOption($"-t|--{ApplicationOptions.RabbitMqTargetConnectionString}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The connection string for the target transport"
+                };
+
+            var targetSqlTConnectionString =
+                new CommandOption($"-t|--{ApplicationOptions.SqlTTargetConnectionString}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The connection string for the SQL Server transport"
                 };
 
             var runParameters = new Dictionary<string, string>();
@@ -325,6 +332,36 @@
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
 
                             var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
+                                transportAdapter);
+                        });
+                    });
+
+                    sqlpCommand.Command("sqlt", sqlPToSqlTCommand =>
+                    {
+                        sqlPToSqlTCommand.Options.Add(targetSqlTConnectionString);
+
+                        sqlPToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceSqlPDialect.Value());
+
+                            runParameters.Add(ApplicationOptions.SqlTTargetConnectionString,
+                                targetConnectionString);
+
+                            var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
+
+                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString);
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
