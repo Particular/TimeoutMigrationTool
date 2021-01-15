@@ -207,6 +207,27 @@
                             await runner.Run();
                         });
                     });
+
+                    sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
+                    {
+                        sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
+
+                        sqlpToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+
+                            var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
+                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString);
+                            var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
+
+                            await runner.Run();
+                        });
+                    });
                 });
 
                 previewCommand.Command("nhb", nHibernateCommand =>

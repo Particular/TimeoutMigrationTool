@@ -58,6 +58,6 @@
         private readonly SqlConnection connection;
         private string connectionString;
         private readonly ILogger logger;
-        private readonly string timeoutmigrationStagingTable = "timeoutmigrationtool-staging-table";
+        private readonly string timeoutmigrationStagingTable = "timeoutmigrationtoolstagingtable";
     }
 }

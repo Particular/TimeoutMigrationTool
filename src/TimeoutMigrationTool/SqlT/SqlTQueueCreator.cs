@@ -15,6 +15,7 @@
                 CommandType = CommandType.Text
             };
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await transaction.CommitAsync().ConfigureAwait(false);
         }
     }
 }
