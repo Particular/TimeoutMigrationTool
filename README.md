@@ -14,7 +14,7 @@ Run a local RavenDb server instance for v3.5 on port 8383.
 
 Run a SQL Server Docker container:
 
-docker run --name SqlServer -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=some-password" -p 1433:1433 -d  mcr.microsoft.com/mssql/server:2019-latest
+`docker run --name SqlServer -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=some-password" -p 1433:1433 -d  mcr.microsoft.com/mssql/server:2019-latest`
 
 Run a RabbitMQ Docker container:
 
