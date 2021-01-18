@@ -17,9 +17,49 @@
             connection = new SqlConnection(connectionString);
         }
 
-        public Task<int> StageBatch(List<TimeoutData> timeouts)
+        public async Task<int> StageBatch(List<TimeoutData> timeouts)
         {
-            throw new System.NotImplementedException();
+            if (connection.State != ConnectionState.Open)
+            {
+                try
+                {
+                    await connection.OpenAsync().ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Improve");
+                    return 0;
+                }
+            }
+
+            var dt = new DataTable();
+            dt.Columns.Add("Headers");
+            dt.Columns.Add("Body", typeof(byte[]));
+            dt.Columns.Add("Due", typeof(DateTime));
+
+            foreach (var timeout in timeouts)
+            {
+                dt.Rows.Add(DictionarySerializer.Serialize(timeout.Headers), timeout.State, timeout.Time);
+            }
+
+            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+            // TODO: Verify options
+            using var sqlBulk = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
+            {
+                DestinationTableName = TimeoutMigrationStagingTable,
+            };
+            try
+            {
+                await sqlBulk.WriteToServerAsync(dt);
+                await transaction.CommitAsync();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Improve");
+                return 0;
+            }
+
+            return timeouts.Count;
         }
 
         public Task<int> CompleteBatch(int number)
@@ -48,11 +88,11 @@
 
             try
             {
-                await SqlTQueueCreator.CreateStagingQueue(connection, timeoutmigrationStagingTable, databaseName);
+                await SqlTQueueCreator.CreateStagingQueue(connection, TimeoutMigrationStagingTable, databaseName);
             }
             catch (Exception e)
             {
-                migrationCheckResult.Problems.Add($"Unable to create the staging queue '{timeoutmigrationStagingTable}'. The following exception occured: {e.Message}");
+                migrationCheckResult.Problems.Add($"Unable to create the staging queue '{TimeoutMigrationStagingTable}'. The following exception occured: {e.Message}");
             }
 
             var suffix = "Delayed";
@@ -71,8 +111,8 @@
         private readonly SqlConnection connection;
         private string connectionString;
         private readonly ILogger logger;
-        private readonly string timeoutmigrationStagingTable = "timeoutmigrationtoolstagingtable";
         private string schema;
         private string databaseName;
+        const string TimeoutMigrationStagingTable = "timeoutmigrationtoolstagingtable";
     }
 }

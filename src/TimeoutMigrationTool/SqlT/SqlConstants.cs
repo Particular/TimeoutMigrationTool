@@ -56,6 +56,15 @@ IF (@NOCOUNT = 'OFF') SET NOCOUNT OFF;";
    WHERE TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{0}' AND TABLE_CATALOG = '{2}'
         ";
 
+        public static readonly string MoveFromStagingToDelayedTableText = $@"
+BEGIN TRANSACTION
+    DELETE [{0}]
+    OUTPUT DELETED.Headers,
+        DELETED.Body,
+        DELETED.Due
+    INTO ['{1}']
+COMMIT;";
+
 
         public static readonly string CreateDelayedMessageStoreText = @"
 IF EXISTS (
