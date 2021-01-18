@@ -5,7 +5,7 @@
 
     public interface ICreateTransportTimeouts
     {
-        Task<int> StageBatch(List<TimeoutData> timeouts);
+        Task<int> StageBatch(IReadOnlyList<TimeoutData> timeouts);
         Task<int> CompleteBatch(int number);
         Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint);
     }

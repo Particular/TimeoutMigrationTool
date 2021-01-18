@@ -7,12 +7,12 @@ namespace TimeoutMigrationTool.Tests
     public class FakeTransportTimeoutCreator : ICreateTransportTimeouts
     {
         private List<string> problemsToReturn;
-        public bool BatchWasStaged { get; private set; } = false;
+        public bool BatchWasStaged { get; private set; }
         public List<TimeoutData> TimeoutsStaged { get; } = new List<TimeoutData>();
         public List<int> BatchesCompleted { get; } = new List<int>();
         public bool EndpointWasVerified { get; private set; } = false;
 
-        public Task<int> StageBatch(List<TimeoutData> timeouts)
+        public Task<int> StageBatch(IReadOnlyList<TimeoutData> timeouts)
         {
             BatchWasStaged = true;
             TimeoutsStaged.AddRange(timeouts);
@@ -28,7 +28,7 @@ namespace TimeoutMigrationTool.Tests
         public Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
         {
             EndpointWasVerified = true;
-            var problems = this.problemsToReturn ?? new List<string>();
+            var problems = problemsToReturn ?? new List<string>();
 
             var result = new MigrationCheckResult
             {

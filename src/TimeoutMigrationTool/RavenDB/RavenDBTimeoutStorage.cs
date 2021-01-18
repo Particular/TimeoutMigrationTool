@@ -10,11 +10,11 @@
     public class RavenDBTimeoutStorage : ITimeoutStorage
     {
         public RavenDBTimeoutStorage(
-            ILogger logger, 
-            string serverUrl, 
-            string databaseName, 
+            ILogger logger,
+            string serverUrl,
+            string databaseName,
             string timeoutDocumentPrefix,
-            RavenDbVersion ravenVersion, 
+            RavenDbVersion ravenVersion,
             bool useIndex)
         {
             this.logger = logger;
@@ -36,7 +36,7 @@
             return ravenToolState.ToToolState(batches);
         }
 
-        public async Task<List<EndpointInfo>> ListEndpoints(DateTime cutoffTime)
+        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutoffTime)
         {
             var nrOfTimeoutsFound = await GuardAgainstTooManyTimeoutsWithoutIndexUsage();
 
@@ -82,7 +82,7 @@
 
                 if (timeouts.Count == 0)
                     findMoreTimeouts = false;
-            } 
+            }
             while (findMoreTimeouts);
 
             tcs.Cancel();
@@ -98,7 +98,7 @@
             return endpoints.Select(x => x.Value).ToList();
         }
 
-        async Task<List<EndpointInfo>> ListEndpointsUsingIndex(Func<TimeoutData, bool> filter)
+        async Task<IReadOnlyList<EndpointInfo>> ListEndpointsUsingIndex(Func<TimeoutData, bool> filter)
         {
             var findMoreTimeouts = true;
             var endpoints = new Dictionary<string, EndpointInfo>();
@@ -135,7 +135,7 @@
 
                 if (result.Documents.Count == 0)
                     findMoreTimeouts = false;
-            } 
+            }
             while (findMoreTimeouts);
 
             tcs.Cancel();
@@ -151,7 +151,7 @@
             return endpoints.Select(x => x.Value).ToList();
         }
 
-        static void ProcessTimeoutsIntoEndpointsFound(List<TimeoutData> timeouts, Dictionary<string, EndpointInfo> endpoints, Func<TimeoutData, bool> filter)
+        static void ProcessTimeoutsIntoEndpointsFound(IReadOnlyList<TimeoutData> timeouts, Dictionary<string, EndpointInfo> endpoints, Func<TimeoutData, bool> filter)
         {
             var eligibleTimeouts = timeouts.Where(filter).ToList();
 
@@ -218,7 +218,7 @@
             return toolState;
         }
 
-        public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        public async Task<IReadOnlyList<TimeoutData>> ReadBatch(int batchNumber)
         {
             var batch = await ravenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchNumber}", (doc, id) => { });
             var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(batch.TimeoutIds, (doc, id) => { doc.Id = id; });

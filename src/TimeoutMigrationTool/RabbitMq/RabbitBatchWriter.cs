@@ -17,7 +17,7 @@
             this.rabbitConnectionString = rabbitConnectionString;
         }
 
-        public Task<int> WriteTimeoutsToStagingQueue(List<TimeoutData> timeouts, string stageExchangeName)
+        public Task<int> WriteTimeoutsToStagingQueue(IReadOnlyList<TimeoutData> timeouts, string stageExchangeName)
         {
             int messageCount;
             using (var connection = GetConnection(this.rabbitConnectionString))

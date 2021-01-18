@@ -25,7 +25,7 @@
             return await VerifyEndpointIsReadyForNativeTimeouts(endpoint);
         }
 
-        public Task<int> StageBatch(List<TimeoutData> timeouts)
+        public Task<int> StageBatch(IReadOnlyList<TimeoutData> timeouts)
         {
             logger.LogDebug($"Writing {timeouts.Count} timeout to queue {QueueCreator.StagingQueueName}");
 
