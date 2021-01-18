@@ -18,14 +18,14 @@
 
         public async Task<IToolState> TryLoadOngoingMigration()
         {
-            using var connection = dialect.Connect(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = dialect.Connect(connectionString);
+            await using var command = connection.CreateCommand();
 
             command.CommandText = dialect.GetScriptLoadPendingMigrations();
 
-            using var reader = await command.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            if (!reader.Read())
+            if (!await reader.ReadAsync())
             {
                 return null;
             }
@@ -35,7 +35,7 @@
             var runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
             var numberOfBatches = reader.GetInt32(3);
 
-            if (reader.Read())
+            if (await reader.ReadAsync())
             {
                 throw new Exception("Multiple uncompleted migrations found");
             }
@@ -47,8 +47,8 @@
         {
             migrationRunId = Guid.NewGuid().ToString().Replace("-", "");
 
-            using var connection = dialect.Connect(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = dialect.Connect(connectionString);
+            await using var command = connection.CreateCommand();
 
             command.CommandTimeout = longRunningQueuerTimeout;
             command.CommandText = dialect.GetScriptToPrepareTimeouts(migrationRunId, endpointName, batchSize);
@@ -75,8 +75,8 @@
 
         public async Task<IReadOnlyList<TimeoutData>> ReadBatch(int batchNumber)
         {
-            using var connection = dialect.Connect(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = dialect.Connect(connectionString);
+            await using var command = connection.CreateCommand();
 
             command.CommandText = dialect.GetScriptToLoadBatch(migrationRunId);
 
@@ -86,7 +86,7 @@
 
             command.Parameters.Add(parameter);
 
-            using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+            await using var reader = await command.ExecuteReaderAsync();
             if (reader.HasRows)
             {
                 return ReadTimeoutDataRows(reader).ToList();
@@ -97,8 +97,8 @@
 
         public async Task MarkBatchAsCompleted(int number)
         {
-            using var connection = dialect.Connect(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = dialect.Connect(connectionString);
+            await using var command = connection.CreateCommand();
 
             command.CommandText = dialect.GetScriptToCompleteBatch(migrationRunId);
 
@@ -113,8 +113,8 @@
 
         public async Task MarkBatchAsStaged(int number)
         {
-            using var connection = dialect.Connect(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = dialect.Connect(connectionString);
+            await using var command = connection.CreateCommand();
 
             command.CommandText = dialect.GetScriptToMarkBatchAsStaged(migrationRunId);
 
@@ -129,8 +129,8 @@
 
         public async Task Complete()
         {
-            using var connection = dialect.Connect(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = dialect.Connect(connectionString);
+            await using var command = connection.CreateCommand();
 
             var migrationRunIdParameter = command.CreateParameter();
             migrationRunIdParameter.ParameterName = "MigrationRunId";
@@ -157,8 +157,8 @@
         {
             var toolState = await TryLoadOngoingMigration();
 
-            using var connection = dialect.Connect(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = dialect.Connect(connectionString);
+            await using var command = connection.CreateCommand();
 
             command.CommandTimeout = longRunningQueuerTimeout;
             command.CommandText = dialect.GetScriptToAbortMigration(migrationRunId, toolState.EndpointName);
@@ -173,9 +173,9 @@
 
         public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
         {
-            using var connection = dialect.Connect(connectionString);
+            await using var connection = dialect.Connect(connectionString);
 
-            using var command = connection.CreateCommand();
+            await using var command = connection.CreateCommand();
             command.CommandText = dialect.GetScriptToListEndpoints();
 
             var parameter = command.CreateParameter();
@@ -184,12 +184,13 @@
 
             command.Parameters.Add(parameter);
 
-            using var reader = await command.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync();
 
+            var results = new List<EndpointInfo>();
             if (reader.HasRows)
             {
-                var results = new List<EndpointInfo>();
-                while (reader.Read())
+
+                while (await reader.ReadAsync())
                 {
                     results.Add(new EndpointInfo
                     {
@@ -200,12 +201,8 @@
                         Destinations = reader.GetString(4).Split(", ", StringSplitOptions.RemoveEmptyEntries)
                     });
                 }
-
-                return results;
             }
-
-
-            return new List<EndpointInfo>();
+            return results;
         }
 
         IEnumerable<TimeoutData> ReadTimeoutDataRows(DbDataReader reader)
