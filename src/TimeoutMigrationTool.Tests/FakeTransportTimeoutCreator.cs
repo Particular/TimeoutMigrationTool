@@ -12,7 +12,7 @@ namespace TimeoutMigrationTool.Tests
         public List<int> BatchesCompleted { get; } = new List<int>();
         public bool EndpointWasVerified { get; private set; } = false;
 
-        public Task<int> StageBatch(List<TimeoutData> timeouts)
+        public Task<int> StageBatch(IReadOnlyList<TimeoutData> timeouts)
         {
             BatchWasStaged = true;
             TimeoutsStaged.AddRange(timeouts);

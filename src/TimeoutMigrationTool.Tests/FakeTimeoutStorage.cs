@@ -37,7 +37,7 @@ namespace TimeoutMigrationTool.Tests
             });
         }
 
-        public Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        public Task<IReadOnlyList<TimeoutData>> ReadBatch(int batchNumber)
         {
             BatchWasRead = true;
             var timeoutsInBatch = readBatchResults.First(x => x.Number == batchNumber).NumberOfTimeouts;
@@ -46,7 +46,7 @@ namespace TimeoutMigrationTool.Tests
             for (var i = 0; i < timeoutsInBatch; i++)
                 timeouts.Add(new TimeoutData());
 
-            return Task.FromResult(timeouts);
+            return Task.FromResult<IReadOnlyList<TimeoutData>>(timeouts);
         }
 
         public Task MarkBatchAsCompleted(int number)
@@ -67,10 +67,10 @@ namespace TimeoutMigrationTool.Tests
             return Task.CompletedTask;
         }
 
-        public Task<List<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
+        public Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
         {
             EndpointsWereListed = true;
-            return Task.FromResult(endpoints);
+            return Task.FromResult<IReadOnlyList<EndpointInfo>>(endpoints);
         }
 
         public void SetupToolStateToReturn(IToolState toolState)

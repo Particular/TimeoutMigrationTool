@@ -73,7 +73,7 @@
             return await TryLoadOngoingMigration();
         }
 
-        public async Task<List<TimeoutData>> ReadBatch(int batchNumber)
+        public async Task<IReadOnlyList<TimeoutData>> ReadBatch(int batchNumber)
         {
             using var connection = dialect.Connect(connectionString);
             using var command = connection.CreateCommand();
@@ -171,7 +171,7 @@
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
+        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
         {
             using var connection = dialect.Connect(connectionString);
 
