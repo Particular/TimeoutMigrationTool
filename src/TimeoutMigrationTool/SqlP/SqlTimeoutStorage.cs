@@ -87,12 +87,17 @@
             command.Parameters.Add(parameter);
 
             await using var reader = await command.ExecuteReaderAsync();
+            List<TimeoutData> results = null;
             if (reader.HasRows)
             {
-                return ReadTimeoutDataRows(reader).ToList();
+                results = new List<TimeoutData>();
+                await foreach (var timeoutDataRow in ReadTimeoutDataRows(reader))
+                {
+                    results.Add(timeoutDataRow);
+                }
             }
 
-            return null;
+            return results;
         }
 
         public async Task MarkBatchAsCompleted(int number)
@@ -205,9 +210,9 @@
             return results;
         }
 
-        IEnumerable<TimeoutData> ReadTimeoutDataRows(DbDataReader reader)
+        async IAsyncEnumerable<TimeoutData> ReadTimeoutDataRows(DbDataReader reader)
         {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 yield return new TimeoutData
                 {
