@@ -9,10 +9,10 @@
             NumberOfTimeouts = numberOfTimeouts;
         }
 
-        public int Number { get; private set; }
+        public int Number { get; }
 
         public BatchState State { get; set; }
 
-        public int NumberOfTimeouts { get; private set; }
+        public int NumberOfTimeouts { get; }
     }
 }
