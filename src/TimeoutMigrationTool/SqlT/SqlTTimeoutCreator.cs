@@ -32,6 +32,8 @@
                 }
             }
 
+            databaseName = connection.Database;
+
             await SqlTQueueCreator.TruncateTable(connection, TimeoutMigrationStagingTable, schema, databaseName);
 
             var dt = new DataTable();
@@ -64,9 +66,25 @@
             return timeouts.Count;
         }
 
-        public Task<int> CompleteBatch(int number)
+        public async Task<int> CompleteBatch(int number)
         {
-            throw new System.NotImplementedException();
+            if (connection.State != ConnectionState.Open)
+            {
+                try
+                {
+                    await connection.OpenAsync().ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Improve");
+                    return 0;
+                }
+            }
+
+            databaseName = connection.Database;
+
+            // TODO how do we know where we write since AbleToMigrate might not be called?
+            return await SqlTQueueCreator.MoveFromTo(connection, TimeoutMigrationStagingTable, schema, "SqlP_FakeTimeouts.Delayed", schema, databaseName);
         }
 
         public async Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
