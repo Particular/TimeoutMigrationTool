@@ -148,7 +148,7 @@ COMMIT;";
         public override string GetScriptToCompleteBatch(string migrationRunId)
         {
             return $@"UPDATE
-    ['{GetMigrationTableName(migrationRunId)}']
+    [{GetMigrationTableName(migrationRunId)}]
 SET
     Status = 2
 WHERE
@@ -191,7 +191,7 @@ END;";
         public override string GetScriptToMarkBatchAsStaged(string migrationRunId)
         {
             return $@"UPDATE
-    ['{GetMigrationTableName(migrationRunId)}']
+    [{GetMigrationTableName(migrationRunId)}]
 SET
     Status = 1
 WHERE
