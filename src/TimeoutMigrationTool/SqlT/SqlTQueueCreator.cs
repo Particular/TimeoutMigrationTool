@@ -6,15 +6,27 @@
 
     public static class SqlTQueueCreator
     {
-        public static async Task CreateStagingQueue(SqlConnection connection, string tableName, string databaseName)
+        public static async Task CreateStagingQueue(SqlConnection connection, string tableName, string schema, string databaseName)
         {
             await using var transaction = connection.BeginTransaction();
-            var sql = string.Format(SqlConstants.CreateDelayedMessageStoreText, tableName, databaseName);
+            var sql = string.Format(SqlConstants.CreateDelayedMessageStoreText, tableName, schema, databaseName);
             await using var command = new SqlCommand(sql, connection, transaction)
             {
                 CommandType = CommandType.Text
             };
-            await command.ExecuteScalarAsync().ConfigureAwait(false);
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await transaction.CommitAsync().ConfigureAwait(false);
+        }
+
+        public static async Task TruncateTable(SqlConnection connection, string tableName, string schema, string databaseName)
+        {
+            await using var transaction = connection.BeginTransaction();
+            var sql = string.Format(SqlConstants.TruncateTableText, tableName, schema, databaseName);
+            await using var command = new SqlCommand(sql, connection, transaction)
+            {
+                CommandType = CommandType.Text
+            };
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
             await transaction.CommitAsync().ConfigureAwait(false);
         }
 

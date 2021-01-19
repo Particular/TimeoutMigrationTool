@@ -32,6 +32,8 @@
                 }
             }
 
+            await SqlTQueueCreator.TruncateTable(connection, TimeoutMigrationStagingTable, schema, databaseName);
+
             var dt = new DataTable();
             dt.Columns.Add("Headers");
             dt.Columns.Add("Body", typeof(byte[]));
@@ -88,7 +90,7 @@
 
             try
             {
-                await SqlTQueueCreator.CreateStagingQueue(connection, TimeoutMigrationStagingTable, databaseName);
+                await SqlTQueueCreator.CreateStagingQueue(connection, TimeoutMigrationStagingTable, schema, databaseName);
             }
             catch (Exception e)
             {

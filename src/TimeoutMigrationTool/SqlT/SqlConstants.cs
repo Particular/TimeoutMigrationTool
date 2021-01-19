@@ -65,28 +65,33 @@ BEGIN TRANSACTION
     INTO ['{1}']
 COMMIT;";
 
+        public static readonly string TruncateTableText = @"
+TRUNCATE TABLE [{2}].[{1}].[{0}];
+";
 
         public static readonly string CreateDelayedMessageStoreText = @"
 IF EXISTS (
     SELECT *
-    FROM {1}.sys.objects
-    WHERE object_id = OBJECT_ID(N'{0}')
-        AND type in (N'U'))
+    FROM [{2}].sys.objects
+    WHERE object_id = OBJECT_ID(N'[{1}].[{0}]')
+        AND type in (N'U')
+)
 RETURN
 
 EXEC sp_getapplock @Resource = '{0}_lock', @LockMode = 'Exclusive'
 
 IF EXISTS (
     SELECT *
-    FROM {1}.sys.objects
-    WHERE object_id = OBJECT_ID(N'{0}')
-        AND type in (N'U'))
+    FROM [{2}].sys.objects
+    WHERE object_id = OBJECT_ID(N'[{1}].[{0}]')
+        AND type in (N'U')
+)
 BEGIN
     EXEC sp_releaseapplock @Resource = '{0}_lock'
     RETURN
 END
 
-CREATE TABLE {0} (
+CREATE TABLE [{2}].[{1}].[{0}] (
     Headers nvarchar(max) NOT NULL,
     Body varbinary(max),
     Due datetime NOT NULL,
