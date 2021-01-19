@@ -50,20 +50,20 @@ INTO {1};
 IF (@NOCOUNT = 'ON') SET NOCOUNT ON;
 IF (@NOCOUNT = 'OFF') SET NOCOUNT OFF;";
 
-         public static readonly string DelayedMessageStoreExistsText = @"
+        public static readonly string DelayedMessageStoreExistsText = @"
    SELECT COUNT(*)
    FROM INFORMATION_SCHEMA.TABLES
    WHERE TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{0}' AND TABLE_CATALOG = '{2}'
         ";
 
-        public static readonly string MoveFromStagingToDelayedTableText = $@"
-BEGIN TRANSACTION
-    DELETE [{0}]
-    OUTPUT DELETED.Headers,
-        DELETED.Body,
-        DELETED.Due
-    INTO ['{1}']
-COMMIT;";
+        public static readonly string MoveFromStagingToDelayedTableText = @"
+DELETE [{4}].[{1}].[{0}]
+OUTPUT DELETED.Headers,
+    DELETED.Body,
+    DELETED.Due
+INTO [{4}].[{3}].[{2}];
+SELECT @@ROWCOUNT;
+";
 
         public static readonly string TruncateTableText = @"
 TRUNCATE TABLE [{2}].[{1}].[{0}];
