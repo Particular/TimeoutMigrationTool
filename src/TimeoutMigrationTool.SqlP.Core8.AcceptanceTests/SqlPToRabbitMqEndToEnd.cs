@@ -59,8 +59,8 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), 1024);
-                    var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
+                    var timeoutStorage = new SqlTimeoutsSource(connectionString, new MsSqlServer(), 1024);
+                    var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());

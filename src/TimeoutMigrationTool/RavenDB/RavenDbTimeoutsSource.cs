@@ -7,9 +7,9 @@
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
 
-    public class RavenDBTimeoutStorage : ITimeoutStorage
+    public class RavenDbTimeoutsSource : ITimeoutsSource
     {
-        public RavenDBTimeoutStorage(
+        public RavenDbTimeoutsSource(
             ILogger logger,
             string serverUrl,
             string databaseName,

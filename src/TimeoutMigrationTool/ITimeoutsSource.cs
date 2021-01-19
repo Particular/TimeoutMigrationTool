@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface ITimeoutStorage
+    public interface ITimeoutsSource
     {
         Task<IToolState> TryLoadOngoingMigration();
         Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters);

@@ -36,7 +36,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var toolState = testSuite.SetupToolState(DateTime.Now);
             await testSuite.SaveToolState(toolState);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.Abort();
 
             var storedSate = await testSuite.GetToolState();
@@ -47,10 +47,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenAbortingOnPreparedStorageStateShouldBeCleanedUp()
         {
             var cutOffTime = DateTime.Now.AddDays(-1);
-            var storage = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.Abort();
 
             var storedSate = await testSuite.GetToolState();
@@ -63,12 +63,12 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var cutOffTime = DateTime.Now.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            var storage = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
             await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.Abort();
 
             var batchesInStore = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(batch => true, RavenConstants.BatchPrefix, (batch, id) => { });
@@ -83,12 +83,12 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var cutOffTime = DateTime.Now.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            var storage = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
             await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var migrationIsInProgress = await sut.CheckIfAMigrationIsInProgress();
 
             Assert.That(migrationIsInProgress, Is.True);
@@ -100,10 +100,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var cutOffTime = DateTime.Now.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            var storage = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var migrationIsInProgress = await sut.CheckIfAMigrationIsInProgress();
 
             Assert.That(migrationIsInProgress, Is.True);
@@ -112,7 +112,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenCheckingIfThereIsSomethingToAbortInACleanSystem()
         {
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             var migrationIsInProgress = await sut.CheckIfAMigrationIsInProgress();
 
             Assert.That(migrationIsInProgress, Is.False);
@@ -127,7 +127,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var incompleteBatches = preparedBatches.Skip(1).Take(1).ToList();
             var incompleteBatch = incompleteBatches.First();
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
             var incompleteBatchFromStorage = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{incompleteBatch.Number}", (doc, id) => { });
@@ -146,7 +146,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var incompleteBatches = preparedBatches.Skip(1).Take(1).ToList();
             var completeBatch = preparedBatches.First();
 
-            var sut = new RavenDBTimeoutStorage(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
+            var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
             var completeBatchFromStorage = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{completeBatch.Number}", (doc, id) => { });

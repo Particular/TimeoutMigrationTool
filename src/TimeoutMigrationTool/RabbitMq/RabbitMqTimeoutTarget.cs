@@ -6,41 +6,48 @@
     using Microsoft.Extensions.Logging;
     using RabbitMQ.Client;
 
-    public class RabbitMqTimeoutCreator : ICreateTransportTimeouts
+    public class RabbitMqTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTarget
     {
-        public RabbitMqTimeoutCreator(ILogger logger, string targetConnectionString)
+        public RabbitMqTimeoutTarget(ILogger logger, string targetConnectionString)
         {
             this.logger = logger;
             this.targetConnectionString = targetConnectionString;
             batchWriter = new RabbitBatchWriter(logger, targetConnectionString);
         }
 
-        public async Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
+        public async ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
         {
-            factory = new ConnectionFactory();
-            factory.Uri = new Uri(targetConnectionString);
+            factory = new ConnectionFactory { Uri = new Uri(targetConnectionString) };
 
             await CreateStagingQueue();
 
             return await VerifyEndpointIsReadyForNativeTimeouts(endpoint);
         }
 
-        public Task<int> StageBatch(IReadOnlyList<TimeoutData> timeouts)
+        public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(EndpointInfo endpoint)
+        {
+            return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
+        }
+
+        public async ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber)
         {
             logger.LogDebug($"Writing {timeouts.Count} timeout to queue {QueueCreator.StagingQueueName}");
 
-            return batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
+            return await batchWriter.WriteTimeoutsToStagingQueue(timeouts, QueueCreator.StagingQueueName);
         }
 
-        public async Task<int> CompleteBatch(int number)
+        public async ValueTask<int> CompleteBatch(int batchNumber)
         {
-            using (var messagePump = new RabbitStagePump(logger, targetConnectionString, QueueCreator.StagingQueueName))
-            {
-                return await messagePump.CompleteBatch(number);
-            }
+            using var messagePump = new RabbitStagePump(logger, targetConnectionString, QueueCreator.StagingQueueName);
+            return await messagePump.CompleteBatch(batchNumber);
         }
 
-        Task<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
+        public ValueTask DisposeAsync()
+        {
+            return new ValueTask();
+        }
+
+        ValueTask<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
             var result = new MigrationCheckResult();
             if ((endpoint.LongestTimeout - DateTime.UtcNow).TotalSeconds > MaxDelayInSeconds)
@@ -70,7 +77,7 @@
                     catch (Exception)
                     {
                         result.Problems.Add("The delivery infrastructure on rabbit broker does not exist. It means that the endpoint is running old version of Rabbit Transport package.");
-                        return Task.FromResult(result);
+                        return new ValueTask<MigrationCheckResult>(result);
                     }
 
 
@@ -85,7 +92,7 @@
                 }
             }
 
-            return Task.FromResult(result);
+            return new ValueTask<MigrationCheckResult>(result);
         }
 
         bool CheckIfEndpointIsUsingConventionalRoutingTopology(string destination)
