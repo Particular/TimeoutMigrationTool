@@ -17,7 +17,7 @@
             connection = new SqlConnection(connectionString);
         }
 
-        public async Task<int> StageBatch(List<TimeoutData> timeouts)
+        public async Task<int> StageBatch(IReadOnlyList<TimeoutData> timeouts)
         {
             if (connection.State != ConnectionState.Open)
             {
