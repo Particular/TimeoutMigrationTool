@@ -1,4 +1,4 @@
-﻿using Particular.TimeoutMigrationTool.Nhb;
+﻿using Particular.TimeoutMigrationTool.NHibernate;
 
 namespace Particular.TimeoutMigrationTool
 {

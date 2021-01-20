@@ -3,7 +3,7 @@ using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using NHibernate.Type;
 
-namespace Particular.TimeoutMigrationTool.Nhb
+namespace Particular.TimeoutMigrationTool.NHibernate
 {
     public class StagedTimeoutEntityMap : ClassMapping<StagedTimeoutEntity>
     {

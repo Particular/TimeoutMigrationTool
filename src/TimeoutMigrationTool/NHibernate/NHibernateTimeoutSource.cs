@@ -2,19 +2,15 @@ using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Cfg.MappingSchema;
 using NHibernate.Criterion;
-using NHibernate.Dialect;
-using NHibernate.Driver;
 using NHibernate.Mapping.ByCode;
 
-namespace Particular.TimeoutMigrationTool.Nhb
+namespace Particular.TimeoutMigrationTool.NHibernate
 {
-    using System.Reflection;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
-    using NHibernate.Transform;
 
     public class NHibernateTimeoutSource : ITimeoutsSource
     {

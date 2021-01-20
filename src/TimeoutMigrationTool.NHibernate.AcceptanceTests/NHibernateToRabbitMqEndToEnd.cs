@@ -5,7 +5,7 @@
     using NServiceBus.AcceptanceTesting;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
-    using Particular.TimeoutMigrationTool.Nhb;
+    using Particular.TimeoutMigrationTool.NHibernate;
     using Particular.TimeoutMigrationTool.RabbitMq;
     using System;
     using System.Linq;

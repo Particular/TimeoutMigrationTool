@@ -6,7 +6,7 @@
     using global::NHibernate.Driver;
     using global::NHibernate.Mapping.ByCode;
     using NUnit.Framework;
-    using Particular.TimeoutMigrationTool.Nhb;
+    using Particular.TimeoutMigrationTool.NHibernate;
     using System;
     using System.Collections.Generic;
     using System.Text;

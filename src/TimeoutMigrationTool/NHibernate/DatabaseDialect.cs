@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Particular.TimeoutMigrationTool.Nhb
+namespace Particular.TimeoutMigrationTool.NHibernate
 {
     public abstract class DatabaseDialect
     {

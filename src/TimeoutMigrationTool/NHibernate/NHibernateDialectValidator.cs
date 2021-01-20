@@ -1,6 +1,6 @@
-﻿using Particular.TimeoutMigrationTool.Nhb;
+﻿using Particular.TimeoutMigrationTool.NHibernate;
 
-namespace Particular.TimeoutMigrationTool.SqlP
+namespace Particular.TimeoutMigrationTool.NHibernate
 {
     using System;
     using McMaster.Extensions.CommandLineUtils;

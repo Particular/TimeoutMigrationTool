@@ -1,6 +1,6 @@
 using System;
 
-namespace Particular.TimeoutMigrationTool.Nhb
+namespace Particular.TimeoutMigrationTool.NHibernate
 {
     public class TimeoutEntity
     {

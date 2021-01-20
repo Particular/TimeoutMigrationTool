@@ -2,7 +2,7 @@
 {
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
-    using Particular.TimeoutMigrationTool.Nhb;
+    using Particular.TimeoutMigrationTool.NHibernate;
     using System;
     using System.Collections.Generic;
     using System.Linq;
