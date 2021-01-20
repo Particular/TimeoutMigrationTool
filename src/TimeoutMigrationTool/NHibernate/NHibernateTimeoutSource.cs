@@ -16,9 +16,9 @@ namespace Particular.TimeoutMigrationTool.Nhb
     using Newtonsoft.Json;
     using NHibernate.Transform;
 
-    public class NHibernateTimeoutStorage : ITimeoutStorage
+    public class NHibernateTimeoutSource : ITimeoutsSource
     {
-        public NHibernateTimeoutStorage(string connectionString, int batchSize, DatabaseDialect databaseDialect)
+        public NHibernateTimeoutSource(string connectionString, int batchSize, DatabaseDialect databaseDialect)
         {
             this.connectionString = connectionString;
             this.batchSize = batchSize;

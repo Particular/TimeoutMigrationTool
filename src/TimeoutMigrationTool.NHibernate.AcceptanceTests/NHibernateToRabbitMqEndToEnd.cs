@@ -52,8 +52,8 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1024, DatabaseDialect);
-                    var transportAdapter = new RabbitMqTimeoutCreator(logger, rabbitUrl);
+                    var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1024, DatabaseDialect);
+                    var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint("NewRabbitMqEndpoint"), new Dictionary<string, string>());

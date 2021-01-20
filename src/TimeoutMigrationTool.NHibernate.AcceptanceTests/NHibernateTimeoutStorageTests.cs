@@ -15,7 +15,7 @@
         public async Task TryLoadOngoingMigration_Should_Be_Null_When_No_Migration_Running()
         {
             // Arrange
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 10, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 10, DatabaseDialect);
 
             // Act
             var currentMigration = await timeoutStorage.TryLoadOngoingMigration();
@@ -29,7 +29,7 @@
         {
             // Arrange
             var endpointName = "Preparing_Creates_A_MigrationsEntity_And_Returns_It";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 10, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 10, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -49,7 +49,7 @@
         {
             // Arrange
             var endpointName = "Preparing_Sets_The_Number_Of_Batches_Correctly";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -89,7 +89,7 @@
         {
             // Arrange
             var endpointName = "Can_Read_Batch_By_Batch_Number";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
             var expectedDestinations = new List<string>();
@@ -137,7 +137,7 @@
         {
             // Arrange
             var endpointName = "Marking_A_Batch_As_Complete_Updates_The_Status_Correctly";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -190,7 +190,7 @@
         {
             // Arrange
             var endpointName = "ListEndpoints_Loads_All_Endpoints_With_Timeouts";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -230,7 +230,7 @@
         public async Task Complete_Sets_The_MigrationStatus_Correctly()
         {
             var endpointName = "Complete_Sets_The_MigrationStatus_Correctly";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -274,7 +274,7 @@
         {
             // Arrange
             var endpointName = "Aborting_Returns_StagedTimeouts_Back_To_TimeoutEntity_Table";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -319,7 +319,7 @@
         {
             // Arrange
             var endpointName = "GetNextBatch_Returns_The_Next_Batch_Not_Migrated";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
             var expectedDestinations = new List<string>();
@@ -359,7 +359,7 @@
         {
             // Arrange
             var endpointName = "GetNextBatch_Returns_The_Next_Batch_Not_Migrated";
-            var timeoutStorage = new NHibernateTimeoutStorage(connectionString, 1, DatabaseDialect);
+            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
             var expectedDestinations = new List<string>();
