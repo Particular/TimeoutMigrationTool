@@ -143,7 +143,7 @@
             var sb = new StringBuilder();
             startingDelayLevel = 0;
 
-            for (var level = RabbitMqTimeoutCreator.MaxLevel; level >= 0; level--)
+            for (var level = RabbitMqTimeoutTarget.MaxLevel; level >= 0; level--)
             {
                 if (startingDelayLevel == 0 && bitArray[level])
                 {

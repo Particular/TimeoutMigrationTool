@@ -13,10 +13,10 @@ namespace TimeoutMigrationTool.Tests
         [SetUp]
         public void Setup()
         {
-            timeoutStorage = new FakeTimeoutStorage();
+            timeoutsSource = new FakeTimeoutsSource();
             logger = new ConsoleLogger(false);
 
-            runner = new AbortRunner(logger, timeoutStorage);
+            runner = new AbortRunner(logger, timeoutsSource);
 
             endpoints = new List<EndpointInfo>
             {
@@ -27,7 +27,7 @@ namespace TimeoutMigrationTool.Tests
                 }
             };
             testEndpoint = endpoints.First().EndpointName;
-            timeoutStorage.SetupEndpoints(endpoints);
+            timeoutsSource.SetupEndpoints(endpoints);
         }
 
         [Test]
@@ -46,11 +46,11 @@ namespace TimeoutMigrationTool.Tests
                 Batches = batches,
                 RunParameters = new Dictionary<string, string>()
             };
-            timeoutStorage.SetupToolStateToReturn(toolState);
+            timeoutsSource.SetupToolStateToReturn(toolState);
 
             await runner.Run();
 
-            Assert.That(timeoutStorage.ToolStateWasAborted, Is.True);
+            Assert.That(timeoutsSource.ToolStateWasAborted, Is.True);
         }
 
         static List<BatchInfo> GetBatches()
@@ -62,7 +62,7 @@ namespace TimeoutMigrationTool.Tests
             return batches;
         }
 
-        FakeTimeoutStorage timeoutStorage;
+        FakeTimeoutsSource timeoutsSource;
         AbortRunner runner;
         List<EndpointInfo> endpoints;
         string testEndpoint;

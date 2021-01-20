@@ -8,16 +8,16 @@
 
     public class PreviewRunner
     {
-        public PreviewRunner(ILogger logger, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutsCreator)
+        public PreviewRunner(ILogger logger, ITimeoutsSource timeoutsSource, ITimeoutsTarget transportTimeoutsTargetCreator)
         {
             this.logger = logger;
-            this.timeoutStorage = timeoutStorage;
-            this.transportTimeoutsCreator = transportTimeoutsCreator;
+            this._timeoutsSource = timeoutsSource;
+            this._transportTimeoutsTargetCreator = transportTimeoutsTargetCreator;
         }
 
         public async Task Run()
         {
-            var endpoints = await timeoutStorage.ListEndpoints(DateTime.Parse("2012-01-01"));
+            var endpoints = await _timeoutsSource.ListEndpoints(DateTime.Parse("2012-01-01"));
 
             var endpointProblems = new Dictionary<string, List<string>>();
             if (!endpoints.Any())
@@ -38,7 +38,7 @@
 
                 endpointProblems[endpoint.EndpointName] = new List<string>();
 
-                var migrationCheckResult = await transportTimeoutsCreator.AbleToMigrate(endpoint);
+                var migrationCheckResult = await _transportTimeoutsTargetCreator.AbleToMigrate(endpoint);
 
                 if (!migrationCheckResult.CanMigrate)
                 {
@@ -67,7 +67,7 @@
         }
 
         readonly ILogger logger;
-        readonly ITimeoutStorage timeoutStorage;
-        readonly ICreateTransportTimeouts transportTimeoutsCreator;
+        readonly ITimeoutsSource _timeoutsSource;
+        readonly ITimeoutsTarget _transportTimeoutsTargetCreator;
     }
 }

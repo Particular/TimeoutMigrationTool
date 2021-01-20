@@ -7,9 +7,9 @@
     using System.Threading.Tasks;
     using Newtonsoft.Json;
 
-    public class SqlTimeoutStorage : ITimeoutStorage
+    public class SqlTimeoutsSource : ITimeoutsSource
     {
-        public SqlTimeoutStorage(string sourceConnectionString, SqlDialect dialect, int batchSize)
+        public SqlTimeoutsSource(string sourceConnectionString, SqlDialect dialect, int batchSize)
         {
             connectionString = sourceConnectionString;
             this.dialect = dialect;

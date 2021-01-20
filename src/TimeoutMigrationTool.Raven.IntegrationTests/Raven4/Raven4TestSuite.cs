@@ -147,7 +147,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
-            var timeoutStorage = new RavenDBTimeoutStorage(Logger, ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four, false);
+            var timeoutStorage = new RavenDbTimeoutsSource(Logger, ServerName, DatabaseName, "TimeoutDatas", RavenDbVersion.Four, false);
             var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }

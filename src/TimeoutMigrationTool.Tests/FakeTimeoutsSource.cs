@@ -6,7 +6,7 @@ namespace TimeoutMigrationTool.Tests
     using System.Threading.Tasks;
     using Particular.TimeoutMigrationTool;
 
-    public class FakeTimeoutStorage : ITimeoutStorage
+    public class FakeTimeoutsSource : ITimeoutsSource
     {
         private IToolState existingToolState;
         private List<BatchInfo> preparedBatches = new List<BatchInfo>();

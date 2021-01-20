@@ -147,9 +147,9 @@
                                 : RavenDbVersion.Four;
                             var forceUseIndex = sourceRavenDbForceUseIndexOption.HasValue();
 
-                            var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix,
+                            var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, forceUseIndex);
-                            var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
+                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
                             await runner.Run();
@@ -177,8 +177,8 @@
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
 
-                            var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
-                            var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
                             await runner.Run();
@@ -238,10 +238,10 @@
                             runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
                             runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
 
-                            var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix,
+                            var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, forceUseIndex);
 
-                            var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
+                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
@@ -277,9 +277,9 @@
                             runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString,
                                 targetConnectionString);
 
-                            var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
 
-                            var transportAdapter = new RabbitMqTimeoutCreator(logger, targetConnectionString);
+                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
@@ -328,7 +328,7 @@
                                 ? RavenDbVersion.ThreeDotFive
                                 : RavenDbVersion.Four;
 
-                            var timeoutStorage = new RavenDBTimeoutStorage(logger, serverUrl, databaseName, prefix,
+                            var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, false);
                             var runner = new AbortRunner(logger, timeoutStorage);
 
@@ -355,7 +355,7 @@
                             var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
-                            var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
                             var runner = new AbortRunner(logger, timeoutStorage);
 
                             await runner.Run();
@@ -388,10 +388,10 @@
 
 
         private static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime? cutoffTime,
-            Dictionary<string, string> runParameters, ITimeoutStorage timeoutStorage,
-            ICreateTransportTimeouts transportTimeoutCreator)
+            Dictionary<string, string> runParameters, ITimeoutsSource timeoutsSource,
+            ITimeoutsTarget transportTimeoutTargetCreator)
         {
-            var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportTimeoutCreator);
+            var migrationRunner = new MigrationRunner(logger, timeoutsSource, transportTimeoutTargetCreator);
 
             if (cutoffTime.HasValue)
             {

@@ -10,11 +10,11 @@ namespace Particular.TimeoutMigrationTool
 
     public class MigrationRunner
     {
-        public MigrationRunner(ILogger logger, ITimeoutStorage timeoutStorage, ICreateTransportTimeouts transportTimeoutsCreator)
+        public MigrationRunner(ILogger logger, ITimeoutsSource timeoutsSource, ITimeoutsTarget timeoutsTarget)
         {
             this.logger = logger;
-            this.timeoutStorage = timeoutStorage;
-            this.transportTimeoutsCreator = transportTimeoutsCreator;
+            this.timeoutsSource = timeoutsSource;
+            this.timeoutsTarget = timeoutsTarget;
         }
 
         public async Task Run(DateTime cutOffTime, EndpointFilter endpointFilter, IDictionary<string, string> runParameters)
@@ -22,7 +22,7 @@ namespace Particular.TimeoutMigrationTool
             var watch = new Stopwatch();
             watch.Start();
 
-            var toolState = await timeoutStorage.TryLoadOngoingMigration();
+            var toolState = await timeoutsSource.TryLoadOngoingMigration();
 
             if (toolState != null)
             {
@@ -37,7 +37,7 @@ namespace Particular.TimeoutMigrationTool
             }
 
             logger.LogInformation("Listing the endpoints");
-            var allEndpoints = await timeoutStorage.ListEndpoints(cutOffTime);
+            var allEndpoints = await timeoutsSource.ListEndpoints(cutOffTime);
 
             var endpointsToMigrate = allEndpoints.Where(e => e.NrOfTimeouts > 0 && endpointFilter.ShouldInclude(e.EndpointName))
                 .ToList();
@@ -60,7 +60,7 @@ namespace Particular.TimeoutMigrationTool
             foreach (var endpoint in endpointsToMigrate)
             {
                 logger.LogInformation($"Verifying that timeouts set by {endpoint.EndpointName} can be migrated");
-                var migrationCheckResult = await transportTimeoutsCreator.AbleToMigrate(endpoint);
+                var migrationCheckResult = await timeoutsTarget.AbleToMigrate(endpoint);
 
                 if (!migrationCheckResult.CanMigrate)
                 {
@@ -109,7 +109,7 @@ namespace Particular.TimeoutMigrationTool
 
         async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
-            var toolState = await timeoutStorage.Prepare(cutOffTime, endpointName, runParameters);
+            var toolState = await timeoutsSource.Prepare(cutOffTime, endpointName, runParameters);
             logger.LogInformation("Storage has been prepared for migration.");
             await Run(toolState);
         }
@@ -117,6 +117,8 @@ namespace Particular.TimeoutMigrationTool
         async Task Run(IToolState toolState)
         {
             BatchInfo batch;
+
+            await using var endpointTarget = await timeoutsTarget.Migrate(toolState.EndpointName);
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
@@ -126,21 +128,21 @@ namespace Particular.TimeoutMigrationTool
                 if (batch.State == BatchState.Pending)
                 {
                     logger.LogDebug($"Reading batch number {batch.Number}");
-                    var timeouts = await timeoutStorage.ReadBatch(batch.Number);
+                    var timeouts = await timeoutsSource.ReadBatch(batch.Number);
                     if (timeouts.Count != batch.NumberOfTimeouts)
                     {
                         throw new Exception($"Expected to retrieve {batch.NumberOfTimeouts} timeouts but only found {timeouts.Count}");
                     }
 
                     logger.LogDebug($"Staging batch number {batch.Number}");
-                    var stagedTimeoutCount = await transportTimeoutsCreator.StageBatch(timeouts);
+                    var stagedTimeoutCount = await endpointTarget.StageBatch(timeouts, batch.Number);
                     if (batch.NumberOfTimeouts != stagedTimeoutCount)
                     {
                         throw new InvalidOperationException($"The amount of staged timeouts does not match the amount of timeouts in the batch of a number: {batch.Number}. Staged amount of timeouts: {stagedTimeoutCount}, batch contains {batch.NumberOfTimeouts}.");
                     }
 
                     batch.State = BatchState.Staged;
-                    await timeoutStorage.MarkBatchAsStaged(batch.Number);
+                    await timeoutsSource.MarkBatchAsStaged(batch.Number);
                 }
                 else
                 {
@@ -149,7 +151,7 @@ namespace Particular.TimeoutMigrationTool
                 }
 
                 logger.LogDebug($"Migrating batch number {batch.Number} from staging to destination");
-                var completedTimeoutsCount = await transportTimeoutsCreator.CompleteBatch(batch.Number);
+                var completedTimeoutsCount = await endpointTarget.CompleteBatch(batch.Number);
 
                 if (!needToRecover && batch.NumberOfTimeouts != completedTimeoutsCount)
                 {
@@ -157,12 +159,12 @@ namespace Particular.TimeoutMigrationTool
                 }
 
                 batch.State = BatchState.Completed;
-                await timeoutStorage.MarkBatchAsCompleted(batch.Number);
+                await timeoutsSource.MarkBatchAsCompleted(batch.Number);
 
                 logger.LogDebug($"Batch number {batch.Number} fully migrated");
             }
 
-            await timeoutStorage.Complete();
+            await timeoutsSource.Complete();
         }
 
         void GuardAgainstInvalidState(IDictionary<string, string> runParameters, IToolState toolState)
@@ -212,7 +214,7 @@ namespace Particular.TimeoutMigrationTool
         }
 
         readonly ILogger logger;
-        readonly ITimeoutStorage timeoutStorage;
-        readonly ICreateTransportTimeouts transportTimeoutsCreator;
+        readonly ITimeoutsSource timeoutsSource;
+        readonly ITimeoutsTarget timeoutsTarget;
     }
 }

@@ -11,13 +11,7 @@
 
         public string EndpointName { get; set; }
 
-        public int NumberOfBatches
-        {
-            get
-            {
-                return Batches.Count;
-            }
-        }
+        public int NumberOfBatches => Batches.Count;
 
         public List<BatchInfo> Batches { get; set; }
 

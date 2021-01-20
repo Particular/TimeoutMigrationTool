@@ -90,9 +90,9 @@
             }
         }
 
-        protected SqlTimeoutStorage GetTimeoutStorage(int batchSize = 1024)
+        protected SqlTimeoutsSource GetTimeoutStorage(int batchSize = 1024)
         {
-            var storage = new SqlTimeoutStorage(connectionString, new MsSqlServer(), batchSize);
+            var storage = new SqlTimeoutsSource(connectionString, new MsSqlServer(), batchSize);
             storage.TryLoadOngoingMigration().GetAwaiter().GetResult();
             return storage;
         }

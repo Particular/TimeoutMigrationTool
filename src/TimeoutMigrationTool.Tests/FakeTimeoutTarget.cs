@@ -4,7 +4,7 @@ namespace TimeoutMigrationTool.Tests
     using System.Threading.Tasks;
     using Particular.TimeoutMigrationTool;
 
-    public class FakeTransportTimeoutCreator : ICreateTransportTimeouts
+    public class FakeTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTarget
     {
         private List<string> problemsToReturn;
         public bool BatchWasStaged { get; private set; }
@@ -12,20 +12,20 @@ namespace TimeoutMigrationTool.Tests
         public List<int> BatchesCompleted { get; } = new List<int>();
         public bool EndpointWasVerified { get; private set; } = false;
 
-        public Task<int> StageBatch(IReadOnlyList<TimeoutData> timeouts)
+        public ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber)
         {
             BatchWasStaged = true;
             TimeoutsStaged.AddRange(timeouts);
-            return Task.FromResult(TimeoutsStaged.Count);
+            return new ValueTask<int>(TimeoutsStaged.Count);
         }
 
-        public Task<int> CompleteBatch(int number)
+        public ValueTask<int> CompleteBatch(int batchNumber)
         {
-            BatchesCompleted.Add(number);
-            return Task.FromResult(BatchesCompleted.Count);
+            BatchesCompleted.Add(batchNumber);
+            return new ValueTask<int>(BatchesCompleted.Count);
         }
 
-        public Task<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
+        public ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
         {
             EndpointWasVerified = true;
             var problems = problemsToReturn ?? new List<string>();
@@ -34,7 +34,17 @@ namespace TimeoutMigrationTool.Tests
             {
                 Problems = problems
             };
-            return Task.FromResult(result);
+            return new ValueTask<MigrationCheckResult>(result);
+        }
+
+        public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName)
+        {
+            return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return new ValueTask();
         }
 
         public void SetupProblemsToReturn(List<string> problems)
