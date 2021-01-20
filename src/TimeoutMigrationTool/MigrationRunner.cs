@@ -28,7 +28,7 @@ namespace Particular.TimeoutMigrationTool
             {
                 GuardAgainstInvalidState(runParameters, toolState);
                 logger.LogInformation($"Existing migration for {toolState.EndpointName} found. Resuming...");
-                await Run(toolState, new EndpointInfo { EndpointName = toolState.EndpointName });
+                await Run(toolState);
 
                 if (!endpointFilter.IncludeAllEndpoints)
                 {
@@ -100,25 +100,25 @@ namespace Particular.TimeoutMigrationTool
 
                 logger.LogInformation($"Starting migration for {endpointToMigrate.EndpointName}({endpointToMigrate.NrOfTimeouts} timeout(s) between {endpointToMigrate.ShortestTimeout} - {endpointToMigrate.LongestTimeout})");
 
-                await Run(cutOffTime, endpointToMigrate, runParameters);
+                await Run(cutOffTime, endpointToMigrate.EndpointName, runParameters);
             }
 
             watch.Stop();
             logger.LogInformation($"Migration completed successfully in {watch.Elapsed.ToString("hh\\:mm\\:ss")}.");
         }
 
-        async Task Run(DateTime cutOffTime, EndpointInfo endpoint, IDictionary<string, string> runParameters)
+        async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
-            var toolState = await timeoutsSource.Prepare(cutOffTime, endpoint.EndpointName, runParameters);
+            var toolState = await timeoutsSource.Prepare(cutOffTime, endpointName, runParameters);
             logger.LogInformation("Storage has been prepared for migration.");
-            await Run(toolState, endpoint);
+            await Run(toolState);
         }
 
-        async Task Run(IToolState toolState, EndpointInfo endpoint)
+        async Task Run(IToolState toolState)
         {
             BatchInfo batch;
 
-            await using var endpointTarget = await timeoutsTarget.Migrate(endpoint);
+            await using var endpointTarget = await timeoutsTarget.Migrate(toolState.EndpointName);
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {

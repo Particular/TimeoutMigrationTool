@@ -8,7 +8,7 @@
     {
         ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint);
 
-        ValueTask<IEndpointTarget> Migrate(EndpointInfo endpoint);
+        ValueTask<IEndpointTarget> Migrate(string endpointName);
 
         public interface IEndpointTarget : IAsyncDisposable
         {

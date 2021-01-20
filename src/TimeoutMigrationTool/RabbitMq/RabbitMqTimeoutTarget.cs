@@ -24,7 +24,7 @@
             return await VerifyEndpointIsReadyForNativeTimeouts(endpoint);
         }
 
-        public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(EndpointInfo endpoint)
+        public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName)
         {
             return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
         }

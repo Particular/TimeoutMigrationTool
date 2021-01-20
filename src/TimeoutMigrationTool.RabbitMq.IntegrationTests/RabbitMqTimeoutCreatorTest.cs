@@ -143,7 +143,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
             var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
 
-            await using var endpointTarget = await sut.Migrate(new EndpointInfo { EndpointName = "FakeEndpoint" });
+            await using var endpointTarget = await sut.Migrate("FakeEndpoint");
 
             await endpointTarget.StageBatch(new List<TimeoutData>
             {
