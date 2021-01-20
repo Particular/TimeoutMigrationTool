@@ -12,15 +12,16 @@ namespace Particular.TimeoutMigrationTool
     using SqlP;
 
     // usage:
-    //  migrate-timeouts preview ravendb|sqlp --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts migrate ravendb|sqlp --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts abort ravendb|sqlp --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts preview ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts migrate ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
     //  abort could also be
-    //  migrate-timeouts abort ravendb|sqlp --src-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options  [--cutoff-time] [--endpoint-filter]
 
     // Examples:
     //  migrate-timeouts preview ravendb --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 rabbitmq --target amqp://guest:guest@localhost:5672
     //  migrate-timeouts preview sqlp --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --dialect MsSqlServer rabbitmq --target amqp://guest:guest@localhost:5672
+    //  migrate-timeouts preview nhb --nhbSource \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --nhbDialect MsSqlDatabaseDialect rabbitmq --target amqp://guest:guest@localhost:5672
     internal class Program
     {
         private static int Main(string[] args)
@@ -439,6 +440,32 @@ namespace Particular.TimeoutMigrationTool
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var runner = new AbortRunner(logger, timeoutStorage);
+
+                            await runner.Run();
+                        });
+                    });
+                });
+
+                abortCommand.Command("nhb", nhbCommand =>
+                {
+                    sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
+
+                    nhbCommand.Options.Add(sourceNHibernateConnectionString);
+                    nhbCommand.Options.Add(sourceNHibernateDialect);
+
+                    nhbCommand.Command("rabbitmq", nhbToRabbitCommand =>
+                    {
+                        nhbToRabbitCommand.Options.Add(targetRabbitConnectionString);
+
+                        nhbToRabbitCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var timeoutStorage = new NHibernateTimeoutSource(sourceConnectionString, 1024, dialect);
                             var runner = new AbortRunner(logger, timeoutStorage);
 
                             await runner.Run();
