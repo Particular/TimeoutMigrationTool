@@ -14,6 +14,12 @@
     [TestFixture]
     class SqlPToRabbitMqEndToEnd : SqlPAcceptanceTest
     {
+        [SetUp]
+        public void Setup()
+        {
+            rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
+        }
+
         [Test]
         public async Task Can_migrate_timeouts()
         {
@@ -83,6 +89,8 @@
                 }
             }
         }
+
+        private string rabbitUrl;
 
         public class SourceTestContext : ScenarioContext
         {

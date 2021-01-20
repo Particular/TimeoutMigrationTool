@@ -36,7 +36,6 @@
             databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
 
             connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-            rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
 
             MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
 
@@ -99,7 +98,6 @@
 
         protected string databaseName;
         protected string connectionString;
-        protected string rabbitUrl;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
