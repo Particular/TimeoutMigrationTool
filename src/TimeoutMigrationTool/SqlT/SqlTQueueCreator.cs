@@ -6,7 +6,7 @@
 
     public static class SqlTQueueCreator
     {
-        public static async Task CreateStagingQueue(SqlConnection connection, string tableName, string schema, string databaseName)
+        public static async Task CreateStagingQueue(SqlConnection connection, string tableName, string schema, string databaseName, bool preview = false)
         {
             await using var transaction = connection.BeginTransaction();
             var sql = string.Format(SqlConstants.CreateDelayedMessageStoreText, tableName, schema, databaseName);
@@ -15,7 +15,15 @@
                 CommandType = CommandType.Text
             };
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-            await transaction.CommitAsync().ConfigureAwait(false);
+
+            if (preview)
+            {
+                await transaction.RollbackAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                await transaction.CommitAsync().ConfigureAwait(false);
+            }
         }
 
         public static async Task<int> MoveFromTo(SqlConnection connection, string fromTable, string fromSchema, string toTable, string toSchema, string databaseName)

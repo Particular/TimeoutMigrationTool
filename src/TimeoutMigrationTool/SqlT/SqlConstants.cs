@@ -2,6 +2,13 @@
 {
     static class SqlConstants
     {
+        public static string DelayedTableName(string endpointName, string suffix = "Delayed")
+        {
+            return $"{endpointName}.{suffix}";
+        }
+
+        public const string TimeoutMigrationStagingTable = "timeoutmigrationtoolstagingtable";
+
         public static readonly string DelayedMessageStoreExistsText = @"
    SELECT COUNT(*)
    FROM INFORMATION_SCHEMA.TABLES

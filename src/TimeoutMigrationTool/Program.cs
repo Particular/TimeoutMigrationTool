@@ -230,8 +230,8 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
-                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString, schema ?? "dbo");
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var transportAdapter = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
                             await runner.Run();
@@ -391,9 +391,9 @@
                             runParameters.Add(ApplicationOptions.SqlTTargetConnectionString,
                                 targetConnectionString);
 
-                            var timeoutStorage = new SqlTimeoutStorage(sourceConnectionString, dialect, 1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
 
-                            var transportAdapter = new SqlTTimeoutCreator(logger, targetConnectionString, schema ?? "dbo");
+                            var transportAdapter = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
