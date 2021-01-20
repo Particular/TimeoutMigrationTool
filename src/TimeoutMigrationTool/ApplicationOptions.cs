@@ -14,5 +14,7 @@ namespace Particular.TimeoutMigrationTool
         public const string AbortMigration = "abort";
         public const string EndpointFilter = "endpoint";
         public const string AllEndpoints = "allEndpoints";
+        public const string NHibernateSourceConnectionString = "nhbSource";
+        public const string NHibernateSourceDialect = "nhbDialect";
     }
 }

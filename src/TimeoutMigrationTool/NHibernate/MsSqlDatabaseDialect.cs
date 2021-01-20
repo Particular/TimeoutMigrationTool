@@ -4,6 +4,8 @@
 
     public class MsSqlDatabaseDialect : DatabaseDialect
     {
+        public static string Name => nameof(MsSqlDatabaseDialect);
+
         public override void ConfigureDriverAndDialect(Configuration configuration)
         {
             var properties = configuration.Properties;

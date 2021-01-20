@@ -1,4 +1,6 @@
-﻿namespace Particular.TimeoutMigrationTool
+﻿using Particular.TimeoutMigrationTool.Nhb;
+
+namespace Particular.TimeoutMigrationTool
 {
     using System;
     using System.Collections.Generic;
@@ -68,6 +70,20 @@
                 new CommandOption($"-d|--{ApplicationOptions.SqlSourceDialect}", CommandOptionType.SingleValue)
                 {
                     Description = "The sql dialect to use",
+                    Inherited = true
+                };
+
+            var sourceNHibernateConnectionString = new CommandOption($"--{ApplicationOptions.NHibernateSourceConnectionString}",
+                CommandOptionType.SingleValue)
+            {
+                Description = "Connection string for NHibernate source storage",
+                Inherited = true
+            };
+
+            var sourceNHibernateDialect =
+                new CommandOption($"--{ApplicationOptions.NHibernateSourceDialect}", CommandOptionType.SingleValue)
+                {
+                    Description = "The sql dialect to use with NHibernate source",
                     Inherited = true
                 };
 
@@ -185,6 +201,35 @@
                         });
                     });
                 });
+
+                previewCommand.Command("nhb", nHibernateCommand =>
+                {
+                    sourceNHibernateDialect.Validators.Add(new NHibernateDialectValidator());
+
+                    nHibernateCommand.Options.Add(sourceNHibernateConnectionString);
+                    nHibernateCommand.Options.Add(sourceNHibernateDialect);
+
+                    nHibernateCommand.Command("rabbitmq", nHibernateToRabbitCommand =>
+                    {
+                        nHibernateToRabbitCommand.Options.Add(targetRabbitConnectionString);
+
+                        nHibernateToRabbitCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetRabbitConnectionString.Value();
+
+                            var timeoutStorage = new NHibernateTimeoutSource(sourceConnectionString, 1024, dialect);
+                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
+
+                            await runner.Run();
+                        });
+                    });
+                });
             });
 
             app.Command("migrate", migrateCommand =>
@@ -278,6 +323,44 @@
                                 targetConnectionString);
 
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+
+                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
+                                transportAdapter);
+                        });
+                    });
+                });
+
+                migrateCommand.Command("nhb", nHibernateCommand =>
+                {
+                    sourceNHibernateDialect.Validators.Add(new NHibernateDialectValidator());
+
+                    nHibernateCommand.Options.Add(sourceNHibernateConnectionString);
+                    nHibernateCommand.Options.Add(sourceNHibernateDialect);
+
+                    nHibernateCommand.Command("rabbitmq", nHibernateToRabbitCommand =>
+                    {
+                        nHibernateToRabbitCommand.Options.Add(targetRabbitConnectionString);
+
+                        nHibernateToRabbitCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+                            var targetConnectionString = targetRabbitConnectionString.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.NHibernateSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.NHibernateSourceDialect, sourceNHibernateDialect.Value());
+
+                            runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString,
+                                targetConnectionString);
+
+                            var timeoutStorage = new NHibernateTimeoutSource(sourceConnectionString, 1024, dialect);
 
                             var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);

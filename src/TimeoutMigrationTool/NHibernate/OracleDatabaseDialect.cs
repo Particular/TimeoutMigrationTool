@@ -5,6 +5,8 @@ namespace Particular.TimeoutMigrationTool.Nhb
 
     public class OracleDatabaseDialect : DatabaseDialect
     {
+        public static string Name => nameof(OracleDatabaseDialect);
+
         public override void ConfigureDriverAndDialect(Configuration configuration)
         {
             var properties = configuration.Properties;
