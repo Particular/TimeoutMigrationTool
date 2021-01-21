@@ -6,7 +6,7 @@
 
 Run a RavenDb Docker container for v4:
 
-`docker run -d -p 8080:8080 -p 38888:38888 ravendb/ravendb`
+`docker run -d -p 8080:8080 -p 38888:38888 ravendb/ravendb:4.2-ubuntu-latest`
 
 Run a local RavenDb server instance for v3.5 on port 8383.
 
