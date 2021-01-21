@@ -14,7 +14,7 @@
     public abstract class SqlPAcceptanceTest
     {
         [SetUp]
-        public Task SetUp()
+        public async Task SetUp()
         {
             NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention = t =>
             {
@@ -37,9 +37,13 @@
 
             connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
 
-            MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
+            await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
+        }
 
-            return Task.CompletedTask;
+        [TearDown]
+        public async Task TearDown()
+        {
+            await MsSqlMicrosoftDataClientHelper.RemoveDbIfExists( connectionString);
         }
 
         protected void SetupPersitence(EndpointConfiguration endpointConfiguration)

@@ -18,13 +18,13 @@
         private string sqlConnectionString;
 
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
             databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
 
             sqlConnectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
 
-            MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
+            await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
         }
 
         [Test]
