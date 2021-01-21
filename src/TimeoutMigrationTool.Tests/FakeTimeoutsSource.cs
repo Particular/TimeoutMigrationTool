@@ -15,7 +15,7 @@ namespace TimeoutMigrationTool.Tests
         public bool BatchWasRead { get; private set; }
         public bool BatchWasCompleted { get; private set; }
         public bool BatchWasStaged { get; private set; }
-        public bool ToolStateWasAborted { get; private set; }
+        public bool MigrationWasAborted { get; private set; }
         public bool EndpointsWereListed { get; private set; }
         public bool ToolStateWasCreated { get; private set; }
         public bool ToolStateMovedToCompleted { get; private set; }
@@ -63,7 +63,7 @@ namespace TimeoutMigrationTool.Tests
 
         public Task Abort()
         {
-            ToolStateWasAborted = true;
+            MigrationWasAborted = true;
             return Task.CompletedTask;
         }
 

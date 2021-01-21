@@ -6,8 +6,9 @@
 
     public class AbortRunner
     {
-        public AbortRunner(ILogger logger, ITimeoutsSource timeoutsSource)
+        public AbortRunner(ILogger logger, ITimeoutsSource timeoutsSource, ITimeoutsTarget timeoutsTarget)
         {
+            this.timeoutsTarget = timeoutsTarget;
             this.logger = logger;
             this.timeoutsSource = timeoutsSource;
         }
@@ -37,5 +38,6 @@
 
         readonly ILogger logger;
         readonly ITimeoutsSource timeoutsSource;
+        private readonly ITimeoutsTarget timeoutsTarget;
     }
 }

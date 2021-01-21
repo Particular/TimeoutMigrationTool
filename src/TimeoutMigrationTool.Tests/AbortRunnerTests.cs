@@ -14,9 +14,11 @@ namespace TimeoutMigrationTool.Tests
         public void Setup()
         {
             timeoutsSource = new FakeTimeoutsSource();
+            timeoutsTarget = new FakeTimeoutTarget();
+
             logger = new ConsoleLogger(false);
 
-            runner = new AbortRunner(logger, timeoutsSource);
+            runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
 
             endpoints = new List<EndpointInfo>
             {
@@ -50,7 +52,8 @@ namespace TimeoutMigrationTool.Tests
 
             await runner.Run();
 
-            Assert.That(timeoutsSource.ToolStateWasAborted, Is.True);
+            Assert.That(timeoutsSource.MigrationWasAborted, Is.True);
+            Assert.That(timeoutsTarget.MigrationWasAborted, Is.True);
         }
 
         static List<BatchInfo> GetBatches()
@@ -63,6 +66,7 @@ namespace TimeoutMigrationTool.Tests
         }
 
         FakeTimeoutsSource timeoutsSource;
+        FakeTimeoutTarget timeoutsTarget;
         AbortRunner runner;
         List<EndpointInfo> endpoints;
         string testEndpoint;
