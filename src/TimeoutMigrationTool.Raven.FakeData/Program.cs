@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Net;
     using System.Net.Http;
     using System.Text;
     using System.Threading.Tasks;
@@ -21,19 +22,22 @@
 
             var createDbUrl = ravenVersion == RavenDbVersion.Four ? $"{serverName}/admin/databases?name={databaseName}" : $"{serverName}/admin/databases/{databaseName}";
             var httpContent = BuildHttpContentForDbCreation(ravenVersion, databaseName);
-            
+
             var dbCreationResult = await httpClient.PutAsync(createDbUrl, httpContent);
-            if (!dbCreationResult.IsSuccessStatusCode)
+            if (dbCreationResult.StatusCode != HttpStatusCode.Conflict && !dbCreationResult.IsSuccessStatusCode)
             {
                 throw new Exception($"Something went wrong while creating the database. Error code {dbCreationResult.StatusCode}");
             }
+
+            Console.WriteLine("Creating the timeouts...");
 
             var timeoutsPrefix = "TimeoutDatas";
             var nrOfBatches = Math.Ceiling(nrOfTimeoutsToInsert / (decimal)RavenConstants.DefaultPagingSize);
             var timeoutIdCounter = await InitTimeouts(nrOfBatches, serverName, databaseName, nrOfTimeoutsToInsert, timeoutsPrefix, ravenVersion);
 
+            Console.WriteLine();
             Console.WriteLine($"{timeoutIdCounter} timeouts were created");
-            Console.WriteLine("Creating the index....");
+            Console.WriteLine("Creating the index...");
             await CreateIndex(serverName, databaseName, ravenVersion);
             Console.WriteLine("Index created.");
         }
@@ -43,7 +47,7 @@
             var timeoutIdCounter = 0;
 
             // batch inserts per paging size
-            for (var i = 1; i <= nrOfBatches; i++) 
+            for (var i = 1; i <= nrOfBatches; i++)
             {
                 var commands = new List<object>();
                 var bulkInsertUrl = $"{serverName}/databases/{databaseName}/bulk_docs";
@@ -73,6 +77,7 @@
                 var serializeObject = JsonConvert.SerializeObject(request);
                 var result = await httpClient.PostAsync(bulkInsertUrl, new StringContent(serializeObject, Encoding.UTF8, "application/json"));
                 result.EnsureSuccessStatusCode();
+                Console.Write(".");
             }
 
             return timeoutIdCounter;
@@ -115,7 +120,10 @@
                 SagaId = Guid.NewGuid(),
                 OwningTimeoutManager = "EndpointA",
                 Time = DateTime.UtcNow.AddDays(daysToTrigger),
-                Headers = new Dictionary<string, string>(),
+                Headers = new Dictionary<string, string>
+                {
+                    { "NServiceBus.MessageId", Guid.NewGuid().ToString() }
+                },
                 State = Encoding.ASCII.GetBytes("This is my state")
             };
             return timeoutData;
