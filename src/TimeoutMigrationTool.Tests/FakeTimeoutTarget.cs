@@ -42,6 +42,11 @@ namespace TimeoutMigrationTool.Tests
             return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
         }
 
+        public ValueTask Abort(string endpointName)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public ValueTask DisposeAsync()
         {
             return new ValueTask();

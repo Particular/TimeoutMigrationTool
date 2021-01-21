@@ -581,6 +581,24 @@
                             await runner.Run();
                         });
                     });
+
+                    sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
+                    {
+                        sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
+
+                        sqlpToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var runner = new AbortRunner(logger, timeoutStorage);
+
+                            await runner.Run();
+                        });
+                    });
                 });
 
                 abortCommand.Command("nhb", nhbCommand =>

@@ -23,5 +23,12 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         {
             model.QueuePurge(StagingQueueName);
         }
+
+        public static void DeleteStagingInfrastructure(IModel model)
+        {
+            model.QueueUnbind(StagingQueueName, StagingExchangeName, string.Empty);
+            model.ExchangeDelete(StagingQueueName, false);
+            model.QueueDelete(StagingQueueName, false, false);
+        }
     }
 }

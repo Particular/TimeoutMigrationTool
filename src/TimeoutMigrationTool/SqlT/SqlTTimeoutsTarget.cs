@@ -24,6 +24,15 @@
             return new SqlTEndpointTarget(logger, connection, endpointName, schema);
         }
 
+        public async ValueTask Abort(string endpointName)
+        {
+            await EnsureConnectionOpen();
+
+            // kill the staging table
+
+            await connection.CloseAsync();
+        }
+
         private async ValueTask EnsureMigrationTableExists()
         {
             try
