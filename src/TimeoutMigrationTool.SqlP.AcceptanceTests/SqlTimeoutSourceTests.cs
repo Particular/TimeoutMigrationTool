@@ -19,7 +19,7 @@
         public async Task Loads_ToolState_For_Existing_Migration()
         {
             await Scenario.Define<Context>()
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -39,7 +39,7 @@
         public async Task Can_prepare_storage_for_migration()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -59,7 +59,7 @@
         public async Task Only_Moves_timeouts_After_migrateTimeoutsWithDeliveryDateLaterThan_date()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -79,7 +79,7 @@
         public async Task Loads_Endpoints_With_Valid_Timeouts()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -99,7 +99,7 @@
         public async Task Loads_Destinations_For_Endpoints_With_Valid_Timeouts()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 1)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(async session =>
                     {
                         var delayedMessage = new StartSagaMessage();
@@ -141,7 +141,7 @@
         public async Task Doesnt_Load_Endpoints_With_Timeouts_outside_the_cutoff_date()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -160,7 +160,7 @@
         public async Task Batches_Completed_Can_Be_Completed()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -190,7 +190,7 @@
         public async Task Can_mark_batch_as_staged()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -218,7 +218,7 @@
         public async Task Timeouts_Split_Can_Be_Read_By_Batch()
         {
             var context = await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -252,7 +252,7 @@
         public async Task Removes_Timeouts_From_Original_TimeoutData_Table()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -274,7 +274,7 @@
         public async Task Restores_Timeouts_To_Original_TimeoutData_Table_When_Aborted()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 10)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -304,7 +304,7 @@
         public async Task Copies_Timeouts_From_Original_TimeoutData_Table_To_New_Table()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 5)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
@@ -324,7 +324,7 @@
         public async Task WhenCompletingMigrationStatusIsSetToCompleted()
         {
             await Scenario.Define<Context>(c => c.NumberOfTimeouts = 5)
-                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
+                .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersistence(ec))
                     .When(session =>
                     {
                         var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};

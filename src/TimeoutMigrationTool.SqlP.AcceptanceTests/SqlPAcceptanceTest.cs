@@ -46,7 +46,7 @@
             await MsSqlMicrosoftDataClientHelper.RemoveDbIfExists( connectionString);
         }
 
-        protected void SetupPersitence(EndpointConfiguration endpointConfiguration)
+        protected void SetupPersistence(EndpointConfiguration endpointConfiguration)
         {
             var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
 
