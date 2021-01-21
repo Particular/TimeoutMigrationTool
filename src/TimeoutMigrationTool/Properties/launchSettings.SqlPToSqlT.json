@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TimeoutMigrationTool": {
+      "commandName": "Project",
+      "commandLineArgs": "migrate --endpoint SqlP_FakeTimeouts sqlp --source \"Server=localhost;Initial Catalog=timeouts;User Id=sa;Password=yourStrong(!)Password;\" --dialect MsSqlServer sqlt --target \"Server=localhost;Initial Catalog=timeoutmigrationtool;User Id=sa;Password=yourStrong(!)Password;\""
+    }
+  }
+}
