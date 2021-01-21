@@ -53,6 +53,8 @@
             var context = await Scenario.Define<TargetTestContext>()
                 .WithEndpoint<SqlTEndpoint>(b => b.CustomConfig(ec =>
                 {
+                    ec.OverrideLocalAddress(sourceEndpoint);
+                    
                     ec.UseTransport<SqlServerTransport>()
                     .ConnectionString(connectionString);
                 })
@@ -63,7 +65,7 @@
                     var timeoutTarget = new SqlTTimeoutsTarget(logger, connectionString, "dbo");
                     var migrationRunner = new MigrationRunner(logger, timeoutSource, timeoutTarget);
 
-                    await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(targetEndpoint), new Dictionary<string, string>());
+                    await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(30));
