@@ -359,6 +359,45 @@
                                 transportAdapter);
                         });
                     });
+
+                    ravenDBCommand.Command("sqlt", ravenDBPToSqlTCommand =>
+                    {
+                        ravenDBPToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDBPToSqlTCommand.Options.Add(targetSqlTSchemaName);
+
+                        ravenDBPToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+                            var forceUseIndex = sourceRavenDbForceUseIndexOption.HasValue();
+
+                            runParameters.Add(ApplicationOptions.RavenServerUrl, serverUrl);
+                            runParameters.Add(ApplicationOptions.RavenDatabaseName, databaseName);
+                            runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
+                            runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.SqlTTargetConnectionString, targetConnectionString);
+
+                            var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
+                                ravenVersion, forceUseIndex);
+                            var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
                 });
 
                 migrateCommand.Command("sqlp", sqlpCommand =>
