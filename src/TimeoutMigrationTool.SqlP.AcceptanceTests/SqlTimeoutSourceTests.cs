@@ -11,7 +11,7 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    class SqlTimeoutStorageTests : SqlPAcceptanceTest
+    class SqlTimeoutSourceTests : SqlPAcceptanceTest
     {
         static string sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint));
 
