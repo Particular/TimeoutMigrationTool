@@ -10,7 +10,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
     using RabbitMQ.Client;
 
     [TestFixture]
-    public class RabbitMqTimeoutCreatorTest
+    public class RabbitMqTimeoutsTargetTests
     {
         string rabbitUrl;
         ConnectionFactory factory;
