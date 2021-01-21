@@ -185,6 +185,35 @@
                             await runner.Run();
                         });
                     });
+
+                    ravenDBCommand.Command("sqlt", ravenDBToSqlTCommand =>
+                    {
+                        ravenDBToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDBToSqlTCommand.Options.Add(targetSqlTSchemaName);
+
+                        ravenDBToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+                            var forceUseIndex = sourceRavenDbForceUseIndexOption.HasValue();
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
+                                ravenVersion, forceUseIndex);
+                            var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+
+                            await runner.Run();
+                        });
+                    });
                 });
 
                 previewCommand.Command("sqlp", sqlpCommand =>
