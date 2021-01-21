@@ -27,10 +27,14 @@
         public async ValueTask Abort(string endpointName)
         {
             await EnsureConnectionOpen();
-
-            // kill the staging table
+            await RemoveMigrationTable();
 
             await connection.CloseAsync();
+        }
+
+        private Task RemoveMigrationTable()
+        {
+            return SqlTQueueCreator.DeleteStagingQueue(connection, SqlConstants.TimeoutMigrationStagingTable, schema, connection.Database);
         }
 
         private async ValueTask EnsureMigrationTableExists()

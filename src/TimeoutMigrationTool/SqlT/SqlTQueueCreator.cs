@@ -26,6 +26,18 @@
             }
         }
 
+        public static async Task DeleteStagingQueue(SqlConnection connection, string tableName, string schema, string databaseName)
+        {
+            await using var transaction = connection.BeginTransaction();
+            var sql = string.Format(SqlConstants.DeleteDelayedMessageStoreText, tableName, schema, databaseName);
+            await using var command = new SqlCommand(sql, connection, transaction)
+            {
+                CommandType = CommandType.Text
+            };
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await transaction.CommitAsync().ConfigureAwait(false);
+        }
+
         public static async Task<int> MoveFromTo(SqlConnection connection, string fromTable, string fromSchema, string toTable, string toSchema, string databaseName)
         {
             await using var transaction = connection.BeginTransaction();
