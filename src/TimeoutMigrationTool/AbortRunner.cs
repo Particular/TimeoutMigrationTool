@@ -33,6 +33,11 @@
 
             await timeoutsSource.Abort();
 
+            if (toolState != null)
+            {
+                await timeoutsTarget.Abort(toolState?.EndpointName);
+            }
+
             logger.LogInformation("Previous migration was successfully aborted. That means that the timeouts hidden away from the TimeoutManager, have been made available again");
         }
 

@@ -20,6 +20,13 @@ namespace TimeoutMigrationTool.Tests
         public bool ToolStateWasCreated { get; private set; }
         public bool ToolStateMovedToCompleted { get; private set; }
 
+        public Func<Task<bool>> CheckIfMigrationIsInProgressFunc { get; set; }
+
+        public FakeTimeoutsSource()
+        {
+            CheckIfMigrationIsInProgressFunc = () => Task.FromResult(existingToolState != null);
+        }
+
         public Task<IToolState> TryLoadOngoingMigration()
         {
             return Task.FromResult<IToolState>(existingToolState);
@@ -99,9 +106,6 @@ namespace TimeoutMigrationTool.Tests
             return Task.CompletedTask;
         }
 
-        public Task<bool> CheckIfAMigrationIsInProgress()
-        {
-            return Task.FromResult(this.existingToolState != null);
-        }
+        public Task<bool> CheckIfAMigrationIsInProgress() => CheckIfMigrationIsInProgressFunc();
     }
 }
