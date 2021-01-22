@@ -64,21 +64,18 @@ CREATE TABLE [{2}].[{1}].[{0}] (
 EXEC sp_releaseapplock @Resource = '{0}_lock'";
 
         public static readonly string DeleteDelayedMessageStoreText = @"
-
-EXEC sp_getapplock @Resource = '{0}_lock', @LockMode = 'Exclusive'
-
-IF EXISTS (
+IF NOT EXISTS (
     SELECT *
     FROM [{2}].sys.objects
     WHERE object_id = OBJECT_ID(N'[{1}].[{0}]')
         AND type in (N'U')
 )
-BEGIN
-    EXEC sp_releaseapplock @Resource = '{0}_lock'
-    RETURN
-END
+RETURN
 
-DELETE TABLE [{2}].[{1}].[{0}]
+EXEC sp_getapplock @Resource = '{0}_lock', @LockMode = 'Exclusive'
+
+DROP TABLE [{2}].[{1}].[{0}]
+
 EXEC sp_releaseapplock @Resource = '{0}_lock'";
 
     }

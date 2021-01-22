@@ -35,7 +35,7 @@ namespace TimeoutMigrationTool.SqlT.IntegrationTests
         }
 
         [Test]
-        public async Task AbleToMigrate_EndpointDelayedDeliveryExists_ReturnsNoProblems()
+        public async Task AbleToMigrate_delayed_delivery_does_exist_should_indicate_no_problems()
         {
             var sut = new SqlTTimeoutsTarget(new TestLoggingAdapter(), connectionString, "dbo");
 
@@ -44,9 +44,6 @@ namespace TimeoutMigrationTool.SqlT.IntegrationTests
             await using var command = connection.CreateCommand();
             command.CommandText = string.Format(@"
 CREATE TABLE [{1}].[{0}] (
-    Headers nvarchar(max) NOT NULL,
-    Body varbinary(max),
-    Due datetime NOT NULL,
     RowVersion bigint IDENTITY(1,1) NOT NULL
 );
 ", $"{ExistingEndpointName}.Delayed", "dbo");
@@ -68,7 +65,7 @@ CREATE TABLE [{1}].[{0}] (
         }
 
         [Test]
-        public async Task AbleToMigrate_DelayedDeliveryDoesNotExist_ReturnsProblems()
+        public async Task AbleToMigrate_delayed_delivery_does_not_exist_should_indicate_problems()
         {
             var sut = new SqlTTimeoutsTarget(new TestLoggingAdapter(), connectionString, "dbo");
 
@@ -94,6 +91,27 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             var result = await sut.AbleToMigrate(info);
 
             Assert.IsFalse(result.CanMigrate);
+        }
+
+        [Test]
+        public async Task Should_delete_staging_queue_when_aborting()
+        {
+            var sut = new SqlTTimeoutsTarget(new TestLoggingAdapter(), connectionString, "dbo");
+            var endpointName = "FakeEndpoint";
+            await using var endpointTarget = await sut.Migrate(endpointName);
+            await sut.Abort(endpointName);
+
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = string.Format(@"
+   SELECT COUNT(*)
+   FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{0}' AND TABLE_CATALOG = '{2}'
+", "timeoutmigrationtoolstagingtable", "dbo", databaseName);
+            var result = await command.ExecuteScalarAsync() as int?;
+
+            Assert.That(Convert.ToBoolean(result), Is.False);
         }
     }
 }
