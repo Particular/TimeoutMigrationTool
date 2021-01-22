@@ -259,7 +259,7 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
                             var transportAdapter = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
@@ -459,7 +459,7 @@
                             runParameters.Add(ApplicationOptions.SqlTTargetConnectionString,
                                 targetConnectionString);
 
-                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
 
                             var transportAdapter = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
@@ -628,7 +628,7 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
 
