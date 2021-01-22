@@ -42,7 +42,6 @@
             }
 
             await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
-            // TODO: Verify options
             using var sqlBulk = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
             {
                 DestinationTableName = SqlConstants.TimeoutMigrationStagingTable,
