@@ -168,11 +168,16 @@ CREATE TABLE [{1}].[{0}] (
 
             await endpointTarget.CompleteBatch(BatchNumber);
 
-            var table = new DataTable();
-            using var da = new SqlDataAdapter(string.Format("SELECT * FROM [{1}].[{0}]", endpointDelayedTableName, "dbo"), connection);
-            da.Fill(table);
+            var endpointDelayedTableDataTable = new DataTable();
+            using var endpointDelayedTableDataAdapter = new SqlDataAdapter(string.Format("SELECT * FROM [{1}].[{0}]", endpointDelayedTableName, "dbo"), connection);
+            endpointDelayedTableDataAdapter.Fill(endpointDelayedTableDataTable);
 
-            Approver.Verify(table.Rows.OfType<DataRow>().SelectMany(r => r.ItemArray.Take(3)));
+            var migrationTableDataTable = new DataTable();
+            using var migrationTableDataAdapter = new SqlDataAdapter(string.Format("SELECT * FROM [{1}].[{0}]", "timeoutmigrationtoolstagingtable", "dbo"), connection);
+            migrationTableDataAdapter.Fill(migrationTableDataTable);
+
+            Approver.Verify(endpointDelayedTableDataTable.Rows.OfType<DataRow>().SelectMany(r => r.ItemArray.Take(3)));
+            Assert.IsEmpty(migrationTableDataTable.Rows);
         }
     }
 }
