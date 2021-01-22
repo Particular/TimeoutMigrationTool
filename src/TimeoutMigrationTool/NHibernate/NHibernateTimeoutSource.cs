@@ -23,7 +23,6 @@ namespace Particular.TimeoutMigrationTool.NHibernate
 
         private ISessionFactory CreateSessionFactory()
         {
-            // todo what about custom schemas?
             var cfg = new Configuration().DataBaseIntegration(x =>
                 {
                     x.ConnectionString = connectionString;
@@ -120,8 +119,6 @@ WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName;");
 
             await deleteTimeoutsThatHaveBeenStagedQuery.ExecuteUpdateAsync();
 
-            // Todo: Make sure this syntax is ANSI-92 compatible and works in oracle, mysql, postgres.
-            // todo what about custom schemas?
             var breakStagedTimeoutsIntoBatchesSqlQuery = session.CreateSQLQuery(databaseDialect.GetSqlTobreakStagedTimeoutsIntoBatches(batchSize));
             await breakStagedTimeoutsIntoBatchesSqlQuery.ExecuteUpdateAsync();
 
@@ -202,7 +199,6 @@ WHERE STE.BatchNumber = :BatchNumber;
             using var session = CreateSessionFactory().OpenSession();
             using var tx = session.BeginTransaction();
 
-            // todo what about custom schemas?
             var copyStagedTimeoutsBackToTimeoutsHqlQuery = session.CreateQuery(@"
 INSERT INTO TimeoutEntity (
     Id,

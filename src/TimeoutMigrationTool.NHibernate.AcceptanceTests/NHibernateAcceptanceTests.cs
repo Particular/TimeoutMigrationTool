@@ -29,8 +29,8 @@
             var cfg = new global::NHibernate.Cfg.Configuration().DataBaseIntegration(x =>
             {
                 x.ConnectionString = connectionString;
-                x.Driver<MicrosoftDataSqlClientDriver>(); // todo this should be changeable for oracle
-                x.Dialect<MsSql2008Dialect>(); // todo this should be changeable for oracle
+                x.Driver<MicrosoftDataSqlClientDriver>();
+                x.Dialect<MsSql2008Dialect>();
                 x.LogSqlInConsole = true;
             });
 
@@ -41,7 +41,6 @@
             HbmMapping mapping = mapper.CompileMappingForAllExplicitlyAddedEntities();
             cfg.AddMapping(mapping);
             cfg.SetProperty("hbm2ddl.auto", "update"); // creates the schema, destroying previous data
-            // Maybe switch to create-drop: drop the schema when the SessionFactory is closed explicitly, typically when the application is stopped. ?
 
             return cfg.BuildSessionFactory();
         }
@@ -59,7 +58,6 @@
 
         async Task DropAllTablesInDatabase()
         {
-
             // Drop schema before tests
             using var connection = new SqlConnection(connectionString);
             using var command = connection.CreateCommand();

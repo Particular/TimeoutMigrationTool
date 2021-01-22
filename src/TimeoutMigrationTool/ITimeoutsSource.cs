@@ -38,9 +38,8 @@
 
         
         /// <summary>
-        /// 
+        /// Aborts the migration and moves all staged timeouts back to the original location
         /// </summary>
-        /// <returns></returns>
         Task Abort();
 
         /// <summary>

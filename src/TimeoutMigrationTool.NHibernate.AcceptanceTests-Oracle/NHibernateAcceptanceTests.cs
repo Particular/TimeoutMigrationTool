@@ -45,7 +45,6 @@
             HbmMapping mapping = mapper.CompileMappingForAllExplicitlyAddedEntities();
             cfg.AddMapping(mapping);
             cfg.SetProperty("hbm2ddl.auto", "update"); // creates the schema, destroying previous data
-            // Maybe switch to create-drop: drop the schema when the SessionFactory is closed explicitly, typically when the application is stopped. ?
 
             return cfg.BuildSessionFactory();
         }
