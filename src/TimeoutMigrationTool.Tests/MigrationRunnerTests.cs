@@ -48,6 +48,7 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutsSource.BatchWasCompleted);
             Assert.That(timeoutsSource.ToolStateMovedToCompleted);
             Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
+            Assert.That(timeoutsTarget.MigrationWasCompleted);
         }
 
         [Test]
@@ -79,6 +80,7 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutsSource.BatchWasCompleted, Is.False);
             Assert.That(timeoutsSource.ToolStateMovedToCompleted, Is.False);
             Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
+            Assert.That(timeoutsTarget.MigrationWasCompleted, Is.False);
         }
 
         [Test]
@@ -104,6 +106,7 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutsSource.BatchWasCompleted);
             Assert.That(timeoutsSource.ToolStateMovedToCompleted);
             Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
+            Assert.That(timeoutsTarget.MigrationWasCompleted);
         }
 
         static List<BatchInfo> GetBatches()

@@ -13,6 +13,8 @@ namespace TimeoutMigrationTool.Tests
         public bool EndpointWasVerified { get; private set; } = false;
 
         public bool MigrationWasAborted { get; private set; }
+        public bool MigrationWasCompleted { get; private set; }
+
 
         public ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber)
         {
@@ -52,7 +54,8 @@ namespace TimeoutMigrationTool.Tests
 
         public ValueTask Complete(string endpointName)
         {
-            throw new System.NotImplementedException();
+            MigrationWasCompleted = true;
+            return new ValueTask();
         }
 
         public ValueTask DisposeAsync()
