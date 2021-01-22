@@ -10,6 +10,7 @@
 
         ValueTask<IEndpointTarget> Migrate(string endpointName);
         ValueTask Abort(string endpointName);
+        ValueTask Complete(string endpointName);
 
         public interface IEndpointTarget : IAsyncDisposable
         {

@@ -32,6 +32,30 @@
             await connection.CloseAsync();
         }
 
+        public async ValueTask Complete(string endpointName)
+        {
+            await EnsureConnectionOpen();
+            await EnsureMigrationTableIsEmpty();
+            await RemoveMigrationTable();
+
+            await connection.CloseAsync();
+        }
+
+        private async Task EnsureMigrationTableIsEmpty()
+        {
+            var databaseName = connection.Database;
+            var sql = string.Format(SqlConstants.SelectAnyFromMigrationTable, SqlConstants.TimeoutMigrationStagingTable, schema, databaseName);
+            await using var command = new SqlCommand(sql, connection)
+            {
+                CommandType = CommandType.Text
+            };
+            var result = await command.ExecuteScalarAsync().ConfigureAwait(false) as int?;
+            if (result > 0)
+            {
+                throw new Exception($"Unable to complete migration as there are still records available in the staging table. Found {result} records");
+            }
+        }
+
         private Task RemoveMigrationTable()
         {
             return SqlTQueueCreator.DeleteStagingQueue(connection, SqlConstants.TimeoutMigrationStagingTable, schema, connection.Database);

@@ -32,7 +32,7 @@
                     }
 
                     model.WaitForConfirmsOrDie(TimeSpan.FromSeconds(30));
-                    messageCount = Convert.ToInt32(QueueCreator.GetStatingQueueMessageLength(model));
+                    messageCount = Convert.ToInt32(QueueCreator.GetStagingQueueMessageLength(model));
                 }
             }
 
@@ -41,7 +41,7 @@
 
         void PurgueQueueIfNotEmpty(IModel model)
         {
-            var statingQueueMessageLength = QueueCreator.GetStatingQueueMessageLength(model);
+            var statingQueueMessageLength = QueueCreator.GetStagingQueueMessageLength(model);
             if (statingQueueMessageLength > 0)
             {
                 logger.LogWarning("Purging staging queue - staging queue contains messages.");

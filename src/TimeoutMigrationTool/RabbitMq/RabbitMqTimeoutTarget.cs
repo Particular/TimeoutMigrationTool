@@ -33,6 +33,25 @@
             return new ValueTask();
         }
 
+        public ValueTask Complete(string endpointName)
+        {
+            EnsureStagingQueueIsEmpty();
+            DeleteStagingQueue();
+            return new ValueTask();
+        }
+
+        private void EnsureStagingQueueIsEmpty()
+        {
+            using var connection = factory.CreateConnection();
+            using var model = connection.CreateModel();
+            var stagingQueueLength = QueueCreator.GetStagingQueueMessageLength(model);
+            if (stagingQueueLength > 0)
+            {
+                throw new Exception(
+                    $"Unable to complete migration as there are still messages available in the staging queue. Found {stagingQueueLength} messages.");
+            }
+        }
+
         public async ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber)
         {
             logger.LogDebug($"Writing {timeouts.Count} timeout to queue {QueueCreator.StagingQueueName}");

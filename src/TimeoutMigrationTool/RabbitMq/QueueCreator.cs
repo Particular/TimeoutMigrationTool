@@ -14,7 +14,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             model.QueueBind(StagingQueueName, StagingExchangeName, string.Empty);
         }
 
-        public static uint GetStatingQueueMessageLength(IModel model)
+        public static uint GetStagingQueueMessageLength(IModel model)
         {
             return model.QueueDeclarePassive(StagingQueueName).MessageCount;
         }

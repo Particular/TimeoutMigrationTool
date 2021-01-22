@@ -24,6 +24,10 @@ INTO [{4}].[{3}].[{2}];
 SELECT @@ROWCOUNT;
 ";
 
+        public static readonly string SelectAnyFromMigrationTable = @"
+ SELECT COUNT(*) FROM [{2}].[{1}].[{0}];
+";
+
         public static readonly string TruncateTableText = @"
 TRUNCATE TABLE [{2}].[{1}].[{0}];
 ";

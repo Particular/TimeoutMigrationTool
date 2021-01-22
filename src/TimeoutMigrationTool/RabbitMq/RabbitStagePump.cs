@@ -51,7 +51,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             channel = connection.CreateModel();
 
             channel.ConfirmSelect();
-            messageCount = QueueCreator.GetStatingQueueMessageLength(channel);
+            messageCount = QueueCreator.GetStagingQueueMessageLength(channel);
 
             logger.LogDebug($"Pushing {messageCount} to the native timeout structure");
             var prefetchCount = (long)maxConcurrency * prefetchMultiplier;
@@ -214,7 +214,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 logger.LogError("The migration was cancelled due to error when completing the batch.");
             }
 
-            if (!messageProcessing.IsCancellationRequested && QueueCreator.GetStatingQueueMessageLength(consumer.Model) > 0)
+            if (!messageProcessing.IsCancellationRequested && QueueCreator.GetStagingQueueMessageLength(consumer.Model) > 0)
             {
                 throw new InvalidOperationException("Staging queue is not empty after finishing CompleteBatch");
             }
