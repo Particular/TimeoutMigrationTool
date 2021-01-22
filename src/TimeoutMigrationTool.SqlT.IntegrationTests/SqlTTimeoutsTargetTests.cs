@@ -2,9 +2,12 @@ namespace TimeoutMigrationTool.SqlT.IntegrationTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Data.SqlClient;
     using NUnit.Framework;
+    using Particular.Approvals;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.SqlT;
     using SqlP.AcceptanceTests;
@@ -112,6 +115,64 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             var result = await command.ExecuteScalarAsync() as int?;
 
             Assert.That(Convert.ToBoolean(result), Is.False);
+        }
+
+        [Test]
+        public async Task Should_migrate_into_delayed_table()
+        {
+            var endpointDelayedTableName = $"{ExistingEndpointName}.Delayed";
+
+            var sut = new SqlTTimeoutsTarget(new TestLoggingAdapter(), connectionString, "dbo");
+
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+
+            command.CommandText = string.Format(@"
+CREATE TABLE [{1}].[{0}] (
+    Headers nvarchar(max) NOT NULL,
+    Body varbinary(max),
+    Due datetime NOT NULL,
+    RowVersion bigint IDENTITY(1,1) NOT NULL
+);
+", endpointDelayedTableName, "dbo");
+            await command.ExecuteNonQueryAsync();
+
+            const int BatchNumber = 2;
+            await using var endpointTarget = await sut.Migrate(ExistingEndpointName);
+            await endpointTarget.StageBatch(new List<TimeoutData>
+            {
+                new TimeoutData
+                {
+                    Id = "SomeID",
+                    Headers = new Dictionary<string, string>
+                    {
+                        { "NServiceBus.MessageId", "SomeMessageId" }
+                    },
+                    Destination = "SomeDestination",
+                    State = new byte[2],
+                    Time = new DateTime(2021, 12, 12, 12, 12, 12, DateTimeKind.Utc)
+                },
+                new TimeoutData
+                {
+                    Id = "SomeOtherId",
+                    Headers = new Dictionary<string, string>
+                    {
+                        { "NServiceBus.MessageId", "SomeOtherMessageId" }
+                    },
+                    Destination = "SomeOtherDestination",
+                    State = new byte[2],
+                    Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
+                },
+            }, BatchNumber);
+
+            await endpointTarget.CompleteBatch(BatchNumber);
+
+            var table = new DataTable();
+            using var da = new SqlDataAdapter(string.Format("SELECT * FROM [{1}].[{0}]", endpointDelayedTableName, "dbo"), connection);
+            da.Fill(table);
+
+            Approver.Verify(table.Rows.OfType<DataRow>().SelectMany(r => r.ItemArray.Take(3)));
         }
     }
 }

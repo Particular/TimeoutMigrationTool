@@ -1,0 +1,8 @@
+[
+  "{\"NServiceBus.MessageId\":\"SomeMessageId\"}",
+  "AAA=",
+  "2021-12-12T12:12:12",
+  "{\"NServiceBus.MessageId\":\"SomeOtherMessageId\"}",
+  "AAA=",
+  "2021-12-12T12:13:13"
+]
