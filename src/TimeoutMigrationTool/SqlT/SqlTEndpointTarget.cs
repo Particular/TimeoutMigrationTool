@@ -54,7 +54,7 @@
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Improve");
+                logger.LogError(e, $"Unable to bulk copy batch '{batchNumber}' to the staging table. Exception occured: {e.Message}");
                 return 0;
             }
             finally

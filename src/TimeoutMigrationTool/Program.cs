@@ -511,7 +511,6 @@
 
             app.Command("abort", abortCommand =>
             {
-                // TODO: we might not need the target given that we don't use it, we just use the source to cleanup
                 abortCommand.Description = "Aborts currently ongoing migration and restores unmigrated timeouts.";
                 abortCommand.OnExecute(() =>
                 {
