@@ -57,11 +57,6 @@ CREATE TABLE [{2}].[{1}].[{0}] (
     RowVersion bigint IDENTITY(1,1) NOT NULL
 );
 
-CREATE NONCLUSTERED INDEX [Index_Due] ON {0}
-(
-    [Due]
-)
-
 EXEC sp_releaseapplock @Resource = '{0}_lock'";
 
         public static readonly string DeleteDelayedMessageStoreText = @"
