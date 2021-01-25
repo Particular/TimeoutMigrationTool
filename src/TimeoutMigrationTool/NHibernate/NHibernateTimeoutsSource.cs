@@ -46,12 +46,11 @@ namespace Particular.TimeoutMigrationTool.NHibernate
         {
             using var session = CreateSessionFactory().OpenSession();
 
-            var migrations = (await session.QueryOver<MigrationsEntity>()
-                                    .Where(migration => migration.Status == MigrationStatus.StoragePrepared)
-                                    .ListAsync()
-                             ).FirstOrDefault();
+            var migration = await session.QueryOver<MigrationsEntity>()
+                .Where(m => m.Status == MigrationStatus.StoragePrepared)
+                .SingleOrDefaultAsync();
 
-            if (migrations == null)
+            if (migration == null)
             {
                 return null;
             }
@@ -71,7 +70,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
                 return stagedTimeoutEntities.Select(x => new BatchInfo((int) x[0], (BatchState) x[1], (int) x[2]))
                     .FirstOrDefault();
             };
-            return new NHibernateToolState(getNextBatch, migrations.MigrationRunId, JsonConvert.DeserializeObject<Dictionary<string, string>>(migrations.RunParameters), migrations.EndpointName, migrations.NumberOfBatches);
+            return new NHibernateToolState(getNextBatch, migration.MigrationRunId, JsonConvert.DeserializeObject<Dictionary<string, string>>(migration.RunParameters), migration.EndpointName, migration.NumberOfBatches);
         }
 
         public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
