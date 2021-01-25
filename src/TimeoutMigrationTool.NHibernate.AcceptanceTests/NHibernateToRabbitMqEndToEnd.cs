@@ -1,6 +1,5 @@
 ﻿namespace TimeoutMigrationTool.NHibernate.AcceptanceTests
 {
-    using Microsoft.Data.SqlClient;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
     using NUnit.Framework;
@@ -8,11 +7,8 @@
     using Particular.TimeoutMigrationTool.NHibernate;
     using Particular.TimeoutMigrationTool.RabbitMq;
     using System;
-    using System.Linq;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using System.Runtime.Serialization.Formatters.Binary;
-    using System.IO;
     using System.Text;
 
     [TestFixture]
@@ -23,14 +19,17 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
+            var sourceEndpoint = "SomeRandomEndpointName";
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RabbitMqEndpoint));
+
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
                 using (var testTx = testSession.BeginTransaction())
                 {
                     await testSession.SaveAsync(new TimeoutEntity
                     {
-                        Endpoint = "NewRabbitMqEndpoint",
-                        Destination = "NewRabbitMqEndpoint",
+                        Endpoint = sourceEndpoint,
+                        Destination = targetEndpoint,
                         SagaId = Guid.NewGuid(),
                         Headers = "{\"NServiceBus.EnclosedMessageTypes\": \"TimeoutMigrationTool.NHibernate.AcceptanceTests.NHibernateToRabbitMqEndToEnd+DelayedMessage\"}",
                         State = Encoding.UTF8.GetBytes("<DelayedMessage></DelayedMessage>"),
@@ -41,10 +40,8 @@
                 }
             }
 
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
-
             var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
+                .WithEndpoint<RabbitMqEndpoint>(b => b.CustomConfig(ec =>
                 {
                     ec.UseTransport<RabbitMQTransport>()
                     .ConnectionString(rabbitUrl);
@@ -52,11 +49,11 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new NHibernateTimeoutsSource(connectionString, 1024, DatabaseDialect);
-                    var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl);
-                    var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
+                    var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1024, DatabaseDialect);
+                    var timeoutsTarget = new RabbitMqTimeoutTarget(logger, rabbitUrl);
+                    var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
-                    await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint("NewRabbitMqEndpoint"), new Dictionary<string, string>());
+                    await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(30));
@@ -69,11 +66,11 @@
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class NewRabbitMqEndpoint : EndpointConfigurationBuilder
+        public class RabbitMqEndpoint : EndpointConfigurationBuilder
         {
-            public NewRabbitMqEndpoint()
+            public RabbitMqEndpoint()
             {
-                EndpointSetup<RabbitMqEndpoint>();
+                EndpointSetup<DefaultServer>();
             }
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
@@ -96,18 +93,6 @@
         [Serializable]
         public class DelayedMessage : IMessage
         {
-        }
-
-        byte[] ObjectToByteArray(object obj)
-        {
-            if (obj == null)
-                return null;
-            BinaryFormatter bf = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                bf.Serialize(ms, obj);
-                return ms.ToArray();
-            }
         }
     }
 }

@@ -10,9 +10,9 @@
     <Compile Include="..\GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\ConfigureExtensions.cs" Link="ConfigureExtensions.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\EndpointCustomizationConfigurationExtensions.cs" Link="EndpointCustomizationConfigurationExtensions.cs" />
-    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateTimeoutStorageTests.cs" Link="NHibernateTimeoutStorageTests.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateTimeoutsSourceTests.cs" Link="NHibernateTimeoutsSourceTests.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateToRabbitMqEndToEnd.cs" Link="NHibernateToRabbitMqEndToEnd.cs" />
-    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\RabbitMqEndpoint.cs" Link="RabbitMqEndpoint.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\DefaultServer.cs" Link="DefaultServer.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\TestLoggingAdapter.cs" Link="TestLoggingAdapter.cs" />
   </ItemGroup>
 
