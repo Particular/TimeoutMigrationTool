@@ -39,7 +39,7 @@
             mapper.AddMapping<TimeoutEntityMap>();
             mapper.AddMapping<StagedTimeoutEntityMap>();
 
-            HbmMapping mapping = mapper.CompileMappingForAllExplicitlyAddedEntities();
+            var mapping = mapper.CompileMappingForAllExplicitlyAddedEntities();
             cfg.AddMapping(mapping);
             cfg.SetProperty("hbm2ddl.auto", "update"); // creates the schema, destroying previous data
 
