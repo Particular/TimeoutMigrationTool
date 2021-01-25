@@ -36,7 +36,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHiber
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHibernate.FakeData", "TimeoutMigrationTool.NHibernate.FakeData\TimeoutMigrationTool.NHibernate.FakeData.csproj", "{C2965A08-972A-4918-BB5C-B0987006BE77}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHibernate.OracleAcceptanceTests", "TimeoutMigrationTool.NHibernate.AcceptanceTests-Oracle\TimeoutMigrationTool.NHibernate.OracleAcceptanceTests.csproj", "{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHibernate.OracleAcceptanceTests", "TimeoutMigrationTool.NHibernate.OracleAcceptanceTests\TimeoutMigrationTool.NHibernate.OracleAcceptanceTests.csproj", "{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
