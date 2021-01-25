@@ -57,7 +57,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
 
             Func<Task<BatchInfo>> getNextBatch = async () =>
             {
-                using var session = CreateSessionFactory().OpenSession();
+                using var session = CreateSessionFactory().OpenStatelessSession();
 
                 var stagedTimeoutEntities = await session.QueryOver<StagedTimeoutEntity>()
                     .Where(stagedTimtoutEntity => stagedTimtoutEntity.BatchState != BatchState.Completed)
@@ -67,6 +67,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
                             .SelectGroup(te => te.BatchState)
                             .SelectCount(te => te.Id))
                     .OrderBy(entity => entity.BatchNumber).Asc.ListAsync<object[]>();
+
                 return stagedTimeoutEntities.Select(x => new BatchInfo((int) x[0], (BatchState) x[1], (int) x[2]))
                     .FirstOrDefault();
             };
@@ -143,11 +144,11 @@ WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName;");
 
         public async Task<IReadOnlyList<TimeoutData>> ReadBatch(int batchNumber)
         {
-            using var session = CreateSessionFactory().OpenSession();
+            using var session = CreateSessionFactory().OpenStatelessSession();
 
-            var timeouts = (await session.QueryOver<StagedTimeoutEntity>()
+            var timeouts = await session.QueryOver<StagedTimeoutEntity>()
                 .Where(timeout => timeout.BatchNumber == batchNumber)
-                .ListAsync());
+                .ListAsync();
 
             return timeouts.Select(timeout => timeout.ToTimeoutData()).ToList();
         }
@@ -243,7 +244,7 @@ WHERE
 
         public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
         {
-            using var session = CreateSessionFactory().OpenSession();
+            using var session = CreateSessionFactory().OpenStatelessSession();
 
             TimeoutEntity timeoutAlias = null;
             var timeouts = await session.QueryOver(() => timeoutAlias)
