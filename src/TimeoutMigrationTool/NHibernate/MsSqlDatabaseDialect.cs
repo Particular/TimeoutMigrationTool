@@ -14,7 +14,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             properties[Environment.Dialect] = "NHibernate.Dialect.MsSql2008Dialect";
         }
 
-        public override string GetSqlTobreakStagedTimeoutsIntoBatches(int batchSize)
+        public override string GetSqlToBreakStagedTimeoutsIntoBatches(int batchSize)
         {
             return $@"
              UPDATE BatchMigration

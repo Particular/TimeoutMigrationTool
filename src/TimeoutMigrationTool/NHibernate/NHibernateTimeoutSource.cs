@@ -119,7 +119,7 @@ WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName;");
 
             await deleteTimeoutsThatHaveBeenStagedQuery.ExecuteUpdateAsync();
 
-            var breakStagedTimeoutsIntoBatchesSqlQuery = session.CreateSQLQuery(databaseDialect.GetSqlTobreakStagedTimeoutsIntoBatches(batchSize));
+            var breakStagedTimeoutsIntoBatchesSqlQuery = session.CreateSQLQuery(databaseDialect.GetSqlToBreakStagedTimeoutsIntoBatches(batchSize));
             await breakStagedTimeoutsIntoBatchesSqlQuery.ExecuteUpdateAsync();
 
             var maxBatchNumber = await session.QueryOver<StagedTimeoutEntity>().Select(Projections.Max<StagedTimeoutEntity>(stagedTimeout => stagedTimeout.BatchNumber))

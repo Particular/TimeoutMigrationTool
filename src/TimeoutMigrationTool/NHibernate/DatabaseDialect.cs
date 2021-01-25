@@ -22,6 +22,6 @@ namespace Particular.TimeoutMigrationTool.NHibernate
         }
 
         public abstract void ConfigureDriverAndDialect(Configuration configuration);
-        public abstract string GetSqlTobreakStagedTimeoutsIntoBatches(int batchSize);
+        public abstract string GetSqlToBreakStagedTimeoutsIntoBatches(int batchSize);
     }
 }

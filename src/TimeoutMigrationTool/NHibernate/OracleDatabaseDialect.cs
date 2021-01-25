@@ -15,7 +15,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             properties[Environment.Dialect] = "NHibernate.Dialect.Oracle10gDialect";
         }
 
-        public override string GetSqlTobreakStagedTimeoutsIntoBatches(int batchSize)
+        public override string GetSqlToBreakStagedTimeoutsIntoBatches(int batchSize)
         {
             return $@"MERGE INTO StagedTimeoutEntity STE
 USING (SELECT Id, CAST (ROW_NUMBER() OVER (ORDER BY Id) / {batchSize} AS INT) calculatedBatchNumber

@@ -15,7 +15,7 @@
         public NHibernateAcceptanceTests()
         {
             var databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-            connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=NHibernateTests;Integrated Security=True;";
+            connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
 
             RecreateDbIfNotExists(connectionString);
         }
