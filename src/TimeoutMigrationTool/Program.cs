@@ -9,13 +9,14 @@
     using RavenDB;
     using SqlP;
     using NHibernate;
+    using SqlT;
 
     // usage:
-    //  migrate-timeouts preview ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts migrate ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts preview ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts migrate ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options  [--cutoff-time] [--endpoint-filter]
     //  abort could also be
-    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options [--cutoff-time] [--endpoint-filter]
 
     // Examples:
     //  migrate-timeouts preview ravendb --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 rabbitmq --target amqp://guest:guest@localhost:5672
@@ -655,8 +656,11 @@
                             var sourceConnectionString = sourceNHibernateConnectionString.Value();
                             var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
 
-                            var timeoutStorage = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
-                            var runner = new AbortRunner(logger, timeoutStorage);
+                            var targetConnectionString = targetRabbitConnectionString.Value();
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
 
                             await runner.Run();
                         });
