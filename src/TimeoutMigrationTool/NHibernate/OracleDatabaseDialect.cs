@@ -1,8 +1,7 @@
-﻿
-using NHibernate.Cfg;
-
-namespace Particular.TimeoutMigrationTool.NHibernate
+﻿namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using global::NHibernate.Cfg;
+
     public class OracleDatabaseDialect : DatabaseDialect
     {
         public static string Name => nameof(OracleDatabaseDialect);

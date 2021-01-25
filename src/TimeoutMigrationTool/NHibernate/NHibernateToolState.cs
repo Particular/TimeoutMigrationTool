@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Particular.TimeoutMigrationTool.NHibernate
+﻿namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
     public class NHibernateToolState : IToolState
     {
         public NHibernateToolState(Func<Task<BatchInfo>> getNextBatch, string migrationRunId, IDictionary<string, string> runParameters, string endpointName, int numberOfBatches)

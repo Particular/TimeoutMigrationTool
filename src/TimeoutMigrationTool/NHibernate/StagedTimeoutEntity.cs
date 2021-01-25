@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Json;
-using System.Text;
-
 namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Runtime.Serialization.Json;
+    using System.Text;
+
     public class StagedTimeoutEntity
     {
         public virtual Guid Id { get; set; }
