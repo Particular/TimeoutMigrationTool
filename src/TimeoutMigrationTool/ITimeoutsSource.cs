@@ -36,7 +36,6 @@
         /// </summary>
         Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime);
 
-        
         /// <summary>
         /// Aborts the migration and moves all staged timeouts back to the original location
         /// </summary>
@@ -46,7 +45,6 @@
         /// Sets the current migration status to Complete and sets the completed date to UtcNow.
         /// </summary>
         Task Complete();
-
 
         /// <summary>
         /// Returns true if a migration is in progress
