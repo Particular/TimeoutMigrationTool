@@ -1,12 +1,11 @@
-﻿using NHibernate.Cfg;
-using NServiceBus.Persistence;
-using NServiceBus.Persistence.NHibernate;
-
-namespace TimeoutMigrationTool.SqlP.FakeData
+﻿namespace TimeoutMigrationTool.NHibernate.FakeData
 {
     using System;
     using System.Threading.Tasks;
+    using global::NHibernate.Cfg;
     using NServiceBus;
+    using NServiceBus.Persistence;
+    using NServiceBus.Persistence.NHibernate;
 
     class Program
     {
