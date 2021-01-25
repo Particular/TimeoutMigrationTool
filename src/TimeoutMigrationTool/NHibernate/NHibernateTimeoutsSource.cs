@@ -1,20 +1,19 @@
-using NHibernate;
-using NHibernate.Cfg;
-using NHibernate.Cfg.MappingSchema;
-using NHibernate.Criterion;
-using NHibernate.Mapping.ByCode;
-
 namespace Particular.TimeoutMigrationTool.NHibernate
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using global::NHibernate;
+    using global::NHibernate.Cfg;
+    using global::NHibernate.Cfg.MappingSchema;
+    using global::NHibernate.Criterion;
+    using global::NHibernate.Mapping.ByCode;
     using Newtonsoft.Json;
 
-    public class NHibernateTimeoutSource : ITimeoutsSource
+    public class NHibernateTimeoutsSource : ITimeoutsSource
     {
-        public NHibernateTimeoutSource(string connectionString, int batchSize, DatabaseDialect databaseDialect)
+        public NHibernateTimeoutsSource(string connectionString, int batchSize, DatabaseDialect databaseDialect)
         {
             this.connectionString = connectionString;
             this.batchSize = batchSize;

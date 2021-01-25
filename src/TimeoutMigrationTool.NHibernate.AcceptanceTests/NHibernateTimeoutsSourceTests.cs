@@ -9,16 +9,16 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    class NHibernateTimeoutStorageTests : NHibernateAcceptanceTests
+    class NHibernateTimeoutsSourceTests : NHibernateAcceptanceTests
     {
         [Test]
         public async Task TryLoadOngoingMigration_Should_Be_Null_When_No_Migration_Running()
         {
             // Arrange
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 10, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 10, DatabaseDialect);
 
             // Act
-            var currentMigration = await timeoutStorage.TryLoadOngoingMigration();
+            var currentMigration = await timeoutsSource.TryLoadOngoingMigration();
 
             // Assert
             Assert.IsNull(currentMigration);
@@ -29,12 +29,12 @@
         {
             // Arrange
             var endpointName = "Preparing_Creates_A_MigrationsEntity_And_Returns_It";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 10, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 10, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
             // Act
-            var currentMigration = await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
             Assert.IsNotNull(currentMigration);
@@ -49,7 +49,7 @@
         {
             // Arrange
             var endpointName = "Preparing_Sets_The_Number_Of_Batches_Correctly";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -74,7 +74,7 @@
             }
 
             // Act
-            var currentMigration = await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
             Assert.IsNotNull(currentMigration);
@@ -89,7 +89,7 @@
         {
             // Arrange
             var endpointName = "Can_Read_Batch_By_Batch_Number";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
             var expectedDestinations = new List<string>();
@@ -116,12 +116,12 @@
                 }
             }
 
-            await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Act
             for (var x = 0; x < 3; x++)
             {
-                var batch = await timeoutStorage.ReadBatch(x + 1);
+                var batch = await timeoutsSource.ReadBatch(x + 1);
                 expectedDestinations.Remove(batch.First().Destination);
             }
 
@@ -137,7 +137,7 @@
         {
             // Arrange
             var endpointName = "Marking_A_Batch_As_Complete_Updates_The_Status_Correctly";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -163,16 +163,16 @@
                 }
             }
 
-            await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Act
             switch (batchState)
             {
                 case BatchState.Staged:
-                    await timeoutStorage.MarkBatchAsStaged(1);
+                    await timeoutsSource.MarkBatchAsStaged(1);
                     break;
                 case BatchState.Completed:
-                    await timeoutStorage.MarkBatchAsCompleted(1);
+                    await timeoutsSource.MarkBatchAsCompleted(1);
                     break;
 
                 default:
@@ -190,7 +190,7 @@
         {
             // Arrange
             var endpointName = "ListEndpoints_Loads_All_Endpoints_With_Timeouts";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -216,10 +216,10 @@
                 }
             }
 
-            await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Act
-            var endpoints = await timeoutStorage.ListEndpoints(DateTime.UtcNow.AddDays(-100));
+            var endpoints = await timeoutsSource.ListEndpoints(DateTime.UtcNow.AddDays(-100));
 
             // Assert
             Assert.AreEqual(2, endpoints.Count);
@@ -230,7 +230,7 @@
         public async Task Complete_Sets_The_MigrationStatus_Correctly()
         {
             var endpointName = "Complete_Sets_The_MigrationStatus_Correctly";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -254,18 +254,18 @@
                 }
             }
 
-            var currentMigration = await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             for (var x = 0; x < currentMigration.NumberOfBatches; x++)
             {
-                await timeoutStorage.MarkBatchAsCompleted(x + 1);
+                await timeoutsSource.MarkBatchAsCompleted(x + 1);
             }
 
             // Act
-            await timeoutStorage.Complete();
+            await timeoutsSource.Complete();
 
             // Assert
-            var loadedMigrationAfterCompletion = await timeoutStorage.TryLoadOngoingMigration();
+            var loadedMigrationAfterCompletion = await timeoutsSource.TryLoadOngoingMigration();
             Assert.IsNull(loadedMigrationAfterCompletion);
         }
 
@@ -274,7 +274,7 @@
         {
             // Arrange
             var endpointName = "Aborting_Returns_StagedTimeouts_Back_To_TimeoutEntity_Table";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
@@ -300,17 +300,17 @@
                 }
             }
 
-            await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Act
-            await timeoutStorage.Abort();
+            await timeoutsSource.Abort();
 
             // Assert
             using var validateSession = sessionFactory.OpenSession();
             var timeouts = await validateSession.QueryOver<TimeoutEntity>().ListAsync();
             Assert.AreEqual(2, timeouts.Count);
 
-            var currentAfterAborting = await timeoutStorage.TryLoadOngoingMigration();
+            var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
             Assert.IsNull(currentAfterAborting);
         }
 
@@ -319,10 +319,9 @@
         {
             // Arrange
             var endpointName = "GetNextBatch_Returns_The_Next_Batch_Not_Migrated";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
-            var expectedDestinations = new List<string>();
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -343,7 +342,7 @@
                 }
             }
 
-            var toolState = await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            var toolState = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Act
             var firstBatch = await toolState.TryGetNextBatch();
@@ -359,10 +358,9 @@
         {
             // Arrange
             var endpointName = "GetNextBatch_Returns_The_Next_Batch_Not_Migrated";
-            var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1, DatabaseDialect);
+            var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
-            var expectedDestinations = new List<string>();
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -384,10 +382,10 @@
                 }
             }
 
-            var toolState = await timeoutStorage.Prepare(cutOffDate, endpointName, runParameters);
+            var toolState = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
             for (var x = 0; x < 3; x++)
             {
-                await timeoutStorage.MarkBatchAsCompleted(x+1);
+                await timeoutsSource.MarkBatchAsCompleted(x+1);
             }
 
             // Act

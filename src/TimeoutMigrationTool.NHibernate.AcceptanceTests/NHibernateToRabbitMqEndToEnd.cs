@@ -52,7 +52,7 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new NHibernateTimeoutSource(connectionString, 1024, DatabaseDialect);
+                    var timeoutStorage = new NHibernateTimeoutsSource(connectionString, 1024, DatabaseDialect);
                     var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 

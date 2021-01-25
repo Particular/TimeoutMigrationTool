@@ -223,7 +223,7 @@ namespace Particular.TimeoutMigrationTool
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
 
-                            var timeoutStorage = new NHibernateTimeoutSource(sourceConnectionString, 1024, dialect);
+                            var timeoutStorage = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
                             var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
@@ -361,7 +361,7 @@ namespace Particular.TimeoutMigrationTool
                             runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString,
                                 targetConnectionString);
 
-                            var timeoutStorage = new NHibernateTimeoutSource(sourceConnectionString, 1024, dialect);
+                            var timeoutStorage = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
 
                             var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
@@ -465,7 +465,7 @@ namespace Particular.TimeoutMigrationTool
                             var sourceConnectionString = sourceNHibernateConnectionString.Value();
                             var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
 
-                            var timeoutStorage = new NHibernateTimeoutSource(sourceConnectionString, 1024, dialect);
+                            var timeoutStorage = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
                             var runner = new AbortRunner(logger, timeoutStorage);
 
                             await runner.Run();
