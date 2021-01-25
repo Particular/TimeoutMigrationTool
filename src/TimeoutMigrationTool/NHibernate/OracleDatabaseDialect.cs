@@ -4,7 +4,7 @@
 
     public class OracleDatabaseDialect : DatabaseDialect
     {
-        public static string Name => nameof(OracleDatabaseDialect);
+        public static string Name => "Oracle";
 
         public override void ConfigureDriverAndDialect(Configuration configuration)
         {

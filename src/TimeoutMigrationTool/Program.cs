@@ -21,7 +21,7 @@
     // Examples:
     //  migrate-timeouts preview ravendb --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 rabbitmq --target amqp://guest:guest@localhost:5672
     //  migrate-timeouts preview sqlp --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --dialect MsSqlServer rabbitmq --target amqp://guest:guest@localhost:5672
-    //  migrate-timeouts preview nhb --nhbSource \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --nhbDialect MsSqlDatabaseDialect rabbitmq --target amqp://guest:guest@localhost:5672
+    //  migrate-timeouts preview nhb --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --dialect MsSqlDatabaseDialect rabbitmq --target amqp://guest:guest@localhost:5672
     internal class Program
     {
         private static int Main(string[] args)
