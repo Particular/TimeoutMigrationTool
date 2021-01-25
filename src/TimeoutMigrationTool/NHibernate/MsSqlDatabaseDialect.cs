@@ -1,7 +1,7 @@
-﻿using NHibernate.Cfg;
-
-namespace Particular.TimeoutMigrationTool.NHibernate
+﻿namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using global::NHibernate.Cfg;
+    
     public class MsSqlDatabaseDialect : DatabaseDialect
     {
         public static string Name => nameof(MsSqlDatabaseDialect);

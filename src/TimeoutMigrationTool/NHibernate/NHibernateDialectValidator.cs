@@ -1,6 +1,4 @@
-﻿using Particular.TimeoutMigrationTool.NHibernate;
-
-namespace Particular.TimeoutMigrationTool.NHibernate
+﻿namespace Particular.TimeoutMigrationTool.NHibernate
 {
     using System;
     using McMaster.Extensions.CommandLineUtils;
