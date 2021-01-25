@@ -55,23 +55,23 @@ namespace Particular.TimeoutMigrationTool.NHibernate
                 return null;
             }
 
-            Func<Task<BatchInfo>> getNextBatch = async () =>
+            async Task<BatchInfo> GetNextBatch()
             {
                 using var session = CreateSessionFactory().OpenStatelessSession();
 
                 var stagedTimeoutEntities = await session.QueryOver<StagedTimeoutEntity>()
-                    .Where(stagedTimtoutEntity => stagedTimtoutEntity.BatchState != BatchState.Completed)
-                    .SelectList(timeoutEntities =>
-                        timeoutEntities
-                            .SelectGroup(te => te.BatchNumber)
-                            .SelectGroup(te => te.BatchState)
-                            .SelectCount(te => te.Id))
-                    .OrderBy(entity => entity.BatchNumber).Asc.ListAsync<object[]>();
+                    .Where(stagedTimeoutEntity => stagedTimeoutEntity.BatchState != BatchState.Completed)
+                    .SelectList(timeoutEntities => timeoutEntities.SelectGroup(te => te.BatchNumber)
+                        .SelectGroup(te => te.BatchState)
+                        .SelectCount(te => te.Id))
+                    .OrderBy(entity => entity.BatchNumber)
+                    .Asc.ListAsync<object[]>();
 
                 return stagedTimeoutEntities.Select(x => new BatchInfo((int) x[0], (BatchState) x[1], (int) x[2]))
                     .FirstOrDefault();
-            };
-            return new NHibernateToolState(getNextBatch, migration.MigrationRunId, JsonConvert.DeserializeObject<Dictionary<string, string>>(migration.RunParameters), migration.EndpointName, migration.NumberOfBatches);
+            }
+
+            return new NHibernateToolState(GetNextBatch, migration.MigrationRunId, JsonConvert.DeserializeObject<Dictionary<string, string>>(migration.RunParameters), migration.EndpointName, migration.NumberOfBatches);
         }
 
         public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
