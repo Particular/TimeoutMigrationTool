@@ -57,13 +57,25 @@
         {
             using var session = CreateSessionFactory().OpenSession();
 
-            await session.CreateSQLQuery(@"drop table TIMEOUTENTITY cascade constraints").ExecuteUpdateAsync();
-            await session.CreateSQLQuery(@"drop table STAGEDTIMEOUTENTITY cascade constraints").ExecuteUpdateAsync();
-            await session.CreateSQLQuery(@"drop table MIGRATIONSENTITY cascade constraints").ExecuteUpdateAsync();
+            await DropTable(session, "TIMEOUTENTITY");
+            await DropTable(session, "STAGEDTIMEOUTENTITY");
+            await DropTable(session, "MIGRATIONSENTITY");
         }
 
         private void RecreateDbIfNotExists(string connectionString)
         {
+        }
+
+        private async Task DropTable(ISession session, string tableName)
+        {
+            await session.CreateSQLQuery(@$"BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE {tableName}';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -942 THEN
+         RAISE;
+      END IF;
+END;").ExecuteUpdateAsync();
         }
 
         internal string connectionString;
