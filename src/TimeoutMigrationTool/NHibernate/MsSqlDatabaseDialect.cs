@@ -1,10 +1,10 @@
 ﻿namespace Particular.TimeoutMigrationTool.NHibernate
 {
     using global::NHibernate.Cfg;
-    
+
     public class MsSqlDatabaseDialect : DatabaseDialect
     {
-        public static string Name => nameof(MsSqlDatabaseDialect);
+        public static string Name => "MsSqlServer";
 
         public override void ConfigureDriverAndDialect(Configuration configuration)
         {
