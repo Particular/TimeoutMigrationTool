@@ -1,6 +1,4 @@
-﻿using Particular.TimeoutMigrationTool.NHibernate;
-
-namespace Particular.TimeoutMigrationTool
+﻿namespace Particular.TimeoutMigrationTool
 {
     using System;
     using System.Collections.Generic;
@@ -10,6 +8,7 @@ namespace Particular.TimeoutMigrationTool
     using RabbitMq;
     using RavenDB;
     using SqlP;
+    using NHibernate;
 
     // usage:
     //  migrate-timeouts preview ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]

@@ -1,10 +1,10 @@
-using NHibernate;
-using NHibernate.Mapping.ByCode;
-using NHibernate.Mapping.ByCode.Conformist;
-using NHibernate.Type;
-
 namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using global::NHibernate;
+    using global::NHibernate.Mapping.ByCode;
+    using global::NHibernate.Mapping.ByCode.Conformist;
+    using global::NHibernate.Type;
+
     public class StagedTimeoutEntityMap : ClassMapping<StagedTimeoutEntity>
     {
         public StagedTimeoutEntityMap()
@@ -29,6 +29,6 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             Property(p => p.BatchNumber);
         }
 
-        public const string EndpointIndexName = "StagedTimeoutEntity_EndpointIdx";
+        private const string EndpointIndexName = "StagedTimeoutEntity_EndpointIdx";
     }
 }
