@@ -1,10 +1,8 @@
-﻿using NHibernate.Cfg;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Particular.TimeoutMigrationTool.NHibernate
+﻿namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using System;
+    using global::NHibernate.Cfg;
+
     public abstract class DatabaseDialect
     {
         public static DatabaseDialect Parse(string dialectString)
