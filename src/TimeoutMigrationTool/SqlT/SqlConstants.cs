@@ -77,7 +77,6 @@ EXEC sp_getapplock @Resource = '{0}_lock', @LockMode = 'Exclusive'
 DROP TABLE [{2}].[{1}].[{0}]
 
 EXEC sp_releaseapplock @Resource = '{0}_lock'";
-
     }
 
 }
