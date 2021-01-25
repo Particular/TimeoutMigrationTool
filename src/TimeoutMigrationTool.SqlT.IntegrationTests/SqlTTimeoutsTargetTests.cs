@@ -119,6 +119,27 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
         }
 
         [Test]
+        public async Task Should_delete_staging_queue_when_completing()
+        {
+            var sut = new SqlTTimeoutsTarget(new TestLoggingAdapter(), connectionString, schema);
+            var endpointName = "FakeEndpoint";
+            await using var endpointTarget = await sut.Migrate(endpointName);
+            await sut.Complete(endpointName);
+
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = string.Format(@"
+   SELECT COUNT(*)
+   FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{0}' AND TABLE_CATALOG = '{2}'
+", SqlConstants.TimeoutMigrationStagingTable, schema, databaseName);
+            var result = await command.ExecuteScalarAsync() as int?;
+
+            Assert.That(Convert.ToBoolean(result), Is.False);
+        }
+
+        [Test]
         public async Task Should_migrate_into_delayed_table()
         {
             var endpointDelayedTableName = $"{ExistingEndpointName}.Delayed";

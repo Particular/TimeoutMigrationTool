@@ -175,5 +175,19 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
             Assert.Throws<RabbitMQ.Client.Exceptions.OperationInterruptedException>(() =>  model.QueueDeclarePassive(QueueCreator.StagingQueueName));
         }
+
+        [Test]
+        public async Task Should_delete_staging_queue_when_completing()
+        {
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var endpointName = "FakeEndpoint";
+            await using var endpointTarget = await sut.Migrate(endpointName);
+            await sut.Complete(endpointName);
+
+            using var connection = this.factory.CreateConnection(rabbitUrl);
+            using var model = connection.CreateModel();
+
+            Assert.Throws<RabbitMQ.Client.Exceptions.OperationInterruptedException>(() =>  model.QueueDeclarePassive(QueueCreator.StagingQueueName));
+        }
     }
 }
