@@ -142,15 +142,20 @@
 
             app.Command("preview", previewCommand =>
             {
-                previewCommand.Description = "Lists endpoints that can be migrated.";
+                previewCommand.OnExecute(() =>
+                {
+                    Console.WriteLine("Specify a source with the required options.");
+                    previewCommand.ShowHelp();
+                    return 1;
+                });
 
-                previewCommand.Options.Add(targetRabbitConnectionString);
+                previewCommand.Description = "Lists endpoints that can be migrated.";
 
                 previewCommand.Command("ravendb", ravenDBCommand =>
                 {
                     ravenDBCommand.OnExecute(() =>
                     {
-                        Console.WriteLine("Specify a subcommand");
+                        Console.WriteLine("Specify a target with the required options.");
                         ravenDBCommand.ShowHelp();
                         return 1;
                     });
@@ -218,6 +223,13 @@
 
                 previewCommand.Command("sqlp", sqlpCommand =>
                 {
+                    sqlpCommand.OnExecute(() =>
+                    {
+                        Console.WriteLine("Specify a target with the required options.");
+                        sqlpCommand.ShowHelp();
+                        return 1;
+                    });
+
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
                     sqlpCommand.Options.Add(sourceSqlPConnectionString);
@@ -270,6 +282,13 @@
 
                 previewCommand.Command("nhb", nHibernateCommand =>
                 {
+                    nHibernateCommand.OnExecute(() =>
+                    {
+                        Console.WriteLine("Specify a target with the required options.");
+                        nHibernateCommand.ShowHelp();
+                        return 1;
+                    });
+
                     sourceNHibernateDialect.Validators.Add(new NHibernateDialectValidator());
 
                     nHibernateCommand.Options.Add(sourceNHibernateConnectionString);
@@ -323,9 +342,14 @@
 
             app.Command("migrate", migrateCommand =>
             {
-                migrateCommand.Description = "Performs migration of selected endpoint(s).";
+                migrateCommand.OnExecute(() =>
+                {
+                    Console.WriteLine("Specify a source with the required options.");
+                    migrateCommand.ShowHelp();
+                    return 1;
+                });
 
-                migrateCommand.Options.Add(targetRabbitConnectionString);
+                migrateCommand.Description = "Performs migration of selected endpoint(s).";
 
                 migrateCommand.Options.Add(allEndpointsOption);
                 migrateCommand.Options.Add(endpointFilterOption);
@@ -335,7 +359,7 @@
                 {
                     ravenDBCommand.OnExecute(() =>
                     {
-                        Console.WriteLine("Specify a subcommand");
+                        Console.WriteLine("Specify a target with the required options.");
                         ravenDBCommand.ShowHelp();
                         return 1;
                     });
@@ -426,7 +450,7 @@
                 {
                     sqlpCommand.OnExecute(() =>
                     {
-                        Console.WriteLine("Specify a subcommand");
+                        Console.WriteLine("Specify a target with the required options.");
                         sqlpCommand.ShowHelp();
                         return 1;
                     });
@@ -502,7 +526,7 @@
                 {
                     nHibernateCommand.OnExecute(() =>
                     {
-                        Console.WriteLine("Specify a subcommand");
+                        Console.WriteLine("Specify a target with the required options.");
                         nHibernateCommand.ShowHelp();
                         return 1;
                     });
@@ -577,19 +601,20 @@
 
             app.Command("abort", abortCommand =>
             {
-                abortCommand.Description = "Aborts currently ongoing migration and restores unmigrated timeouts.";
                 abortCommand.OnExecute(() =>
                 {
-                    Console.WriteLine("Specify a subcommand");
+                    Console.WriteLine("Specify a source with the required options.");
                     abortCommand.ShowHelp();
                     return 1;
                 });
+
+                abortCommand.Description = "Aborts currently ongoing migration and restores unmigrated timeouts.";
 
                 abortCommand.Command("ravendb", ravenDBCommand =>
                 {
                     ravenDBCommand.OnExecute(() =>
                     {
-                        Console.WriteLine("Specify a subcommand");
+                        Console.WriteLine("Specify a target with the required options.");
                         ravenDBCommand.ShowHelp();
                         return 1;
                     });
@@ -656,7 +681,7 @@
                 {
                     sqlpCommand.OnExecute(() =>
                     {
-                        Console.WriteLine("Specify a subcommand");
+                        Console.WriteLine("Specify a target with the required options.");
                         sqlpCommand.ShowHelp();
                         return 1;
                     });
@@ -714,7 +739,7 @@
                 {
                     nhbCommand.OnExecute(() =>
                     {
-                        Console.WriteLine("Specify a subcommand");
+                        Console.WriteLine("Specify a target with the required options.");
                         nhbCommand.ShowHelp();
                         return 1;
                     });
@@ -759,10 +784,10 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutStorage = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
 
-                            var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
+                            var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
                         });
                     });
