@@ -79,7 +79,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             using var session = CreateSessionFactory().OpenSession();
             using var tx = session.BeginTransaction();
 
-            var copyTimeoutsToStagedQuery = session.CreateQuery($@"
+            var copyTimeoutsToStagedQuery = session.CreateQuery(@"
 INSERT INTO StagedTimeoutEntity (
     Id,
     Destination,
