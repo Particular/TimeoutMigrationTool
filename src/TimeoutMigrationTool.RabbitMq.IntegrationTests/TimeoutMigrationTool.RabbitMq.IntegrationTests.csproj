@@ -15,7 +15,7 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" /> 
-    <PackageReference Include="RabbitMQ.Client" Version="5.2.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
   </ItemGroup>
 
   <ItemGroup>
