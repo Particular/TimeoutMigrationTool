@@ -1,9 +1,9 @@
-using NHibernate;
-using NHibernate.Mapping.ByCode;
-using NHibernate.Mapping.ByCode.Conformist;
-
 namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using global::NHibernate;
+    using global::NHibernate.Mapping.ByCode;
+    using global::NHibernate.Mapping.ByCode.Conformist;
+
     public class TimeoutEntityMap : ClassMapping<TimeoutEntity>
     {
         public TimeoutEntityMap()

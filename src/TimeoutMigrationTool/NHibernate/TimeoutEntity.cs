@@ -1,7 +1,7 @@
-using System;
-
 namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using System;
+
     public class TimeoutEntity
     {
         /// <summary>

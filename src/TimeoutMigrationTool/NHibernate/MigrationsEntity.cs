@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace Particular.TimeoutMigrationTool.NHibernate
+﻿namespace Particular.TimeoutMigrationTool.NHibernate
 {
+    using System;
+
     class MigrationsEntity
     {
         public virtual string MigrationRunId { get; set; }
