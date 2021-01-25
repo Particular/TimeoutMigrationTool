@@ -9,11 +9,14 @@
         ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint);
 
         ValueTask<IEndpointTarget> Migrate(string endpointName);
+        ValueTask Abort(string endpointName);
+        ValueTask Complete(string endpointName);
 
         public interface IEndpointTarget : IAsyncDisposable
         {
             ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber);
             ValueTask<int> CompleteBatch(int batchNumber);
+
         }
     }
 }

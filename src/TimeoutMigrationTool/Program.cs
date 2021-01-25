@@ -9,13 +9,14 @@
     using RavenDB;
     using SqlP;
     using NHibernate;
+    using SqlT;
 
     // usage:
-    //  migrate-timeouts preview ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts migrate ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
-    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options rabbitmq --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts preview ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts migrate ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options  [--cutoff-time] [--endpoint-filter]
     //  abort could also be
-    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options  [--cutoff-time] [--endpoint-filter]
+    //  migrate-timeouts abort ravendb|sqlp|nhb --src-specific-options rabbitmq|sqlt --target-specific-options [--cutoff-time] [--endpoint-filter]
 
     // Examples:
     //  migrate-timeouts preview ravendb --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 rabbitmq --target amqp://guest:guest@localhost:5672
@@ -33,13 +34,6 @@
             };
 
             var verboseOption = app.Option("-v|--verbose", "Show verbose output", CommandOptionType.NoValue, true);
-            var targetRabbitConnectionString =
-                new CommandOption($"-t|--{ApplicationOptions.RabbitMqTargetConnectionString}",
-                    CommandOptionType.SingleValue)
-                {
-                    Description = "The connection string for the target transport"
-                };
-
             var cutoffTimeOption =
                 new CommandOption($"-c|--{ApplicationOptions.CutoffTime}", CommandOptionType.SingleValue)
                 {
@@ -123,6 +117,27 @@
                     Inherited = true
                 };
 
+            var targetRabbitConnectionString =
+                new CommandOption($"-t|--{ApplicationOptions.RabbitMqTargetConnectionString}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The connection string for the target transport"
+                };
+
+            var targetSqlTConnectionString =
+                new CommandOption($"-t|--{ApplicationOptions.SqlTTargetConnectionString}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The connection string for the SQL Server transport"
+                };
+
+            var targetSqlTSchemaName =
+                new CommandOption($"-s|--{ApplicationOptions.SqlTTargetSchema}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The default schema used for the SQL Server transport",
+                };
+
             var runParameters = new Dictionary<string, string>();
 
             app.Command("preview", previewCommand =>
@@ -171,6 +186,35 @@
                             await runner.Run();
                         });
                     });
+
+                    ravenDBCommand.Command("sqlt", ravenDBToSqlTCommand =>
+                    {
+                        ravenDBToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDBToSqlTCommand.Options.Add(targetSqlTSchemaName);
+
+                        ravenDBToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+                            var forceUseIndex = sourceRavenDbForceUseIndexOption.HasValue();
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
+                                ravenVersion, forceUseIndex);
+                            var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+
+                            await runner.Run();
+                        });
+                    });
                 });
 
                 previewCommand.Command("sqlp", sqlpCommand =>
@@ -195,6 +239,29 @@
 
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
                             var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
+
+                            await runner.Run();
+                        });
+                    });
+
+                    sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
+                    {
+                        sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        sqlpToSqlTCommand.Options.Add(targetSqlTSchemaName);
+
+                        sqlpToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var transportAdapter = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
                             await runner.Run();
@@ -293,6 +360,45 @@
                                 transportAdapter);
                         });
                     });
+
+                    ravenDBCommand.Command("sqlt", ravenDBPToSqlTCommand =>
+                    {
+                        ravenDBPToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDBPToSqlTCommand.Options.Add(targetSqlTSchemaName);
+
+                        ravenDBPToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+                            var forceUseIndex = sourceRavenDbForceUseIndexOption.HasValue();
+
+                            runParameters.Add(ApplicationOptions.RavenServerUrl, serverUrl);
+                            runParameters.Add(ApplicationOptions.RavenDatabaseName, databaseName);
+                            runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
+                            runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.SqlTTargetConnectionString, targetConnectionString);
+
+                            var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
+                                ravenVersion, forceUseIndex);
+                            var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
                 });
 
                 migrateCommand.Command("sqlp", sqlpCommand =>
@@ -325,6 +431,38 @@
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
 
                             var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
+                                transportAdapter);
+                        });
+                    });
+
+                    sqlpCommand.Command("sqlt", sqlPToSqlTCommand =>
+                    {
+                        sqlPToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        sqlPToSqlTCommand.Options.Add(targetSqlTSchemaName);
+
+                        sqlPToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceSqlPDialect.Value());
+
+                            runParameters.Add(ApplicationOptions.SqlTTargetConnectionString,
+                                targetConnectionString);
+
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+
+                            var transportAdapter = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutStorage,
@@ -374,7 +512,6 @@
 
             app.Command("abort", abortCommand =>
             {
-                // TODO: we might not need the target given that we don't use it, we just use the source to cleanup
                 abortCommand.Description = "Aborts currently ongoing migration and restores unmigrated timeouts.";
                 abortCommand.OnExecute(() =>
                 {
@@ -411,9 +548,39 @@
                                 ? RavenDbVersion.ThreeDotFive
                                 : RavenDbVersion.Four;
 
+                            var targetConnectionString = targetRabbitConnectionString.Value();
+
                             var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, false);
-                            var runner = new AbortRunner(logger, timeoutStorage);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
+
+                            await runner.Run();
+                        });
+                    });
+
+                    ravenDBCommand.Command("sqlt", ravenDBToSqlTCommand =>
+                    {
+                        ravenDBToSqlTCommand.Options.Add(targetSqlTConnectionString);
+
+                        ravenDBToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
+                                ravenVersion, false);
+                            var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
+                            var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
 
                             await runner.Run();
                         });
@@ -438,8 +605,33 @@
                             var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
+                            var targetConnectionString = targetRabbitConnectionString.Value();
+
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
-                            var runner = new AbortRunner(logger, timeoutStorage);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
+
+                            await runner.Run();
+                        });
+                    });
+
+                    sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
+                    {
+                        sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
+
+                        sqlpToSqlTCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetSqlTConnectionString.Value();
+                            var schema = targetSqlTSchemaName.Value();
+
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
+                            var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
 
                             await runner.Run();
                         });
@@ -464,8 +656,11 @@
                             var sourceConnectionString = sourceNHibernateConnectionString.Value();
                             var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
 
-                            var timeoutStorage = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
-                            var runner = new AbortRunner(logger, timeoutStorage);
+                            var targetConnectionString = targetRabbitConnectionString.Value();
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
 
                             await runner.Run();
                         });

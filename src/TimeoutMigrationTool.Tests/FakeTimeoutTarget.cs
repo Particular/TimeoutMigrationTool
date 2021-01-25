@@ -12,6 +12,10 @@ namespace TimeoutMigrationTool.Tests
         public List<int> BatchesCompleted { get; } = new List<int>();
         public bool EndpointWasVerified { get; private set; } = false;
 
+        public bool MigrationWasAborted { get; private set; }
+        public bool MigrationWasCompleted { get; private set; }
+
+
         public ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber)
         {
             BatchWasStaged = true;
@@ -40,6 +44,18 @@ namespace TimeoutMigrationTool.Tests
         public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName)
         {
             return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
+        }
+
+        public ValueTask Abort(string endpointName)
+        {
+            MigrationWasAborted = true;
+            return new ValueTask();
+        }
+
+        public ValueTask Complete(string endpointName)
+        {
+            MigrationWasCompleted = true;
+            return new ValueTask();
         }
 
         public ValueTask DisposeAsync()

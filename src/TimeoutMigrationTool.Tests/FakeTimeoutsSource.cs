@@ -15,10 +15,17 @@ namespace TimeoutMigrationTool.Tests
         public bool BatchWasRead { get; private set; }
         public bool BatchWasCompleted { get; private set; }
         public bool BatchWasStaged { get; private set; }
-        public bool ToolStateWasAborted { get; private set; }
+        public bool MigrationWasAborted { get; private set; }
         public bool EndpointsWereListed { get; private set; }
         public bool ToolStateWasCreated { get; private set; }
         public bool ToolStateMovedToCompleted { get; private set; }
+
+        public Func<Task<bool>> CheckIfMigrationIsInProgressFunc { get; set; }
+
+        public FakeTimeoutsSource()
+        {
+            CheckIfMigrationIsInProgressFunc = () => Task.FromResult(existingToolState != null);
+        }
 
         public Task<IToolState> TryLoadOngoingMigration()
         {
@@ -63,7 +70,7 @@ namespace TimeoutMigrationTool.Tests
 
         public Task Abort()
         {
-            ToolStateWasAborted = true;
+            MigrationWasAborted = true;
             return Task.CompletedTask;
         }
 
@@ -99,9 +106,6 @@ namespace TimeoutMigrationTool.Tests
             return Task.CompletedTask;
         }
 
-        public Task<bool> CheckIfAMigrationIsInProgress()
-        {
-            return Task.FromResult(this.existingToolState != null);
-        }
+        public Task<bool> CheckIfAMigrationIsInProgress() => CheckIfMigrationIsInProgressFunc();
     }
 }

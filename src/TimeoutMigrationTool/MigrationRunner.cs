@@ -165,6 +165,7 @@ namespace Particular.TimeoutMigrationTool
             }
 
             await timeoutsSource.Complete();
+            await timeoutsTarget.Complete(toolState.EndpointName);
         }
 
         void GuardAgainstInvalidState(IDictionary<string, string> runParameters, IToolState toolState)

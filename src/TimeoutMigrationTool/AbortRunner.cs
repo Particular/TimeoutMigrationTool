@@ -6,8 +6,9 @@
 
     public class AbortRunner
     {
-        public AbortRunner(ILogger logger, ITimeoutsSource timeoutsSource)
+        public AbortRunner(ILogger logger, ITimeoutsSource timeoutsSource, ITimeoutsTarget timeoutsTarget)
         {
+            this.timeoutsTarget = timeoutsTarget;
             this.logger = logger;
             this.timeoutsSource = timeoutsSource;
         }
@@ -32,10 +33,16 @@
 
             await timeoutsSource.Abort();
 
+            if (toolState != null)
+            {
+                await timeoutsTarget.Abort(toolState?.EndpointName);
+            }
+
             logger.LogInformation("Previous migration was successfully aborted. That means that the timeouts hidden away from the TimeoutManager, have been made available again");
         }
 
         readonly ILogger logger;
         readonly ITimeoutsSource timeoutsSource;
+        private readonly ITimeoutsTarget timeoutsTarget;
     }
 }

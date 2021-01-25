@@ -2,7 +2,7 @@
   "profiles": {
     "TimeoutMigrationTool": {
       "commandName": "Project",
-      "commandLineArgs": "preview ravendb --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 rabbitmq --target amqp://guest:guest@localhost:5672"
+      "commandLineArgs": "migrate --endpoint EndpointA ravendb --serverUrl \"http://localhost:8080\" --databaseName raven-timeout-test --ravenVersion 4 --prefix TimeoutDatas sqlt --target \"Server=localhost;Initial Catalog=timeoutmigrationtool;User Id=sa;Password=yourStrong(!)Password;\""
     }
   }
 }

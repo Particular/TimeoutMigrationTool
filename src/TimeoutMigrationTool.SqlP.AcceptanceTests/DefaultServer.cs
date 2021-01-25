@@ -6,7 +6,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class RabbitMqEndpoint : IEndpointSetupTemplate
+    public class DefaultServer : IEndpointSetupTemplate
     {
         public virtual Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointCustomizationConfiguration, Action<EndpointConfiguration> configurationBuilderCustomization)
         {

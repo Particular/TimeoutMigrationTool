@@ -25,7 +25,7 @@
     Headers,
     PersistenceVersion
 FROM
-    ['{GetMigrationTableName(migrationRunId)}']
+    [{GetMigrationTableName(migrationRunId)}]
 WHERE
     BatchNumber = @BatchNumber;
 ";
@@ -36,8 +36,8 @@ WHERE
             return $@"
 SELECT top 1 BatchNumber,
     Status,
-    COUNT(1) as NumberOfTimeouts 
-FROM ['{GetMigrationTableName(migrationRunId)}'] AS batch
+    COUNT(1) as NumberOfTimeouts
+FROM [{GetMigrationTableName(migrationRunId)}] AS batch
 GROUP BY BatchNumber, Status
 HAVING Status < 2
 ORDER BY BatchNumber";
@@ -76,7 +76,7 @@ WHERE
             return $@"
 BEGIN TRANSACTION
 
-    CREATE TABLE ['{migrationTableName}'] (
+    CREATE TABLE [{migrationTableName}] (
         Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
         BatchNumber INT,
         Status INT NOT NULL, /* 0 = Pending, 1 = staged, 2 = migrated */
@@ -89,7 +89,7 @@ BEGIN TRANSACTION
     );
 
     CREATE NONCLUSTERED INDEX INDEX_Status_BatchNumber
-    ON [dbo].['{migrationTableName}'] ([Status])
+    ON [dbo].[{migrationTableName}] ([Status])
     INCLUDE ([BatchNumber]);
 
     DELETE [{endpointName}_TimeoutData]
@@ -102,18 +102,18 @@ BEGIN TRANSACTION
         DELETED.Time,
         DELETED.Headers,
         DELETED.PersistenceVersion
-    INTO ['{migrationTableName}']
+    INTO [{migrationTableName}]
     WHERE [{endpointName}_TimeoutData].Time >= @CutOffTime;
 
     UPDATE BatchMigration
     SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber + 1
     FROM (
         SELECT BatchNumber, ROW_NUMBER() OVER (ORDER BY (select 0)) / {batchSize} AS CalculatedBatchNumber
-        FROM ['{migrationTableName}']
+        FROM [{migrationTableName}]
     ) BatchMigration;
 
     INSERT INTO TimeoutsMigration_State (MigrationRunId, EndpointName, Status, RunParameters, NumberOfBatches, CutOffTime, StartedAt)
-    VALUES ('{migrationRunId}', '{endpointName}', 1, @RunParameters,(SELECT COUNT(DISTINCT BatchNumber) from ['{migrationTableName}']), @CutOffTime, @StartedAt);
+    VALUES ('{migrationRunId}', '{endpointName}', 1, @RunParameters,(SELECT COUNT(DISTINCT BatchNumber) from [{migrationTableName}]), @CutOffTime, @StartedAt);
 COMMIT;";
         }
 
@@ -122,7 +122,7 @@ COMMIT;";
             var migrationTableName = GetMigrationTableName(migrationRunId);
             return $@"
 BEGIN TRANSACTION
-    DELETE ['{migrationTableName}']
+    DELETE [{migrationTableName}]
         OUTPUT DELETED.Id,
             DELETED.Destination,
             DELETED.SagaId,
@@ -131,7 +131,7 @@ BEGIN TRANSACTION
             DELETED.Headers,
             DELETED.PersistenceVersion
     INTO [{endpointName}_TimeoutData]
-    WHERE ['{migrationTableName}'].Status <> 2;
+    WHERE [{migrationTableName}].Status <> 2;
 
 
     UPDATE TimeoutsMigration_State
@@ -141,14 +141,14 @@ BEGIN TRANSACTION
     WHERE
         MigrationRunId = '{migrationRunId}';
 
-    DROP TABLE ['{migrationTableName}'];
+    DROP TABLE [{migrationTableName}];
 COMMIT;";
         }
 
         public override string GetScriptToCompleteBatch(string migrationRunId)
         {
             return $@"UPDATE
-    ['{GetMigrationTableName(migrationRunId)}']
+    [{GetMigrationTableName(migrationRunId)}]
 SET
     Status = 2
 WHERE
@@ -191,7 +191,7 @@ END;";
         public override string GetScriptToMarkBatchAsStaged(string migrationRunId)
         {
             return $@"UPDATE
-    ['{GetMigrationTableName(migrationRunId)}']
+    [{GetMigrationTableName(migrationRunId)}]
 SET
     Status = 1
 WHERE

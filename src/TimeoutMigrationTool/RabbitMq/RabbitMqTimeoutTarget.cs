@@ -13,20 +13,43 @@
             this.logger = logger;
             this.targetConnectionString = targetConnectionString;
             batchWriter = new RabbitBatchWriter(logger, targetConnectionString);
+            factory = new ConnectionFactory { Uri = new Uri(targetConnectionString) };
         }
 
         public async ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
         {
-            factory = new ConnectionFactory { Uri = new Uri(targetConnectionString) };
-
-            await CreateStagingQueue();
-
             return await VerifyEndpointIsReadyForNativeTimeouts(endpoint);
         }
 
         public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName)
         {
+            CreateStagingQueue();
             return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
+        }
+
+        public ValueTask Abort(string endpointName)
+        {
+            DeleteStagingQueue();
+            return new ValueTask();
+        }
+
+        public ValueTask Complete(string endpointName)
+        {
+            EnsureStagingQueueIsEmpty();
+            DeleteStagingQueue();
+            return new ValueTask();
+        }
+
+        private void EnsureStagingQueueIsEmpty()
+        {
+            using var connection = factory.CreateConnection();
+            using var model = connection.CreateModel();
+            var stagingQueueLength = QueueCreator.GetStagingQueueMessageLength(model);
+            if (stagingQueueLength > 0)
+            {
+                throw new Exception(
+                    $"Unable to complete migration as there are still messages available in the staging queue. Found {stagingQueueLength} messages.");
+            }
         }
 
         public async ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber)
@@ -112,15 +135,18 @@
             }
         }
 
-        Task CreateStagingQueue()
+        void CreateStagingQueue()
         {
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                QueueCreator.CreateStagingInfrastructure(channel);
-            }
+            using var connection = factory.CreateConnection();
+            using var channel = connection.CreateModel();
+            QueueCreator.CreateStagingInfrastructure(channel);
+        }
 
-            return Task.CompletedTask;
+        void DeleteStagingQueue()
+        {
+            using var connection = factory.CreateConnection();
+            using var channel = connection.CreateModel();
+            QueueCreator.DeleteStagingInfrastructure(channel);
         }
 
         string targetConnectionString;

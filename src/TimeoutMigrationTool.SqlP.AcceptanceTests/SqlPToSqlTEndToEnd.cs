@@ -5,26 +5,20 @@
     using NServiceBus.AcceptanceTesting;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
-    using Particular.TimeoutMigrationTool.RabbitMq;
+    using Particular.TimeoutMigrationTool.SqlT;
     using Particular.TimeoutMigrationTool.SqlP;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
     [TestFixture]
-    class SqlPToRabbitMqEndToEnd : SqlPAcceptanceTest
+    class SqlPToSqlTEndToEnd : SqlPAcceptanceTest
     {
-        [SetUp]
-        public void Setup()
-        {
-            rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
-        }
-
         [Test]
         public async Task Can_migrate_timeouts()
         {
             var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacySqlPEndpoint));
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RabbitMqEndpoint));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlTEndpoint));
 
             await Scenario.Define<SourceTestContext>()
                  .WithEndpoint<LegacySqlPEndpoint>(b => b.CustomConfig(ec =>
@@ -57,17 +51,19 @@
                  .Run(TimeSpan.FromSeconds(30));
 
             var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<RabbitMqEndpoint>(b => b.CustomConfig(ec =>
+                .WithEndpoint<SqlTEndpoint>(b => b.CustomConfig(ec =>
                 {
-                    ec.UseTransport<RabbitMQTransport>()
-                    .ConnectionString(rabbitUrl);
+                    ec.OverrideLocalAddress(sourceEndpoint);
+                    
+                    ec.UseTransport<SqlServerTransport>()
+                    .ConnectionString(connectionString);
                 })
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = new SqlTimeoutsSource(connectionString, new MsSqlServer(), 1024);
-                    var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl);
-                    var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
+                    var timeoutSource = new SqlTimeoutsSource(connectionString, new MsSqlServer(), 1024);
+                    var timeoutTarget = new SqlTTimeoutsTarget(logger, connectionString, "dbo");
+                    var migrationRunner = new MigrationRunner(logger, timeoutSource, timeoutTarget);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
@@ -90,8 +86,6 @@
             }
         }
 
-        private string rabbitUrl;
-
         public class SourceTestContext : ScenarioContext
         {
             public bool TimeoutSet { get; set; }
@@ -110,9 +104,9 @@
             }
         }
 
-        public class RabbitMqEndpoint : EndpointConfigurationBuilder
+        public class SqlTEndpoint : EndpointConfigurationBuilder
         {
-            public RabbitMqEndpoint()
+            public SqlTEndpoint()
             {
                 EndpointSetup<DefaultServer>();
             }

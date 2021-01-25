@@ -14,7 +14,7 @@
     public abstract class SqlPAcceptanceTest
     {
         [SetUp]
-        public Task SetUp()
+        public async Task SetUp()
         {
             NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention = t =>
             {
@@ -36,14 +36,17 @@
             databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
 
             connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-            rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
 
-            MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
-
-            return Task.CompletedTask;
+            await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }
 
-        protected void SetupPersitence(EndpointConfiguration endpointConfiguration)
+        [TearDown]
+        public async Task TearDown()
+        {
+            await MsSqlMicrosoftDataClientHelper.RemoveDbIfExists( connectionString);
+        }
+
+        protected void SetupPersistence(EndpointConfiguration endpointConfiguration)
         {
             var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
 
@@ -99,7 +102,6 @@
 
         protected string databaseName;
         protected string connectionString;
-        protected string rabbitUrl;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()

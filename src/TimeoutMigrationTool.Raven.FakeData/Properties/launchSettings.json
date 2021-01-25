@@ -2,7 +2,7 @@
   "profiles": {
     "TimeoutMigrationTool.Raven.FakeData": {
       "commandName": "Project",
-      "commandLineArgs": "http://localhost:8383 raven-timeout-test 3"
+      "commandLineArgs": "http://localhost:8080 raven-timeout-test 4"
     }
   }
 }

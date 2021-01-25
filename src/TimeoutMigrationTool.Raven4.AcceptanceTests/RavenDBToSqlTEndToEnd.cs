@@ -9,15 +9,29 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Particular.TimeoutMigrationTool.SqlT;
+    using SqlP.AcceptanceTests;
 
     [TestFixture]
-    class RavenDBToRabbitMqEndToEnd : RavenDBAcceptanceTest
+    class RavenDBToSqlTEndToEnd : RavenDBAcceptanceTest
     {
+        private string sqlConnectionString;
+
+        [SetUp]
+        public async Task Setup()
+        {
+            databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
+
+            sqlConnectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
+
+            await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
+        }
+
         [Test]
         public async Task Can_migrate_timeouts()
         {
             var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacyRavenDBEndpoint));
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RabbitMqEndpoint));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlTEndpoint));
 
             var ravenTimeoutPrefix = "TimeoutDatas";
             var ravenVersion = RavenDbVersion.Four;
@@ -49,16 +63,18 @@
                 .Run(TimeSpan.FromSeconds(15));
 
             var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<RabbitMqEndpoint>(b => b.CustomConfig(ec =>
+                .WithEndpoint<SqlTEndpoint>(b => b.CustomConfig(ec =>
                     {
-                        ec.UseTransport<RabbitMQTransport>()
-                            .ConnectionString(rabbitUrl);
+                        ec.OverrideLocalAddress(sourceEndpoint);
+
+                        ec.UseTransport<SqlServerTransport>()
+                            .ConnectionString(sqlConnectionString);
                     })
                     .When(async (_, c) =>
                     {
                         var logger = new TestLoggingAdapter(c);
                         var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion, false);
-                        var timeoutsTarget = new RabbitMqTimeoutTarget(logger, rabbitUrl);
+                        var timeoutsTarget = new SqlTTimeoutsTarget(logger, sqlConnectionString, "dbo");
                         var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
                         await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
@@ -106,9 +122,9 @@
             }
         }
 
-        public class RabbitMqEndpoint : EndpointConfigurationBuilder
+        public class SqlTEndpoint : EndpointConfigurationBuilder
         {
-            public RabbitMqEndpoint()
+            public SqlTEndpoint()
             {
                 EndpointSetup<DefaultServer>();
             }

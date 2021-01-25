@@ -24,7 +24,8 @@
             var subscriptions = persistence.SubscriptionSettings();
             subscriptions.CacheFor(TimeSpan.FromMinutes(1));
 
-            endpointConfiguration.UseTransport<MsmqTransport>();
+            var transport = endpointConfiguration.UseTransport<MsmqTransport>();
+            transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
             endpointConfiguration.SendFailedMessagesTo("error");
             endpointConfiguration.EnableInstallers();
 
@@ -39,7 +40,7 @@
 
                 var options = new SendOptions();
                 options.DelayDeliveryWith(TimeSpan.FromDays(daysToTrigger));
-                options.SetDestination(i % 10 == 0 ? "DestinationEndpoint" : "EndpointB");
+                options.SetDestination(i % 10 == 0 ? "EndpointA" : "EndpointB");
 
                 await endpointInstance.Send(message, options).ConfigureAwait(false);
             }

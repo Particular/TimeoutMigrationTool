@@ -14,7 +14,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             model.QueueBind(StagingQueueName, StagingExchangeName, string.Empty);
         }
 
-        public static uint GetStatingQueueMessageLength(IModel model)
+        public static uint GetStagingQueueMessageLength(IModel model)
         {
             return model.QueueDeclarePassive(StagingQueueName).MessageCount;
         }
@@ -22,6 +22,13 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         public static void PurgeStagingQueue(IModel model)
         {
             model.QueuePurge(StagingQueueName);
+        }
+
+        public static void DeleteStagingInfrastructure(IModel model)
+        {
+            model.QueueUnbind(StagingQueueName, StagingExchangeName, string.Empty);
+            model.ExchangeDelete(StagingQueueName, false);
+            model.QueueDelete(StagingQueueName, false, false);
         }
     }
 }
