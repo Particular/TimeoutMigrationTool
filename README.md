@@ -20,6 +20,10 @@ Run a RabbitMQ Docker container:
 
 `docker run -d --hostname my-rabbit -p 5672:5672 -p 15672:15672  rabbitmq:3-management`
 
+Run an Oracle Docker container:
+
+`$ docker run -d -it --name oracle -p 1521:1521 store/oracle/database-enterprise:12.2.0.1`
+
 ## Project structure
 
 The solution is divided up into a single tool project with multiple test projects. The test are divided into unit test, integration tests and acceptance tests.
