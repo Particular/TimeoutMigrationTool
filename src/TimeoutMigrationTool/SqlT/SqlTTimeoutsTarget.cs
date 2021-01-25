@@ -123,6 +123,5 @@
         private readonly string connectionString;
         private readonly ILogger logger;
         private readonly string schema;
-
     }
 }
