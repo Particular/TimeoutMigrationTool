@@ -141,7 +141,7 @@
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
-            var sessionFactory = CreateSessionFactory();
+            using var sessionFactory = CreateSessionFactory();
 
             using (var testSession = sessionFactory.OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -180,9 +180,14 @@
             }
 
             // Assert
-            using var dbQuerySession = sessionFactory.OpenSession();
-            var query = dbQuerySession.CreateSQLQuery(GetSqlQueryToLoadBatchState(1));
-            Assert.AreEqual((int)batchState, query.List<object>().Select(o => Convert.ToInt32(o)).First());
+            using var dbQuerySession = sessionFactory.OpenStatelessSession();
+
+            var timeouts = await dbQuerySession.QueryOver<StagedTimeoutEntity>()
+                .Where(timeout => timeout.BatchNumber == 1)
+                .ListAsync();
+
+
+            Assert.True(timeouts.All(t => t.BatchState == batchState), $"Expected all StagedTimeoutEntity rows to have the batch state set to {batchState}");
         }
 
         [Test]
@@ -194,7 +199,7 @@
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
-            var sessionFactory = CreateSessionFactory();
+            using var sessionFactory = CreateSessionFactory();
 
             using (var testSession = sessionFactory.OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -278,7 +283,7 @@
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
             var cutOffDate = DateTime.UtcNow;
 
-            var sessionFactory = CreateSessionFactory();
+            using var sessionFactory = CreateSessionFactory();
 
             using (var testSession = sessionFactory.OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects

@@ -21,11 +21,6 @@
 
         internal DatabaseDialect DatabaseDialect = new OracleDatabaseDialect();
 
-        internal string GetSqlQueryToLoadBatchState(int batchNumber)
-        {
-            return $"SELECT CAST (BatchState AS INT) FROM StagedTimeoutEntity WHERE BatchNumber = {batchNumber} FETCH NEXT 1 ROWS ONLY";
-        }
-
         internal ISessionFactory CreateSessionFactory()
         {
             var cfg = new global::NHibernate.Cfg.Configuration().DataBaseIntegration(x =>
