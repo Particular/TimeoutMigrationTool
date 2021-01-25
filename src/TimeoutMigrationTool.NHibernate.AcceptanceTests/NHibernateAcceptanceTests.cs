@@ -12,17 +12,18 @@
 
     class NHibernateAcceptanceTests
     {
-        public NHibernateAcceptanceTests()
+        internal string connectionString;
+
+        internal DatabaseDialect DatabaseDialect = new MsSqlDatabaseDialect();
+
+        [SetUp]
+        public async Task SetUp()
         {
             var databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
             connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
 
-            RecreateDbIfNotExists(connectionString);
+            await RecreateDbIfNotExists(connectionString);
         }
-
-        internal string connectionString;
-
-        internal DatabaseDialect DatabaseDialect = new MsSqlDatabaseDialect();
 
         internal ISessionFactory CreateSessionFactory()
         {
@@ -59,8 +60,8 @@
         async Task DropAllTablesInDatabase()
         {
             // Drop schema before tests
-            using var connection = new SqlConnection(connectionString);
-            using var command = connection.CreateCommand();
+            await using var connection = new SqlConnection(connectionString);
+            await using var command = connection.CreateCommand();
 
             command.CommandText = @"
 DECLARE @sql NVARCHAR(max) = ''
@@ -78,51 +79,41 @@ Exec sp_executesql @sql
             await command.ExecuteNonQueryAsync();
         }
 
-        public static void RecreateDbIfNotExists(string connectionString = null)
+        private static async Task RecreateDbIfNotExists(string connectionString = null)
         {
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
             var databaseName = connectionStringBuilder.InitialCatalog;
 
-            DropDatabase(connectionString, databaseName);
+            await DropDatabase(connectionString, databaseName);
 
             connectionStringBuilder.InitialCatalog = "master";
 
-            using (var connection = new SqlConnection(connectionStringBuilder.ToString()))
+            await using var connection = new SqlConnection(connectionStringBuilder.ToString());
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = $"select * from master.dbo.sysdatabases where name='{databaseName}'";
+            await using (var reader = await command.ExecuteReaderAsync())
             {
-                connection.Open();
-
-                using (var command = connection.CreateCommand())
+                if (reader.HasRows)
                 {
-                    command.CommandText = $"select * from master.dbo.sysdatabases where name='{databaseName}'";
-                    using (var reader = command.ExecuteReader())
-                    {
-                        if (reader.HasRows)
-                        {
-                            return;
-                        }
-                    }
-
-                    command.CommandText = $"CREATE DATABASE {databaseName} COLLATE SQL_Latin1_General_CP1_CS_AS";
-                    command.ExecuteNonQuery();
+                    return;
                 }
             }
+
+            command.CommandText = $"CREATE DATABASE {databaseName} COLLATE SQL_Latin1_General_CP1_CS_AS";
+            await command.ExecuteNonQueryAsync();
         }
 
-        static void DropDatabase(string connectionString, string databaseName)
+        private static async Task DropDatabase(string connectionString, string databaseName)
         {
-            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
+            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString) {InitialCatalog = "master"};
 
-            connectionStringBuilder.InitialCatalog = "master";
-
-            using (var connection = new SqlConnection(connectionStringBuilder.ToString()))
-            {
-                connection.Open();
-                using (var dropCommand = connection.CreateCommand())
-                {
-                    dropCommand.CommandText = $"use master; if exists(select * from sysdatabases where name = '{databaseName}') begin alter database {databaseName} set SINGLE_USER with rollback immediate; drop database {databaseName}; end; ";
-                    dropCommand.ExecuteNonQuery();
-                }
-            }
+            await using var connection = new SqlConnection(connectionStringBuilder.ToString());
+            await connection.OpenAsync();
+            await using var dropCommand = connection.CreateCommand();
+            dropCommand.CommandText = $"use master; if exists(select * from sysdatabases where name = '{databaseName}') begin alter database {databaseName} set SINGLE_USER with rollback immediate; drop database {databaseName}; end; ";
+            await dropCommand.ExecuteNonQueryAsync();
         }
     }
 }
