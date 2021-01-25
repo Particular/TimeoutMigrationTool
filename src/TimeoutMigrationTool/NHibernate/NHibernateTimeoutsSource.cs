@@ -275,17 +275,16 @@ WHERE
             using var session = CreateSessionFactory().OpenSession();
             using var tx = session.BeginTransaction();
 
-            var migration = (await session.QueryOver<MigrationsEntity>()
-                                    .Where(migration => migration.Status == MigrationStatus.StoragePrepared)
-                                    .ListAsync()
-                             ).FirstOrDefault();
+            var migration = await session.QueryOver<MigrationsEntity>()
+                                    .Where(m => m.Status == MigrationStatus.StoragePrepared)
+                                    .SingleOrDefaultAsync();
 
             migration.Status = MigrationStatus.Completed;
             migration.CompletedAt = DateTime.UtcNow;
 
             await session.UpdateAsync(migration);
 
-            tx.Commit();
+            await tx.CommitAsync();
         }
 
         public async Task<bool> CheckIfAMigrationIsInProgress()
