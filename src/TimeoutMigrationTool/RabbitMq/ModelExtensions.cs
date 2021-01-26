@@ -14,20 +14,20 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             public ulong DeliveryTag { get; set; }
         }
 
-        public static Task BasicAckSingle(this IModel channel, ulong deliveryTag, TaskScheduler scheduler) =>
+        public static Task BasicAckSingle(this IModel channel, ulong deliveryTag) =>
             Task.Factory.StartNew(
                 state =>
                 {
                     var messageState = (MessageState)state;
                     messageState.Channel.BasicAck(messageState.DeliveryTag, false);
-                }, 
-                new MessageState {Channel = channel, DeliveryTag = deliveryTag}, 
+                },
+                new MessageState {Channel = channel, DeliveryTag = deliveryTag},
                 CancellationToken.None,
-                TaskCreationOptions.DenyChildAttach, 
-                scheduler);
+                TaskCreationOptions.DenyChildAttach,
+                TaskScheduler.Default);
 
         public static Task
-            BasicRejectAndRequeueIfOpen(this IModel channel, ulong deliveryTag, TaskScheduler scheduler) =>
+            BasicRejectAndRequeueIfOpen(this IModel channel, ulong deliveryTag) =>
             Task.Factory.StartNew(
                 state =>
                 {
@@ -47,6 +47,6 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 new MessageState {Channel = channel, DeliveryTag = deliveryTag},
                 CancellationToken.None,
                 TaskCreationOptions.DenyChildAttach,
-                scheduler);
+                TaskScheduler.Default);
     }
 }
