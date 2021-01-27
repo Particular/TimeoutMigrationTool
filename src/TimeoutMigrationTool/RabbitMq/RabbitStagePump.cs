@@ -14,27 +14,28 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
     {
         public RabbitStagePump(ILogger logger, string targetConnectionString, string queueName)
         {
-            factory = new ConnectionFactory();
-            factory.Uri = new Uri(targetConnectionString);
+            factory = new ConnectionFactory
+            {
+                Uri = new Uri(targetConnectionString),
+                DispatchConsumersAsync = true,
+                UseBackgroundThreadsForIO = true,
+                ConsumerDispatchConcurrency = MaxConcurrency
+            };
             this.prefetchMultiplier = 10;
             this.logger = logger;
             this.queueName = queueName;
-
-            exclusiveScheduler = new ConcurrentExclusiveSchedulerPair().ExclusiveScheduler;
         }
 
-        static int processedMessages = 0;
+        int processedMessages;
         uint messageCount;
         readonly int prefetchMultiplier;
-
-        TaskScheduler exclusiveScheduler;
+        long numberOfMessagesBeingProcessed;
 
         // Start
-        int maxConcurrency;
-        SemaphoreSlim semaphore;
+        const int MaxConcurrency = 10;
         CancellationTokenSource messageProcessing;
         IConnection connection;
-        EventingBasicConsumer consumer;
+        AsyncEventingBasicConsumer  consumer;
         IModel channel;
 
         // Stop
@@ -42,9 +43,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public void Start(int batchNumber)
         {
-            maxConcurrency = 10;
             messageProcessing = new CancellationTokenSource();
-            semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
 
             connection = factory.CreateConnection("TimoutMigration - CompleteBatch");
 
@@ -54,11 +53,11 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             messageCount = QueueCreator.GetStagingQueueMessageLength(channel);
 
             logger.LogDebug($"Pushing {messageCount} to the native timeout structure");
-            var prefetchCount = (long)maxConcurrency * prefetchMultiplier;
+            var prefetchCount = (long)MaxConcurrency * prefetchMultiplier;
 
             channel.BasicQos(0, (ushort)Math.Min(prefetchCount, ushort.MaxValue), false);
 
-            consumer = new EventingBasicConsumer(channel);
+            consumer = new AsyncEventingBasicConsumer (channel);
 
             connection.ConnectionShutdown += Connection_ConnectionShutdown;
 
@@ -72,12 +71,12 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             consumer.Received -= Consumer_Received;
             messageProcessing.Cancel();
 
-            while (semaphore.CurrentCount != maxConcurrency)
+            while (Interlocked.Read(ref numberOfMessagesBeingProcessed) > 0)
             {
                 await Task.Delay(50);
             }
 
-            connectionShutdownCompleted = new TaskCompletionSource<bool>();
+            connectionShutdownCompleted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             if (connection.IsOpen)
             {
@@ -99,56 +98,28 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             }
         }
 
-        async void Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
+        async Task  Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
         {
-            var eventRaisingThreadId = Thread.CurrentThread.ManagedThreadId;
-
-            try
-            {
-                await semaphore.WaitAsync(messageProcessing.Token);
-            }
-            catch (OperationCanceledException)
+            if (messageProcessing.Token.IsCancellationRequested)
             {
                 return;
             }
 
             try
             {
-                // The current thread will be the event-raising thread if either:
-                //
-                // a) the semaphore was entered synchronously (did not have to wait).
-                // b) the event was raised on a thread pool thread,
-                //    and the semaphore was entered asynchronously (had to wait),
-                //    and the continuation happened to be scheduled back onto the same thread.
-                if (Thread.CurrentThread.ManagedThreadId == eventRaisingThreadId)
-                {
-                    // In RabbitMQ.Client 4.1.0, the event is raised by reusing a single, explicitly created thread,
-                    // so we are in scenario (a) described above.
-                    // We must yield to allow the thread to raise more events while we handle this one,
-                    // otherwise we will never process messages concurrently.
-                    //
-                    // If a future version of RabbitMQ.Client changes its threading model, then either:
-                    //
-                    // 1) we are in scenario (a), but we *may not* need to yield.
-                    //    E.g. the client may raise the event on a new, explicitly created thread each time.
-                    // 2) we cannot tell whether we are in scenario (a) or scenario (b).
-                    //    E.g. the client may raise the event on a thread pool thread.
-                    //
-                    // In both cases, we cannot tell whether we need to yield or not, so we must yield.
-                    await Task.Yield();
-                }
+                Interlocked.Increment(ref numberOfMessagesBeingProcessed);
 
                 await Process(eventArgs);
             }
             catch (Exception ex)
             {
                 logger.LogError($"Failed to process message. Returning message to queue... {ex}");
-                await consumer.Model.BasicRejectAndRequeueIfOpen(eventArgs.DeliveryTag, exclusiveScheduler);
+                await consumer.Model.BasicRejectAndRequeueIfOpen(eventArgs.DeliveryTag);
                 messageProcessing.Cancel();
             }
             finally
             {
-                semaphore.Release();
+                Interlocked.Decrement(ref numberOfMessagesBeingProcessed);
             }
         }
 
@@ -161,26 +132,24 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             message.BasicProperties.Headers.Remove("TimeoutMigrationTool.DelayExchange");
             message.BasicProperties.Headers.Remove("TimeoutMigrationTool.RoutingKey");
 
-            using (var tokenSource = new CancellationTokenSource())
-            {
-                message.BasicProperties.Expiration = ((long)delayInSeconds * 1000).ToString(CultureInfo.InvariantCulture);
-                consumer.Model.BasicPublish(delayExchangeName, routingKey, true, message.BasicProperties, message.Body);
+            using var tokenSource = new CancellationTokenSource();
+            message.BasicProperties.Expiration = ((long)delayInSeconds * 1000).ToString(CultureInfo.InvariantCulture);
+            consumer.Model.BasicPublish(delayExchangeName, routingKey, true, message.BasicProperties, message.Body);
 
-                if (tokenSource.IsCancellationRequested)
+            if (tokenSource.IsCancellationRequested)
+            {
+                await consumer.Model.BasicRejectAndRequeueIfOpen(message.DeliveryTag);
+            }
+            else
+            {
+                try
                 {
-                    await consumer.Model.BasicRejectAndRequeueIfOpen(message.DeliveryTag, exclusiveScheduler);
+                    await consumer.Model.BasicAckSingle(message.DeliveryTag);
+                    Interlocked.Increment(ref processedMessages);
                 }
-                else
+                catch (AlreadyClosedException ex)
                 {
-                    try
-                    {
-                        await consumer.Model.BasicAckSingle(message.DeliveryTag, exclusiveScheduler);
-                        Interlocked.Increment(ref processedMessages);
-                    }
-                    catch (AlreadyClosedException ex)
-                    {
-                        logger.LogWarning($"Failed to acknowledge message because the channel was closed. The message was returned to the queue. {ex}");
-                    }
+                    logger.LogWarning($"Failed to acknowledge message because the channel was closed. The message was returned to the queue. {ex}");
                 }
             }
         }
@@ -193,7 +162,6 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public void Dispose()
         {
-            semaphore?.Dispose();
             messageProcessing?.Dispose();
             channel?.Dispose();
             connection?.Dispose();
@@ -201,12 +169,13 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public async Task<int> CompleteBatch(int number)
         {
-            processedMessages = 0;
+            Interlocked.Exchange(ref processedMessages, 0);
+
             Start(number);
             do
             {
-                Thread.Sleep(100);
-            } 
+                await Task.Delay(100);
+            }
             while (processedMessages < messageCount && !messageProcessing.IsCancellationRequested);
 
             if (messageProcessing.IsCancellationRequested)
