@@ -30,7 +30,7 @@
 
                 testName = testName.Replace("_", "");
 
-                return testName + "_" + endpointBuilder;
+                return testName + "-" + endpointBuilder;
             };
 
             databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
@@ -44,6 +44,44 @@
         public async Task TearDown()
         {
             await MsSqlMicrosoftDataClientHelper.RemoveDbIfExists(connectionString);
+        }
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        public static string StorageRootDir
+        {
+            get
+            {
+                string tempDir;
+
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    //can't use bin dir since that will be too long on the build agents
+                    tempDir = @"c:\temp";
+                }
+                else
+                {
+                    tempDir = Path.GetTempPath();
+                }
+
+                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
+            }
         }
 
         protected void SetupPersistence(EndpointConfiguration endpointConfiguration)
@@ -60,7 +98,7 @@
 
         protected int NumberOfTimeouts(string endpointName)
         {
-            return QueryScalar<int>($"SELECT COUNT(*) FROM {endpointName}_TimeoutData");
+            return QueryScalar<int>($"SELECT COUNT(*) FROM [{endpointName}_TimeoutData]");
         }
 
         protected async Task<T> QueryScalarAsync<T>(string sqlStatement)
@@ -100,45 +138,20 @@
             return storage;
         }
 
+        protected async Task WaitUntilTheTimeoutIsSavedInSql(string endpoint)
+        {
+            while (true)
+            {
+                var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM [{endpoint}_TimeoutData]");
+
+                if (numberOfTimeouts > 0)
+                {
+                    return;
+                }
+            }
+        }
+
         protected string databaseName;
         protected string connectionString;
-
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            if (Directory.Exists(StorageRootDir))
-            {
-                Directory.Delete(StorageRootDir, true);
-            }
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            if (Directory.Exists(StorageRootDir))
-            {
-                Directory.Delete(StorageRootDir, true);
-            }
-        }
-
-        public static string StorageRootDir
-        {
-            get
-            {
-                string tempDir;
-
-                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                {
-                    //can't use bin dir since that will be too long on the build agents
-                    tempDir = @"c:\temp";
-                }
-                else
-                {
-                    tempDir = Path.GetTempPath();
-                }
-
-                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
-            }
-        }
     }
 }

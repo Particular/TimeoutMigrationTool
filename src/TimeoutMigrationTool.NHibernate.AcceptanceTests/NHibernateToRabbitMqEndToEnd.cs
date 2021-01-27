@@ -32,7 +32,7 @@
                         Destination = targetEndpoint,
                         SagaId = Guid.NewGuid(),
                         Headers = "{\"NServiceBus.EnclosedMessageTypes\": \"TimeoutMigrationTool.NHibernate.AcceptanceTests.NHibernateToRabbitMqEndToEnd+DelayedMessage\"}",
-                        State = Encoding.UTF8.GetBytes("<DelayedMessage></DelayedMessage>"),
+                        State = Encoding.UTF8.GetBytes("{}"),
                         Time = DateTime.UtcNow.AddSeconds(15)
                     });
 
@@ -45,6 +45,8 @@
                 {
                     ec.UseTransport<RabbitMQTransport>()
                     .ConnectionString(rabbitUrl);
+
+                    ec.UseSerialization<NewtonsoftSerializer>();
                 })
                 .When(async (_, c) =>
                 {

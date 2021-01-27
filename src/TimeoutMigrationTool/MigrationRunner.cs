@@ -120,7 +120,7 @@ namespace Particular.TimeoutMigrationTool
         {
             BatchInfo batch;
 
-            await using var endpointTarget = await timeoutsTarget.Migrate(toolState.EndpointName);
+            await using var endpointTarget = await timeoutsTarget.PrepareTargetEndpointBatchMigrator(toolState.EndpointName);
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {

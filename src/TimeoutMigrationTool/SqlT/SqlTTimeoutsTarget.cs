@@ -16,7 +16,7 @@
             connection = new SqlConnection(connectionString);
         }
 
-        public async ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName)
+        public async ValueTask<ITimeoutsTarget.IEndpointTargetBatchMigrator> PrepareTargetEndpointBatchMigrator(string endpointName)
         {
             await EnsureConnectionOpen();
             await EnsureMigrationTableExists();

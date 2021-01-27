@@ -30,7 +30,9 @@
 
                 testName = testName.Replace("_", "");
 
-                return testName + "." + endpointBuilder;
+                var result = testName + "." + endpointBuilder;
+                result = result.Replace('.', '-');
+                return result;
             };
 
             serverUrl = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8080";

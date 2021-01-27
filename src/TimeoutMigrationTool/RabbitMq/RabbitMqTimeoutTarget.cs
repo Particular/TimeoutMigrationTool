@@ -6,7 +6,7 @@
     using Microsoft.Extensions.Logging;
     using RabbitMQ.Client;
 
-    public class RabbitMqTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTarget
+    public class RabbitMqTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTargetBatchMigrator
     {
         public RabbitMqTimeoutTarget(ILogger logger, string targetConnectionString)
         {
@@ -21,10 +21,10 @@
             return await VerifyEndpointIsReadyForNativeTimeouts(endpoint);
         }
 
-        public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName)
+        public ValueTask<ITimeoutsTarget.IEndpointTargetBatchMigrator> PrepareTargetEndpointBatchMigrator(string endpointName)
         {
             CreateStagingQueue();
-            return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
+            return new ValueTask<ITimeoutsTarget.IEndpointTargetBatchMigrator>(this);
         }
 
         public ValueTask Abort(string endpointName)

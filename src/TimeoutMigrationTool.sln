@@ -32,7 +32,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Raven4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.SqlP.Core8.AcceptanceTests", "TimeoutMigrationTool.SqlP.Core8.AcceptanceTests\TimeoutMigrationTool.SqlP.Core8.AcceptanceTests.csproj", "{5CE2B57A-223E-4D2F-AAE3-CDADDDA3DC76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.SqlT.IntegrationTests", "TimeoutMigrationTool.SqlT.IntegrationTests\TimeoutMigrationTool.SqlT.IntegrationTests.csproj", "{E06B67D5-B224-4C07-AEB2-E75489B039AA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.SqlT.IntegrationTests", "TimeoutMigrationTool.SqlT.IntegrationTests\TimeoutMigrationTool.SqlT.IntegrationTests.csproj", "{E06B67D5-B224-4C07-AEB2-E75489B039AA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHibernate.AcceptanceTests", "TimeoutMigrationTool.NHibernate.AcceptanceTests\TimeoutMigrationTool.NHibernate.AcceptanceTests.csproj", "{DE901555-32AA-4561-A1F4-229654A0022A}"
 EndProject
@@ -40,11 +40,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHiber
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHibernate.OracleAcceptanceTests", "TimeoutMigrationTool.NHibernate.OracleAcceptanceTests\TimeoutMigrationTool.NHibernate.OracleAcceptanceTests.csproj", "{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.Asp.IntegrationTests", "TimeoutMigrationTool.Asp.IntegrationTests\TimeoutMigrationTool.Asp.IntegrationTests.csproj", "{A4334D32-0595-446A-944E-5D5B76B4DC04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.ASQ.IntegrationTests", "TimeoutMigrationTool.ASQ.IntegrationTests\TimeoutMigrationTool.ASQ.IntegrationTests.csproj", "{8CC12631-9CAA-43FC-8EF9-B5923CF532F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.Asp.FakeData", "TimeoutMigrationTool.Asp.FakeData\TimeoutMigrationTool.Asp.FakeData.csproj", "{36E1A495-68EC-4C40-9800-AE39DF5B2B25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Asp.FakeData", "TimeoutMigrationTool.Asp.FakeData\TimeoutMigrationTool.Asp.FakeData.csproj", "{36E1A495-68EC-4C40-9800-AE39DF5B2B25}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.Asp.AcceptanceTests", "TimeoutMigrationTool.Asp.AcceptanceTests\TimeoutMigrationTool.Asp.AcceptanceTests.csproj", "{BF938D36-C8E1-4910-854A-6340306199F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.ASQ.FakeTarget", "TimeoutMigrationTool.ASQ.FakeTarget\TimeoutMigrationTool.ASQ.FakeTarget.csproj", "{4A20CD2D-5192-4358-929A-8A851400072C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Asp.AcceptanceTests", "TimeoutMigrationTool.Asp.AcceptanceTests\TimeoutMigrationTool.Asp.AcceptanceTests.csproj", "{BF938D36-C8E1-4910-854A-6340306199F0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Asp.IntegrationTests", "TimeoutMigrationTool.Asp.IntegrationTests\TimeoutMigrationTool.Asp.IntegrationTests.csproj", "{C786D14F-C431-40AA-8869-227ABE0250BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -100,14 +104,14 @@ Global
 		{5CE2B57A-223E-4D2F-AAE3-CDADDDA3DC76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CE2B57A-223E-4D2F-AAE3-CDADDDA3DC76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CE2B57A-223E-4D2F-AAE3-CDADDDA3DC76}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DE901555-32AA-4561-A1F4-229654A0022A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DE901555-32AA-4561-A1F4-229654A0022A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DE901555-32AA-4561-A1F4-229654A0022A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DE901555-32AA-4561-A1F4-229654A0022A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E06B67D5-B224-4C07-AEB2-E75489B039AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E06B67D5-B224-4C07-AEB2-E75489B039AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E06B67D5-B224-4C07-AEB2-E75489B039AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E06B67D5-B224-4C07-AEB2-E75489B039AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE901555-32AA-4561-A1F4-229654A0022A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE901555-32AA-4561-A1F4-229654A0022A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE901555-32AA-4561-A1F4-229654A0022A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE901555-32AA-4561-A1F4-229654A0022A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C2965A08-972A-4918-BB5C-B0987006BE77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C2965A08-972A-4918-BB5C-B0987006BE77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2965A08-972A-4918-BB5C-B0987006BE77}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -116,18 +120,26 @@ Global
 		{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CC12631-9CAA-43FC-8EF9-B5923CF532F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CC12631-9CAA-43FC-8EF9-B5923CF532F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CC12631-9CAA-43FC-8EF9-B5923CF532F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CC12631-9CAA-43FC-8EF9-B5923CF532F5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A20CD2D-5192-4358-929A-8A851400072C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A20CD2D-5192-4358-929A-8A851400072C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A20CD2D-5192-4358-929A-8A851400072C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A20CD2D-5192-4358-929A-8A851400072C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BF938D36-C8E1-4910-854A-6340306199F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BF938D36-C8E1-4910-854A-6340306199F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF938D36-C8E1-4910-854A-6340306199F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF938D36-C8E1-4910-854A-6340306199F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C786D14F-C431-40AA-8869-227ABE0250BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C786D14F-C431-40AA-8869-227ABE0250BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C786D14F-C431-40AA-8869-227ABE0250BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C786D14F-C431-40AA-8869-227ABE0250BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

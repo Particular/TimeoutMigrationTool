@@ -18,19 +18,16 @@
             NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention = t =>
             {
                 var classAndEndpoint = t.FullName.Split('.').Last();
-
                 var testName = classAndEndpoint.Split('+').First();
-
                 testName = testName.Replace("When_", "");
 
                 var endpointBuilder = classAndEndpoint.Split('+').Last();
-
-
                 testName = Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(testName);
-
                 testName = testName.Replace("_", "");
 
-                return testName + "." + endpointBuilder;
+                var result = testName + "." + endpointBuilder;
+                result = result.Replace('.', '-');
+                return result;
             };
 
             serverUrl = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8080";

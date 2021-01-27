@@ -43,6 +43,44 @@
             return Task.CompletedTask;
         }
 
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        public static string StorageRootDir
+        {
+            get
+            {
+                string tempDir;
+
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    //can't use bin dir since that will be too long on the build agents
+                    tempDir = @"c:\temp";
+                }
+                else
+                {
+                    tempDir = Path.GetTempPath();
+                }
+
+                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
+            }
+        }
+
         protected void SetupPersitence(EndpointConfiguration endpointConfiguration)
         {
             var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
@@ -97,46 +135,21 @@
             return storage;
         }
 
+        protected async Task WaitUntilTheTimeoutIsSavedInSql(string endpoint)
+        {
+            while (true)
+            {
+                var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM [{endpoint}_TimeoutData]");
+
+                if (numberOfTimeouts > 0)
+                {
+                    return;
+                }
+            }
+        }
+
         protected string databaseName;
         protected string connectionString;
         protected string rabbitUrl;
-
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            if (Directory.Exists(StorageRootDir))
-            {
-                Directory.Delete(StorageRootDir, true);
-            }
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            if (Directory.Exists(StorageRootDir))
-            {
-                Directory.Delete(StorageRootDir, true);
-            }
-        }
-
-        public static string StorageRootDir
-        {
-            get
-            {
-                string tempDir;
-
-                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                {
-                    //can't use bin dir since that will be too long on the build agents
-                    tempDir = @"c:\temp";
-                }
-                else
-                {
-                    tempDir = Path.GetTempPath();
-                }
-
-                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
-            }
-        }
     }
 }

@@ -102,7 +102,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
         {
             var sut = new SqlTTimeoutsTarget(new TestLoggingAdapter(), connectionString, schema);
             var endpointName = "FakeEndpoint";
-            await using var endpointTarget = await sut.Migrate(endpointName);
+            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Abort(endpointName);
 
             await using var connection = new SqlConnection(connectionString);
@@ -123,7 +123,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
         {
             var sut = new SqlTTimeoutsTarget(new TestLoggingAdapter(), connectionString, schema);
             var endpointName = "FakeEndpoint";
-            await using var endpointTarget = await sut.Migrate(endpointName);
+            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Complete(endpointName);
 
             await using var connection = new SqlConnection(connectionString);
@@ -161,7 +161,7 @@ CREATE TABLE [{1}].[{0}] (
             await command.ExecuteNonQueryAsync();
 
             const int BatchNumber = 2;
-            await using var endpointTarget = await sut.Migrate(ExistingEndpointName);
+            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(ExistingEndpointName);
             await endpointTarget.StageBatch(new List<TimeoutData>
             {
                 new TimeoutData
