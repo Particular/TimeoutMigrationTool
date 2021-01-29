@@ -7,7 +7,6 @@
   </PropertyGroup>
 
     <ItemGroup>
-    <Compile Include="..\GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\ConfigureExtensions.cs" Link="ConfigureExtensions.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\EndpointCustomizationConfigurationExtensions.cs" Link="EndpointCustomizationConfigurationExtensions.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateTimeoutsSourceTests.cs" Link="NHibernateTimeoutsSourceTests.cs" />

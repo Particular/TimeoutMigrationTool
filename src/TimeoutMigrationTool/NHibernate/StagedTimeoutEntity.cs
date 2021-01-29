@@ -37,13 +37,13 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             return string.IsNullOrEmpty(data) ? new Dictionary<string, string>() : DeSerialize<Dictionary<string, string>>(data);
         }
 
-        private static T DeSerialize<T>(string data)
+        static T DeSerialize<T>(string data)
         {
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(data));
             return (T)Serializer<T>.Instance.ReadObject(stream);
         }
 
-        private static class Serializer<T>
+        static class Serializer<T>
         {
             public static readonly DataContractJsonSerializer Instance = new DataContractJsonSerializer(typeof(T), new DataContractJsonSerializerSettings
             {

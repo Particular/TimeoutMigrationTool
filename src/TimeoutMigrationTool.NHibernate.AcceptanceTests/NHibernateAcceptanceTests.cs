@@ -79,7 +79,7 @@ Exec sp_executesql @sql
             await command.ExecuteNonQueryAsync();
         }
 
-        private static async Task RecreateDbIfNotExists(string connectionString = null)
+        static async Task RecreateDbIfNotExists(string connectionString = null)
         {
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
             var databaseName = connectionStringBuilder.InitialCatalog;
@@ -105,7 +105,7 @@ Exec sp_executesql @sql
             await command.ExecuteNonQueryAsync();
         }
 
-        private static async Task DropDatabase(string connectionString, string databaseName)
+        static async Task DropDatabase(string connectionString, string databaseName)
         {
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString) {InitialCatalog = "master"};
 

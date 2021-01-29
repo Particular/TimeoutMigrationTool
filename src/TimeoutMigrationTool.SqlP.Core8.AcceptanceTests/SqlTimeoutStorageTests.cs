@@ -358,7 +358,7 @@
             [SqlSaga(correlationProperty: nameof(TestSaga.Id))]
             public class TimeoutSaga : Saga<TestSaga>, IAmStartedByMessages<StartSagaMessage>, IHandleTimeouts<Timeout>
             {
-                private Context testContext;
+                Context testContext;
 
                 public TimeoutSaga(Context testContext)
                 {

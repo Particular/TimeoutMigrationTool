@@ -48,7 +48,7 @@
             await DropAllTablesInDatabase();
         }
 
-        private async Task DropAllTablesInDatabase()
+        async Task DropAllTablesInDatabase()
         {
             using var session = CreateSessionFactory().OpenSession();
 
@@ -57,11 +57,11 @@
             await DropTable(session, "MIGRATIONSENTITY");
         }
 
-        private void RecreateDbIfNotExists(string connectionString)
+        void RecreateDbIfNotExists(string connectionString)
         {
         }
 
-        private async Task DropTable(ISession session, string tableName)
+        async Task DropTable(ISession session, string tableName)
         {
             await session.CreateSQLQuery(@$"BEGIN
    EXECUTE IMMEDIATE 'DROP TABLE {tableName}';

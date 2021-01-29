@@ -39,7 +39,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             result.EnsureSuccessStatusCode();
         }
 
-        private static object GetDeleteCommand(string key)
+        static object GetDeleteCommand(string key)
         {
             return new
             {

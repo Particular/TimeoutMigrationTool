@@ -41,7 +41,7 @@
             await connection.CloseAsync();
         }
 
-        private async Task EnsureMigrationTableIsEmpty()
+        async Task EnsureMigrationTableIsEmpty()
         {
             var databaseName = connection.Database;
             var sql = string.Format(SqlConstants.SelectAnyFromMigrationTable, SqlConstants.TimeoutMigrationStagingTable, schema, databaseName);
@@ -56,12 +56,12 @@
             }
         }
 
-        private Task RemoveMigrationTable()
+        Task RemoveMigrationTable()
         {
             return SqlTQueueCreator.DeleteStagingQueue(connection, SqlConstants.TimeoutMigrationStagingTable, schema, connection.Database);
         }
 
-        private async ValueTask EnsureMigrationTableExists()
+        async ValueTask EnsureMigrationTableExists()
         {
             try
             {
@@ -74,7 +74,7 @@
             }
         }
 
-        private async ValueTask EnsureConnectionOpen()
+        async ValueTask EnsureConnectionOpen()
         {
             if (connection.State != ConnectionState.Open)
             {
@@ -119,9 +119,9 @@
             return migrationCheckResult;
         }
 
-        private readonly SqlConnection connection;
-        private readonly string connectionString;
-        private readonly ILogger logger;
-        private readonly string schema;
+        readonly SqlConnection connection;
+        readonly string connectionString;
+        readonly ILogger logger;
+        readonly string schema;
     }
 }

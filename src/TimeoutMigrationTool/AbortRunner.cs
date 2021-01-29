@@ -43,6 +43,6 @@
 
         readonly ILogger logger;
         readonly ITimeoutsSource timeoutsSource;
-        private readonly ITimeoutsTarget timeoutsTarget;
+        readonly ITimeoutsTarget timeoutsTarget;
     }
 }

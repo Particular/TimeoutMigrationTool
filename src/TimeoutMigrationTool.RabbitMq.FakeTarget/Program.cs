@@ -5,7 +5,7 @@
 
     class Program
     {
-        static async Task Main(string[] args)
+        static async Task Main()
         {
             var endpointConfigA = new EndpointConfiguration("EndpointA");
             SetupEndpointConfig(endpointConfigA);
@@ -30,7 +30,7 @@
             await destinationEndpoint.Stop();
         }
 
-        private static void SetupEndpointConfig(EndpointConfiguration endpointConfig)
+        static void SetupEndpointConfig(EndpointConfiguration endpointConfig)
         {
             endpointConfig.SendFailedMessagesTo("error");
             endpointConfig.AuditProcessedMessagesTo("audit");

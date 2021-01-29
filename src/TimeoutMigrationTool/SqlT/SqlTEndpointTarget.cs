@@ -9,13 +9,13 @@
 
     class SqlTEndpointTarget : ITimeoutsTarget.IEndpointTarget
     {
-        private readonly SqlConnection connection;
-        private readonly string databaseName;
-        private readonly string endpointName;
-        private readonly string schema;
-        private readonly ILogger logger;
-        private readonly DataTable stagingDataTable;
-        private string endpointDelayedTableName;
+        readonly SqlConnection connection;
+        readonly string databaseName;
+        readonly string endpointName;
+        readonly string schema;
+        readonly ILogger logger;
+        readonly DataTable stagingDataTable;
+        string endpointDelayedTableName;
 
         public SqlTEndpointTarget(ILogger logger, SqlConnection connection, string endpointName, string schema)
         {

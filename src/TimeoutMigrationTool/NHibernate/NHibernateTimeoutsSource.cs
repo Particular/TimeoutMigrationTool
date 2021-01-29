@@ -20,7 +20,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             this.databaseDialect = databaseDialect;
         }
 
-        private ISessionFactory CreateSessionFactory()
+        ISessionFactory CreateSessionFactory()
         {
             var cfg = new Configuration().DataBaseIntegration(x =>
                 {
@@ -295,6 +295,6 @@ WHERE
 
         readonly string connectionString;
         readonly int batchSize;
-        private DatabaseDialect databaseDialect;
+        DatabaseDialect databaseDialect;
     }
 }

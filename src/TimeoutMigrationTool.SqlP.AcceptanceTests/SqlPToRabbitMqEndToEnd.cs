@@ -90,7 +90,7 @@
             }
         }
 
-        private string rabbitUrl;
+        string rabbitUrl;
 
         public class SourceTestContext : ScenarioContext
         {

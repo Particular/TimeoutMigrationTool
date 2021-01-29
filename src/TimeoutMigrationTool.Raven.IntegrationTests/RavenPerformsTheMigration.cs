@@ -12,7 +12,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
     public abstract class RavenPerformsTheMigration
     {
-        private readonly int nrOfTimeouts = 2000;
+        readonly int nrOfTimeouts = 2000;
         IRavenTestSuite testSuite;
 
         [SetUp]

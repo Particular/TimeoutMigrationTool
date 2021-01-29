@@ -347,7 +347,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -365,7 +365,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<List<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        async Task<List<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -385,14 +385,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
+        async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
         {
             var contentString = await resultContent.ReadAsStringAsync();
             var document = JsonConvert.DeserializeObject<T>(contentString);
             return document;
         }
 
-        private async Task PostToBulkDocs(IEnumerable<object> commands)
+        async Task PostToBulkDocs(IEnumerable<object> commands)
         {
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var serializedCommands = JsonConvert.SerializeObject(commands);
@@ -400,7 +400,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             result.EnsureSuccessStatusCode();
         }
 
-        private Raven3BatchCommand GetDeleteCommand(string key)
+        Raven3BatchCommand GetDeleteCommand(string key)
         {
             return new Raven3BatchCommand
             {
