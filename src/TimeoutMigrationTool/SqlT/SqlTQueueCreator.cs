@@ -46,7 +46,7 @@
             {
                 CommandType = CommandType.Text
             };
-            var rowCount = (int) await command.ExecuteScalarAsync().ConfigureAwait(false);
+            var rowCount = (int)await command.ExecuteScalarAsync().ConfigureAwait(false);
             await transaction.CommitAsync().ConfigureAwait(false);
             return rowCount;
         }

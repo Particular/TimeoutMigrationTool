@@ -24,7 +24,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         public void TestSuitSetup()
         {
             rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672/";
-            factory = new ConnectionFactory() {Uri = new Uri(rabbitUrl)};
+            factory = new ConnectionFactory() { Uri = new Uri(rabbitUrl) };
         }
 
         [SetUp]
@@ -112,7 +112,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                 EndpointName = ExistingEndpointNameUsingConventional,
                 ShortestTimeout = DateTime.UtcNow.AddDays(3),
                 LongestTimeout = DateTime.UtcNow.AddDays(5),
-                Destinations = new List<string> {ExistingEndpointNameUsingConventional, NonExistingEndpointName}
+                Destinations = new List<string> { ExistingEndpointNameUsingConventional, NonExistingEndpointName }
             };
             var result = await sut.AbleToMigrate(info);
 
@@ -129,7 +129,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                 EndpointName = ExistingEndpointNameUsingConventional,
                 ShortestTimeout = DateTime.UtcNow.AddDays(3),
                 LongestTimeout = DateTime.UtcNow.AddYears(9),
-                Destinations = new List<string> {ExistingEndpointNameUsingConventional}
+                Destinations = new List<string> { ExistingEndpointNameUsingConventional }
             };
             var result = await sut.AbleToMigrate(info);
 
@@ -170,10 +170,10 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             await using var endpointTarget = await sut.Migrate(endpointName);
             await sut.Abort(endpointName);
 
-            using var connection = this.factory.CreateConnection(rabbitUrl);
+            using var connection = factory.CreateConnection(rabbitUrl);
             using var model = connection.CreateModel();
 
-            Assert.Throws<RabbitMQ.Client.Exceptions.OperationInterruptedException>(() =>  model.QueueDeclarePassive(QueueCreator.StagingQueueName));
+            Assert.Throws<RabbitMQ.Client.Exceptions.OperationInterruptedException>(() => model.QueueDeclarePassive(QueueCreator.StagingQueueName));
         }
 
         [Test]
@@ -184,10 +184,10 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             await using var endpointTarget = await sut.Migrate(endpointName);
             await sut.Complete(endpointName);
 
-            using var connection = this.factory.CreateConnection(rabbitUrl);
+            using var connection = factory.CreateConnection(rabbitUrl);
             using var model = connection.CreateModel();
 
-            Assert.Throws<RabbitMQ.Client.Exceptions.OperationInterruptedException>(() =>  model.QueueDeclarePassive(QueueCreator.StagingQueueName));
+            Assert.Throws<RabbitMQ.Client.Exceptions.OperationInterruptedException>(() => model.QueueDeclarePassive(QueueCreator.StagingQueueName));
         }
     }
 }

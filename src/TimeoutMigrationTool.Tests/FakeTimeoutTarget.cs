@@ -6,7 +6,7 @@ namespace TimeoutMigrationTool.Tests
 
     public class FakeTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTarget
     {
-        private List<string> problemsToReturn;
+        List<string> problemsToReturn;
         public bool BatchWasStaged { get; private set; }
         public List<TimeoutData> TimeoutsStaged { get; } = new List<TimeoutData>();
         public List<int> BatchesCompleted { get; } = new List<int>();
@@ -65,7 +65,7 @@ namespace TimeoutMigrationTool.Tests
 
         public void SetupProblemsToReturn(List<string> problems)
         {
-            this.problemsToReturn = problems;
+            problemsToReturn = problems;
         }
     }
 }

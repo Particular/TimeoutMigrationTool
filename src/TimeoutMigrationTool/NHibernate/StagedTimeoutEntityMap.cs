@@ -29,6 +29,6 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             Property(p => p.BatchNumber);
         }
 
-        private const string EndpointIndexName = "StagedTimeoutEntity_EndpointIdx";
+        const string EndpointIndexName = "StagedTimeoutEntity_EndpointIdx";
     }
 }

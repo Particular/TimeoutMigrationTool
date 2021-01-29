@@ -14,7 +14,11 @@
     {
         static async Task Main(string[] args)
         {
-            if (args.Length < 3) throw new InvalidOperationException("At least 3 arguments are needed in order to run: Servername and DatabaseName. If you want to skip db-creation, add a third argument set to true");
+            if (args.Length < 3)
+            {
+                throw new InvalidOperationException("At least 3 arguments are needed in order to run: Servername and DatabaseName. If you want to skip db-creation, add a third argument set to true");
+            }
+
             var serverName = args[0];
             var databaseName = args[1];
             var ravenVersion = args[2] == "4" ? RavenDbVersion.Four : RavenDbVersion.ThreeDotFive;
@@ -167,7 +171,7 @@
             var index = new
             {
                 Name = RavenConstants.TimeoutIndexName,
-                Maps = new List<string> {map},
+                Maps = new List<string> { map },
                 Type = "Map",
                 LockMode = "Unlock",
                 Priority = "Normal",
@@ -181,7 +185,7 @@
 
             var indexes = new
             {
-                Indexes = new List<object> {index}
+                Indexes = new List<object> { index }
             };
 
             var createIndexUrl = $"{serverName}/databases/{databaseName}/admin/indexes";
@@ -206,7 +210,7 @@
                 IsMapReduce = false,
                 LockMode = "Unlock",
                 Map = map,
-                Maps = new List<string> {map},
+                Maps = new List<string> { map },
                 Name = RavenConstants.TimeoutIndexName,
                 Reduce = (object)null,
                 SortOptions = (object)null,

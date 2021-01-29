@@ -28,6 +28,6 @@
             return getNextBatch();
         }
 
-        private Func<Task<BatchInfo>> getNextBatch;
+        Func<Task<BatchInfo>> getNextBatch;
     }
 }

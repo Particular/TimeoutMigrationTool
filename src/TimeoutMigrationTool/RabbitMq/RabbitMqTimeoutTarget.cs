@@ -40,7 +40,7 @@
             return new ValueTask();
         }
 
-        private void EnsureStagingQueueIsEmpty()
+        void EnsureStagingQueueIsEmpty()
         {
             using var connection = factory.CreateConnection();
             using var model = connection.CreateModel();

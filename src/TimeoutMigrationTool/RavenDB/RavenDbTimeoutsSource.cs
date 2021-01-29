@@ -81,7 +81,9 @@
                 ProcessTimeoutsIntoEndpointsFound(timeouts, endpoints, filter);
 
                 if (timeouts.Count == 0)
+                {
                     findMoreTimeouts = false;
+                }
             }
             while (findMoreTimeouts);
 
@@ -134,7 +136,9 @@
                 ProcessTimeoutsIntoEndpointsFound(result.Documents, endpoints, filter);
 
                 if (result.Documents.Count == 0)
+                {
                     findMoreTimeouts = false;
+                }
             }
             while (findMoreTimeouts);
 
@@ -348,7 +352,7 @@
 
             while (findMoreTimeouts)
             {
-                var startFrom = iteration * (nrOfPages * RavenConstants.DefaultPagingSize);
+                var startFrom = iteration * nrOfPages * RavenConstants.DefaultPagingSize;
                 var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, nrOfPages);
 
                 var elegibleTimeouts = timeouts.Where(ElegibleFilter).ToList();
@@ -371,7 +375,9 @@
                 }
 
                 if (timeouts.Count == 0)
+                {
                     findMoreTimeouts = false;
+                }
 
                 iteration++;
             }
@@ -456,7 +462,9 @@
                 }
 
                 if (timeoutsResult.Documents.Count == 0)
+                {
                     findMoreTimeouts = false;
+                }
             }
 
             tcs.Cancel();

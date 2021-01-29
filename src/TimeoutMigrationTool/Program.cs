@@ -22,9 +22,9 @@
     //  migrate-timeouts preview ravendb --serverUrl http://localhost:8080 --databaseName raven-timeout-test --prefix TimeoutDatas --ravenVersion 4 rabbitmq --target amqp://guest:guest@localhost:5672
     //  migrate-timeouts preview sqlp --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --dialect MsSqlServer rabbitmq --target amqp://guest:guest@localhost:5672
     //  migrate-timeouts preview nhb --source \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=MyTestDB;Integrated Security=True;\" --dialect MsSqlDatabaseDialect rabbitmq --target amqp://guest:guest@localhost:5672
-    internal class Program
+    class Program
     {
-        private static int Main(string[] args)
+        static int Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledAppdomainExceptionHandler;
 
@@ -271,7 +271,7 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * 1024);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
@@ -511,7 +511,7 @@
                             runParameters.Add(ApplicationOptions.SqlTTargetConnectionString,
                                 targetConnectionString);
 
-                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * 1024);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
@@ -726,7 +726,7 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * 1024);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
@@ -806,18 +806,24 @@
             return app.Execute(args);
         }
 
-        private static DateTime? GetCutoffTime(CommandOption cutoffTimeOption)
+        static DateTime? GetCutoffTime(CommandOption cutoffTimeOption)
         {
-            if (!cutoffTimeOption.HasValue()) return null;
+            if (!cutoffTimeOption.HasValue())
+            {
+                return null;
+            }
 
-            if (DateTime.TryParse(cutoffTimeOption.Value(), out var cutoffTime)) return cutoffTime;
+            if (DateTime.TryParse(cutoffTimeOption.Value(), out var cutoffTime))
+            {
+                return cutoffTime;
+            }
 
             throw new ArgumentException(
                 "Unable to parse the cutofftime, please supply the cutoffTime in the following format 'yyyy-MM-dd hh:mm:ss'");
         }
 
 
-        private static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime? cutoffTime,
+        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime? cutoffTime,
             Dictionary<string, string> runParameters, ITimeoutsSource timeoutsSource,
             ITimeoutsTarget transportTimeoutTargetCreator)
         {
@@ -837,10 +843,13 @@
             return migrationRunner.Run(cutoffTime.Value, endpointFilter, runParameters);
         }
 
-        private static EndpointFilter ParseEndpointFilter(CommandOption allEndpointsOption,
+        static EndpointFilter ParseEndpointFilter(CommandOption allEndpointsOption,
             CommandOption endpointFilterOption)
         {
-            if (allEndpointsOption.HasValue()) return EndpointFilter.IncludeAll;
+            if (allEndpointsOption.HasValue())
+            {
+                return EndpointFilter.IncludeAll;
+            }
 
             if (!endpointFilterOption.HasValue())
             {
@@ -851,9 +860,9 @@
             return EndpointFilter.SpecificEndpoint(endpointFilterOption.Value());
         }
 
-        private static void UnhandledAppdomainExceptionHandler(object sender, UnhandledExceptionEventArgs args)
+        static void UnhandledAppdomainExceptionHandler(object sender, UnhandledExceptionEventArgs args)
         {
-            var exception = (Exception) args.ExceptionObject;
+            var exception = (Exception)args.ExceptionObject;
             Console.WriteLine("Unhandled appdomain exception: " + exception);
             Console.WriteLine("Runtime terminating: {0}", args.IsTerminating);
         }

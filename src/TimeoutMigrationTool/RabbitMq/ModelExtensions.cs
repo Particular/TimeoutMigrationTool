@@ -21,7 +21,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                     var messageState = (MessageState)state;
                     messageState.Channel.BasicAck(messageState.DeliveryTag, false);
                 },
-                new MessageState {Channel = channel, DeliveryTag = deliveryTag},
+                new MessageState { Channel = channel, DeliveryTag = deliveryTag },
                 CancellationToken.None,
                 TaskCreationOptions.DenyChildAttach,
                 TaskScheduler.Default);
@@ -44,7 +44,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                         }
                     }
                 },
-                new MessageState {Channel = channel, DeliveryTag = deliveryTag},
+                new MessageState { Channel = channel, DeliveryTag = deliveryTag },
                 CancellationToken.None,
                 TaskCreationOptions.DenyChildAttach,
                 TaskScheduler.Default);

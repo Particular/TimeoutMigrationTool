@@ -9,7 +9,7 @@
 
     class Program
     {
-        static async Task Main(string[] args)
+        static async Task Main()
         {
             var endpointConfiguration = new EndpointConfiguration("NHibernateEndpoint.FakeTimeouts");
             var connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=NHibernateTests;Integrated Security=True;";

@@ -2,7 +2,6 @@
 {
     using Microsoft.Data.SqlClient;
     using global::NHibernate;
-    using global::NHibernate.Cfg.MappingSchema;
     using global::NHibernate.Dialect;
     using global::NHibernate.Driver;
     using global::NHibernate.Mapping.ByCode;
@@ -46,7 +45,7 @@
             return cfg.BuildSessionFactory();
         }
 
-        internal string GetSqlQueryToLoadBatchState(int batchNumber)
+        internal string GetSqlQueryToLoadBatchState()
         {
             return "SELECT TOP 1 BatchState FROM StagedTimeoutEntity WHERE BatchNumber = 1";
         }
@@ -79,7 +78,7 @@ Exec sp_executesql @sql
             await command.ExecuteNonQueryAsync();
         }
 
-        private static async Task RecreateDbIfNotExists(string connectionString = null)
+        static async Task RecreateDbIfNotExists(string connectionString = null)
         {
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
             var databaseName = connectionStringBuilder.InitialCatalog;
@@ -105,9 +104,9 @@ Exec sp_executesql @sql
             await command.ExecuteNonQueryAsync();
         }
 
-        private static async Task DropDatabase(string connectionString, string databaseName)
+        static async Task DropDatabase(string connectionString, string databaseName)
         {
-            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString) {InitialCatalog = "master"};
+            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString) { InitialCatalog = "master" };
 
             await using var connection = new SqlConnection(connectionStringBuilder.ToString());
             await connection.OpenAsync();

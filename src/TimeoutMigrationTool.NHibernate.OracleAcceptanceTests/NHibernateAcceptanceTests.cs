@@ -16,7 +16,7 @@
         {
             connectionString = Environment.GetEnvironmentVariable("OracleConnectionString") ?? $@"Data Source = (DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = 127.0.0.1)(PORT = 1521)))(CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = ORCLCDB.localdomain))); DBA Privilege = SYSDBA; User Id = sys; Password = Oradoc_db1; Enlist = dynamic";
 
-            RecreateDbIfNotExists(connectionString);
+            RecreateDbIfNotExists();
         }
 
         internal DatabaseDialect DatabaseDialect = new OracleDatabaseDialect();
@@ -48,7 +48,7 @@
             await DropAllTablesInDatabase();
         }
 
-        private async Task DropAllTablesInDatabase()
+        async Task DropAllTablesInDatabase()
         {
             using var session = CreateSessionFactory().OpenSession();
 
@@ -57,11 +57,11 @@
             await DropTable(session, "MIGRATIONSENTITY");
         }
 
-        private void RecreateDbIfNotExists(string connectionString)
+        void RecreateDbIfNotExists()
         {
         }
 
-        private async Task DropTable(ISession session, string tableName)
+        async Task DropTable(ISession session, string tableName)
         {
             await session.CreateSQLQuery(@$"BEGIN
    EXECUTE IMMEDIATE 'DROP TABLE {tableName}';

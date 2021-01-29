@@ -7,7 +7,7 @@
 
     class Program
     {
-        static async Task Main(string[] args)
+        static async Task Main()
         {
             var endpointConfiguration = new EndpointConfiguration("SqlP.FakeTimeouts");
 

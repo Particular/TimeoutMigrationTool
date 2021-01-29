@@ -2,19 +2,16 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     using System;
 
-    internal static class RavenDataReaderFactory
+    static class RavenDataReaderFactory
     {
         public static ICanTalkToRavenVersion Resolve(string serverUrl, string databaseName, RavenDbVersion version)
         {
-            switch (version)
+            return version switch
             {
-                case RavenDbVersion.ThreeDotFive:
-                    return new Raven3Adapter(serverUrl, databaseName);
-                case RavenDbVersion.Four:
-                    return new Raven4Adapter(serverUrl, databaseName);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(version), version, null);
-            }
+                RavenDbVersion.ThreeDotFive => new Raven3Adapter(serverUrl, databaseName),
+                RavenDbVersion.Four => new Raven4Adapter(serverUrl, databaseName),
+                _ => throw new ArgumentOutOfRangeException(nameof(version), version, null),
+            };
         }
     }
 }

@@ -176,7 +176,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 {
                     var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
                     if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
+                    {
                         checkForMoreResults = false;
+                    }
 
                     var elegibleItems = pagedTimeouts.Where(filterPredicate);
                     items.AddRange(elegibleItems);
@@ -259,7 +261,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var item in resultSet)
             {
-                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
+                if (string.IsNullOrEmpty(item.ToString()))
+                {
+                    throw new Exception("No document found for one of the specified id's");
+                }
+
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
@@ -301,7 +307,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var indexName = (string)((dynamic)item)["Name"];
                 if (indexName == RavenConstants.TimeoutIndexName)
+                {
                     return true;
+                }
             }
 
             return false;
@@ -318,7 +326,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             using var response = await httpClient.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                return default(T);
+                return default;
             }
 
             var document = await GetDocumentFromResponse<T>(response.Content);
@@ -347,7 +355,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -365,7 +373,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<List<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        async Task<List<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -375,7 +383,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var item in resultSet)
             {
-                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
+                if (string.IsNullOrEmpty(item.ToString()))
+                {
+                    throw new Exception("No document found for one of the specified id's");
+                }
+
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
@@ -385,14 +397,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        private async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
+        async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
         {
             var contentString = await resultContent.ReadAsStringAsync();
             var document = JsonConvert.DeserializeObject<T>(contentString);
             return document;
         }
 
-        private async Task PostToBulkDocs(IEnumerable<object> commands)
+        async Task PostToBulkDocs(IEnumerable<object> commands)
         {
             var bulkUpdateUrl = $"{serverUrl}/databases/{databaseName}/bulk_docs";
             var serializedCommands = JsonConvert.SerializeObject(commands);
@@ -400,7 +412,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             result.EnsureSuccessStatusCode();
         }
 
-        private Raven3BatchCommand GetDeleteCommand(string key)
+        Raven3BatchCommand GetDeleteCommand(string key)
         {
             return new Raven3BatchCommand
             {

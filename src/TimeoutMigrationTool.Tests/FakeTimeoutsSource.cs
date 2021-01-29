@@ -8,10 +8,10 @@ namespace TimeoutMigrationTool.Tests
 
     public class FakeTimeoutsSource : ITimeoutsSource
     {
-        private IToolState existingToolState;
-        private List<BatchInfo> preparedBatches = new List<BatchInfo>();
-        private List<EndpointInfo> endpoints = new List<EndpointInfo>();
-        private List<BatchInfo> readBatchResults = new List<BatchInfo>();
+        IToolState existingToolState;
+        List<BatchInfo> preparedBatches = new List<BatchInfo>();
+        List<EndpointInfo> endpoints = new List<EndpointInfo>();
+        List<BatchInfo> readBatchResults = new List<BatchInfo>();
         public bool BatchWasRead { get; private set; }
         public bool BatchWasCompleted { get; private set; }
         public bool BatchWasStaged { get; private set; }
@@ -51,7 +51,9 @@ namespace TimeoutMigrationTool.Tests
 
             var timeouts = new List<TimeoutData>(timeoutsInBatch);
             for (var i = 0; i < timeoutsInBatch; i++)
+            {
                 timeouts.Add(new TimeoutData());
+            }
 
             return Task.FromResult<IReadOnlyList<TimeoutData>>(timeouts);
         }
@@ -82,12 +84,12 @@ namespace TimeoutMigrationTool.Tests
 
         public void SetupToolStateToReturn(IToolState toolState)
         {
-            this.existingToolState = toolState;
+            existingToolState = toolState;
         }
 
         public void SetupBatchesToPrepare(List<BatchInfo> batches)
         {
-            this.preparedBatches = batches;
+            preparedBatches = batches;
         }
 
         public void SetupEndpoints(List<EndpointInfo> endpoints)
@@ -97,7 +99,7 @@ namespace TimeoutMigrationTool.Tests
 
         public void SetupTimeoutsToReadForBatch(BatchInfo batchInfo)
         {
-            this.readBatchResults.Add(batchInfo);
+            readBatchResults.Add(batchInfo);
         }
 
         public Task Complete()

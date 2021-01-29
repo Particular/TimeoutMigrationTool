@@ -39,7 +39,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             result.EnsureSuccessStatusCode();
         }
 
-        private static object GetDeleteCommand(string key)
+        static object GetDeleteCommand(string key)
         {
             return new
             {
@@ -71,8 +71,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 }
             }).ToList();
 
-            var commands = new List<object>();
-            commands.Add(insertCommand);
+            var commands = new List<object>
+            {
+                insertCommand
+            };
             commands.AddRange(timeoutUpdateCommands);
 
             await PostToBulkDocs(commands);
@@ -93,8 +95,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 }
             }).ToList();
 
-            var commands = new List<object>();
-            commands.Add(deleteCommand);
+            var commands = new List<object>
+            {
+                deleteCommand
+            };
             commands.AddRange(timeoutUpdateCommands);
 
             await PostToBulkDocs(commands);
@@ -121,8 +125,10 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 }
             }).ToList();
 
-            var commands = new List<object>();
-            commands.Add(insertCommand);
+            var commands = new List<object>
+            {
+                insertCommand
+            };
             commands.AddRange(timeoutUpdateCommands);
 
             await PostToBulkDocs(commands);
@@ -177,7 +183,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var item in resultSet)
             {
-                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
+                if (string.IsNullOrEmpty(item.ToString()))
+                {
+                    throw new Exception("No document found for one of the specified id's");
+                }
+
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
@@ -216,7 +226,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 {
                     var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
                     if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
+                    {
                         checkForMoreResults = false;
+                    }
 
                     var elegibleItems = pagedTimeouts.Where(filterPredicate);
                     items.AddRange(elegibleItems);
@@ -271,7 +283,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 throw new InvalidOperationException("Cannot retrieve a document with empty id");
             }
 
-            var documents = await GetDocuments(new[] {id}, idSetter);
+            var documents = await GetDocuments(new[] { id }, idSetter);
             var document = documents.SingleOrDefault();
             idSetter(document, id);
             return document;
@@ -319,7 +331,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 using var response = await httpClient.GetAsync(uri);
                 if (response.StatusCode == HttpStatusCode.NotFound)
+                {
                     continue;
+                }
 
                 var resultsFromUri = await GetDocumentsFromResponse(response.Content, idSetter);
                 results.AddRange(resultsFromUri);
@@ -338,7 +352,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             foreach (var item in resultSet)
             {
-                if (string.IsNullOrEmpty(item.ToString())) throw new Exception("No document found for one of the specified id's");
+                if (string.IsNullOrEmpty(item.ToString()))
+                {
+                    throw new Exception("No document found for one of the specified id's");
+                }
+
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
                 idSetter(document, id);
@@ -359,9 +377,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var serializedCommands = JsonConvert.SerializeObject(bulkCommand);
 
             using var httpContent = new StringContent(serializedCommands, Encoding.UTF8, "application/json");
-            using var request = new HttpRequestMessage(HttpMethod.Post, bulkUpdateUrl);
-            request.Version = HttpVersion.Version10;
-            request.Content = httpContent;
+            using var request = new HttpRequestMessage(HttpMethod.Post, bulkUpdateUrl)
+            {
+                Version = HttpVersion.Version10,
+                Content = httpContent
+            };
 
             using var result = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             result.EnsureSuccessStatusCode();
@@ -381,7 +401,9 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var indexName = (string)((dynamic)item)["Name"];
                 if (indexName == RavenConstants.TimeoutIndexName)
+                {
                     return true;
+                }
             }
 
             return false;

@@ -17,7 +17,7 @@
         public static Dictionary<string, string> DeSerialize(string json)
         {
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            return (Dictionary<string, string>) serializer.ReadObject(stream);
+            return (Dictionary<string, string>)serializer.ReadObject(stream);
         }
 
         static DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Dictionary<string, string>), new DataContractJsonSerializerSettings

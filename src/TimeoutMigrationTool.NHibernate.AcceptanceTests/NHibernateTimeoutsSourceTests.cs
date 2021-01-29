@@ -174,7 +174,7 @@
                 case BatchState.Completed:
                     await timeoutsSource.MarkBatchAsCompleted(1);
                     break;
-
+                case BatchState.Pending:
                 default:
                     return;
             }
@@ -390,7 +390,7 @@
             var toolState = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
             for (var x = 0; x < 3; x++)
             {
-                await timeoutsSource.MarkBatchAsCompleted(x+1);
+                await timeoutsSource.MarkBatchAsCompleted(x + 1);
             }
 
             // Act

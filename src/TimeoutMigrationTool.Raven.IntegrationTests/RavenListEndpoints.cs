@@ -11,7 +11,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
     public abstract class RavenListEndpoints
     {
-        private readonly int nrOfTimeouts = 1500;
+        readonly int nrOfTimeouts = 1500;
         IRavenTestSuite testSuite;
 
         [SetUp]

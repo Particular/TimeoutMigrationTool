@@ -15,7 +15,7 @@
     [TestFixture]
     class RavenDBToSqlTEndToEnd : RavenDBAcceptanceTest
     {
-        private string sqlConnectionString;
+        string sqlConnectionString;
 
         [SetUp]
         public async Task Setup()

@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.4.4" />
     <PackageReference Include="NServiceBus.RabbitMQ" Version="6.0.0" />
     <PackageReference Include="NUnit" Version="3.13.0" />

@@ -15,12 +15,12 @@ namespace TimeoutMigrationTool.SqlT.IntegrationTests
     [TestFixture]
     public class SqlTTimeoutsTargetTests
     {
-        private string databaseName;
-        private string connectionString;
+        string databaseName;
+        string connectionString;
 
         string ExistingEndpointName = "ExistingEndpointName";
         string ExistingDestination = "ExistingEndpointNameDirect";
-        private string schema = "dbo";
+        string schema = "dbo";
 
         [SetUp]
         public async Task SetUp()

@@ -54,7 +54,7 @@
                 .WithEndpoint<SqlTEndpoint>(b => b.CustomConfig(ec =>
                 {
                     ec.OverrideLocalAddress(sourceEndpoint);
-                    
+
                     ec.UseTransport<SqlServerTransport>()
                     .ConnectionString(connectionString);
                 })
