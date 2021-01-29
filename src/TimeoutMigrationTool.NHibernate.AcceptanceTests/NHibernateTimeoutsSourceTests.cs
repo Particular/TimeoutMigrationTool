@@ -175,7 +175,6 @@
                     await timeoutsSource.MarkBatchAsCompleted(1);
                     break;
                 case BatchState.Pending:
-                    break;
                 default:
                     return;
             }
