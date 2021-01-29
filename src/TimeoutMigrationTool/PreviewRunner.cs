@@ -11,8 +11,8 @@
         public PreviewRunner(ILogger logger, ITimeoutsSource timeoutsSource, ITimeoutsTarget transportTimeoutsTargetCreator)
         {
             this.logger = logger;
-            this._timeoutsSource = timeoutsSource;
-            this._transportTimeoutsTargetCreator = transportTimeoutsTargetCreator;
+            _timeoutsSource = timeoutsSource;
+            _transportTimeoutsTargetCreator = transportTimeoutsTargetCreator;
         }
 
         public async Task Run()
@@ -45,7 +45,7 @@
                     endpointProblems[endpoint.EndpointName].AddRange(migrationCheckResult.Problems);
                 }
 
-                if ((endpoint.ShortestTimeout - DateTime.UtcNow) < TimeSpan.FromHours(4) )
+                if ((endpoint.ShortestTimeout - DateTime.UtcNow) < TimeSpan.FromHours(4))
                 {
                     endpointProblems[endpoint.EndpointName].Add($"Shortest timeout is {endpoint.ShortestTimeout} is about to trigger and can trigger to late should the migration take a long time.");
                 }

@@ -41,7 +41,7 @@
                     command.CommandText = $"select * from master.dbo.sysdatabases where name='{databaseName}'";
                     using (var reader = command.ExecuteReader())
                     {
-                        if (reader.HasRows) 
+                        if (reader.HasRows)
                         {
                             return;
                         }
@@ -97,9 +97,10 @@
 
         static void DropDatabase(string connectionString, string databaseName)
         {
-            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
-
-            connectionStringBuilder.InitialCatalog = "master";
+            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString)
+            {
+                InitialCatalog = "master"
+            };
 
             using (var connection = new SqlConnection(connectionStringBuilder.ToString()))
             {

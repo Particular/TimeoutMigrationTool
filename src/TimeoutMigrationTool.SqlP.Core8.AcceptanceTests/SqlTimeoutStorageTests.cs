@@ -22,7 +22,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -42,7 +42,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -62,7 +62,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -82,7 +82,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
                         return session.SendLocal(startSagaMessage);
                     }))
                 .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
@@ -134,7 +134,7 @@
 
             var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(-10));
 
-            CollectionAssert.AreEquivalent(new List<string> {"FirstDestination", "SecondDestination", "ThirdDestination"}, endpoints.First().Destinations);
+            CollectionAssert.AreEquivalent(new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" }, endpoints.First().Destinations);
         }
 
         [Test]
@@ -144,7 +144,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -163,7 +163,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -193,7 +193,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -221,7 +221,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -255,7 +255,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -277,7 +277,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -307,7 +307,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -327,7 +327,7 @@
                 .WithEndpoint<SqlPEndpoint>(b => b.CustomConfig(ec => SetupPersitence(ec))
                     .When(session =>
                     {
-                        var startSagaMessage = new StartSagaMessage {Id = Guid.NewGuid()};
+                        var startSagaMessage = new StartSagaMessage { Id = Guid.NewGuid() };
 
                         return session.SendLocal(startSagaMessage);
                     }))
@@ -369,7 +369,7 @@
                 {
                     for (var x = 0; x < testContext.NumberOfTimeouts; x++)
                     {
-                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout {Id = message.Id});
+                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
                     }
                 }
 

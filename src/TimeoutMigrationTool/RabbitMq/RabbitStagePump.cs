@@ -21,7 +21,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
                 UseBackgroundThreadsForIO = true,
                 ConsumerDispatchConcurrency = MaxConcurrency
             };
-            this.prefetchMultiplier = 10;
+            prefetchMultiplier = 10;
             this.logger = logger;
             this.queueName = queueName;
         }
@@ -35,7 +35,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         const int MaxConcurrency = 10;
         CancellationTokenSource messageProcessing;
         IConnection connection;
-        AsyncEventingBasicConsumer  consumer;
+        AsyncEventingBasicConsumer consumer;
         IModel channel;
 
         // Stop
@@ -57,7 +57,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
             channel.BasicQos(0, (ushort)Math.Min(prefetchCount, ushort.MaxValue), false);
 
-            consumer = new AsyncEventingBasicConsumer (channel);
+            consumer = new AsyncEventingBasicConsumer(channel);
 
             connection.ConnectionShutdown += Connection_ConnectionShutdown;
 
@@ -98,7 +98,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             }
         }
 
-        async Task  Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
+        async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
         {
             if (messageProcessing.Token.IsCancellationRequested)
             {
@@ -156,7 +156,7 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
 
         public uint GetMessageCount()
         {
-            var data = this.consumer.Model.QueueDeclarePassive("TimeoutMigrationTool_Staging");
+            var data = consumer.Model.QueueDeclarePassive("TimeoutMigrationTool_Staging");
             return data.MessageCount;
         }
 

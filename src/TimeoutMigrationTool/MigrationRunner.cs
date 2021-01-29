@@ -104,7 +104,7 @@ namespace Particular.TimeoutMigrationTool
             }
 
             watch.Stop();
-            logger.LogInformation($"Migration completed successfully in {watch.Elapsed.ToString("hh\\:mm\\:ss")}.");
+            logger.LogInformation($"Migration completed successfully in {watch.Elapsed:hh\\:mm\\:ss}.");
         }
 
         async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)

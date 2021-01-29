@@ -73,7 +73,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     Headers = new Dictionary<string, string>(),
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
-                
+
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
                 var httpContent = new StringContent(serializeObject);
 
@@ -81,14 +81,14 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
             }
         }
-        
+
         public async Task<InitiTimeoutsResult> InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId)
         {
             var timeoutsPrefix = "TimeoutDatas";
             var shortestTimeout = DateTime.MaxValue;
             var longestTimeout = DateTime.MinValue;
             var daysToTrigger = random.Next(2, 60); // randomize the Time property
-            
+
             for (var i = 0; i < nrOfTimeouts; i++)
             {
                 var insertTimeoutUrl = $"{ServerName}/databases/{DatabaseName}/docs?id={timeoutsPrefix}/{startFromId + i}";
@@ -103,17 +103,24 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     Headers = new Dictionary<string, string>(),
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
-                
+
                 var serializeObject = JsonConvert.SerializeObject(timeoutData);
                 var httpContent = new StringContent(serializeObject);
 
                 var result = await HttpClient.PutAsync(insertTimeoutUrl, httpContent);
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-                if (shortestTimeout > timeoutData.Time) shortestTimeout = timeoutData.Time;
-                if (longestTimeout < timeoutData.Time) longestTimeout = timeoutData.Time;
+                if (shortestTimeout > timeoutData.Time)
+                {
+                    shortestTimeout = timeoutData.Time;
+                }
+
+                if (longestTimeout < timeoutData.Time)
+                {
+                    longestTimeout = timeoutData.Time;
+                }
             }
-            
-            return new InitiTimeoutsResult               
+
+            return new InitiTimeoutsResult
             {
                 ShortestTimeout = shortestTimeout,
                 LongestTimeout = longestTimeout
@@ -228,7 +235,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var killDb = $"{ServerName}/admin/databases";
             var deleteDb = new DeleteDbParamsForRaven4
             {
-                DatabaseNames = new[] {DatabaseName},
+                DatabaseNames = new[] { DatabaseName },
                 HardDelete = true
             };
             var httpRequest = new HttpRequestMessage
@@ -248,7 +255,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var index = new
             {
                 Name = RavenConstants.TimeoutIndexName,
-                Maps = new List<string> {map},
+                Maps = new List<string> { map },
                 Type = "Map",
                 LockMode = "Unlock",
                 Priority = "Normal",
@@ -262,7 +269,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
             var indexes = new
             {
-                Indexes = new List<object> {index}
+                Indexes = new List<object> { index }
             };
 
             var createIndexUrl = $"{ServerName}/databases/{DatabaseName}/admin/indexes";
@@ -279,10 +286,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
         public string DatabaseName { get; private set; }
 
-        public RavenDbVersion RavenVersion
-        {
-            get => RavenDbVersion.Four;
-        }
+        public RavenDbVersion RavenVersion => RavenDbVersion.Four;
 
         public string EndpointName { get; set; }
         protected static readonly HttpClient HttpClient = new HttpClient();
@@ -298,7 +302,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 var contentString = await result.Content.ReadAsStringAsync();
                 var jObject = JObject.Parse(contentString);
                 isIndexStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
-                if (isIndexStale) await Task.Delay(TimeSpan.FromMilliseconds(500));
+                if (isIndexStale)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(500));
+                }
             }
         }
     }

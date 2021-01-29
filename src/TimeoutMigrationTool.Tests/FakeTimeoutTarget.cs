@@ -65,7 +65,7 @@ namespace TimeoutMigrationTool.Tests
 
         public void SetupProblemsToReturn(List<string> problems)
         {
-            this.problemsToReturn = problems;
+            problemsToReturn = problems;
         }
     }
 }

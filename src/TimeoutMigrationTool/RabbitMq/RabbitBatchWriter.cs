@@ -20,7 +20,7 @@
         public Task<int> WriteTimeoutsToStagingQueue(IReadOnlyList<TimeoutData> timeouts, string stageExchangeName)
         {
             int messageCount;
-            using (var connection = GetConnection(this.rabbitConnectionString))
+            using (var connection = GetConnection(rabbitConnectionString))
             {
                 using (var model = connection.CreateModel())
                 {
@@ -51,8 +51,6 @@
 
         void PublishTimeout(IModel model, TimeoutData timeout, string stageExchangeName)
         {
-            int level;
-
             var delay = timeout.Time - DateTime.UtcNow;
             var delayInSeconds = Convert.ToInt32(Math.Ceiling(delay.TotalSeconds));
             if (delayInSeconds < 0)
@@ -61,7 +59,7 @@
                 delayInSeconds = 0;
             }
 
-            var routingKey = CalculateRoutingKey(delayInSeconds, timeout.Destination, out level);
+            var routingKey = CalculateRoutingKey(delayInSeconds, timeout.Destination, out int level);
 
             var properties = model.CreateBasicProperties();
             Fill(properties, timeout, delay);
@@ -74,8 +72,10 @@
 
         IConnection GetConnection(string rabbitMqBroker)
         {
-            this.factory = new ConnectionFactory();
-            factory.Uri = new Uri(rabbitMqBroker);
+            factory = new ConnectionFactory
+            {
+                Uri = new Uri(rabbitMqBroker)
+            };
             return factory.CreateConnection();
         }
 

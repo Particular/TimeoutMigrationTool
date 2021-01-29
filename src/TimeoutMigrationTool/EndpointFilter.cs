@@ -4,13 +4,7 @@
 
     public class EndpointFilter
     {
-        public static EndpointFilter IncludeAll
-        {
-            get
-            {
-                return new EndpointFilter(true);
-            }
-        }
+        public static EndpointFilter IncludeAll => new EndpointFilter(true);
 
         public bool IncludeAllEndpoints { get; private set; }
 

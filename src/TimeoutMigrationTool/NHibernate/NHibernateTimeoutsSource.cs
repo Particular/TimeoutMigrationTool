@@ -67,7 +67,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
                     .OrderBy(entity => entity.BatchNumber)
                     .Asc.ListAsync<object[]>();
 
-                return stagedTimeoutEntities.Select(x => new BatchInfo((int) x[0], (BatchState) x[1], (int) x[2]))
+                return stagedTimeoutEntities.Select(x => new BatchInfo((int)x[0], (BatchState)x[1], (int)x[2]))
                     .FirstOrDefault();
             }
 
@@ -257,12 +257,12 @@ WHERE
                     ).ListAsync<object[]>();
 
             return timeouts.Select(x => new EndpointInfo
-                {
-                    EndpointName = x[0].ToString(),
-                    LongestTimeout = (DateTime)x[1],
-                    ShortestTimeout = (DateTime)x[2],
-                    NrOfTimeouts = (int)x[3],
-                    Destinations = session.QueryOver<TimeoutEntity>()
+            {
+                EndpointName = x[0].ToString(),
+                LongestTimeout = (DateTime)x[1],
+                ShortestTimeout = (DateTime)x[2],
+                NrOfTimeouts = (int)x[3],
+                Destinations = session.QueryOver<TimeoutEntity>()
                                             .Where(timeout => timeout.Endpoint == x[0].ToString())
                                             .SelectList(t => t.SelectGroup(x => x.Destination))
                                             .List<string>()

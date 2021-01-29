@@ -11,7 +11,6 @@
     {
         readonly SqlConnection connection;
         readonly string databaseName;
-        readonly string endpointName;
         readonly string schema;
         readonly ILogger logger;
         readonly DataTable stagingDataTable;
@@ -21,7 +20,6 @@
         {
             this.logger = logger;
             this.schema = schema;
-            this.endpointName = endpointName;
             this.connection = connection;
             databaseName = connection.Database;
             endpointDelayedTableName = SqlConstants.DelayedTableName(endpointName);

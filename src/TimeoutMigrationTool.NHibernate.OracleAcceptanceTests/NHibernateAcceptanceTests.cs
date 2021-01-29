@@ -16,7 +16,7 @@
         {
             connectionString = Environment.GetEnvironmentVariable("OracleConnectionString") ?? $@"Data Source = (DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = 127.0.0.1)(PORT = 1521)))(CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = ORCLCDB.localdomain))); DBA Privilege = SYSDBA; User Id = sys; Password = Oradoc_db1; Enlist = dynamic";
 
-            RecreateDbIfNotExists(connectionString);
+            RecreateDbIfNotExists();
         }
 
         internal DatabaseDialect DatabaseDialect = new OracleDatabaseDialect();
@@ -57,7 +57,7 @@
             await DropTable(session, "MIGRATIONSENTITY");
         }
 
-        void RecreateDbIfNotExists(string connectionString)
+        void RecreateDbIfNotExists()
         {
         }
 

@@ -43,7 +43,7 @@
         [TearDown]
         public async Task TearDown()
         {
-            await MsSqlMicrosoftDataClientHelper.RemoveDbIfExists( connectionString);
+            await MsSqlMicrosoftDataClientHelper.RemoveDbIfExists(connectionString);
         }
 
         protected void SetupPersistence(EndpointConfiguration endpointConfiguration)

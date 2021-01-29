@@ -19,10 +19,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
         public ICanTalkToRavenVersion RavenAdapter => new Raven3Adapter(ServerName, DatabaseName);
         public ILogger Logger => new ConsoleLogger(false);
 
-        public string ServerName
-        {
-            get { return serverName; }
-        }
+        public string ServerName => serverName;
 
         static Random random = new Random();
 
@@ -97,8 +94,15 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
                 var result = await HttpClient.PutAsync(insertTimeoutUrl, httpContent);
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-                if (shortestTimeout > timeoutData.Time) shortestTimeout = timeoutData.Time;
-                if (longestTimeout < timeoutData.Time) longestTimeout = timeoutData.Time;
+                if (shortestTimeout > timeoutData.Time)
+                {
+                    shortestTimeout = timeoutData.Time;
+                }
+
+                if (longestTimeout < timeoutData.Time)
+                {
+                    longestTimeout = timeoutData.Time;
+                }
             }
 
             return new InitiTimeoutsResult
@@ -225,10 +229,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
 
         public string DatabaseName { get; private set; }
 
-        public RavenDbVersion RavenVersion
-        {
-            get => RavenDbVersion.ThreeDotFive;
-        }
+        public RavenDbVersion RavenVersion => RavenDbVersion.ThreeDotFive;
 
         public string EndpointName { get; set; }
 
@@ -256,7 +257,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                 IsMapReduce = false,
                 LockMode = "Unlock",
                 Map = map,
-                Maps = new List<string> {map},
+                Maps = new List<string> { map },
                 Name = RavenConstants.TimeoutIndexName,
                 Reduce = (object)null,
                 SortOptions = (object)null,
@@ -291,7 +292,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                 var contentString = await result.Content.ReadAsStringAsync();
                 var jObject = JObject.Parse(contentString);
                 isIndexStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
-                if (isIndexStale) await Task.Delay(TimeSpan.FromMilliseconds(500));
+                if (isIndexStale)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(500));
+                }
             }
         }
     }

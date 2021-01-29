@@ -17,15 +17,12 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
         public static int GetMaxNrOfTimeoutsWithoutIndexByRavenVersion(RavenDbVersion version)
         {
-            switch (version)
+            return version switch
             {
-                case RavenDbVersion.ThreeDotFive:
-                    return 300000;
-                case RavenDbVersion.Four:
-                    return 1000000;
-                default:
-                    throw new ArgumentOutOfRangeException("Unsupported version of RavenDB");
-            }
+                RavenDbVersion.ThreeDotFive => 300000,
+                RavenDbVersion.Four => 1000000,
+                _ => throw new ArgumentOutOfRangeException("Unsupported version of RavenDB"),
+            };
         }
     }
 }

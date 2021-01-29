@@ -51,7 +51,9 @@ namespace TimeoutMigrationTool.Tests
 
             var timeouts = new List<TimeoutData>(timeoutsInBatch);
             for (var i = 0; i < timeoutsInBatch; i++)
+            {
                 timeouts.Add(new TimeoutData());
+            }
 
             return Task.FromResult<IReadOnlyList<TimeoutData>>(timeouts);
         }
@@ -82,12 +84,12 @@ namespace TimeoutMigrationTool.Tests
 
         public void SetupToolStateToReturn(IToolState toolState)
         {
-            this.existingToolState = toolState;
+            existingToolState = toolState;
         }
 
         public void SetupBatchesToPrepare(List<BatchInfo> batches)
         {
-            this.preparedBatches = batches;
+            preparedBatches = batches;
         }
 
         public void SetupEndpoints(List<EndpointInfo> endpoints)
@@ -97,7 +99,7 @@ namespace TimeoutMigrationTool.Tests
 
         public void SetupTimeoutsToReadForBatch(BatchInfo batchInfo)
         {
-            this.readBatchResults.Add(batchInfo);
+            readBatchResults.Add(batchInfo);
         }
 
         public Task Complete()

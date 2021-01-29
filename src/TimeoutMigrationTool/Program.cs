@@ -271,7 +271,7 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * 1024);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
@@ -511,7 +511,7 @@
                             runParameters.Add(ApplicationOptions.SqlTTargetConnectionString,
                                 targetConnectionString);
 
-                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * 1024);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
@@ -726,7 +726,7 @@
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
 
-                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5*1024);
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * 1024);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
@@ -808,9 +808,15 @@
 
         static DateTime? GetCutoffTime(CommandOption cutoffTimeOption)
         {
-            if (!cutoffTimeOption.HasValue()) return null;
+            if (!cutoffTimeOption.HasValue())
+            {
+                return null;
+            }
 
-            if (DateTime.TryParse(cutoffTimeOption.Value(), out var cutoffTime)) return cutoffTime;
+            if (DateTime.TryParse(cutoffTimeOption.Value(), out var cutoffTime))
+            {
+                return cutoffTime;
+            }
 
             throw new ArgumentException(
                 "Unable to parse the cutofftime, please supply the cutoffTime in the following format 'yyyy-MM-dd hh:mm:ss'");
@@ -840,7 +846,10 @@
         static EndpointFilter ParseEndpointFilter(CommandOption allEndpointsOption,
             CommandOption endpointFilterOption)
         {
-            if (allEndpointsOption.HasValue()) return EndpointFilter.IncludeAll;
+            if (allEndpointsOption.HasValue())
+            {
+                return EndpointFilter.IncludeAll;
+            }
 
             if (!endpointFilterOption.HasValue())
             {
@@ -853,7 +862,7 @@
 
         static void UnhandledAppdomainExceptionHandler(object sender, UnhandledExceptionEventArgs args)
         {
-            var exception = (Exception) args.ExceptionObject;
+            var exception = (Exception)args.ExceptionObject;
             Console.WriteLine("Unhandled appdomain exception: " + exception);
             Console.WriteLine("Runtime terminating: {0}", args.IsTerminating);
         }
