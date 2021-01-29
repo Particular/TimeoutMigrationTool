@@ -4,6 +4,6 @@
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-  	<PackageReference Include="NServiceBus.NHibernate" Version="7.2.5" />
+  	<PackageReference Include="NServiceBus.NHibernate" Version="8.4.3" />
   </ItemGroup>
 </Project>
