@@ -40,6 +40,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHiber
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.NHibernate.OracleAcceptanceTests", "TimeoutMigrationTool.NHibernate.OracleAcceptanceTests\TimeoutMigrationTool.NHibernate.OracleAcceptanceTests.csproj", "{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.Asp.IntegrationTests", "TimeoutMigrationTool.Asp.IntegrationTests\TimeoutMigrationTool.Asp.IntegrationTests.csproj", "{A4334D32-0595-446A-944E-5D5B76B4DC04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.Asp.FakeData", "TimeoutMigrationTool.Asp.FakeData\TimeoutMigrationTool.Asp.FakeData.csproj", "{36E1A495-68EC-4C40-9800-AE39DF5B2B25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeoutMigrationTool.Asp.AcceptanceTests", "TimeoutMigrationTool.Asp.AcceptanceTests\TimeoutMigrationTool.Asp.AcceptanceTests.csproj", "{BF938D36-C8E1-4910-854A-6340306199F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,6 +116,18 @@ Global
 		{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E4CFDC6-B245-46BD-8C45-2A0B9FB28E0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4334D32-0595-446A-944E-5D5B76B4DC04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36E1A495-68EC-4C40-9800-AE39DF5B2B25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF938D36-C8E1-4910-854A-6340306199F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF938D36-C8E1-4910-854A-6340306199F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF938D36-C8E1-4910-854A-6340306199F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF938D36-C8E1-4910-854A-6340306199F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

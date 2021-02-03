@@ -13,6 +13,10 @@ namespace Particular.TimeoutMigrationTool
         public const string SqlTTargetSchema = "schema";
         public const string SqlSourceConnectionString = "source";
         public const string SqlSourceDialect = "dialect";
+        public const string AspSourceConnectionString = "source";
+        public const string AspSourceContainerName = "containerName";
+        public const string AspSourcePartitionKeyScope = "partitionKeyScope";
+        public const string AspTimeoutTableName = "timeoutTableName";
         public const string AbortMigration = "abort";
         public const string EndpointFilter = "endpoint";
         public const string AllEndpoints = "allEndpoints";
