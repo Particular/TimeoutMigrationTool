@@ -13,10 +13,10 @@ Here's an overview per transport:
 |   SQL Server |   On the source endpoint in a table	|
 |   Amazon SQS	|   On the target endpoint in a .fifo queue	|
 
-This drives how the migration tool behaves. Let's consider that an endpoint called Sales, containing timeouts that are to be consumed by endpoints Invoicing and Reporting.
-- For RabbitMQ, all the delayed messages from Sales, independent of their destination, will be migrated into the shared delayed delivery infrastructure that's used by the RabbitMQ transport.
-- For Azure Storage Queues, all the delayed messages from Sales will be migrated directly to the delayed delivery Azure Table from the Sales endpoint. They are kept there until a polling mechanism picks them up as expired and sends them to the appropriate destination.
-- For SQL Server transport, all the delayed messages from Sales, will be migrated into the Sales endpoint. They are kept there until a polling mechanism picks them up as expired and sends them to the appropriate destination.
+This drives how the migration tool behaves. Let's consider that an endpoint called Sales, contains delayed messages that are to be consumed by endpoints Invoicing and Reporting.
+- For RabbitMQ, all the delayed messages from Sales, independent of their destination, will be migrated into the shared delayed delivery infrastructure that's used by the RabbitMQ transport. The messages will flow through that infrastructure and be routed to the correct destination.
+- For Azure Storage Queues, all the delayed messages from Sales will be migrated into an Azure Table that holds delayed messages for the Sales endpoint. They are kept there until a polling mechanism picks them up as expired and sends them to the appropriate destination.
+- For SQL Server transport, all the delayed messages from Sales, will be migrated into a dedicated delayed messages table in the Sales endpoint. They are kept there until a polling mechanism picks them up as expired and sends them to the appropriate destination.
 - For Amazon SQS, the delayed messages for Invoicing will be migrated directly to the invoicing.fifo queue, and the delayed messages for Reporting to reporting.fifo.
 
 
