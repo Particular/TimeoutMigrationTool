@@ -1,5 +1,25 @@
 # TimeoutMigrationTool
 
+## Delayed message behavior across transports
+
+A delayed message is a message that should not be sent before x date and time. Depending on the transport's capabilities, the delayed message or timeout can be stored by the destination and made available in the input queue when the delay expires, or it might be kept by the source endpoint until the delay expires, and sent out at that point as a normal message.
+How this works impacts how the endpoint's source and target are viewed.
+
+Here's an overview per transport:
+|   Transport	|   Where are timeouts stored before expiry?	|
+|---	|---	|
+|   RabbitMQ	|   On the shared delayed delivery infrastructure (shared by all endpoints)	|
+|   Azure Storage Queues	|   On the source endpoint in an Azure Table, which is polled	|
+|   SQL Server |   On the source endpoint in a table	|
+|   Amazon SQS	|   On the target endpoint in a .fifo queue	|
+
+This drives how the migration tool behaves. Let's consider that an endpoint called Sales, contains delayed messages that are to be consumed by endpoints Invoicing and Reporting.
+- For RabbitMQ, all the delayed messages from Sales, independent of their destination, will be migrated into the shared delayed delivery infrastructure that's used by the RabbitMQ transport. The messages will flow through that infrastructure and be routed to the correct destination.
+- For Azure Storage Queues, all the delayed messages from Sales will be migrated into an Azure Table that holds delayed messages for the Sales endpoint. They are kept there until a polling mechanism picks them up as expired and sends them to the appropriate destination.
+- For SQL Server transport, all the delayed messages from Sales, will be migrated into a dedicated delayed messages table in the Sales endpoint. They are kept there until a polling mechanism picks them up as expired and sends them to the appropriate destination.
+- For Amazon SQS, the delayed messages for Invoicing will be migrated directly to the invoicing.fifo queue, and the delayed messages for Reporting to reporting.fifo.
+
+
 ## How to Test Locally
 
 ### For the source
