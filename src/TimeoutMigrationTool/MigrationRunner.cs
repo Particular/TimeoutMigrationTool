@@ -109,8 +109,10 @@ namespace Particular.TimeoutMigrationTool
 
         async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
+            var prepareWatch = Stopwatch.StartNew();
             var toolState = await timeoutsSource.Prepare(cutOffTime, endpointName, runParameters);
-            logger.LogInformation("Storage has been prepared for migration.");
+            logger.LogInformation($"Storage has been prepared for migration in {prepareWatch.Elapsed:hh\\:mm\\:ss}.");
+            prepareWatch.Stop();
             await Run(toolState);
         }
 
@@ -122,6 +124,7 @@ namespace Particular.TimeoutMigrationTool
 
             while ((batch = await toolState.TryGetNextBatch()) != null)
             {
+                var batchWatch = Stopwatch.StartNew();
                 logger.LogInformation($"Migrating batch {batch.Number}");
 
                 var needToRecover = false;
@@ -161,7 +164,8 @@ namespace Particular.TimeoutMigrationTool
                 batch.State = BatchState.Completed;
                 await timeoutsSource.MarkBatchAsCompleted(batch.Number);
 
-                logger.LogDebug($"Batch number {batch.Number} fully migrated");
+                batchWatch.Stop();
+                logger.LogInformation($"Batch {batch.Number} migrated in {batchWatch.Elapsed:hh\\:mm\\:ss}");
             }
 
             await timeoutsSource.Complete();
