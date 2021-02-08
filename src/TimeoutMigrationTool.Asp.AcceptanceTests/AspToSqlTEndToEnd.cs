@@ -5,7 +5,6 @@
     using NServiceBus.AcceptanceTesting;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
-    using Particular.TimeoutMigrationTool.RabbitMq;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -101,7 +100,10 @@
         {
             public LegacyAspEndpoint()
             {
-                EndpointSetup<LegacyTimeoutManagerEndpoint>();
+                EndpointSetup<LegacyTimeoutManagerEndpoint>(ec =>
+                {
+                    ec.DisableFeature<Sagas>();
+                });
             }
         }
 

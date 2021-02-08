@@ -77,19 +77,6 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        async Task WaitUntilTheTimeoutIsSavedInSql(string endpoint)
-        {
-            while (true)
-            {
-                var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {endpoint}_TimeoutData");
-
-                if (numberOfTimeouts > 0)
-                {
-                    return;
-                }
-            }
-        }
-
         string rabbitUrl;
 
         public class SourceTestContext : ScenarioContext

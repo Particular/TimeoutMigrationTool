@@ -3,13 +3,13 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public class NoOpTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTarget
+    public class NoOpTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTargetBatchMigrator
     {
         int lastStaged;
 
         public ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint) => new ValueTask<MigrationCheckResult>(new MigrationCheckResult());
 
-        public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName) => new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
+        public ValueTask<ITimeoutsTarget.IEndpointTargetBatchMigrator> PrepareTargetEndpointBatchMigrator(string endpointName) => new ValueTask<ITimeoutsTarget.IEndpointTargetBatchMigrator>(this);
 
         public ValueTask Abort(string endpointName) => new ValueTask();
 

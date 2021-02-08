@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Asp;
+    using ASQ;
     using McMaster.Extensions.CommandLineUtils;
     using Microsoft.Extensions.Logging;
     using RabbitMq;
@@ -172,6 +173,20 @@
                     Description = "The default schema used for the SQL Server transport",
                 };
 
+            var targetAsqConnectionString =
+                new CommandOption($"-t|--{ApplicationOptions.AsqTargetConnectionString}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The connection string to the table storage"
+                };
+
+            var targetAsqDelayedDeliveryTableName =
+                new CommandOption($"-t|--{ApplicationOptions.AsqDelayedDeliveryTableName}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The name of the delayed delivery table for ASQ. Only necessary if the default was overidden in the endpoint configuration."
+                };
+
             var runParameters = new Dictionary<string, string>();
 
             var batchSize = 1024;
@@ -254,6 +269,34 @@
                             await runner.Run();
                         });
                     });
+
+                    ravenDBCommand.Command("asq", ravenDBToAsqCommand =>
+                    {
+                        ravenDBToAsqCommand.Options.Add(targetAsqConnectionString);
+                        ravenDBToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        ravenDBToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+                            var forceUseIndex = sourceRavenDbForceUseIndexOption.HasValue();
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
                 });
 
                 previewCommand.Command("sqlp", sqlpCommand =>
@@ -308,6 +351,29 @@
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    sqlpCommand.Command("asq", sqlpToAsqCommand =>
+                    {
+                        sqlpToAsqCommand.Options.Add(targetAsqConnectionString);
+                        sqlpToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        sqlpToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -372,6 +438,29 @@
                             await runner.Run();
                         });
                     });
+
+                    nHibernateCommand.Command("asq", nHibernateToAsqCommand =>
+                    {
+                        nHibernateToAsqCommand.Options.Add(targetAsqConnectionString);
+                        nHibernateToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        nHibernateToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
                 });
 
                 previewCommand.Command("asp", aspCommand =>
@@ -382,9 +471,6 @@
                         aspCommand.ShowHelp();
                         return 1;
                     });
-
-                    // TODO validate partitionKeyScope
-                    //sourceNHibernateDialect.Validators.Add(new NHibernateDialectValidator());
 
                     aspCommand.Options.Add(endpointFilterOption);
                     aspCommand.Options.Add(sourceAspConnectionString);
@@ -444,6 +530,35 @@
 
                             var timeoutsTarget =
                                 new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    aspCommand.Command("asq", aspToAsqCommand =>
+                    {
+                        aspToAsqCommand.Options.Add(targetAsqConnectionString);
+                        aspToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        aspToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceContainerName = sourceAspContainerName.Value();
+                            var sourcePartitionKeyScope = sourceAspPartitionKeyScope.Value();
+                            var sourceTimeoutTableName = sourceAspTimeoutTableName.Value();
+
+                            var endpointName = endpointFilterOption.Value();
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
+                                sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
+                                partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -557,6 +672,51 @@
                         });
                     });
 
+                    ravenDBCommand.Command("asq", ravenDBPToAsqCommand =>
+                    {
+                        ravenDBPToAsqCommand.Options.Add(targetAsqConnectionString);
+                        ravenDBPToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        ravenDBPToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+                            var forceUseIndex = sourceRavenDbForceUseIndexOption.HasValue();
+
+                            runParameters.Add(ApplicationOptions.RavenServerUrl, serverUrl);
+                            runParameters.Add(ApplicationOptions.RavenDatabaseName, databaseName);
+                            runParameters.Add(ApplicationOptions.RavenTimeoutPrefix, prefix);
+                            runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            if (targetAsqDelayedDeliveryTableName.HasValue() && allEndpointsOption.HasValue())
+                            {
+                                Console.WriteLine("It is not possible to override the delayed delivery table name and migrate all endpoints");
+                                return;
+                            }
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.AsqTargetConnectionString, targetConnectionString);
+                            runParameters.Add(ApplicationOptions.AsqDelayedDeliveryTableName, delayedDeliveryTableNameOverride);
+
+                            var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource, timeoutsTarget);
+                        });
+                    });
+
                     ravenDBCommand.Command("noop", ravenDBCommandToNoopCommand =>
                     {
                         ravenDBCommandToNoopCommand.OnExecuteAsync(async ct =>
@@ -656,6 +816,43 @@
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
+
+                    sqlpCommand.Command("asq", sqlPToAsqCommand =>
+                    {
+                        sqlPToAsqCommand.Options.Add(targetAsqConnectionString);
+                        sqlPToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        sqlPToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            if (targetAsqDelayedDeliveryTableName.HasValue() && allEndpointsOption.HasValue())
+                            {
+                                Console.WriteLine("It is not possible to override the delayed delivery table name and migrate all endpoints");
+                                return;
+                            }
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceSqlPDialect.Value());
+                            runParameters.Add(ApplicationOptions.AsqTargetConnectionString, targetConnectionString);
+                            runParameters.Add(ApplicationOptions.AsqDelayedDeliveryTableName, delayedDeliveryTableNameOverride);
+
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -766,6 +963,44 @@
                         });
                     });
 
+                    nHibernateCommand.Command("asq", nHibernateToAsqCommand =>
+                    {
+                        nHibernateToAsqCommand.Options.Add(targetAsqConnectionString);
+                        nHibernateToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        nHibernateToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            if (targetAsqDelayedDeliveryTableName.HasValue() && allEndpointsOption.HasValue())
+                            {
+                                Console.WriteLine("It is not possible to override the delayed delivery table name and migrate all endpoints");
+                                return;
+                            }
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.NHibernateSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.NHibernateSourceDialect, sourceNHibernateDialect.Value());
+
+                            runParameters.Add(ApplicationOptions.AsqTargetConnectionString, targetConnectionString);
+                            runParameters.Add(ApplicationOptions.AsqDelayedDeliveryTableName, delayedDeliveryTableNameOverride);
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource, timeoutsTarget);
+                        });
+                    });
+
                     nHibernateCommand.Command("noop", nHibernateToNoopCommand =>
                     {
                         nHibernateToNoopCommand.OnExecuteAsync(async ct =>
@@ -800,8 +1035,6 @@
                         aspCommand.ShowHelp();
                         return 1;
                     });
-
-                    //sourceNHibernateDialect.Validators.Add(new NHibernateDialectValidator());
 
                     aspCommand.Options.Add(endpointFilterOption);
                     aspCommand.Options.Add(sourceAspConnectionString);
@@ -886,6 +1119,52 @@
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
                                 timeoutsTarget);
+                        });
+                    });
+
+                    aspCommand.Command("asq", aspToAsqCommand =>
+                    {
+                        aspToAsqCommand.Options.Add(targetAsqConnectionString);
+                        aspToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        aspToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceContainerName = sourceAspContainerName.Value();
+                            var sourcePartitionKeyScope = sourceAspPartitionKeyScope.Value();
+                            var sourceTimeoutTableName = sourceAspTimeoutTableName.Value();
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            if (targetAsqDelayedDeliveryTableName.HasValue() && allEndpointsOption.HasValue())
+                            {
+                                Console.WriteLine("It is not possible to override the delayed delivery table name and migrate all endpoints");
+                                return;
+                            }
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.AspSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.AspSourceContainerName, sourceContainerName);
+                            runParameters.Add(ApplicationOptions.AspSourcePartitionKeyScope, sourcePartitionKeyScope);
+                            runParameters.Add(ApplicationOptions.AspTimeoutTableName, sourceTimeoutTableName);
+
+                            runParameters.Add(ApplicationOptions.AsqTargetConnectionString, targetConnectionString);
+                            runParameters.Add(ApplicationOptions.AsqDelayedDeliveryTableName, delayedDeliveryTableNameOverride);
+
+                            var endpointName = endpointFilterOption.Value();
+
+                            var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
+                                sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
+                                partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource, timeoutsTarget);
                         });
                     });
 
@@ -976,6 +1255,7 @@
                     ravenDBCommand.Command("sqlt", ravenDBToSqlTCommand =>
                     {
                         ravenDBToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDBToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
                         ravenDBToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -994,6 +1274,34 @@
                             var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, false);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
+
+                            var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    ravenDBCommand.Command("asq", ravenDBToAsqCommand =>
+                    {
+                        ravenDBToAsqCommand.Options.Add(targetAsqConnectionString);
+                        ravenDBToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        ravenDBToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var serverUrl = sourceRavenDbServerUrlOption.Value();
+                            var databaseName = sourceRavenDbDatabaseNameOption.Value();
+                            var prefix = sourceRavenDbPrefixOption.Value();
+                            var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
+                                ? RavenDbVersion.ThreeDotFive
+                                : RavenDbVersion.Four;
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
+                                ravenVersion, false);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
                             await runner.Run();
@@ -1061,6 +1369,7 @@
                     sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
                     {
                         sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        sqlpToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
                         sqlpToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1074,6 +1383,29 @@
 
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
+
+                            var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    sqlpCommand.Command("asq", sqlpToAsqCommand =>
+                    {
+                        sqlpToAsqCommand.Options.Add(targetAsqConnectionString);
+                        sqlpToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        sqlpToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
                             await runner.Run();
@@ -1136,6 +1468,7 @@
                     nhbCommand.Command("sqlt", nHibernateToSqlTCommand =>
                     {
                         nHibernateToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        nHibernateToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
                         nHibernateToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1149,6 +1482,29 @@
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, batchSize, dialect);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
+
+                            var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    nhbCommand.Command("asq", nHibernateToAsqCommand =>
+                    {
+                        nHibernateToAsqCommand.Options.Add(targetAsqConnectionString);
+                        nHibernateToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        nHibernateToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -1237,6 +1593,35 @@
                                 sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
                                 partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema);
+
+                            var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    aspCommand.Command("asq", aspToAsqCommand =>
+                    {
+                        aspToAsqCommand.Options.Add(targetAsqConnectionString);
+                        aspToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+
+                        aspToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceContainerName = sourceAspContainerName.Value();
+                            var sourcePartitionKeyScope = sourceAspPartitionKeyScope.Value();
+                            var sourceTimeoutTableName = sourceAspTimeoutTableName.Value();
+
+                            var targetConnectionString = targetAsqConnectionString.Value();
+                            var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
+
+                            var endpointName = endpointFilterOption.Value();
+
+                            var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
+                                sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
+                                partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
+                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();

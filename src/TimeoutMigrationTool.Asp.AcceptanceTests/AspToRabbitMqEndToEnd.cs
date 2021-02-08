@@ -86,7 +86,10 @@
         {
             public LegacyAspEndpoint()
             {
-                EndpointSetup<LegacyTimeoutManagerEndpoint>();
+                EndpointSetup<LegacyTimeoutManagerEndpoint>(ec =>
+                {
+                    ec.DisableFeature<Sagas>();
+                });
             }
         }
 

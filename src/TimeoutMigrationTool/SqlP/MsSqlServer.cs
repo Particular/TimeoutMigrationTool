@@ -108,7 +108,7 @@ BEGIN TRANSACTION
     UPDATE BatchMigration
     SET BatchMigration.BatchNumber = BatchMigration.CalculatedBatchNumber + 1
     FROM (
-        SELECT BatchNumber, ROW_NUMBER() OVER (ORDER BY (select 0)) / {batchSize} AS CalculatedBatchNumber
+        SELECT BatchNumber, (ROW_NUMBER() OVER (ORDER BY (select 0)) - 1) / {batchSize} AS CalculatedBatchNumber
         FROM [{migrationTableName}]
     ) BatchMigration;
 
@@ -167,10 +167,10 @@ SELECT
 	MIN(Time) ShortestTimeout,
     (SELECT DISTINCT(Destination) + '', ''
     FROM
-        ' + name + '
+        [' + name + ']
     FOR XML PATH('''')) Destinations
 FROM
-	' + name + '
+	[' + name + ']
 WHERE
 	Time >= @CutOffTime
 HAVING

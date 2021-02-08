@@ -4,7 +4,7 @@ namespace TimeoutMigrationTool.Tests
     using System.Threading.Tasks;
     using Particular.TimeoutMigrationTool;
 
-    public class FakeTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTarget
+    public class FakeTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTargetBatchMigrator
     {
         List<string> problemsToReturn;
         public bool BatchWasStaged { get; private set; }
@@ -41,9 +41,9 @@ namespace TimeoutMigrationTool.Tests
             return new ValueTask<MigrationCheckResult>(result);
         }
 
-        public ValueTask<ITimeoutsTarget.IEndpointTarget> Migrate(string endpointName)
+        public ValueTask<ITimeoutsTarget.IEndpointTargetBatchMigrator> PrepareTargetEndpointBatchMigrator(string endpointName)
         {
-            return new ValueTask<ITimeoutsTarget.IEndpointTarget>(this);
+            return new ValueTask<ITimeoutsTarget.IEndpointTargetBatchMigrator>(this);
         }
 
         public ValueTask Abort(string endpointName)

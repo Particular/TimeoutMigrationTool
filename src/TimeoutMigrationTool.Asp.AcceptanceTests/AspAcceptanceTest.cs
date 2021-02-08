@@ -35,7 +35,7 @@
 
                 testName = testName.Replace("_", "");
 
-                return testName + "_" + endpointBuilder;
+                return testName + "-" + endpointBuilder;
             };
 
             tableNamePrefix = $"Att{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();

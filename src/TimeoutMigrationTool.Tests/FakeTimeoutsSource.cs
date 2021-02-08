@@ -29,7 +29,7 @@ namespace TimeoutMigrationTool.Tests
 
         public Task<IToolState> TryLoadOngoingMigration()
         {
-            return Task.FromResult<IToolState>(existingToolState);
+            return Task.FromResult(existingToolState);
         }
 
         public Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)

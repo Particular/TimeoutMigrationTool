@@ -7,7 +7,7 @@
     using Microsoft.Data.SqlClient;
     using Microsoft.Extensions.Logging;
 
-    class SqlTEndpointTarget : ITimeoutsTarget.IEndpointTarget
+    class SqlTEndpointTarget : ITimeoutsTarget.IEndpointTargetBatchMigrator
     {
         readonly SqlConnection connection;
         readonly string databaseName;

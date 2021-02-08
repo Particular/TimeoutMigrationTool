@@ -265,7 +265,7 @@
             var timeoutStorage = GetTimeoutStorage();
             await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint}_TimeoutData");
+            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM [{sourceEndpoint}_TimeoutData]");
 
             Assert.AreEqual(0, numberOfTimeouts);
         }
@@ -293,7 +293,7 @@
 
             await timeoutStorage.Abort();
 
-            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint}_TimeoutData");
+            var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM [{sourceEndpoint}_TimeoutData]");
 
             Assert.AreEqual(10 - batch1.NumberOfTimeouts, numberOfTimeouts);
 

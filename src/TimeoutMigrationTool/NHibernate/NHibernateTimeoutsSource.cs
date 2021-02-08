@@ -102,7 +102,8 @@ SELECT
     -1,
     :BatchPendingStatus
 FROM TimeoutEntity TE
-WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName;
+WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName
+ORDER BY TE.Time ASC;
 ");
             copyTimeoutsToStagedQuery.SetParameter("EndpointName", endpointName);
             copyTimeoutsToStagedQuery.SetParameter("CutOffTime", maxCutoffTime);

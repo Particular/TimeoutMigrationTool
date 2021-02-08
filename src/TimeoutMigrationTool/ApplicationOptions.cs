@@ -22,5 +22,7 @@ namespace Particular.TimeoutMigrationTool
         public const string AllEndpoints = "allEndpoints";
         public const string NHibernateSourceConnectionString = "source";
         public const string NHibernateSourceDialect = "dialect";
+        public const string AsqTargetConnectionString = "target";
+        public const string AsqDelayedDeliveryTableName = "delayedtablename";
     }
 }

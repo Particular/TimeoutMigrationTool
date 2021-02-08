@@ -4,7 +4,6 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using NUnit.Framework;
-    using NUnit.Framework.Internal.Commands;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RabbitMq;
     using RabbitMQ.Client;
@@ -143,7 +142,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
             var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
 
-            await using var endpointTarget = await sut.Migrate("FakeEndpoint");
+            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator("FakeEndpoint");
 
             await endpointTarget.StageBatch(new List<TimeoutData>
             {
@@ -167,7 +166,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         {
             var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
             var endpointName = "FakeEndpoint";
-            await using var endpointTarget = await sut.Migrate(endpointName);
+            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Abort(endpointName);
 
             using var connection = factory.CreateConnection(rabbitUrl);
@@ -181,7 +180,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         {
             var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
             var endpointName = "FakeEndpoint";
-            await using var endpointTarget = await sut.Migrate(endpointName);
+            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Complete(endpointName);
 
             using var connection = factory.CreateConnection(rabbitUrl);
