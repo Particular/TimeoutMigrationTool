@@ -29,6 +29,8 @@
             set => RowKey = value.ToString();
         }
 
+        public string UniqueHiddenEndpointName { get; set; }
+
         public string EndpointName { get; set; }
 
         public DateTime? CompletedAt { get; set; }
