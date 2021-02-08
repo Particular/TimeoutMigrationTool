@@ -119,7 +119,8 @@
                 EndpointName = endpointName,
                 MigrationRunId = Guid.NewGuid(),
                 RunParameters = runParameters,
-                Status = MigrationStatus.Preparing
+                Status = MigrationStatus.Preparing,
+                UniqueHiddenEndpointName = string.Format(AspConstants.MigrationHiddenEndpointNameFormat, Path.GetFileNameWithoutExtension(Path.GetTempFileName()), endpointName)
             };
 
             await toolStateTable.ExecuteAsync(TableOperation.Insert(toolStateEntity));
@@ -141,7 +142,7 @@
                             upperLimitForCutOffToFilterGuidEntriesOut)
                     ),
                     TableOperators.And,
-                    GenerateFilterCondition(nameof(TimeoutDataEntity.OwningTimeoutManager), QueryComparisons.Equal, endpointName)));
+                    GenerateFilterCondition(nameof(TimeoutDataEntity.OwningTimeoutManager), QueryComparisons.Equal, toolStateEntity.EndpointName)));
 
             TableContinuationToken token = null;
             CancellationToken queryCancellationToken = CancellationToken.None;
@@ -163,7 +164,7 @@
 
                 // need to copy since to make sure there are no side effects
                 var timeoutEntitiesToHide = seg.Results.Select(r => r.Clone()).Cast<TimeoutDataEntity>();
-                var hideTimeoutsTask = HideTimeoutsOfCurrentSegment(endpointTimeoutTable, timeoutEntitiesToHide);
+                var hideTimeoutsTask = HideTimeoutsOfCurrentSegment(endpointTimeoutTable, timeoutEntitiesToHide, toolStateEntity.UniqueHiddenEndpointName);
 
                 // no need to copy since we don't care about the entities anymore after this stage
                 var timeoutEntitiesToMigrate = seg.Results;
@@ -219,7 +220,7 @@
         }
 
         static async Task HideTimeoutsOfCurrentSegment(CloudTable endpointTimeoutTable,
-            IEnumerable<TimeoutDataEntity> timeoutsOfSegment)
+            IEnumerable<TimeoutDataEntity> timeoutsOfSegment, string uniqueHiddenEndpointName)
         {
             // with batching we can at least efficiently insert
             long hideByPartitionKeyBatchSize = 0;
@@ -238,8 +239,7 @@
                     // we don't want to preserve the etag and we always want to win
                     timeoutDataEntity.ETag = "*";
                     // Fix the hiding part
-                    timeoutDataEntity.OwningTimeoutManager =
-                        $"{AspConstants.MigrationOngoingPrefix}{timeoutDataEntity.OwningTimeoutManager}";
+                    timeoutDataEntity.OwningTimeoutManager = uniqueHiddenEndpointName;
 
                     var entitySize = timeoutDataEntity.CalculateSize();
 
@@ -635,7 +635,7 @@
                     ),
                     TableOperators.And,
                     GenerateFilterCondition(nameof(PartialTimeoutDataEntityWithOwningTimeoutManager.OwningTimeoutManager), QueryComparisons.Equal,
-                        $"{AspConstants.MigrationOngoingPrefix}{toolState.EndpointName}")));
+                        toolState.UniqueHiddenEndpointName)));
 
             query.SelectColumns = new List<string> { nameof(PartialTimeoutDataEntityWithOwningTimeoutManager.OwningTimeoutManager) };
             TableContinuationToken token = null;
@@ -668,8 +668,7 @@
                         var currentOwningTimeoutManager = partialTimeoutDataEntity.OwningTimeoutManager;
 
                         partialTimeoutDataEntity.ETag = "*";
-                        partialTimeoutDataEntity.OwningTimeoutManager =
-                            currentOwningTimeoutManager.Replace(AspConstants.MigrationOngoingPrefix, string.Empty);
+                        partialTimeoutDataEntity.OwningTimeoutManager = toolState.EndpointName;
 
                         // the batch can have max 100 items and max 4 MB of data
                         // we don't need to check the size since we are only getting OwningTimeoutManager which is size restricted

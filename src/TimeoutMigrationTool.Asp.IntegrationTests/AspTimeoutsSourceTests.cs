@@ -436,7 +436,8 @@
             var toolStateTable = tableClient.GetTableReference($"{tableNamePrefix}{AspConstants.ToolStateTableName}");
             await toolStateTable.CreateIfNotExistsAsync();
 
-            var toolStateEntity = new ToolStateEntity() { Status = MigrationStatus.Preparing, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar" };
+            var uniqueHiddenEndpointName = string.Format(AspConstants.MigrationHiddenEndpointNameFormat, "gurlugurlu", endpointName);
+            var toolStateEntity = new ToolStateEntity() { Status = MigrationStatus.Preparing, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar", UniqueHiddenEndpointName = uniqueHiddenEndpointName };
 
             await toolStateTable.ExecuteAsync(TableOperation.Insert(toolStateEntity));
 
@@ -446,7 +447,7 @@
 
                 var entity = new TimeoutDataEntity(dateTime.ToString(AspConstants.PartitionKeyScope), Guid.NewGuid().ToString())
                 {
-                    OwningTimeoutManager = $"{AspConstants.MigrationOngoingPrefix}{endpointName}",
+                    OwningTimeoutManager = uniqueHiddenEndpointName,
                     Destination = endpointName,
                     SagaId = Guid.NewGuid(),
                     StateAddress = x.ToString(),
