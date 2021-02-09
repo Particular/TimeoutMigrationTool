@@ -68,25 +68,6 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        static async Task WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
-        {
-            while (true)
-            {
-                var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(
-                    x =>
-                        x.OwningTimeoutManager.Equals(
-                            endpoint,
-                            StringComparison.OrdinalIgnoreCase),
-                    "TimeoutDatas",
-                    (doc, id) => doc.Id = id);
-
-                if (timeouts.Count > 0)
-                {
-                    return;
-                }
-            }
-        }
-
         public class SourceTestContext : ScenarioContext
         {
             public bool TimeoutSet { get; set; }

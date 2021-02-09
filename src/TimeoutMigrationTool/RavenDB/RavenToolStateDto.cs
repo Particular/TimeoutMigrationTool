@@ -15,19 +15,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public int NumberOfBatches { get; set; }
         public int NumberOfTimeouts { get; set; }
 
-        public static RavenToolStateDto FromToolState(RavenToolState toolState)
+        public static List<string> ToBatches(IEnumerable<RavenBatch> batches)
         {
-            return new RavenToolStateDto()
-            {
-                RunParameters = toolState.RunParameters,
-                Batches = toolState.Batches.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToList(),
-                Endpoint = toolState.EndpointName
-            };
+            return batches.Select(b => $"{RavenConstants.BatchPrefix}/{b.Number}").ToList();
         }
 
-        public RavenToolState ToToolState(List<RavenBatch> batches)
+        public RavenToolState ToToolState(IEnumerable<RavenBatch> batches)
         {
-            return new RavenToolState(RunParameters, Endpoint, batches);
+            return new RavenToolState(RunParameters, Endpoint, batches, Status);
         }
     }
 }

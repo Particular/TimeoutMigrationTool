@@ -2,6 +2,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -152,7 +153,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom, TimeSpan timeToWaitForNonStaleResults) where T : class
+        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(int startFrom, TimeSpan timeToWaitForNonStaleResults, Action<T, string> idSetter = null) where T : class
         {
             var indexExists = await DoesTimeoutIndexExist();
             if (!indexExists)
@@ -161,19 +162,30 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             }
 
             var url = $"{serverUrl}/databases/{databaseName}/queries?query=from%20index%20%27{RavenConstants.TimeoutIndexName}%27&parameters=%7B%7D&start={startFrom}&pageSize={RavenConstants.DefaultPagingSize}&metadataOnly=false";
-            using var result = await httpClient.GetAsync(url);
 
-            var contentString = await result.Content.ReadAsStringAsync();
-            var jObject = JObject.Parse(contentString);
-            var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
-
-            if (isStale && timeToWaitForNonStaleResults > TimeSpan.Zero)
+            JObject jObject;
+            bool isStale;
+            var stopWatch = Stopwatch.StartNew();
+            try
             {
-                await Task.Delay(timeToWaitForNonStaleResults);
-                using var waitResult = await httpClient.GetAsync(url);
-                contentString = await waitResult.Content.ReadAsStringAsync();
-                jObject = JObject.Parse(contentString);
-                isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+                do
+                {
+                    using var result = await httpClient.GetAsync(url);
+                    using var content = result.Content;
+
+                    var contentString = await result.Content.ReadAsStringAsync();
+                    jObject = JObject.Parse(contentString);
+                    isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+
+                    if (isStale)
+                    {
+                        await Task.Delay(500);
+                    }
+                } while (isStale && stopWatch.Elapsed < timeToWaitForNonStaleResults);
+            }
+            finally
+            {
+                stopWatch.Stop();
             }
 
             var results = new List<T>();
@@ -190,7 +202,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
-                idSetter(document, id);
+                idSetter?.Invoke(document, id);
                 results.Add(document);
             }
 
@@ -209,7 +221,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string prefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class
+        public async Task<IReadOnlyList<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string prefix, Action<T, string> idSetter = null, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
             var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(prefix)}&pageSize={pageSize}";
@@ -239,7 +251,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages = 0) where T : class
+        public async Task<IReadOnlyList<T>> GetPagedDocuments<T>(string documentPrefix, int startFrom, Action<T, string> idSetter = null, int nrOfPages = 0) where T : class
         {
             var items = new List<T>();
             var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={RavenConstants.DefaultPagingSize}";
@@ -276,7 +288,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
+        public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter = null) where T : class
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -285,11 +297,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             var documents = await GetDocuments(new[] { id }, idSetter);
             var document = documents.SingleOrDefault();
-            idSetter(document, id);
+            idSetter?.Invoke(document, id);
             return document;
         }
 
-        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
+        public async Task<IReadOnlyList<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter = null) where T : class
         {
             if (!ids.Any())
             {
@@ -342,7 +354,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        static async Task<IReadOnlyList<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -359,7 +371,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
-                idSetter(document, id);
+                idSetter?.Invoke(document, id);
                 results.Add(document);
             }
 

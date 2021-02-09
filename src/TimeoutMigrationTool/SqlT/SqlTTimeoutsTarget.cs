@@ -12,7 +12,6 @@
         {
             this.schema = schema;
             this.logger = logger;
-            this.connectionString = connectionString;
             connection = new SqlConnection(connectionString);
         }
 
@@ -92,7 +91,7 @@
             }
             catch (Exception e)
             {
-                migrationCheckResult.Problems.Add($"Unable to connect to the server or database under connection string '{connectionString}'. The following exception occured: {e.Message}");
+                migrationCheckResult.Problems.Add($"Unable to connect to the server or database using the provided connection string. Verify the connection string. The following exception occured: {e.Message}");
                 return migrationCheckResult;
             }
 
@@ -120,7 +119,6 @@
         }
 
         readonly SqlConnection connection;
-        readonly string connectionString;
         readonly ILogger logger;
         readonly string schema;
     }

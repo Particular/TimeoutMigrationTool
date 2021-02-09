@@ -59,7 +59,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.MarkBatchAsStaged(batchToVerify.Number);
 
-            var updatedBatch = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
+            var updatedBatch = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}");
 
             Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Staged));
         }
@@ -76,7 +76,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.MarkBatchAsCompleted(batchToVerify.Number);
 
-            var updatedBatch = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}", (batch, id) => { });
+            var updatedBatch = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{batchToVerify.Number}");
 
             toolState = await sut.TryLoadOngoingMigration();
             var currentBatch = await toolState.TryGetNextBatch();
@@ -117,16 +117,14 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.Complete();
 
-            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(
-                RavenConstants.ToolStateId,
-                (timeoutData, id) => { });
+            var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId);
 
             Assert.IsNull(updatedToolState);
 
-            var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(info => { return true; }, RavenConstants.BatchPrefix, (batch, id) => { });
+            var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(info => true, RavenConstants.BatchPrefix);
             Assert.That(batches.Count, Is.EqualTo(0));
 
-            var archivedToolStates = await testSuite.RavenAdapter.GetDocuments<RavenToolStateDto>(_ => true, RavenConstants.ArchivedToolStateIdPrefix, (batch, id) => { });
+            var archivedToolStates = await testSuite.RavenAdapter.GetDocuments<RavenToolStateDto>(_ => true, RavenConstants.ArchivedToolStateIdPrefix);
 
             Assert.That(archivedToolStates.Count, Is.EqualTo(1));
 

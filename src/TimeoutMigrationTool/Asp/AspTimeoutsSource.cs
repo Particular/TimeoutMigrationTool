@@ -46,19 +46,19 @@
         {
             var tableClient = CreateCloudTableClient();
 
-            var toolStateEntity = await TryLoadToolStateEntity(tableClient);
+            var toolStateEntity = await TryLoadNotCompletedAndNotAbortedToolStateEntity(tableClient);
 
             return toolStateEntity == null
                 ? null
                 : new AspToolState(GetNextBatch, toolStateEntity.RunParameters, toolStateEntity.EndpointName,
-                    toolStateEntity.NumberOfBatches);
+                    toolStateEntity.NumberOfBatches, toolStateEntity.Status);
         }
 
         async Task<BatchInfo> GetNextBatch()
         {
             var tableClient = CreateCloudTableClient();
 
-            var toolStateEntity = await TryLoadToolStateEntity(tableClient);
+            var toolStateEntity = await TryLoadNotCompletedAndNotAbortedToolStateEntity(tableClient);
 
             if (toolStateEntity.CurrentBatchNumber > toolStateEntity.BatchNumberAndSizes.Count)
             {
@@ -67,25 +67,6 @@
 
             return new BatchInfo(toolStateEntity.CurrentBatchNumber, toolStateEntity.CurrentBatchState,
                 toolStateEntity.BatchNumberAndSizes[toolStateEntity.CurrentBatchNumber - 1].batchSize);
-        }
-
-        async Task<ToolStateEntity> TryLoadToolStateEntity(CloudTableClient tableClient)
-        {
-            var toolStateTable = await GetAndCreateToolStateTableIfNotExists(tableClient);
-
-            var query = new TableQuery<ToolStateEntity>()
-                .Where(
-                    CombineFilters(
-                        GenerateFilterCondition(nameof(ToolStateEntity.PartitionKey), QueryComparisons.Equal,
-                            ToolStateEntity.FixedPartitionKey),
-                        TableOperators.And,
-                        GenerateFilterConditionForInt(nameof(ToolStateEntity.Status), QueryComparisons.Equal, (int)MigrationStatus.StoragePrepared)))
-                .Take(1);
-
-            var toolStateEntities = await toolStateTable.ExecuteQuerySegmentedAsync(query, null);
-            var toolStateEntity = toolStateEntities.Results
-                .SingleOrDefault();
-            return toolStateEntity;
         }
 
         async Task<CloudTable> GetAndCreateToolStateTableIfNotExists(CloudTableClient tableClient)
@@ -197,7 +178,7 @@
             await toolStateTable.ExecuteAsync(TableOperation.Merge(toolStateEntity));
 
             return new AspToolState(GetNextBatch, toolStateEntity.RunParameters, toolStateEntity.EndpointName,
-                toolStateEntity.NumberOfBatches);
+                toolStateEntity.NumberOfBatches, toolStateEntity.Status);
         }
 
         static async Task PurgeMigrationTable(CloudTable migrationTable)
@@ -518,7 +499,7 @@
                 }
             } while (token != null && !queryCancellationToken.IsCancellationRequested);
 
-            var toolState = await TryLoadToolStateEntity(tableClient);
+            var toolState = await TryLoadNotCompletedAndNotAbortedToolStateEntity(tableClient);
             toolState.CurrentBatchNumber = nextBatch;
 
             var toolStateTable = await GetAndCreateToolStateTableIfNotExists(tableClient);
@@ -725,14 +706,7 @@
         {
             var tableClient = CreateCloudTableClient();
 
-            ToolStateEntity toolStateEntity = await TryLoadNotCompletedAndNotAbortedToolStateEntity(tableClient);
-
-            if (toolStateEntity?.Status == MigrationStatus.Preparing)
-            {
-                throw new Exception("The last migration must have failed while preparing. You need to first run abort.");
-            }
-
-            return toolStateEntity != null;
+            return await TryLoadNotCompletedAndNotAbortedToolStateEntity(tableClient) != null;
         }
 
         async Task<ToolStateEntity> TryLoadNotCompletedAndNotAbortedToolStateEntity(CloudTableClient tableClient)

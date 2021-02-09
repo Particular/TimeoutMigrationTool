@@ -2,8 +2,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.IO.Compression;
+    using System.Diagnostics;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -159,7 +158,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             await PostToBulkDocs(commands);
         }
 
-        public async Task<List<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, Action<T, string> idSetter, int pageSize = RavenConstants.DefaultPagingSize) where T : class
+        public async Task<IReadOnlyList<T>> GetDocuments<T>(Func<T, bool> filterPredicate, string documentPrefix, Action<T, string> idSetter = null, int pageSize = RavenConstants.DefaultPagingSize) where T : class
         {
             var items = new List<T>();
             var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={pageSize}";
@@ -174,7 +173,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
-                    var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
+                    using var resultContent = result.Content;
+                    var pagedTimeouts = await GetDocumentsFromResponse(resultContent, idSetter);
                     if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < pageSize)
                     {
                         checkForMoreResults = false;
@@ -189,7 +189,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<List<T>> GetPagedDocuments<T>(string documentPrefix, Action<T, string> idSetter, int startFrom, int nrOfPages) where T : class
+        public async Task<IReadOnlyList<T>> GetPagedDocuments<T>(string documentPrefix, int startFrom, Action<T, string> idSetter, int nrOfPages = 0) where T : class
         {
             var items = new List<T>();
             var url = $"{serverUrl}/databases/{databaseName}/docs?startsWith={Uri.EscapeDataString(documentPrefix)}&pageSize={RavenConstants.DefaultPagingSize}";
@@ -206,7 +206,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
-                    var pagedTimeouts = await GetDocumentsFromResponse(result.Content, idSetter);
+                    using var resultContent = result.Content;
+                    var pagedTimeouts = await GetDocumentsFromResponse(resultContent, idSetter);
 
                     items.AddRange(pagedTimeouts);
                     fetchStartFrom += pagedTimeouts.Count;
@@ -226,7 +227,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return items;
         }
 
-        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(Action<T, string> idSetter, int startFrom, TimeSpan timeToWaitForNonStaleResults) where T : class
+        public async Task<GetByIndexResult<T>> GetDocumentsByIndex<T>(int startFrom, TimeSpan timeToWaitForNonStaleResults, Action<T, string> idSetter = null) where T : class
         {
             var indexExists = await DoesTimeoutIndexExist();
             if (!indexExists)
@@ -241,17 +242,29 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 throw new Exception($"Was not able to get documents using index '{RavenConstants.TimeoutIndexName}', which should exist when using NServiceBus with RavenDB as persistence mechanism.");
             }
 
-            var contentString = await result.Content.ReadAsStringAsync();
-            var jObject = JObject.Parse(contentString);
-            var isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
-
-            if (isStale && timeToWaitForNonStaleResults > TimeSpan.Zero)
+            JObject jObject;
+            bool isStale;
+            var stopWatch = Stopwatch.StartNew();
+            try
             {
-                await Task.Delay(timeToWaitForNonStaleResults);
-                using var waitResult = await httpClient.GetAsync(url);
-                contentString = await waitResult.Content.ReadAsStringAsync();
-                jObject = JObject.Parse(contentString);
-                isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+                do
+                {
+                    using var resultContent = await httpClient.GetAsync(url);
+                    using var content = resultContent.Content;
+
+                    var contentString = await resultContent.Content.ReadAsStringAsync();
+                    jObject = JObject.Parse(contentString);
+                    isStale = Convert.ToBoolean(jObject.SelectToken("IsStale"));
+
+                    if (isStale)
+                    {
+                        await Task.Delay(500);
+                    }
+                } while (isStale && stopWatch.Elapsed < timeToWaitForNonStaleResults);
+            }
+            finally
+            {
+                stopWatch.Stop();
             }
 
             var results = new List<T>();
@@ -268,7 +281,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
-                idSetter(document, id);
+                idSetter?.Invoke(document, id);
                 results.Add(document);
             }
 
@@ -281,27 +294,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             };
         }
 
-        public static byte[] Compress(byte[] input)
-        {
-            using var result = new MemoryStream();
-            var lengthBytes = BitConverter.GetBytes(input.Length);
-            result.Write(lengthBytes, 0, 4);
-
-            using (var compressionStream = new GZipStream(result, CompressionMode.Compress))
-            {
-                compressionStream.Write(input, 0, input.Length);
-                compressionStream.Flush();
-            }
-
-            return result.ToArray();
-        }
-
         async Task<bool> DoesTimeoutIndexExist()
         {
             var indexUrl = $"{serverUrl}/databases/{databaseName}/indexes-stats";
             using var indexResults = await httpClient.GetAsync(indexUrl);
             indexResults.EnsureSuccessStatusCode();
-            var indexContentString = await indexResults.Content.ReadAsStringAsync();
+            using var indexResultsContent = indexResults.Content;
+            var indexContentString = await indexResultsContent.ReadAsStringAsync();
             var jArray = JArray.Parse(indexContentString);
             foreach (var item in jArray)
             {
@@ -315,7 +314,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return false;
         }
 
-        public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter) where T : class
+        public async Task<T> GetDocument<T>(string id, Action<T, string> idSetter = null) where T : class
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -329,12 +328,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                 return default;
             }
 
-            var document = await GetDocumentFromResponse<T>(response.Content);
-            idSetter(document, id);
+            using var responseContent = response.Content;
+            var document = await GetDocumentFromResponse<T>(responseContent);
+            idSetter?.Invoke(document, id);
             return document;
         }
 
-        public async Task<List<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter) where T : class
+        public async Task<IReadOnlyList<T>> GetDocuments<T>(IEnumerable<string> ids, Action<T, string> idSetter = null) where T : class
         {
             if (!ids.Any())
             {
@@ -350,12 +350,13 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             var serializedCommands = JsonConvert.SerializeObject(ids);
             using var result = await httpClient.PostAsync(url, new StringContent(serializedCommands, Encoding.UTF8, "application/json"));
 
-            var results = await GetDocumentsFromQueryResponse(result.Content, idSetter);
+            using var resultContent = result.Content;
+            var results = await GetDocumentsFromQueryResponse(resultContent, idSetter);
 
             return results;
         }
 
-        async Task<List<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        static async Task<IReadOnlyList<T>> GetDocumentsFromResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -366,14 +367,14 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             {
                 var document = JsonConvert.DeserializeObject<T>(item.ToString());
                 var id = (string)((dynamic)item)["@metadata"]["@id"];
-                idSetter(document, id);
+                idSetter?.Invoke(document, id);
                 results.Add(document);
             }
 
             return results;
         }
 
-        async Task<List<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
+        static async Task<IReadOnlyList<T>> GetDocumentsFromQueryResponse<T>(HttpContent resultContent, Action<T, string> idSetter) where T : class
         {
             var results = new List<T>();
 
@@ -397,7 +398,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             return results;
         }
 
-        async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
+        static async Task<T> GetDocumentFromResponse<T>(HttpContent resultContent) where T : class
         {
             var contentString = await resultContent.ReadAsStringAsync();
             var document = JsonConvert.DeserializeObject<T>(contentString);

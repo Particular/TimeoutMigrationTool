@@ -56,18 +56,6 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutsTarget.MigrationWasAborted, Is.True);
         }
 
-        [Test]
-        public async Task WhenAbortingAndTimeoutStorageDidntFindToolStateItTargetIsNotAborted()
-        {
-            timeoutsSource.SetupToolStateToReturn(null);
-            timeoutsSource.CheckIfMigrationIsInProgressFunc = () => Task.FromResult(true);
-
-            await runner.Run();
-
-            Assert.That(timeoutsSource.MigrationWasAborted, Is.True);
-            Assert.That(timeoutsTarget.MigrationWasAborted, Is.False);
-        }
-
         static List<BatchInfo> GetBatches()
         {
             var batches = new List<BatchInfo>

@@ -55,7 +55,7 @@
                 {
                     var logger = new TestLoggingAdapter(c);
                     var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1024, DatabaseDialect);
-                    var timeoutsTarget = new ASQTarget(logger, asqConnectionString, new DelayedDeliveryTableNameProvider());
+                    var timeoutsTarget = new ASQTarget(asqConnectionString, new DelayedDeliveryTableNameProvider());
 
                     var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 

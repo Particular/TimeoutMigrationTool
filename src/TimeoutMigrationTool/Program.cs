@@ -291,7 +291,7 @@
                             var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
 
                             var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -373,7 +373,7 @@
                             var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -455,7 +455,7 @@
                             var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -558,7 +558,7 @@
                             var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
                                 sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
                                 partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -709,7 +709,7 @@
                             runParameters.Add(ApplicationOptions.AsqDelayedDeliveryTableName, delayedDeliveryTableNameOverride);
 
                             var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -852,7 +852,7 @@
                             runParameters.Add(ApplicationOptions.AsqDelayedDeliveryTableName, delayedDeliveryTableNameOverride);
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -993,7 +993,7 @@
                             runParameters.Add(ApplicationOptions.AsqDelayedDeliveryTableName, delayedDeliveryTableNameOverride);
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -1160,7 +1160,7 @@
                             var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
                                 sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
                                 partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -1301,7 +1301,7 @@
 
                             var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, false);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
                             await runner.Run();
@@ -1405,7 +1405,7 @@
                             var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
 
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
                             await runner.Run();
@@ -1504,7 +1504,7 @@
                             var delayedDeliveryTableNameOverride = targetAsqDelayedDeliveryTableName.HasValue() ? targetAsqDelayedDeliveryTableName.Value() : null;
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -1621,7 +1621,7 @@
                             var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
                                 sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
                                 partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
-                            var timeoutsTarget = new ASQTarget(logger, targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
+                            var timeoutsTarget = new ASQTarget(targetConnectionString, new DelayedDeliveryTableNameProvider(delayedDeliveryTableNameOverride));
 
                             var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();

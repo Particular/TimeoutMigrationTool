@@ -11,7 +11,8 @@
             string migrationRunId,
             IDictionary<string, string> runParameters,
             string endpointName,
-            int numberOfBatches)
+            int numberOfBatches,
+            MigrationStatus migrationStatus)
         {
             this.connectionString = connectionString;
             this.dialect = dialect;
@@ -19,9 +20,11 @@
             RunParameters = runParameters;
             EndpointName = endpointName;
             NumberOfBatches = numberOfBatches;
+            Status = migrationStatus;
         }
 
         public IDictionary<string, string> RunParameters { get; }
+        public MigrationStatus Status { get; }
 
         public string EndpointName { get; }
 

@@ -75,7 +75,7 @@
                 {
                     var logger = new TestLoggingAdapter(c);
                     var timeoutStorage = CreateTimeoutStorage(sourceEndpoint);
-                    var timeoutsTarget = new ASQTarget(logger, asqConnectionString, new DelayedDeliveryTableNameProvider());
+                    var timeoutsTarget = new ASQTarget(asqConnectionString, new DelayedDeliveryTableNameProvider());
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, timeoutsTarget);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
