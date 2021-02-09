@@ -6,8 +6,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\TimeoutMigrationTool.SqlP.AcceptanceTests\MsSqlMicrosoftDataClientHelper.cs">
+			<Link>MsSqlMicrosoftDataClientHelper.cs</Link>
+		</Compile>
+	</ItemGroup>
+	
+	<ItemGroup>
 		<PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.4.4" />
 		<PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
+		<PackageReference Include="NServiceBus.SqlServer" Version="6.2.0" />
 		<PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="9.0.1" />
 		<PackageReference Include="NUnit" Version="3.13.1" />
 		<PackageReference Include="NServiceBus.RabbitMQ" Version="6.0.0" />
