@@ -148,7 +148,7 @@ WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName;");
             using var session = CreateSessionFactory().OpenStatelessSession();
 
             var timeouts = await session.QueryOver<StagedTimeoutEntity>()
-                .Where(timeout => timeout.BatchNumber == batchNumber)
+                .Where(timeout => timeout.BatchNumber == batchNumber && timeout.BatchState < BatchState.Completed)
                 .ListAsync();
 
             return timeouts.Select(timeout => timeout.ToTimeoutData()).ToList();
