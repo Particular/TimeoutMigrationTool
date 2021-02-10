@@ -8,6 +8,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
     using global::NHibernate.Cfg;
     using global::NHibernate.Cfg.MappingSchema;
     using global::NHibernate.Criterion;
+    using global::NHibernate.Linq;
     using global::NHibernate.Mapping.ByCode;
     using Newtonsoft.Json;
 
@@ -79,6 +80,10 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             using var session = CreateSessionFactory().OpenSession();
             using var tx = session.BeginTransaction();
 
+            // purge the staging table
+            await session.Query<StagedTimeoutEntity>()
+                .DeleteAsync();
+
             var copyTimeoutsToStagedQuery = session.CreateQuery(@"
 INSERT INTO StagedTimeoutEntity (
     Id,
@@ -148,7 +153,7 @@ WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName;");
             using var session = CreateSessionFactory().OpenStatelessSession();
 
             var timeouts = await session.QueryOver<StagedTimeoutEntity>()
-                .Where(timeout => timeout.BatchNumber == batchNumber)
+                .Where(timeout => timeout.BatchNumber == batchNumber && timeout.BatchState < BatchState.Completed)
                 .ListAsync();
 
             return timeouts.Select(timeout => timeout.ToTimeoutData()).ToList();
