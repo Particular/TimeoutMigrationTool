@@ -40,7 +40,7 @@
                 blobContainerClient = blobServiceClient.GetBlobContainerClient(ContainerName);
             }
 
-            var noOfTimeouts = 20000;
+            var noOfTimeouts = 5000;
 
             var cutOffDate = DateTime.Now;
 
@@ -55,11 +55,34 @@
             {
                 var dateTime = cutOffDate.AddDays(random.Next(1, 20));
 
-                allTimeouts.Add(new TimeoutDataEntity(dateTime.ToString(PartitionKeyScope), Guid.NewGuid().ToString())
+                var sagaId = Guid.NewGuid();
+                string identifier = Guid.NewGuid().ToString();
+                // aka timeout entry
+                allTimeouts.Add(new TimeoutDataEntity(dateTime.ToString(PartitionKeyScope), identifier)
                 {
                     OwningTimeoutManager = "Asp.FakeTimeouts",
                     Destination = i % 10 == 0 ? "EndpointA" : "EndpointB",
-                    SagaId = Guid.NewGuid(),
+                    SagaId = sagaId,
+                    StateAddress = stateAddress,
+                    Time = dateTime,
+                    Headers = "{}",
+                });
+                // aka saga entry
+                allTimeouts.Add(new TimeoutDataEntity(sagaId.ToString(), identifier)
+                {
+                    OwningTimeoutManager = "Asp.FakeTimeouts",
+                    Destination = i % 10 == 0 ? "EndpointA" : "EndpointB",
+                    SagaId = sagaId,
+                    StateAddress = stateAddress,
+                    Time = dateTime,
+                    Headers = "{}",
+                });
+                // aka main entry
+                allTimeouts.Add(new TimeoutDataEntity(identifier, string.Empty)
+                {
+                    OwningTimeoutManager = "Asp.FakeTimeouts",
+                    Destination = i % 10 == 0 ? "EndpointA" : "EndpointB",
+                    SagaId = sagaId,
                     StateAddress = stateAddress,
                     Time = dateTime,
                     Headers = "{}",
