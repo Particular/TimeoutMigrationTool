@@ -8,6 +8,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
     using global::NHibernate.Cfg;
     using global::NHibernate.Cfg.MappingSchema;
     using global::NHibernate.Criterion;
+    using global::NHibernate.Linq;
     using global::NHibernate.Mapping.ByCode;
     using Newtonsoft.Json;
 
@@ -78,6 +79,10 @@ namespace Particular.TimeoutMigrationTool.NHibernate
         {
             using var session = CreateSessionFactory().OpenSession();
             using var tx = session.BeginTransaction();
+
+            // purge the staging table
+            await session.Query<StagedTimeoutEntity>()
+                .DeleteAsync();
 
             var copyTimeoutsToStagedQuery = session.CreateQuery(@"
 INSERT INTO StagedTimeoutEntity (
