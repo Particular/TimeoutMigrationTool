@@ -75,7 +75,7 @@
 
             do
             {
-                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, nrOfPages);
+                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, nrOfTimeoutsRetrieved, (doc, id) => doc.Id = id, nrOfPages);
 
                 nrOfTimeoutsRetrieved += timeouts.Count;
                 ProcessTimeoutsIntoEndpointsFound(timeouts, endpoints, filter);
@@ -120,7 +120,7 @@
 
             do
             {
-                var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, nrOfTimeoutsRetrieved, TimeSpan.FromSeconds(5));
+                var result = await ravenAdapter.GetDocumentsByIndex<TimeoutData>(nrOfTimeoutsRetrieved, TimeSpan.FromSeconds(5), (doc, id) => doc.Id = id);
                 if (string.IsNullOrEmpty(initialIndexEtag))
                 {
                     initialIndexEtag = result.IndexETag;
@@ -196,7 +196,7 @@
 
         async Task<int> GuardAgainstTooManyTimeoutsWithoutIndexUsage()
         {
-            var nrOfTimeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.FromSeconds(0));
+            var nrOfTimeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>(0, TimeSpan.FromSeconds(5), (doc, id) => doc.Id = id);
             if (nrOfTimeoutsResult.NrOfDocuments > RavenConstants.GetMaxNrOfTimeoutsWithoutIndexByRavenVersion(ravenVersion) && !useIndex)
             {
                 throw new Exception($"We've encountered around {nrOfTimeoutsResult.NrOfDocuments} timeouts to process. Given the amount of timeouts to migrate, please shut down your endpoints before migrating and use the --{ApplicationOptions.ForceUseIndex} option.");
@@ -207,19 +207,21 @@
 
         public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
+            var toolStateDTO = new RavenToolStateDto { RunParameters = runParameters, Endpoint = endpointName, Status = MigrationStatus.Preparing };
+
+            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, toolStateDTO);
+
             var batches = await PrepareBatchesAndTimeouts(maxCutoffTime, endpointName);
-            var toolState = new RavenToolState(runParameters, endpointName, batches);
 
-            var ravenToolState = RavenToolStateDto.FromToolState(toolState);
+            toolStateDTO.Batches = RavenToolStateDto.ToBatches(batches);
+            toolStateDTO.Status = MigrationStatus.StoragePrepared;
+            toolStateDTO.StartedAt = DateTime.UtcNow;
+            toolStateDTO.NumberOfBatches = batches.Count();
+            toolStateDTO.NumberOfTimeouts = batches.Sum(b => b.NumberOfTimeouts);
 
-            ravenToolState.Status = MigrationStatus.StoragePrepared;
-            ravenToolState.StartedAt = DateTime.UtcNow;
-            ravenToolState.NumberOfBatches = batches.Count();
-            ravenToolState.NumberOfTimeouts = batches.Sum(b => b.NumberOfTimeouts);
+            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, toolStateDTO);
 
-            await ravenAdapter.UpdateDocument(RavenConstants.ToolStateId, ravenToolState);
-
-            return toolState;
+            return toolStateDTO.ToToolState(batches);
         }
 
         public async Task<IReadOnlyList<TimeoutData>> ReadBatch(int batchNumber)
@@ -249,38 +251,23 @@
         public async Task Abort()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
-            var anyBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => batch.State == BatchState.Pending, RavenConstants.BatchPrefix, (batch, id) => { });
-            if (ravenToolState == null && !anyBatches.Any())
-            {
-                throw new ArgumentNullException(nameof(ravenToolState), "Can't abort without a tool state");
-            }
+            var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
 
-            if (ravenToolState != null)
-            {
-                var batches = await ravenAdapter.GetDocuments<RavenBatch>(ravenToolState.Batches, (doc, id) => { });
+            // Only restoring the timeouts in pending batches to their original state
+            var incompleteBatches = batches.Where(bi => bi.State != BatchState.Completed).ToList();
+            await CleanupExistingBatchesAndResetTimeouts(batches, incompleteBatches);
 
-                // Only restoring the timeouts in pending batches to their original state
-                var incompleteBatches = batches.Where(bi => bi.State != BatchState.Completed).ToList();
-                await CleanupExistingBatchesAndResetTimeouts(batches, incompleteBatches);
+            ravenToolState.CompletedAt = DateTime.UtcNow;
+            ravenToolState.Status = MigrationStatus.Aborted;
 
-                ravenToolState.CompletedAt = DateTime.UtcNow;
-                ravenToolState.Status = MigrationStatus.Aborted;
-
-                await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
-            }
-            else
-            {
-                await CleanupExistingBatchesAndResetTimeouts(anyBatches, anyBatches);
-            }
+            await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
         }
 
         internal async Task<List<RavenBatch>> PrepareBatchesAndTimeouts(DateTime cutoffTime, string endpointName)
         {
-            if (useIndex)
-            {
-                return await PrepareBatchesWithIndexUsage(cutoffTime, endpointName);
-            }
-            return await PrepareBatchesWithoutIndexUsage(cutoffTime, endpointName);
+            return useIndex
+                ? await PrepareBatchesWithIndexUsage(cutoffTime, endpointName)
+                : await PrepareBatchesWithoutIndexUsage(cutoffTime, endpointName);
         }
 
         public async Task Complete()
@@ -296,12 +283,10 @@
         public async Task<bool> CheckIfAMigrationIsInProgress()
         {
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
-            var anyBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => batch.State == BatchState.Pending, RavenConstants.BatchPrefix, (batch, id) => { });
-
-            return ravenToolState != null || anyBatches.Any();
+            return ravenToolState != null;
         }
 
-        internal async Task CleanupExistingBatchesAndResetTimeouts(List<RavenBatch> batchesToRemove, List<RavenBatch> batchesForWhichToResetTimeouts)
+        internal async Task CleanupExistingBatchesAndResetTimeouts(IReadOnlyList<RavenBatch> batchesToRemove, IReadOnlyList<RavenBatch> batchesForWhichToResetTimeouts)
         {
             foreach (var batch in batchesToRemove)
             {
@@ -336,7 +321,7 @@
             var iteration = 0;
             var nrOfPages = 1;
 
-            var existingBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => { return true; }, RavenConstants.BatchPrefix, (batch, idSetter) => { });
+            var existingBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => true, RavenConstants.BatchPrefix, (batch, idSetter) => { });
             if (existingBatches.Any())
             {
                 var batch = existingBatches.First();
@@ -353,7 +338,7 @@
             while (findMoreTimeouts)
             {
                 var startFrom = iteration * nrOfPages * RavenConstants.DefaultPagingSize;
-                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, (doc, id) => doc.Id = id, startFrom, nrOfPages);
+                var timeouts = await ravenAdapter.GetPagedDocuments<TimeoutData>(timeoutDocumentPrefix, startFrom, (doc, id) => doc.Id = id, nrOfPages);
 
                 var elegibleTimeouts = timeouts.Where(ElegibleFilter).ToList();
                 if (batchesExisted)
@@ -418,7 +403,7 @@
 
             var findMoreTimeouts = true;
 
-            var existingBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => { return true; }, RavenConstants.BatchPrefix, (batch, idSetter) => { });
+            var existingBatches = await ravenAdapter.GetDocuments<RavenBatch>(batch => true, RavenConstants.BatchPrefix);
             if (existingBatches.Any())
             {
                 var batch = existingBatches.First();
@@ -435,7 +420,7 @@
             while (findMoreTimeouts)
             {
                 var startFrom = nrOfTimeoutsRetrieved;
-                var timeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, startFrom, TimeSpan.Zero);
+                var timeoutsResult = await ravenAdapter.GetDocumentsByIndex<TimeoutData>(startFrom, TimeSpan.FromSeconds(5), (doc, id) => doc.Id = id);
 
                 if (string.IsNullOrEmpty(initialIndexEtag))
                 {

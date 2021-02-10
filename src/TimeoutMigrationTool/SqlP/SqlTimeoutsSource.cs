@@ -31,15 +31,16 @@
 
             migrationRunId = reader.GetString(0);
             var endpoint = reader.GetString(1);
-            var runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(2));
-            var numberOfBatches = reader.GetInt32(3);
+            var status = (MigrationStatus)reader.GetInt32(2);
+            var runParameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.GetString(3));
+            var numberOfBatches = reader.GetInt32(4);
 
             if (await reader.ReadAsync())
             {
                 throw new Exception("Multiple uncompleted migrations found");
             }
 
-            return new SqlPToolState(connectionString, dialect, migrationRunId, runParameters, endpoint, numberOfBatches);
+            return new SqlPToolState(connectionString, dialect, migrationRunId, runParameters, endpoint, numberOfBatches, status);
         }
 
         public async Task<IToolState> Prepare(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)

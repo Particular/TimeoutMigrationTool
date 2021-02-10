@@ -93,6 +93,34 @@
             Assert.AreEqual(endpointName, currentMigration.EndpointName);
             Assert.AreEqual(runParameters, currentMigration.RunParameters);
             Assert.AreEqual(0, currentMigration.NumberOfBatches);
+            Assert.AreEqual(MigrationStatus.StoragePrepared, currentMigration.Status);
+        }
+
+        [Test]
+        public async Task TryLoadOngoingMigration_Should_return_tool_state_when_migration_failed_while_preparing()
+        {
+            // Arrange
+            var endpointName = nameof(TryLoadOngoingMigration_Should_return_tool_state_when_migration_failed_while_preparing);
+            var timeoutsSource = new AspTimeoutsSource(connectionString, 10, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
+            var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
+
+            var toolStateTable = tableClient.GetTableReference($"{tableNamePrefix}{AspConstants.ToolStateTableName}");
+            await toolStateTable.CreateIfNotExistsAsync();
+
+            var toolStateEntity = new ToolStateEntity { Status = MigrationStatus.Preparing, RunParameters = runParameters, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar" };
+
+            await toolStateTable.ExecuteAsync(TableOperation.Insert(toolStateEntity));
+
+            // Act
+            var currentMigration = await timeoutsSource.TryLoadOngoingMigration();
+
+            // Assert
+            Assert.IsNotNull(currentMigration);
+
+            Assert.AreEqual(endpointName, currentMigration.EndpointName);
+            Assert.AreEqual(runParameters, currentMigration.RunParameters);
+            Assert.AreEqual(0, currentMigration.NumberOfBatches);
+            Assert.AreEqual(MigrationStatus.Preparing, currentMigration.Status);
         }
 
         [Test]
@@ -109,20 +137,43 @@
         }
 
         [Test]
-        public async Task CheckMigrationInProgress_Should_throw_when_migration_failed_while_preparing()
+        public async Task CheckMigrationInProgress_Should_be_true_when_migration_failed_during_prepare()
         {
             // Arrange
-            var endpointName = nameof(CheckMigrationInProgress_Should_throw_when_migration_failed_while_preparing);
+            var endpointName = nameof(CheckMigrationInProgress_Should_be_true_when_migration_failed_during_prepare);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 10, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var toolStateTable = tableClient.GetTableReference($"{tableNamePrefix}{AspConstants.ToolStateTableName}");
             await toolStateTable.CreateIfNotExistsAsync();
 
-            var toolStateEntity = new ToolStateEntity() { Status = MigrationStatus.Preparing, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar" };
+            var toolStateEntity = new ToolStateEntity { Status = MigrationStatus.Preparing, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar" };
 
             await toolStateTable.ExecuteAsync(TableOperation.Insert(toolStateEntity));
 
-            // Act & Assert
-            Assert.ThrowsAsync<Exception>(async () => await timeoutsSource.CheckIfAMigrationIsInProgress());
+            // Act
+            var currentMigration = await timeoutsSource.CheckIfAMigrationIsInProgress();
+
+            // Assert
+            Assert.IsTrue(currentMigration);
+        }
+
+        [Test]
+        public async Task CheckMigrationInProgress_Should_be_true_when_migration_running()
+        {
+            // Arrange
+            var endpointName = nameof(CheckMigrationInProgress_Should_be_true_when_migration_running);
+            var timeoutsSource = new AspTimeoutsSource(connectionString, 10, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
+            var toolStateTable = tableClient.GetTableReference($"{tableNamePrefix}{AspConstants.ToolStateTableName}");
+            await toolStateTable.CreateIfNotExistsAsync();
+
+            var toolStateEntity = new ToolStateEntity { Status = MigrationStatus.StoragePrepared, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar" };
+
+            await toolStateTable.ExecuteAsync(TableOperation.Insert(toolStateEntity));
+
+            // Act
+            var currentMigration = await timeoutsSource.CheckIfAMigrationIsInProgress();
+
+            // Assert
+            Assert.IsTrue(currentMigration);
         }
 
         [Test]
@@ -146,6 +197,7 @@
             Assert.AreEqual(endpointName, currentMigration.EndpointName);
             Assert.AreEqual(runParameters, currentMigration.RunParameters);
             Assert.AreEqual(0, currentMigration.NumberOfBatches);
+            Assert.AreEqual(MigrationStatus.StoragePrepared, currentMigration.Status);
         }
 
         [Test]
@@ -185,6 +237,7 @@
             Assert.AreEqual(endpointName, currentMigration.EndpointName);
             Assert.AreEqual(runParameters, currentMigration.RunParameters);
             Assert.AreEqual(2, currentMigration.NumberOfBatches);
+            Assert.AreEqual(MigrationStatus.StoragePrepared, currentMigration.Status);
         }
 
         [Test]
@@ -200,20 +253,36 @@
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
 
             // the entity will roughly be 98 KB and we will store 50 of those which makes the actual payload be around 5 MB
+            string destination = new string('a', 32 * 1024);
+            string stateAddress = new string('s', 32 * 1024);
+            string headers = new string('h', 32 * 1024);
+
+            var batch = new TableBatchOperation();
             for (var x = 0; x < 50; x++)
             {
                 var dateTime = cutOffDate.AddDays(2);
                 var entity = new TimeoutDataEntity(dateTime.ToString(AspConstants.PartitionKeyScope), Guid.NewGuid().ToString())
                 {
                     OwningTimeoutManager = endpointName,
-                    Destination = new string('a', 32 * 1024),
+                    Destination = destination,
                     SagaId = Guid.NewGuid(),
-                    StateAddress = new string('s', 32 * 1024),
+                    StateAddress = stateAddress,
                     Time = dateTime,
-                    Headers = new string('h', 32 * 1024),
+                    Headers = headers,
                 };
 
-                await endpointTimeoutTableName.ExecuteAsync(TableOperation.Insert(entity));
+                batch.Add(TableOperation.Insert(entity));
+
+                if (batch.Count % 25 == 0)
+                {
+                    await endpointTimeoutTableName.ExecuteBatchAsync(batch);
+                    batch.Clear();
+                }
+            }
+
+            if (batch.Count > 0)
+            {
+                await endpointTimeoutTableName.ExecuteBatchAsync(batch);
             }
 
             // Act
@@ -225,6 +294,7 @@
             Assert.AreEqual(endpointName, currentMigration.EndpointName);
             Assert.AreEqual(runParameters, currentMigration.RunParameters);
             Assert.AreEqual(1, currentMigration.NumberOfBatches);
+            Assert.AreEqual(MigrationStatus.StoragePrepared, currentMigration.Status);
         }
 
         [Test]
@@ -437,7 +507,7 @@
             await toolStateTable.CreateIfNotExistsAsync();
 
             var uniqueHiddenEndpointName = string.Format(AspConstants.MigrationHiddenEndpointNameFormat, "gurlugurlu", endpointName);
-            var toolStateEntity = new ToolStateEntity() { Status = MigrationStatus.Preparing, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar", UniqueHiddenEndpointName = uniqueHiddenEndpointName };
+            var toolStateEntity = new ToolStateEntity { Status = MigrationStatus.StoragePrepared, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar", UniqueHiddenEndpointName = uniqueHiddenEndpointName };
 
             await toolStateTable.ExecuteAsync(TableOperation.Insert(toolStateEntity));
 
@@ -473,6 +543,56 @@
             Assert.IsFalse(await timeoutsSource.CheckIfAMigrationIsInProgress());
         }
 
+        [Test]
+        public async Task Aborting_Unhides_The_TimeoutEntities_even_when_preparing_failed()
+        {
+            // Arrange
+            var endpointName = nameof(Aborting_Unhides_The_TimeoutEntities);
+            var timeoutsSource = new AspTimeoutsSource(connectionString, 1, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
+            var cutOffDate = DateTime.UtcNow;
+
+            var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
+            await endpointTimeoutTableName.CreateIfNotExistsAsync();
+
+            var toolStateTable = tableClient.GetTableReference($"{tableNamePrefix}{AspConstants.ToolStateTableName}");
+            await toolStateTable.CreateIfNotExistsAsync();
+
+            var uniqueHiddenEndpointName = string.Format(AspConstants.MigrationHiddenEndpointNameFormat, "gurlugurlu", endpointName);
+            var toolStateEntity = new ToolStateEntity() { Status = MigrationStatus.Preparing, EndpointName = endpointName, PartitionKey = ToolStateEntity.FixedPartitionKey, RowKey = "bar", UniqueHiddenEndpointName = uniqueHiddenEndpointName };
+
+            await toolStateTable.ExecuteAsync(TableOperation.Insert(toolStateEntity));
+
+            for (var x = 0; x < 3; x++)
+            {
+                var dateTime = cutOffDate.AddDays(random.Next(1, 5));
+
+                var entity = new TimeoutDataEntity(dateTime.ToString(AspConstants.PartitionKeyScope), Guid.NewGuid().ToString())
+                {
+                    OwningTimeoutManager = uniqueHiddenEndpointName,
+                    Destination = endpointName,
+                    SagaId = Guid.NewGuid(),
+                    StateAddress = x.ToString(),
+                    Time = dateTime,
+                    Headers = "Headers",
+                };
+
+                await endpointTimeoutTableName.ExecuteAsync(TableOperation.Insert(entity));
+            }
+
+            // Act
+            await timeoutsSource.Abort();
+
+            // Assert
+            var query = new TableQuery<TimeoutDataEntity>()
+                .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
+            var timeouts = await endpointTimeoutTableName.ExecuteQuerySegmentedAsync(query, null);
+            Assert.AreEqual(3, timeouts.Results.Count);
+
+            var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
+            Assert.IsNull(currentAfterAborting);
+
+            Assert.IsFalse(await timeoutsSource.CheckIfAMigrationIsInProgress());
+        }
 
         [Test]
         public async Task ListEndpoint_should_ignore_endpoints_outside_cutoff_date()

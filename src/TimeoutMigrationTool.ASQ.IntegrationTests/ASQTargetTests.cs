@@ -38,7 +38,7 @@
         public async Task AbleToMigrate_fails_if_Timeout_table_Does_not_exist()
         {
             // Arrange
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, new DelayedDeliveryTableNameProvider("TimeoutTableThatDoesNotExist"));
+            var timeoutTarget = new ASQTarget(connectionString, new DelayedDeliveryTableNameProvider("TimeoutTableThatDoesNotExist"));
 
             // Act
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
@@ -52,14 +52,19 @@
         public async Task AbleToMigrate_fails_with_incorrect_connection_string()
         {
             // Arrange
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), "DefaultEndpointsProtocol=https;AccountName=fakename;AccountKey=g94OvNO9o3sVan5eipemQEHmU8zD2M9iq98E8nKSdR2bTuQB1hi07Yd1/8dDw6+1jGI2klWjpvoDahHPhR/3og==", new DelayedDeliveryTableNameProvider("TimeoutTableThatDoesNotExist"));
+            string fakeConnectionString = "DefaultEndpointsProtocol=https;AccountName=fakename;AccountKey=g94OvNO9o3sVan5eipemQEHmU8zD2M9iq98E8nKSdR2bTuQB1hi07Yd1/8dDw6+1jGI2klWjpvoDahHPhR/3og==";
+            var account = CloudStorageAccount.Parse(fakeConnectionString);
+            var client = account.CreateCloudTableClient();
+            client.DefaultRequestOptions.MaximumExecutionTime = TimeSpan.FromSeconds(2);
+
+            var timeoutTarget = new ASQTarget(client, new DelayedDeliveryTableNameProvider("TimeoutTableThatDoesNotExist"));
 
             // Act
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
             // Assert
             Assert.IsFalse(ableToMigrate.CanMigrate);
-            Assert.AreEqual("Unable to connect to the storage instance with connection string 'DefaultEndpointsProtocol=https;AccountName=fakename;AccountKey=g94OvNO9o3sVan5eipemQEHmU8zD2M9iq98E8nKSdR2bTuQB1hi07Yd1/8dDw6+1jGI2klWjpvoDahHPhR/3og=='. Exception message 'No such host is known.'", ableToMigrate.Problems[0]);
+            Assert.AreEqual("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message 'No such host is known.'", ableToMigrate.Problems[0]);
         }
 
         [Test]
@@ -68,7 +73,7 @@
             // Arrange
             await CreateTimeoutTable($"T{endpointName}");
 
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, new DelayedDeliveryTableNameProvider($"T{endpointName}"));
+            var timeoutTarget = new ASQTarget(connectionString, new DelayedDeliveryTableNameProvider($"T{endpointName}"));
 
             // Act
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
@@ -82,7 +87,7 @@
         {
             // Arrange
             var nameProvider = new DelayedDeliveryTableNameProvider();
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var timeoutTarget = new ASQTarget(connectionString, nameProvider);
 
             // Act
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
@@ -97,7 +102,7 @@
             // Arrange
             var nameProvider = new DelayedDeliveryTableNameProvider();
 
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             // Act
@@ -142,7 +147,7 @@
 
             await CreateTimeoutTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             await migrator.StageBatch(new List<TimeoutData>
@@ -189,7 +194,7 @@
 
             await CreateTimeoutTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             await migrator.StageBatch(new List<TimeoutData>
@@ -235,7 +240,7 @@
 
             await CreateTimeoutTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             // Act
@@ -255,7 +260,7 @@
 
             await CreateTimeoutTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             var numberStaged = await migrator.StageBatch(new List<TimeoutData>
@@ -300,7 +305,7 @@
 
             await CreateTimeoutTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            var timeoutTarget = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             await migrator.StageBatch(new List<TimeoutData>
@@ -348,7 +353,7 @@
             var endpointName = nameof(Staging_with_large_entities_batches_respecting_size_limitations);
             var cutOffDate = DateTime.UtcNow;
             var random = new Random();
-            var target = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var target = new ASQTarget(connectionString, nameProvider);
             var timeouts = new List<TimeoutData>();
 
             // the entity will roughly be 98 KB and we will store 50 of those which makes the actual payload be around 5 MB
@@ -387,7 +392,7 @@
             var random = new Random();
             var timeouts = new List<StagedDelayedMessageEntity>();
 
-            var target = new ASQTarget(new TestLoggingAdapter(), connectionString, nameProvider);
+            var target = new ASQTarget(connectionString, nameProvider);
             var stagingTableName = nameProvider.GetStagingTableName(endpointName);
             await CreateTimeoutTable(stagingTableName);
             await CreateTimeoutTable(nameProvider.GetDelayedDeliveryTableName(endpointName));

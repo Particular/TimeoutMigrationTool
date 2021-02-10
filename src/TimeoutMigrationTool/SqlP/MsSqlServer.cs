@@ -51,7 +51,7 @@ ORDER BY BatchNumber";
         CREATE TABLE TimeoutsMigration_State (
             MigrationRunId NVARCHAR(500) NOT NULL PRIMARY KEY,
             EndpointName NVARCHAR(500) NOT NULL,
-            Status VARCHAR(15) NOT NULL,
+            Status INT NOT NULL,
             RunParameters NVARCHAR(MAX) NOT NULL,
             NumberOfBatches INT NOT NULL,
             CutOffTime DATETIME NOT NULL,
@@ -62,6 +62,7 @@ ORDER BY BatchNumber";
 SELECT
     MigrationRunId,
     EndpointName,
+    Status,
     RunParameters,
     NumberOfBatches
 FROM

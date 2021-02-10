@@ -91,7 +91,8 @@ namespace TimeoutMigrationTool.Tests
             {
                 EndpointName = testEndpoint,
                 Batches = batches,
-                RunParameters = new Dictionary<string, string>()
+                RunParameters = new Dictionary<string, string>(),
+                Status = MigrationStatus.StoragePrepared
             };
             timeoutsSource.SetupToolStateToReturn(toolState);
             timeoutsSource.SetupTimeoutsToReadForBatch(batches.First());
@@ -107,6 +108,24 @@ namespace TimeoutMigrationTool.Tests
             Assert.That(timeoutsSource.ToolStateMovedToCompleted);
             Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
             Assert.That(timeoutsTarget.MigrationWasCompleted);
+        }
+
+        [Test]
+        public void WhenRunningWithStatePreparingAndParametersMatchThrows()
+        {
+            var batches = GetBatches();
+            var toolState = new FakeToolState
+            {
+                EndpointName = testEndpoint,
+                Batches = batches,
+                RunParameters = new Dictionary<string, string>(),
+                Status = MigrationStatus.Preparing
+            };
+            timeoutsSource.SetupToolStateToReturn(toolState);
+            timeoutsSource.SetupTimeoutsToReadForBatch(batches.First());
+
+            Assert.ThrowsAsync<Exception>(async () => await runner.Run(DateTime.Now,
+                EndpointFilter.SpecificEndpoint(testEndpoint), new Dictionary<string, string>()));
         }
 
         static List<BatchInfo> GetBatches()

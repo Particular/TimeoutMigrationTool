@@ -6,6 +6,7 @@
     public interface IToolState
     {
         IDictionary<string, string> RunParameters { get; }
+        MigrationStatus Status { get; }
         string EndpointName { get; }
         int NumberOfBatches { get; }
 

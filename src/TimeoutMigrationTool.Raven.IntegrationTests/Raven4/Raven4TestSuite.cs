@@ -58,11 +58,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
 
         public async Task InitTimeouts(int nrOfTimeouts)
         {
+            var commands = new List<object>();
+            var bulkInsertUrl = $"{ServerName}/databases/{DatabaseName}/bulk_docs";
             var timeoutsPrefix = "TimeoutDatas";
             for (var i = 0; i < nrOfTimeouts; i++)
             {
-                var insertTimeoutUrl = $"{ServerName}/databases/{DatabaseName}/docs?id={timeoutsPrefix}/{i}";
-
                 // Insert the timeout data
                 var timeoutData = new TimeoutData
                 {
@@ -74,12 +74,25 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
 
-                var serializeObject = JsonConvert.SerializeObject(timeoutData);
-                var httpContent = new StringContent(serializeObject);
-
-                var result = await HttpClient.PutAsync(insertTimeoutUrl, httpContent);
-                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+                commands.Add(new PutCommand
+                {
+                    Document = timeoutData,
+                    ChangeVector = null,
+                    Type = "PUT",
+                    Id = $"{timeoutsPrefix}/{i}"
+                });
             }
+
+            var request = new
+            {
+                Commands = commands.ToArray()
+            };
+
+            var serializeObject = JsonConvert.SerializeObject(request);
+            using var stringContent = new StringContent(serializeObject, Encoding.UTF8, "application/json");
+            using var result = await HttpClient.PostAsync(bulkInsertUrl, stringContent);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
         }
 
         public async Task<InitiTimeoutsResult> InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId)
@@ -89,10 +102,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
             var longestTimeout = DateTime.MinValue;
             var daysToTrigger = random.Next(2, 60); // randomize the Time property
 
+            var commands = new List<object>();
+            var bulkInsertUrl = $"{ServerName}/databases/{DatabaseName}/bulk_docs";
+
             for (var i = 0; i < nrOfTimeouts; i++)
             {
-                var insertTimeoutUrl = $"{ServerName}/databases/{DatabaseName}/docs?id={timeoutsPrefix}/{startFromId + i}";
-
                 // Insert the timeout data
                 var timeoutData = new TimeoutData
                 {
@@ -104,11 +118,14 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
 
-                var serializeObject = JsonConvert.SerializeObject(timeoutData);
-                var httpContent = new StringContent(serializeObject);
+                commands.Add(new PutCommand
+                {
+                    Document = timeoutData,
+                    ChangeVector = null,
+                    Type = "PUT",
+                    Id = $"{timeoutsPrefix}/{startFromId + i}"
+                });
 
-                var result = await HttpClient.PutAsync(insertTimeoutUrl, httpContent);
-                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
                 if (shortestTimeout > timeoutData.Time)
                 {
                     shortestTimeout = timeoutData.Time;
@@ -119,6 +136,17 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     longestTimeout = timeoutData.Time;
                 }
             }
+
+            var request = new
+            {
+                Commands = commands.ToArray()
+            };
+
+            var serializeObject = JsonConvert.SerializeObject(request);
+            using var stringContent = new StringContent(serializeObject, Encoding.UTF8, "application/json");
+            using var result = await HttpClient.PostAsync(bulkInsertUrl, stringContent);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
 
             return new InitiTimeoutsResult
             {
@@ -149,7 +177,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     TimeoutIds = new[] {"TimeoutDatas/3", "TimeoutDatas/4"}
                 }
             };
-            return new RavenToolState(runParameters, EndpointName, batches);
+            return new RavenToolState(runParameters, EndpointName, batches, MigrationStatus.StoragePrepared);
         }
 
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
@@ -176,7 +204,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                 Id = $"{RavenConstants.ToolStateId}",
                 Type = "PUT",
                 ChangeVector = null,
-                Document = RavenToolStateDto.FromToolState(toolState)
+                Document = this.FromToolState(toolState)
             });
 
             var request = new

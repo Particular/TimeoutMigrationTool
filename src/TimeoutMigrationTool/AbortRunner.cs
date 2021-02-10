@@ -22,21 +22,8 @@
             }
 
             var toolState = await timeoutsSource.TryLoadOngoingMigration();
-            if (toolState != null)
-            {
-                logger.LogInformation($"Aborting ongoing migration for {toolState.EndpointName}");
-            }
-            else
-            {
-                logger.LogInformation("Cleaning up changes made in the previous interrupted migration");
-            }
-
             await timeoutsSource.Abort();
-
-            if (toolState != null)
-            {
-                await timeoutsTarget.Abort(toolState?.EndpointName);
-            }
+            await timeoutsTarget.Abort(toolState.EndpointName);
 
             logger.LogInformation("Previous migration was successfully aborted. That means that the timeouts hidden away from the TimeoutManager, have been made available again");
         }

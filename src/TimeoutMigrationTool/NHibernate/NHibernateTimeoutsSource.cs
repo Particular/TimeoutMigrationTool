@@ -71,7 +71,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
                     .FirstOrDefault();
             }
 
-            return new NHibernateToolState(GetNextBatch, migration.MigrationRunId, JsonConvert.DeserializeObject<Dictionary<string, string>>(migration.RunParameters), migration.EndpointName, migration.NumberOfBatches);
+            return new NHibernateToolState(GetNextBatch, migration.MigrationRunId, JsonConvert.DeserializeObject<Dictionary<string, string>>(migration.RunParameters), migration.EndpointName, migration.NumberOfBatches, migration.Status);
         }
 
         public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)

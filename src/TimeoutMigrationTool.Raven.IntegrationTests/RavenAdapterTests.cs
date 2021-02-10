@@ -90,7 +90,7 @@
             var nrOfTimeouts = 1250;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", (doc, id) => doc.Id = id, 0, 5);
+            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", 0, (doc, id) => doc.Id = id, 5);
             Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts));
         }
 
@@ -101,7 +101,7 @@
             var nrOfPages = 3;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", (doc, id) => doc.Id = id, 0, nrOfPages);
+            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", 0, (doc, id) => doc.Id = id, nrOfPages);
             Assert.That(timeouts.Count, Is.EqualTo(RavenConstants.DefaultPagingSize * nrOfPages));
         }
 
@@ -112,7 +112,7 @@
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var startFrom = 125;
-            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", (doc, id) => doc.Id = id, startFrom);
+            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", startFrom, (doc, id) => doc.Id = id);
             Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts - startFrom));
         }
 
@@ -122,7 +122,7 @@
             var nrOfTimeouts = RavenConstants.DefaultPagingSize * 4;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", (doc, id) => doc.Id = id, 0, 1);
+            var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", 0, (doc, id) => doc.Id = id, 1);
             Assert.That(timeouts.Count, Is.EqualTo(RavenConstants.DefaultPagingSize));
         }
 
@@ -132,7 +132,7 @@
             var nrOfTimeouts = 500;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            Assert.ThrowsAsync<Exception>(() => testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.Zero));
+            Assert.ThrowsAsync<Exception>(() => testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>(0, TimeSpan.Zero, (doc, id) => doc.Id = id));
         }
 
         [Test]
@@ -142,7 +142,7 @@
             await testSuite.InitTimeouts(nrOfTimeouts);
             await testSuite.CreateLegacyTimeoutManagerIndex(true);
 
-            var result = await testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.Zero);
+            var result = await testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>(0, TimeSpan.Zero, (doc, id) => doc.Id = id);
 
             Assert.That(result.Documents.Count, Is.EqualTo(500));
         }
@@ -168,13 +168,13 @@
 
             var ravenAdapter = (Raven3Adapter)suite.RavenAdapter;
             await Task.Delay(TimeSpan.FromSeconds(2));
-            var resultsPage1 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, 0, TimeSpan.Zero);
+            var resultsPage1 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>(0, TimeSpan.Zero, (doc, id) => doc.Id = id);
             var timeoutData = resultsPage1.Documents.First();
             timeoutData.OwningTimeoutManager = "bla";
             await ravenAdapter.UpdateDocument(timeoutData.Id, timeoutData);
             await Task.Delay(TimeSpan.FromSeconds(2));
 
-            var resultsPage2 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>((doc, id) => doc.Id = id, RavenConstants.DefaultPagingSize, TimeSpan.Zero);
+            var resultsPage2 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>(RavenConstants.DefaultPagingSize, TimeSpan.Zero, (doc, id) => doc.Id = id);
 
             Assert.That(resultsPage1.Documents.Count, Is.EqualTo(1024));
             Assert.That(resultsPage2.Documents.Count, Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));

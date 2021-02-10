@@ -36,7 +36,7 @@
         public DateTime? CompletedAt { get; set; }
 
         [IgnoreProperty]
-        public int NumberOfBatches => BatchNumberAndSizes.Count;
+        public int NumberOfBatches => BatchNumberAndSizes?.Count ?? 0;
 
         public ToolStateEntity()
         {

@@ -63,7 +63,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var timeoutStorage =
                 new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await timeoutStorage.Prepare(cutoffTime, testSuite.EndpointName, new Dictionary<string, string>());
-            await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
+
+            var toolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId);
+            toolState.Status = MigrationStatus.Preparing;
+            await testSuite.RavenAdapter.UpdateDocument(RavenConstants.ToolStateId, toolState);
 
             var secondBatchNrOfTimeouts = 5;
             await testSuite.InitTimeouts(secondBatchNrOfTimeouts, "EndpointA", nrOfTimeouts);
@@ -102,7 +105,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
-            var storedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (batch, id) => { });
+            var storedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId);
 
             Assert.That(storedToolState.NumberOfTimeouts, Is.EqualTo(nrOfTimeouts));
             Assert.That(storedToolState.NumberOfBatches, Is.EqualTo(2));
@@ -160,7 +163,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var timeoutStorage =
                 new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
             await timeoutStorage.Prepare(cutoffTime, testSuite.EndpointName, new Dictionary<string, string>());
-            await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
+
+            var toolStateDto = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId);
+            toolStateDto.Status = MigrationStatus.Preparing;
+            await testSuite.RavenAdapter.UpdateDocument(RavenConstants.ToolStateId, toolStateDto);
 
             var secondBatchNrOfTimeouts = 5;
             await testSuite.InitTimeouts(secondBatchNrOfTimeouts, testSuite.EndpointName, nrOfTimeouts);

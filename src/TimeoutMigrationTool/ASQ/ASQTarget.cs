@@ -1,7 +1,6 @@
 ﻿namespace Particular.TimeoutMigrationTool.ASQ
 {
     using Microsoft.Azure.Cosmos.Table;
-    using Microsoft.Extensions.Logging;
     using System;
     using System.Linq;
     using System.Threading;
@@ -9,13 +8,22 @@
 
     public class ASQTarget : ITimeoutsTarget
     {
-        public ASQTarget(ILogger logger, string connectionString, IProvideDelayedDeliveryTableName delayedDeliveryTableNameProvider)
+        // used for testing only
+        public ASQTarget(CloudTableClient client, IProvideDelayedDeliveryTableName delayedDeliveryTableNameProvider)
         {
-            this.connectionString = connectionString;
-
-            var cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
-            client = cloudStorageAccount.CreateCloudTableClient();
             this.delayedDeliveryTableNameProvider = delayedDeliveryTableNameProvider;
+            this.client = client;
+        }
+
+        public ASQTarget(string connectionString, IProvideDelayedDeliveryTableName delayedDeliveryTableNameProvider)
+        : this(Create(connectionString), delayedDeliveryTableNameProvider)
+        {
+        }
+
+        static CloudTableClient Create(string connectionString)
+        {
+            var cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
+            return cloudStorageAccount.CreateCloudTableClient();
         }
 
         public async ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
@@ -33,7 +41,7 @@
             }
             catch (StorageException ex)
             {
-                migrationsResult.Problems.Add($"Unable to connect to the storage instance with connection string '{connectionString}'. Exception message '{ex.Message}'");
+                migrationsResult.Problems.Add($"Unable to connect to the storage instance on account '{client.Credentials.AccountName}'. Verify the connection string. Exception message '{ex.Message}'");
             }
 
             try
@@ -89,7 +97,6 @@
             await table.DeleteIfExistsAsync();
         }
 
-        string connectionString;
         CloudTableClient client;
         IProvideDelayedDeliveryTableName delayedDeliveryTableNameProvider;
     }

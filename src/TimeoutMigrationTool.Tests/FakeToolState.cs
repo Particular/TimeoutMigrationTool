@@ -8,6 +8,7 @@
     public class FakeToolState : IToolState
     {
         public IDictionary<string, string> RunParameters { get; set; }
+        public MigrationStatus Status { get; set; }
 
         public string EndpointName { get; set; }
 

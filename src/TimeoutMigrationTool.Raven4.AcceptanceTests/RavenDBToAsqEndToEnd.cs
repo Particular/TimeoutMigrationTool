@@ -73,7 +73,7 @@
                     {
                         var logger = new TestLoggingAdapter(c);
                         var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion, false);
-                        var timeoutsTarget = new ASQTarget(logger, asqConnectionString, new DelayedDeliveryTableNameProvider());
+                        var timeoutsTarget = new ASQTarget(asqConnectionString, new DelayedDeliveryTableNameProvider());
                         var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
                         await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
@@ -82,25 +82,6 @@
                 .Run(TimeSpan.FromSeconds(30));
 
             Assert.True(context.GotTheDelayedMessage);
-        }
-
-        static async Task WaitUntilTheTimeoutIsSavedInRaven(Raven4Adapter ravenAdapter, string endpoint)
-        {
-            while (true)
-            {
-                var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(
-                    x =>
-                        x.OwningTimeoutManager.Equals(
-                            endpoint,
-                            StringComparison.OrdinalIgnoreCase),
-                    "TimeoutDatas",
-                    (doc, id) => doc.Id = id);
-
-                if (timeouts.Count > 0)
-                {
-                    return;
-                }
-            }
         }
 
         public class SourceTestContext : ScenarioContext

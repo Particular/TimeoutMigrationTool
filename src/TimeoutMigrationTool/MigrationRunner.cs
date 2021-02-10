@@ -189,6 +189,12 @@ namespace Particular.TimeoutMigrationTool
                 throw new Exception(sb.ToString());
             }
 
+            if (toolState.Status == MigrationStatus.Preparing)
+            {
+                throw new Exception(
+                    "The last migration must have failed while preparing. You need to first run abort.");
+            }
+
             logger.LogInformation("Resuming in progress migration");
         }
 

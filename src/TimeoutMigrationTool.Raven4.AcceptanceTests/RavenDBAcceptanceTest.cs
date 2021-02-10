@@ -9,6 +9,8 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Particular.TimeoutMigrationTool;
+    using Particular.TimeoutMigrationTool.RavenDB;
 
     public abstract class RavenDBAcceptanceTest
     {
@@ -57,6 +59,25 @@
             CreateDatabase(documentStore, dbName);
 
             return documentStore;
+        }
+
+        protected static async Task WaitUntilTheTimeoutIsSavedInRaven(ICanTalkToRavenVersion ravenAdapter, string endpoint)
+        {
+            while (true)
+            {
+                var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(
+                    x =>
+                        x.OwningTimeoutManager.Equals(
+                            endpoint,
+                            StringComparison.OrdinalIgnoreCase),
+                    "TimeoutDatas",
+                    (doc, id) => doc.Id = id);
+
+                if (timeouts.Count > 0)
+                {
+                    return;
+                }
+            }
         }
 
         static DocumentStore GetInitializedDocumentStore(string urls, string defaultDatabase)

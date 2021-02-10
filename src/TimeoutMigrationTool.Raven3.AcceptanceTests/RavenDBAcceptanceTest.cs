@@ -5,6 +5,8 @@
     using Raven.Client.Document;
     using System;
     using System.Threading.Tasks;
+    using NServiceBus.Timeout.Core;
+    using Particular.TimeoutMigrationTool.RavenDB;
 
     public abstract class RavenDBAcceptanceTest : NServiceBusAcceptanceTest
     {
@@ -29,6 +31,25 @@
         protected DocumentStore GetDocumentStore(string url, string dbName)
         {
             return GetInitializedDocumentStore(url, dbName);
+        }
+
+        protected async Task WaitUntilTheTimeoutIsSavedInRaven(ICanTalkToRavenVersion ravenAdapter, string endpoint)
+        {
+            while (true)
+            {
+                var timeouts = await ravenAdapter.GetDocuments<TimeoutData>(
+                    x =>
+                        x.OwningTimeoutManager.Equals(
+                            endpoint,
+                            StringComparison.OrdinalIgnoreCase),
+                    "TimeoutDatas",
+                    (doc, id) => doc.Id = id);
+
+                if (timeouts.Count > 0)
+                {
+                    return;
+                }
+            }
         }
 
         static DocumentStore GetInitializedDocumentStore(string url, string defaultDatabase)

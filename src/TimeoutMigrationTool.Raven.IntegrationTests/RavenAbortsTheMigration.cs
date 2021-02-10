@@ -58,7 +58,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         }
 
         [Test]
-        public async Task WhenAbortingWithoutAToolStateToolWillStillCleanupBatches()
+        public async Task WhenAbortingWithAToolStateInPreparingToolWillStillCleanupBatches()
         {
             var cutOffTime = DateTime.Now.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
@@ -66,19 +66,21 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
-            await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
+            var toolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId);
+            toolState.Status = MigrationStatus.Preparing;
+            await testSuite.RavenAdapter.UpdateDocument(RavenConstants.ToolStateId, toolState);
 
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.Abort();
 
-            var batchesInStore = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(batch => true, RavenConstants.BatchPrefix, (batch, id) => { });
+            var batchesInStore = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(batch => true, RavenConstants.BatchPrefix);
             var hiddenTimeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeout => timeout.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix), RavenConstants.DefaultTimeoutPrefix, (timeout, id) => { timeout.Id = id; });
             Assert.That(batchesInStore.Count, Is.EqualTo(0));
             Assert.That(hiddenTimeouts.Count, Is.EqualTo(0));
         }
 
         [Test]
-        public async Task WhenCheckingIfThereIsSomethingToAbortAndThereIsNoToolStateButWeHaveBatches()
+        public async Task WhenAbortingWithAToolStateInStoragePreparedToolWillStillCleanupBatches()
         {
             var cutOffTime = DateTime.Now.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
@@ -86,12 +88,13 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
-            await testSuite.RavenAdapter.DeleteDocument(RavenConstants.ToolStateId);
-
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
-            var migrationIsInProgress = await sut.CheckIfAMigrationIsInProgress();
+            await sut.Abort();
 
-            Assert.That(migrationIsInProgress, Is.True);
+            var batchesInStore = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(batch => true, RavenConstants.BatchPrefix);
+            var hiddenTimeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeout => timeout.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix), RavenConstants.DefaultTimeoutPrefix, (timeout, id) => { timeout.Id = id; });
+            Assert.That(batchesInStore.Count, Is.EqualTo(0));
+            Assert.That(hiddenTimeouts.Count, Is.EqualTo(0));
         }
 
         [Test]
@@ -130,7 +133,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.CleanupExistingBatchesAndResetTimeouts(preparedBatches, incompleteBatches);
 
-            var incompleteBatchFromStorage = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{incompleteBatch.Number}", (doc, id) => { });
+            var incompleteBatchFromStorage = await testSuite.RavenAdapter.GetDocument<RavenBatch>($"{RavenConstants.BatchPrefix}/{incompleteBatch.Number}");
             var resetTimeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(x => incompleteBatch.TimeoutIds.Contains(x.Id), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             Assert.That(incompleteBatchFromStorage, Is.Null);
