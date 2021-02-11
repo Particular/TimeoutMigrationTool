@@ -51,7 +51,7 @@
 
             var createQueueResponse = await sqsClient.CreateQueueAsync(createQueueRequest).ConfigureAwait(false);
 
-            return new SQSEndpointTarget(createQueueResponse.QueueUrl);
+            return new SQSEndpointTarget(sqsClient, createQueueResponse.QueueUrl);
         }
 
         public async ValueTask Abort(string endpointName)
