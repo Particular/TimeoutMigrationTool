@@ -25,6 +25,8 @@
 		<PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
 		<PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.8.0" />
+		<PackageReference Include="AWSSDK.S3" Version="3.5.7.6" />
+		<PackageReference Include="AWSSDK.SQS" Version="3.5.1.8" />
 		<PackageReference Include="Particular.Packaging" Version="0.7.0" PrivateAssets="All" />
 	</ItemGroup>
 
