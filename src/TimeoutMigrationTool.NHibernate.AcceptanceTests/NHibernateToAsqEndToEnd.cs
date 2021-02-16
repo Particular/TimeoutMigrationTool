@@ -15,7 +15,7 @@
     [TestFixture]
     class NHibernateToAsqEndToEnd : NHibernateAcceptanceTests
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable("AzureStorageQueue_ConnectionString") ?? "UseDevelopmentStorage=true";
+        string asqConnectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true";
 
         [Test]
         public async Task Can_migrate_timeouts()
