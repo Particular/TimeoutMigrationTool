@@ -29,16 +29,16 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacyRavenDBEndpoint));
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlTEndpoint));
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RavenDBSource));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlTTarget));
 
             var ravenTimeoutPrefix = "TimeoutDatas";
             var ravenVersion = RavenDbVersion.Four;
 
             var ravenAdapter = new Raven4Adapter(serverUrl, databaseName);
 
-            await Scenario.Define<SourceTestContext>()
-                .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
+            await Scenario.Define<SourceContext>()
+                .WithEndpoint<RavenDBSource>(b => b.CustomConfig(ec =>
                     {
                         ec.UsePersistence<RavenDBPersistence>()
                             .SetDefaultDocumentStore(GetDocumentStore(serverUrl, databaseName));
@@ -61,8 +61,8 @@
                 .Done(c => c.TimeoutSet)
                 .Run(TimeSpan.FromSeconds(15));
 
-            var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<SqlTEndpoint>(b => b.CustomConfig(ec =>
+            var context = await Scenario.Define<TargetContext>()
+                .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>
                     {
                         ec.OverrideLocalAddress(sourceEndpoint);
 
@@ -84,45 +84,45 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        public class SourceTestContext : ScenarioContext
+        public class SourceContext : ScenarioContext
         {
             public bool TimeoutSet { get; set; }
         }
 
-        public class TargetTestContext : ScenarioContext
+        public class TargetContext : ScenarioContext
         {
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class LegacyRavenDBEndpoint : EndpointConfigurationBuilder
+        public class RavenDBSource : EndpointConfigurationBuilder
         {
-            public LegacyRavenDBEndpoint()
+            public RavenDBSource()
             {
                 EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }
         }
 
-        public class SqlTEndpoint : EndpointConfigurationBuilder
+        public class SqlTTarget : EndpointConfigurationBuilder
         {
-            public SqlTEndpoint()
+            public SqlTTarget()
             {
                 EndpointSetup<DefaultServer>();
             }
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
             {
-                public DelayedMessageHandler(TargetTestContext testContext)
+                public DelayedMessageHandler(TargetContext context)
                 {
-                    this.testContext = testContext;
+                    this.context = context;
                 }
 
                 public Task Handle(DelayedMessage message, IMessageHandlerContext context)
                 {
-                    testContext.GotTheDelayedMessage = true;
+                    this.context.GotTheDelayedMessage = true;
                     return Task.CompletedTask;
                 }
 
-                readonly TargetTestContext testContext;
+                readonly TargetContext context;
             }
         }
 

@@ -10,6 +10,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Text;
+    using NServiceBus.Features;
 
     [TestFixture]
     class NHibernateToRabbitMqEndToEnd : NHibernateAcceptanceTests
@@ -19,8 +20,8 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = "SomeRandomEndpointName";
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RabbitMqEndpoint));
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NHibernateSource));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RabbitMqTarget));
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -40,8 +41,8 @@
                 }
             }
 
-            var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<RabbitMqEndpoint>(b => b.CustomConfig(ec =>
+            var context = await Scenario.Define<TargetContext>()
+                .WithEndpoint<RabbitMqTarget>(b => b.CustomConfig(ec =>
                 {
                     ec.UseTransport<RabbitMQTransport>()
                     .ConnectionString(rabbitUrl);
@@ -63,32 +64,43 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        public class TargetTestContext : ScenarioContext
+        public class TargetContext : ScenarioContext
         {
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class RabbitMqEndpoint : EndpointConfigurationBuilder
+        public class NHibernateSource : EndpointConfigurationBuilder
         {
-            public RabbitMqEndpoint()
+            public NHibernateSource()
+            {
+                EndpointSetup<LegacyTimeoutManagerEndpoint>(ec =>
+                {
+                    ec.DisableFeature<Sagas>();
+                });
+            }
+        }
+
+        public class RabbitMqTarget : EndpointConfigurationBuilder
+        {
+            public RabbitMqTarget()
             {
                 EndpointSetup<DefaultServer>();
             }
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
             {
-                public DelayedMessageHandler(TargetTestContext testContext)
+                public DelayedMessageHandler(TargetContext context)
                 {
-                    this.testContext = testContext;
+                    this.context = context;
                 }
 
                 public Task Handle(DelayedMessage message, IMessageHandlerContext context)
                 {
-                    testContext.GotTheDelayedMessage = true;
+                    this.context.GotTheDelayedMessage = true;
                     return Task.CompletedTask;
                 }
 
-                readonly TargetTestContext testContext;
+                readonly TargetContext context;
             }
         }
 

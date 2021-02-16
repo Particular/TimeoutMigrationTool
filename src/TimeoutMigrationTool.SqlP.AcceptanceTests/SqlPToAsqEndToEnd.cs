@@ -12,19 +12,19 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    class SqlPToASQEndToEnd : SqlPAcceptanceTest
+    class SqlPToAsqEndToEnd : SqlPAcceptanceTest
     {
         string asqConnectionString = Environment.GetEnvironmentVariable("AzureStorageQueue_ConnectionString") ?? "UseDevelopmentStorage=true";
 
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var salesEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SalesSqlPEndpoint));
-            var reportingEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(ReportingEndpoint));
+            var salesEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPSource));
+            var reportingEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(AsqTarget));
 
             // Make sure delayed delivery queue is created so that the migration can run.
-            await Scenario.Define<SourceTestContext>()
-                .WithEndpoint<SalesSqlPEndpoint>(b => b.CustomConfig(ec =>
+            await Scenario.Define<SourceContext>()
+                .WithEndpoint<SqlPSource>(b => b.CustomConfig(ec =>
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
@@ -36,8 +36,8 @@
                 })).Run(TimeSpan.FromSeconds(10));
 
             // Sending a delayed delivery message using TimeoutManager
-            await Scenario.Define<SourceTestContext>()
-                .WithEndpoint<SalesSqlPEndpoint>(b => b.CustomConfig(ec =>
+            await Scenario.Define<SourceContext>()
+                .WithEndpoint<SqlPSource>(b => b.CustomConfig(ec =>
                 {
                     var persistence = ec.UsePersistence<SqlPersistence>();
                     persistence.SubscriptionSettings().DisableCache();
@@ -66,11 +66,11 @@
                 .Done(c => c.TimeoutSet)
                 .Run(TimeSpan.FromSeconds(30));
 
-            var context = await Scenario.Define<TargetTestContext>()
+            var context = await Scenario.Define<TargetContext>()
                 // Create the sales endpoint to forward the delayed message to the reporting endpoint
                 // This is needed as ASQ stores the delayed messages at the sending endpoint until
                 // delivery is needed
-                .WithEndpoint<SalesSqlPEndpoint>(b => b.CustomConfig(ec =>
+                .WithEndpoint<SqlPSource>(b => b.CustomConfig(ec =>
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
@@ -81,7 +81,7 @@
                     ec.UseSerialization<NewtonsoftSerializer>();
                 }))
                 // Start the reporting endpoint to receieve and process the delayed message
-                .WithEndpoint<ReportingEndpoint>(b => b.CustomConfig(ec =>
+                .WithEndpoint<AsqTarget>(b => b.CustomConfig(ec =>
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
@@ -106,45 +106,45 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        public class SourceTestContext : ScenarioContext
+        public class SourceContext : ScenarioContext
         {
             public bool TimeoutSet { get; set; }
         }
 
-        public class TargetTestContext : ScenarioContext
+        public class TargetContext : ScenarioContext
         {
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class SalesSqlPEndpoint : EndpointConfigurationBuilder
+        public class SqlPSource : EndpointConfigurationBuilder
         {
-            public SalesSqlPEndpoint()
+            public SqlPSource()
             {
                 EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }
         }
 
-        public class ReportingEndpoint : EndpointConfigurationBuilder
+        public class AsqTarget : EndpointConfigurationBuilder
         {
-            public ReportingEndpoint()
+            public AsqTarget()
             {
                 EndpointSetup<DefaultServer>();
             }
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
             {
-                public DelayedMessageHandler(TargetTestContext testContext)
+                public DelayedMessageHandler(TargetContext context)
                 {
-                    this.testContext = testContext;
+                    this.context = context;
                 }
 
                 public Task Handle(DelayedMessage message, IMessageHandlerContext context)
                 {
-                    testContext.GotTheDelayedMessage = true;
+                    this.context.GotTheDelayedMessage = true;
                     return Task.CompletedTask;
                 }
 
-                readonly TargetTestContext testContext;
+                readonly TargetContext context;
             }
         }
 
