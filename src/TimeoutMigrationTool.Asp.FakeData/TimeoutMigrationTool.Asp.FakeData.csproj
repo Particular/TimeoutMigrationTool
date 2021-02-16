@@ -3,9 +3,11 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.8.0" />
 		<PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
 		<PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
 	</ItemGroup>
+
 </Project>
