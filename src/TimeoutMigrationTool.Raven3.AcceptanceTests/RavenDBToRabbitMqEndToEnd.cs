@@ -16,16 +16,16 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacyRavenDBEndpoint));
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NewRabbitMqEndpoint));
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RavenDBSource));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(RabbitMqTarget));
 
             var ravenTimeoutPrefix = "TimeoutDatas";
             var ravenVersion = RavenDbVersion.ThreeDotFive;
 
             var ravenAdapter = new Raven3Adapter(serverUrl, databaseName);
 
-            await Scenario.Define<SourceTestContext>()
-                .WithEndpoint<LegacyRavenDBEndpoint>(b => b.CustomConfig(ec =>
+            await Scenario.Define<SourceContext>()
+                .WithEndpoint<RavenDBSource>(b => b.CustomConfig(ec =>
                     {
                         ec.UsePersistence<RavenDBPersistence>()
                             .DoNotSetupDatabasePermissions()
@@ -50,8 +50,8 @@
                 .Done(c => c.TimeoutSet)
                 .Run(TimeSpan.FromSeconds(15));
 
-            var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<NewRabbitMqEndpoint>(b => b.CustomConfig(ec =>
+            var context = await Scenario.Define<TargetContext>()
+                .WithEndpoint<RabbitMqTarget>(b => b.CustomConfig(ec =>
                     {
                         ec.UseTransport<RabbitMQTransport>()
                             .ConnectionString(rabbitUrl);
@@ -70,45 +70,45 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        public class SourceTestContext : ScenarioContext
+        public class SourceContext : ScenarioContext
         {
             public bool TimeoutSet { get; set; }
         }
 
-        public class TargetTestContext : ScenarioContext
+        public class TargetContext : ScenarioContext
         {
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class LegacyRavenDBEndpoint : EndpointConfigurationBuilder
+        public class RavenDBSource : EndpointConfigurationBuilder
         {
-            public LegacyRavenDBEndpoint()
+            public RavenDBSource()
             {
                 EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }
         }
 
-        public class NewRabbitMqEndpoint : EndpointConfigurationBuilder
+        public class RabbitMqTarget : EndpointConfigurationBuilder
         {
-            public NewRabbitMqEndpoint()
+            public RabbitMqTarget()
             {
                 EndpointSetup<RabbitMqEndpoint>();
             }
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
             {
-                public DelayedMessageHandler(TargetTestContext testContext)
+                public DelayedMessageHandler(TargetContext context)
                 {
-                    this.testContext = testContext;
+                    this.context = context;
                 }
 
                 public Task Handle(DelayedMessage message, IMessageHandlerContext context)
                 {
-                    testContext.GotTheDelayedMessage = true;
+                    this.context.GotTheDelayedMessage = true;
                     return Task.CompletedTask;
                 }
 
-                readonly TargetTestContext testContext;
+                readonly TargetContext context;
             }
         }
 

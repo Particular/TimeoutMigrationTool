@@ -9,18 +9,19 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Text;
+    using NServiceBus.Features;
     using Particular.TimeoutMigrationTool.ASQ;
 
     [TestFixture]
-    class NHibernateToASQEndToEnd : NHibernateAcceptanceTests
+    class NHibernateToAsqEndToEnd : NHibernateAcceptanceTests
     {
         string asqConnectionString = Environment.GetEnvironmentVariable("AzureStorageQueue_ConnectionString") ?? "UseDevelopmentStorage=true";
 
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(AsqEndpoint));
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(AsqEndpoint));
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NHibernateSource));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(AsqTarget));
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -31,7 +32,7 @@
                         Endpoint = sourceEndpoint,
                         Destination = targetEndpoint,
                         SagaId = Guid.NewGuid(),
-                        Headers = "{\"NServiceBus.EnclosedMessageTypes\": \"TimeoutMigrationTool.NHibernate.AcceptanceTests.NHibernateToASQEndToEnd+DelayedMessage\"}",
+                        Headers = "{\"NServiceBus.EnclosedMessageTypes\": \"TimeoutMigrationTool.NHibernate.AcceptanceTests.NHibernateToAsqEndToEnd+DelayedMessage\"}",
                         State = Encoding.UTF8.GetBytes("{}"),
                         Time = DateTime.UtcNow.AddSeconds(15)
                     });
@@ -40,8 +41,21 @@
                 }
             }
 
-            var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<AsqEndpoint>(b => b.CustomConfig(ec =>
+            var context = await Scenario.Define<TargetContext>()
+                // Create the legacy endpoint to forward the delayed message to the reporting endpoint
+                // This is needed as ASQ stores the delayed messages at the sending endpoint until
+                // delivery is needed
+                .WithEndpoint<NHibernateSource>(b => b.CustomConfig(ec =>
+                {
+                    var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
+                    transportConfig.ConnectionString(asqConnectionString);
+                    transportConfig.DisablePublishing();
+
+                    transportConfig.DelayedDelivery().DisableTimeoutManager();
+
+                    ec.UseSerialization<NewtonsoftSerializer>();
+                }))
+                .WithEndpoint<AsqTarget>(b => b.CustomConfig(ec =>
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
@@ -67,32 +81,43 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        public class TargetTestContext : ScenarioContext
+        public class TargetContext : ScenarioContext
         {
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class AsqEndpoint : EndpointConfigurationBuilder
+        public class NHibernateSource : EndpointConfigurationBuilder
         {
-            public AsqEndpoint()
+            public NHibernateSource()
+            {
+                EndpointSetup<LegacyTimeoutManagerEndpoint>(ec =>
+                {
+                    ec.DisableFeature<Sagas>();
+                });
+            }
+        }
+
+        public class AsqTarget : EndpointConfigurationBuilder
+        {
+            public AsqTarget()
             {
                 EndpointSetup<DefaultServer>();
             }
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
             {
-                public DelayedMessageHandler(TargetTestContext testContext)
+                public DelayedMessageHandler(TargetContext context)
                 {
-                    this.testContext = testContext;
+                    this.context = context;
                 }
 
                 public Task Handle(DelayedMessage message, IMessageHandlerContext context)
                 {
-                    testContext.GotTheDelayedMessage = true;
+                    this.context.GotTheDelayedMessage = true;
                     return Task.CompletedTask;
                 }
 
-                readonly TargetTestContext testContext;
+                readonly TargetContext context;
             }
         }
 

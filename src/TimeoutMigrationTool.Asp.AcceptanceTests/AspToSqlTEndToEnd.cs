@@ -37,11 +37,11 @@
         [Test]
         public async Task Can_migrate_timeouts()
         {
-            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(LegacyAspEndpoint));
-            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlTEndpoint));
+            var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(AspSource));
+            var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlTTarget));
 
-            await Scenario.Define<SourceTestContext>()
-                 .WithEndpoint<LegacyAspEndpoint>(b => b.CustomConfig(ec =>
+            await Scenario.Define<SourceContext>()
+                 .WithEndpoint<AspSource>(b => b.CustomConfig(ec =>
                  {
                      SetupPersistence(ec);
                  })
@@ -63,8 +63,8 @@
                  .Done(c => c.TimeoutSet)
                  .Run(TimeSpan.FromSeconds(30));
 
-            var context = await Scenario.Define<TargetTestContext>()
-                .WithEndpoint<SqlTEndpoint>(b => b.CustomConfig(ec =>
+            var context = await Scenario.Define<TargetContext>()
+                .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>
                 {
                     ec.OverrideLocalAddress(sourceEndpoint);
 
@@ -86,19 +86,19 @@
             Assert.True(context.GotTheDelayedMessage);
         }
 
-        public class SourceTestContext : ScenarioContext
+        public class SourceContext : ScenarioContext
         {
             public bool TimeoutSet { get; set; }
         }
 
-        public class TargetTestContext : ScenarioContext
+        public class TargetContext : ScenarioContext
         {
             public bool GotTheDelayedMessage { get; set; }
         }
 
-        public class LegacyAspEndpoint : EndpointConfigurationBuilder
+        public class AspSource : EndpointConfigurationBuilder
         {
-            public LegacyAspEndpoint()
+            public AspSource()
             {
                 EndpointSetup<LegacyTimeoutManagerEndpoint>(ec =>
                 {
@@ -107,9 +107,9 @@
             }
         }
 
-        public class SqlTEndpoint : EndpointConfigurationBuilder
+        public class SqlTTarget : EndpointConfigurationBuilder
         {
-            public SqlTEndpoint()
+            public SqlTTarget()
             {
                 EndpointSetup<DefaultServer>(ec =>
                 {
@@ -119,18 +119,18 @@
 
             class DelayedMessageHandler : IHandleMessages<DelayedMessage>
             {
-                public DelayedMessageHandler(TargetTestContext testContext)
+                public DelayedMessageHandler(TargetContext context)
                 {
-                    this.testContext = testContext;
+                    this.context = context;
                 }
 
                 public Task Handle(DelayedMessage message, IMessageHandlerContext context)
                 {
-                    testContext.GotTheDelayedMessage = true;
+                    this.context.GotTheDelayedMessage = true;
                     return Task.CompletedTask;
                 }
 
-                readonly TargetTestContext testContext;
+                readonly TargetContext context;
             }
         }
 

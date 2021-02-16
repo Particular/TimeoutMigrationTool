@@ -1,5 +1,7 @@
 ﻿namespace TimeoutMigrationTool.NHibernate.AcceptanceTests
 {
+    using System;
+    using System.IO;
     using Microsoft.Data.SqlClient;
     using global::NHibernate;
     using global::NHibernate.Dialect;
@@ -113,6 +115,44 @@ Exec sp_executesql @sql
             await using var dropCommand = connection.CreateCommand();
             dropCommand.CommandText = $"use master; if exists(select * from sysdatabases where name = '{databaseName}') begin alter database {databaseName} set SINGLE_USER with rollback immediate; drop database {databaseName}; end; ";
             await dropCommand.ExecuteNonQueryAsync();
+        }
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        public static string StorageRootDir
+        {
+            get
+            {
+                string tempDir;
+
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    //can't use bin dir since that will be too long on the build agents
+                    tempDir = @"c:\temp";
+                }
+                else
+                {
+                    tempDir = Path.GetTempPath();
+                }
+
+                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
+            }
         }
     }
 }

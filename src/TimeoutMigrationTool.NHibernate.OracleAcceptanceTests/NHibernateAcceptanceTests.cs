@@ -8,6 +8,7 @@
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool.NHibernate;
     using System;
+    using System.IO;
     using System.Threading.Tasks;
 
     class NHibernateAcceptanceTests
@@ -71,6 +72,44 @@ EXCEPTION
          RAISE;
       END IF;
 END;").ExecuteUpdateAsync();
+        }
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            if (Directory.Exists(StorageRootDir))
+            {
+                Directory.Delete(StorageRootDir, true);
+            }
+        }
+
+        public static string StorageRootDir
+        {
+            get
+            {
+                string tempDir;
+
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    //can't use bin dir since that will be too long on the build agents
+                    tempDir = @"c:\temp";
+                }
+                else
+                {
+                    tempDir = Path.GetTempPath();
+                }
+
+                return Path.Combine(tempDir, "timeoutmigrationtool-accpt-tests");
+            }
         }
 
         internal string connectionString;
