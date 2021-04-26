@@ -2,19 +2,19 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Runtime.CompilerServices;
-    using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
-    using static Microsoft.Azure.Cosmos.Table.TableQuery;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Net;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Threading;
+    using System.Threading.Tasks;
+    using Azure.Storage.Blobs;
     using Microsoft.Azure.Cosmos.Table;
     using Newtonsoft.Json;
+    using static Microsoft.Azure.Cosmos.Table.TableQuery;
 
     public class AspTimeoutsSource : ITimeoutsSource
     {
@@ -386,7 +386,7 @@
         async IAsyncEnumerable<TimeoutData> MaterializeTimeoutData(
             BlobContainerClient blobContainerClient,
             IEnumerable<MigratedTimeoutDataEntity> timeoutDataEntities,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default,
+            [EnumeratorCancellation] CancellationToken cancellationToken,
             int maxConcurrentBlobDownloads = 200) // a single blob can handle up to 500 req/s
         {
             using var throttler = new SemaphoreSlim(maxConcurrentBlobDownloads);
