@@ -17,7 +17,7 @@
     [TestFixture]
     public class AspTimeoutsSourceTests
     {
-        static readonly string connectionString = Environment.GetEnvironmentVariable("AzureStorageQueue_ConnectionString") ?? "UseDevelopmentStorage=true;";
+        static readonly string connectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true;";
         string tableNamePrefix;
         CloudTableClient tableClient;
         BlobContainerClient blobContainerClient;

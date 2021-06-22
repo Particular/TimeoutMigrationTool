@@ -12,7 +12,7 @@
     [TestFixture]
     class ASQTargetTests
     {
-        string connectionString = Environment.GetEnvironmentVariable("AzureStorageQueue_ConnectionString") ?? "UseDevelopmentStorage=true;";
+        string connectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true;";
         CloudTableClient tableClient;
         string endpointName;
 

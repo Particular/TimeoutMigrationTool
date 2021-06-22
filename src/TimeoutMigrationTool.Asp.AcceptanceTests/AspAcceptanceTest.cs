@@ -42,7 +42,7 @@
             timeoutTableName = tableNamePrefix + TimeoutTableName;
             timeoutContainerName = tableNamePrefix + "timeoutsstate";
 
-            connectionString = Environment.GetEnvironmentVariable("AzureStorageQueue_ConnectionString") ?? "UseDevelopmentStorage=true;";
+            connectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true;";
 
             var account = CloudStorageAccount.Parse(connectionString);
             tableClient = account.CreateCloudTableClient();
