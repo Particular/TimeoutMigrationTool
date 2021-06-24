@@ -48,7 +48,6 @@
                  .When(async (session, c) =>
                  {
                      var delayedMessage = new DelayedMessage();
-
                      var options = new SendOptions();
 
                      options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
@@ -63,6 +62,24 @@
                  .Done(c => c.TimeoutSet)
                  .Run(TimeSpan.FromSeconds(30));
 
+            var setupContext = await Scenario.Define<TargetContext>()
+                .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>
+                {
+                    ec.OverrideLocalAddress(sourceEndpoint);
+
+                    ec.UseTransport<SqlServerTransport>()
+                        .ConnectionString(sqlConnectionString);
+                }))
+                .Done(c => c.EndpointsStarted)
+                .Run(TimeSpan.FromSeconds(30));
+
+            var logger = new TestLoggingAdapter(setupContext);
+            var timeoutStorage = CreateTimeoutStorage(sourceEndpoint);
+            var timeoutTarget = new SqlTTimeoutsTarget(logger, sqlConnectionString, "dbo");
+            var migrationRunner = new MigrationRunner(logger, timeoutStorage, timeoutTarget);
+
+            await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
+
             var context = await Scenario.Define<TargetContext>()
                 .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>
                 {
@@ -70,18 +87,9 @@
 
                     ec.UseTransport<SqlServerTransport>()
                         .ConnectionString(sqlConnectionString);
-                })
-                .When(async (_, c) =>
-                {
-                    var logger = new TestLoggingAdapter(c);
-                    var timeoutStorage = CreateTimeoutStorage(sourceEndpoint);
-                    var timeoutTarget = new SqlTTimeoutsTarget(logger, sqlConnectionString, "dbo");
-                    var migrationRunner = new MigrationRunner(logger, timeoutStorage, timeoutTarget);
-
-                    await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(90));
+                .Run(TimeSpan.FromSeconds(30));
 
             Assert.True(context.GotTheDelayedMessage);
         }
