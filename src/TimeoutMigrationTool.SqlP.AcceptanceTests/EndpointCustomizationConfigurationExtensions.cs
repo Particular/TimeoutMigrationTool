@@ -11,7 +11,10 @@
     {
         public static IEnumerable<Type> GetTypesScopedByTestClass(this EndpointCustomizationConfiguration endpointConfiguration)
         {
-            var assemblies = new AssemblyScanner().GetScannableAssemblies();
+            var assemblies = new AssemblyScanner()
+            {
+                ThrowExceptions = false
+            }.GetScannableAssemblies();
 
             var assembliesToScan = assemblies.Assemblies
                 //exclude acceptance tests by default

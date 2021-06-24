@@ -6,7 +6,7 @@
 
     public static class MsSqlMicrosoftDataClientHelper
     {
-        const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Initial Catalog=Test;";
+        const string ConnectionString = @"Data Source=(local);Initial Catalog=TimeoutMigrationTestSource;Integrated Security=True;";
 
         public static SqlConnection Build(string connectionString = null)
         {

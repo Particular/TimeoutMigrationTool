@@ -35,7 +35,7 @@
 
             databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
 
-            connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
+            connectionString = $@"Data Source=(local);Initial Catalog={databaseName};Integrated Security=True;";
 
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }
