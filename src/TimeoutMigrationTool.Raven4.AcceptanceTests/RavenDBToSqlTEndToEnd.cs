@@ -79,7 +79,7 @@
                         await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                     }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(TimeSpan.FromSeconds(90));
 
             Assert.True(context.GotTheDelayedMessage);
         }
