@@ -22,7 +22,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
 		<PackageReference Include="NHibernate" Version="5.3.9" />
-		<PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
+		<PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
 		<PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.9.1" />
 		<PackageReference Include="Particular.Packaging" Version="1.2.1" PrivateAssets="All" />
