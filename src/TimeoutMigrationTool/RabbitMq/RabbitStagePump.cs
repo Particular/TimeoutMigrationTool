@@ -1,7 +1,6 @@
 namespace Particular.TimeoutMigrationTool.RabbitMq
 {
     using System;
-    using System.Globalization;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -127,13 +126,11 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
         {
             var delayExchangeName = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.DelayExchange"] as byte[]);
             var routingKey = Encoding.UTF8.GetString(message.BasicProperties.Headers["TimeoutMigrationTool.RoutingKey"] as byte[]);
-            var delayInSeconds = (int)message.BasicProperties.Headers["NServiceBus.Transport.RabbitMQ.DelayInSeconds"];
 
             message.BasicProperties.Headers.Remove("TimeoutMigrationTool.DelayExchange");
             message.BasicProperties.Headers.Remove("TimeoutMigrationTool.RoutingKey");
 
             using var tokenSource = new CancellationTokenSource();
-            message.BasicProperties.Expiration = ((long)delayInSeconds * 1000).ToString(CultureInfo.InvariantCulture);
             consumer.Model.BasicPublish(delayExchangeName, routingKey, true, message.BasicProperties, message.Body);
 
             if (tokenSource.IsCancellationRequested)
