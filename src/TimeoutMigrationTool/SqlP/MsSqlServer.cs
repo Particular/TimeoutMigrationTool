@@ -161,25 +161,25 @@ WHERE
             return @"DECLARE @SqlQuery NVARCHAR(MAX) = '';
 
 SELECT
-	@SqlQuery = @SqlQuery + 'SELECT
-	''' + SUBSTRING(name, 0, LEN(name) - LEN('_TimeoutData') + 1) + ''' EndpointName,
-	COUNT(*) NrOfTimeouts,
-	MAX(Time) LongestTimeout,
-	MIN(Time) ShortestTimeout,
+    @SqlQuery = @SqlQuery + 'SELECT
+    ''' + SUBSTRING(name, 0, LEN(name) - LEN('_TimeoutData') + 1) + ''' EndpointName,
+    COUNT(*) NrOfTimeouts,
+    MAX(Time) LongestTimeout,
+    MIN(Time) ShortestTimeout,
     (SELECT DISTINCT(Destination) + '', ''
     FROM
         [' + name + ']
     FOR XML PATH('''')) Destinations
 FROM
-	[' + name + ']
+    [' + name + ']
 WHERE
-	Time >= @CutOffTime
+    Time >= @CutOffTime
 HAVING
     COUNT(*) > 0 UNION '
 FROM
-	sys.tables
+    sys.tables
 WHERE
-	name LIKE '%_TimeoutData';
+    name LIKE '%_TimeoutData';
 
 IF LEN(@SqlQuery) > 0 BEGIN
 SET @SqlQuery = SUBSTRING(@SqlQuery, 0, LEN(@SqlQuery) - LEN('UNION'));
