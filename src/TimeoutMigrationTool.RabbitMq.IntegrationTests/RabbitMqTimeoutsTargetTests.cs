@@ -34,11 +34,15 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
             model.QueueDeclare(ExistingEndpointNameUsingConventional, true, false, false, null);
             model.ExchangeDeclare(ExistingEndpointNameUsingConventional, "fanout", true, false, null);
+            model.QueueBind(ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingConventional, "");
+
             model.QueueDeclare(ExistingEndpointNameUsingDirect, true, false, false, null);
 
             model.QueueDeclare(EndpointWithShortTimeout, true, false, false, null);
+
             model.ExchangeDeclare(DelayDeliveryExchange, "topic", true, false, null);
             model.ExchangeDeclare("nsb.delay-level-00", "topic", true, false, null);
+            model.ExchangeBind(DelayDeliveryExchange, "nsb.delay-level-00", "*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.0.#");
         }
 
         [TearDown]
@@ -142,7 +146,18 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
             var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
 
-            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator("FakeEndpoint");
+            var info = new EndpointInfo
+            {
+                EndpointName = ExistingEndpointNameUsingConventional,
+                ShortestTimeout = DateTime.UtcNow.AddDays(3),
+                LongestTimeout = DateTime.UtcNow.AddDays(5),
+                Destinations = new List<string> { ExistingEndpointNameUsingConventional }
+            };
+
+            var migrateResult = await sut.AbleToMigrate(info);
+            Assert.IsTrue(migrateResult.CanMigrate);
+
+            await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(ExistingEndpointNameUsingConventional);
 
             await endpointTarget.StageBatch(new List<TimeoutData>
             {
@@ -150,7 +165,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                 {
                     Id = "SomeID",
                     Headers = new Dictionary<string, string>(),
-                    Destination = EndpointWithShortTimeout,
+                    Destination = ExistingEndpointNameUsingConventional,
                     State = new byte[2],
                     Time = DateTime.Now - TimeSpan.FromDays(1)
                 }
@@ -159,6 +174,13 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             var numPumped = await sut.CompleteBatch(BatchNumber);
 
             Assert.AreEqual(1, numPumped);
+
+            using var connection = factory.CreateConnection();
+            using var channel = connection.CreateModel();
+            var result = channel.BasicGet(ExistingEndpointNameUsingConventional, true);
+
+            Assert.NotNull(result);
+            Assert.AreEqual(0, result.MessageCount);
         }
 
         [Test]
