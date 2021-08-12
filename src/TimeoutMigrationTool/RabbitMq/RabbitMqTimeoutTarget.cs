@@ -155,8 +155,9 @@
         readonly ILogger logger;
         readonly RabbitBatchWriter batchWriter;
 
-        public const int MaxDelayInSeconds = (1 << MaxLevel) - 1;
+        const int maxNumberOfBitsToUse = 28;
 
-        public const int MaxLevel = 28;
+        public const int MaxDelayInSeconds = (1 << maxNumberOfBitsToUse) - 1;
+        public const int MaxLevel = maxNumberOfBitsToUse - 1;
     }
 }
