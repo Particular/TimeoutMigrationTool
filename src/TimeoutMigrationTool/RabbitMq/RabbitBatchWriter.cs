@@ -9,7 +9,7 @@
     using Microsoft.Extensions.Logging;
     using RabbitMQ.Client;
 
-    class RabbitBatchWriter
+    public class RabbitBatchWriter
     {
         public RabbitBatchWriter(ILogger logger, string rabbitConnectionString)
         {
@@ -132,7 +132,7 @@
             }
         }
 
-        static string CalculateRoutingKey(int delayInSeconds, string address, out int startingDelayLevel)
+        public static string CalculateRoutingKey(int delayInSeconds, string address, out int startingDelayLevel)
         {
             if (delayInSeconds < 0)
             {
