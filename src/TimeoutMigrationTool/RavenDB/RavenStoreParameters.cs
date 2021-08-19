@@ -4,6 +4,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
     public class RavenStoreParameters
     {
-        public DateTime MaxCutoffTime { get; set; } = DateTime.Now.AddDays(-1);
+        public DateTimeOffset MaxCutoffTime { get; set; } = DateTimeOffset.UtcNow.AddDays(-1);
     }
 }

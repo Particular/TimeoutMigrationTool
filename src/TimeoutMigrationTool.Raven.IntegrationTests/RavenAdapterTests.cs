@@ -64,7 +64,7 @@
         {
             var nrOfTimeouts = 250;
             await testSuite.InitTimeouts(nrOfTimeouts);
-            var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(-1), "TimeoutDatas", (doc, id) => doc.Id = id);
+            var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(x => x.Time >= DateTimeOffset.UtcNow.AddDays(-1), "TimeoutDatas", (doc, id) => doc.Id = id);
             Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts));
         }
 
@@ -74,7 +74,7 @@
             var nrOfTimeouts = 250;
             await testSuite.InitTimeouts(nrOfTimeouts);
 
-            var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(10), "TimeoutDatas", (doc, id) => doc.Id = id);
+            var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(x => x.Time >= DateTimeOffset.UtcNow.AddDays(10), "TimeoutDatas", (doc, id) => doc.Id = id);
 
             foreach (var timeout in timeouts)
             {

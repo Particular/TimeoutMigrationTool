@@ -83,7 +83,7 @@
             return tableClient;
         }
 
-        public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName,
+        public async Task<IToolState> Prepare(DateTimeOffset maxCutoffTime, string endpointName,
             IDictionary<string, string> runParameters)
         {
             var tableClient = CreateCloudTableClient();
@@ -506,7 +506,7 @@
             await toolStateTable.ExecuteAsync(TableOperation.Merge(toolState));
         }
 
-        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
+        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTimeOffset cutOffTime)
         {
             var tableClient = CreateCloudTableClient();
 
@@ -536,8 +536,8 @@
             TableContinuationToken token = null;
             var numberOfTimeouts = 0;
             CancellationToken queryCancellationToken = CancellationToken.None;
-            DateTime minDateTime = DateTime.MaxValue;
-            DateTime maxDateTime = DateTime.MinValue;
+            DateTimeOffset minDateTime = DateTimeOffset.MaxValue;
+            DateTimeOffset maxDateTime = DateTimeOffset.MinValue;
             var destinations = new HashSet<string>(StringComparer.Ordinal);
             do
             {
@@ -552,7 +552,7 @@
 
                 foreach (var timeoutEntry in seg.Results)
                 {
-                    if (!DateTime.TryParseExact(timeoutEntry.PartitionKey, partitionKeyScope,
+                    if (!DateTimeOffset.TryParseExact(timeoutEntry.PartitionKey, partitionKeyScope,
                         CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal,
                         out var parsedPartitionKeyAsDateTime) || parsedPartitionKeyAsDateTime <= cutOffTime)
                     {
@@ -598,8 +598,8 @@
 
             var endpointTimeoutTable = await GetEndpointTimeoutTable(toolState.EndpointName, tableClient);
 
-            var lowerLimitForCutOffToFilterGuidEntriesOut = DateTime.UtcNow.AddYears(-1).ToString(partitionKeyScope);
-            var upperLimitForCutOffToFilterGuidEntriesOut = DateTime.UtcNow.AddYears(100).ToString(partitionKeyScope);
+            var lowerLimitForCutOffToFilterGuidEntriesOut = DateTimeOffset.UtcNow.AddYears(-1).ToString(partitionKeyScope);
+            var upperLimitForCutOffToFilterGuidEntriesOut = DateTimeOffset.UtcNow.AddYears(100).ToString(partitionKeyScope);
 
             // we introduce an upper limit in the query to make sure we never get entries that use a guid as a partition key
             // unfortunately if we select only the lower limit due to lexicographical query analysis guid entries might still match
@@ -697,7 +697,7 @@
                 (await toolStateTable.ExecuteQuerySegmentedAsync(query, null)).Results.SingleOrDefault();
 
             toolStateEntity.Status = MigrationStatus.Completed;
-            toolStateEntity.CompletedAt = DateTime.UtcNow;
+            toolStateEntity.CompletedAt = DateTimeOffset.UtcNow;
 
             await toolStateTable.ExecuteAsync(TableOperation.Replace(toolStateEntity));
         }

@@ -117,7 +117,7 @@
                     },
                     Destination = "SomeDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 12, 12, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 12, 12, TimeSpan.Zero)
                 },
                 new TimeoutData
                 {
@@ -128,7 +128,7 @@
                     },
                     Destination = "SomeOtherDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 13, 13, TimeSpan.Zero)
                 },
             }, 1);
 
@@ -161,7 +161,7 @@
                     },
                     Destination = "SomeDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 12, 12, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 12, 12, TimeSpan.Zero)
                 },
                 new TimeoutData
                 {
@@ -172,7 +172,7 @@
                     },
                     Destination = "SomeOtherDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 13, 13, TimeSpan.Zero)
                 },
             }, 1);
 
@@ -208,7 +208,7 @@
                     },
                     Destination = "SomeDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 12, 12, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 12, 12, TimeSpan.Zero)
                 },
                 new TimeoutData
                 {
@@ -219,7 +219,7 @@
                     },
                     Destination = "SomeOtherDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 13, 13, TimeSpan.Zero)
                 },
             }, 1);
 
@@ -274,7 +274,7 @@
                     },
                     Destination = "SomeDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 12, 12, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 12, 12, TimeSpan.Zero)
                 },
                 new TimeoutData
                 {
@@ -285,7 +285,7 @@
                     },
                     Destination = "SomeOtherDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 13, 13, TimeSpan.Zero)
                 },
             }, 1);
 
@@ -319,7 +319,7 @@
                     },
                     Destination = "SomeDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 12, 12, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 12, 12, TimeSpan.Zero)
                 },
                 new TimeoutData
                 {
@@ -330,7 +330,7 @@
                     },
                     Destination = "SomeOtherDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 13, 13, TimeSpan.Zero)
                 },
             }, 1);
 
@@ -351,7 +351,7 @@
             // Arrange
             var nameProvider = new DelayedDeliveryTableNameProvider();
             var endpointName = nameof(Staging_with_large_entities_batches_respecting_size_limitations);
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
             var random = new Random();
             var target = new ASQTarget(connectionString, nameProvider);
             var timeouts = new List<TimeoutData>();
@@ -388,7 +388,7 @@
             // Arrange
             var nameProvider = new DelayedDeliveryTableNameProvider();
             var endpointName = nameof(Completing_with_large_entities_batches_respecting_size_limitations);
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
             var random = new Random();
             var timeouts = new List<StagedDelayedMessageEntity>();
 

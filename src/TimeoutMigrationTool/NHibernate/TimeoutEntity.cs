@@ -40,7 +40,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
         /// It is important that this property is declared after the <see cref="Endpoint"/> property
         /// for NHibernate to ensure TimeoutEntity_EndpointIdx has proper column order: (Endpoint, Time).
         /// </remarks>
-        public virtual DateTime Time { get; set; }
+        public virtual DateTimeOffset Time { get; set; }
 
         /// <summary>
         /// Store the headers to preserve them across timeouts.

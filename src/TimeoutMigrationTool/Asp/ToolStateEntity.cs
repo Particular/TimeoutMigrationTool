@@ -33,7 +33,7 @@
 
         public string EndpointName { get; set; }
 
-        public DateTime? CompletedAt { get; set; }
+        public DateTimeOffset? CompletedAt { get; set; }
 
         [IgnoreProperty]
         public int NumberOfBatches => BatchNumberAndSizes?.Count ?? 0;

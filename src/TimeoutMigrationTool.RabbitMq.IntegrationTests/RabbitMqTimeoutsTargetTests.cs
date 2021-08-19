@@ -65,8 +65,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             var info = new EndpointInfo
             {
                 EndpointName = ExistingEndpointNameUsingConventional,
-                ShortestTimeout = DateTime.UtcNow.AddDays(3),
-                LongestTimeout = DateTime.UtcNow.AddDays(5),
+                ShortestTimeout = DateTimeOffset.UtcNow.AddDays(3),
+                LongestTimeout = DateTimeOffset.UtcNow.AddDays(5),
                 Destinations = new List<string>
                 {
                     ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect
@@ -86,8 +86,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             var info = new EndpointInfo
             {
                 EndpointName = ExistingEndpointNameUsingConventional,
-                ShortestTimeout = DateTime.UtcNow.AddDays(3),
-                LongestTimeout = DateTime.UtcNow.AddDays(5),
+                ShortestTimeout = DateTimeOffset.UtcNow.AddDays(3),
+                LongestTimeout = DateTimeOffset.UtcNow.AddDays(5),
                 Destinations = new List<string>
                 {
                     ExistingEndpointNameUsingConventional, ExistingEndpointNameUsingDirect
@@ -113,8 +113,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             var info = new EndpointInfo
             {
                 EndpointName = ExistingEndpointNameUsingConventional,
-                ShortestTimeout = DateTime.UtcNow.AddDays(3),
-                LongestTimeout = DateTime.UtcNow.AddDays(5),
+                ShortestTimeout = DateTimeOffset.UtcNow.AddDays(3),
+                LongestTimeout = DateTimeOffset.UtcNow.AddDays(5),
                 Destinations = new List<string> { ExistingEndpointNameUsingConventional, NonExistingEndpointName }
             };
             var result = await sut.AbleToMigrate(info);
@@ -130,8 +130,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             var info = new EndpointInfo
             {
                 EndpointName = ExistingEndpointNameUsingConventional,
-                ShortestTimeout = DateTime.UtcNow.AddDays(3),
-                LongestTimeout = DateTime.UtcNow.AddYears(9),
+                ShortestTimeout = DateTimeOffset.UtcNow.AddDays(3),
+                LongestTimeout = DateTimeOffset.UtcNow.AddYears(9),
                 Destinations = new List<string> { ExistingEndpointNameUsingConventional }
             };
             var result = await sut.AbleToMigrate(info);
@@ -149,8 +149,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             var info = new EndpointInfo
             {
                 EndpointName = ExistingEndpointNameUsingConventional,
-                ShortestTimeout = DateTime.UtcNow.AddDays(3),
-                LongestTimeout = DateTime.UtcNow.AddDays(5),
+                ShortestTimeout = DateTimeOffset.UtcNow.AddDays(3),
+                LongestTimeout = DateTimeOffset.UtcNow.AddDays(5),
                 Destinations = new List<string> { ExistingEndpointNameUsingConventional }
             };
 
@@ -167,7 +167,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
                     Headers = new Dictionary<string, string>(),
                     Destination = ExistingEndpointNameUsingConventional,
                     State = new byte[2],
-                    Time = DateTime.Now - TimeSpan.FromDays(1)
+                    Time = DateTimeOffset.UtcNow - TimeSpan.FromDays(1)
                 }
             }, BatchNumber);
 

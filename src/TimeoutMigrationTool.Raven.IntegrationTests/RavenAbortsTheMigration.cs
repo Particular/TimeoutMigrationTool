@@ -33,7 +33,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenThereIsStateAbortShouldDeleteState()
         {
-            var toolState = testSuite.SetupToolState(DateTime.Now);
+            var toolState = testSuite.SetupToolState(DateTimeOffset.UtcNow);
             await testSuite.SaveToolState(toolState);
 
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
@@ -46,7 +46,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenAbortingOnPreparedStorageStateShouldBeCleanedUp()
         {
-            var cutOffTime = DateTime.Now.AddDays(-1);
+            var cutOffTime = DateTimeOffset.UtcNow.AddDays(-1);
             var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await storage.Prepare(cutOffTime, testSuite.EndpointName, new Dictionary<string, string>());
 
@@ -60,7 +60,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenAbortingWithAToolStateInPreparingToolWillStillCleanupBatches()
         {
-            var cutOffTime = DateTime.Now.AddDays(-1);
+            var cutOffTime = DateTimeOffset.UtcNow.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
@@ -82,7 +82,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenAbortingWithAToolStateInStoragePreparedToolWillStillCleanupBatches()
         {
-            var cutOffTime = DateTime.Now.AddDays(-1);
+            var cutOffTime = DateTimeOffset.UtcNow.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
@@ -100,7 +100,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenCheckingIfThereIsSomethingToAbortAndThereIsAToolState()
         {
-            var cutOffTime = DateTime.Now.AddDays(-1);
+            var cutOffTime = DateTimeOffset.UtcNow.AddDays(-1);
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var storage = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
@@ -125,7 +125,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenCleaningUpBatchesThenTimeoutsInIncompleteBatchesAreReset()
         {
             await testSuite.InitTimeouts(nrOfTimeouts);
-            testSuite.SetupToolState(DateTime.Now.AddDays(-1));
+            testSuite.SetupToolState(DateTimeOffset.UtcNow.AddDays(-1));
             var preparedBatches = await testSuite.SetupExistingBatchInfoInDatabase();
             var incompleteBatches = preparedBatches.Skip(1).Take(1).ToList();
             var incompleteBatch = incompleteBatches.First();
@@ -144,7 +144,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenCleaningUpBatchesThenTimeoutsInCompleteBatchesAreNotReset()
         {
             await testSuite.InitTimeouts(nrOfTimeouts);
-            testSuite.SetupToolState(DateTime.Now.AddDays(-1));
+            testSuite.SetupToolState(DateTimeOffset.UtcNow.AddDays(-1));
             var preparedBatches = await testSuite.SetupExistingBatchInfoInDatabase();
             var incompleteBatches = preparedBatches.Skip(1).Take(1).ToList();
             var completeBatch = preparedBatches.First();

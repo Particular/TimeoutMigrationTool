@@ -9,7 +9,7 @@
         }
 
         public string[] TimeoutIds { get; set; }
-        public DateTime CutoffDate { get; set; }
+        public DateTimeOffset CutoffDate { get; set; }
         public string EndpointName { get; set; }
     }
 }

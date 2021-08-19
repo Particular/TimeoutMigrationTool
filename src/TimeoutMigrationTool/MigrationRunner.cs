@@ -17,7 +17,7 @@ namespace Particular.TimeoutMigrationTool
             this.timeoutsTarget = timeoutsTarget;
         }
 
-        public async Task Run(DateTime cutOffTime, EndpointFilter endpointFilter, IDictionary<string, string> runParameters)
+        public async Task Run(DateTimeOffset cutOffTime, EndpointFilter endpointFilter, IDictionary<string, string> runParameters)
         {
             var watch = new Stopwatch();
             watch.Start();
@@ -107,7 +107,7 @@ namespace Particular.TimeoutMigrationTool
             logger.LogInformation($"Migration completed successfully in {watch.Elapsed:hh\\:mm\\:ss}.");
         }
 
-        async Task Run(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
+        async Task Run(DateTimeOffset cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             var prepareWatch = Stopwatch.StartNew();
             var toolState = await timeoutsSource.Prepare(cutOffTime, endpointName, runParameters);

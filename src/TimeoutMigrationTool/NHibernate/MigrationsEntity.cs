@@ -9,8 +9,8 @@
         public virtual MigrationStatus Status { get; set; }
         public virtual string RunParameters { get; set; }
         public virtual int NumberOfBatches { get; set; }
-        public virtual DateTime CutOffTime { get; set; }
-        public virtual DateTime StartedAt { get; set; }
-        public virtual DateTime? CompletedAt { get; set; }
+        public virtual DateTimeOffset CutOffTime { get; set; }
+        public virtual DateTimeOffset StartedAt { get; set; }
+        public virtual DateTimeOffset? CompletedAt { get; set; }
     }
 }

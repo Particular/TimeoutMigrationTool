@@ -42,7 +42,7 @@
 
             var noOfTimeouts = 5000;
 
-            var cutOffDate = DateTime.Now;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             var allTimeouts = new List<TimeoutDataEntity>(noOfTimeouts);
 
@@ -166,7 +166,7 @@
 
         public string StateAddress { get; set; }
 
-        public DateTime Time { get; set; }
+        public DateTimeOffset Time { get; set; }
 
         public string OwningTimeoutManager { get; set; }
 

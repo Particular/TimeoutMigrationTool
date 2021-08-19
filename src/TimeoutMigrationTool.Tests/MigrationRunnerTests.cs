@@ -38,7 +38,7 @@ namespace TimeoutMigrationTool.Tests
             timeoutsSource.SetupBatchesToPrepare(batches);
             timeoutsSource.SetupTimeoutsToReadForBatch(batches.First());
 
-            await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
+            await runner.Run(DateTimeOffset.UtcNow, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
             Assert.That(timeoutsSource.EndpointsWereListed);
             Assert.That(timeoutsSource.ToolStateWasCreated);
@@ -65,7 +65,7 @@ namespace TimeoutMigrationTool.Tests
 
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>
+                await runner.Run(DateTimeOffset.UtcNow, EndpointFilter.IncludeAll, new Dictionary<string, string>
                 {
                     { "someotherkey", "someothervalue" },
                     { "somekey", "someothervalue" }
@@ -97,7 +97,7 @@ namespace TimeoutMigrationTool.Tests
             timeoutsSource.SetupToolStateToReturn(toolState);
             timeoutsSource.SetupTimeoutsToReadForBatch(batches.First());
 
-            await runner.Run(DateTime.Now, EndpointFilter.SpecificEndpoint(testEndpoint), new Dictionary<string, string>());
+            await runner.Run(DateTimeOffset.UtcNow, EndpointFilter.SpecificEndpoint(testEndpoint), new Dictionary<string, string>());
 
             Assert.That(timeoutsSource.EndpointsWereListed, Is.False);
             Assert.That(timeoutsSource.ToolStateWasCreated, Is.False);
@@ -124,7 +124,7 @@ namespace TimeoutMigrationTool.Tests
             timeoutsSource.SetupToolStateToReturn(toolState);
             timeoutsSource.SetupTimeoutsToReadForBatch(batches.First());
 
-            Assert.ThrowsAsync<Exception>(async () => await runner.Run(DateTime.Now,
+            Assert.ThrowsAsync<Exception>(async () => await runner.Run(DateTimeOffset.UtcNow,
                 EndpointFilter.SpecificEndpoint(testEndpoint), new Dictionary<string, string>()));
         }
 

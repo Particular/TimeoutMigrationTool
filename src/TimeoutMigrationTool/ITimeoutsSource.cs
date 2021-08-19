@@ -14,7 +14,7 @@
         /// <summary>
         /// Creates a new timeout migration, moves all timeouts that match the specified endpoint name and cutoff time to a staged table, and breaks the timeouts up into batches
         /// </summary>
-        Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters);
+        Task<IToolState> Prepare(DateTimeOffset maxCutoffTime, string endpointName, IDictionary<string, string> runParameters);
 
         /// <summary>
         /// Reads all timeouts from a specified batch number
@@ -34,7 +34,7 @@
         /// <summary>
         /// Lists all the endpoints found that have timeouts associated with them.
         /// </summary>
-        Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime);
+        Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTimeOffset cutOffTime);
 
         /// <summary>
         /// Aborts the migration and moves all staged timeouts back to the original location

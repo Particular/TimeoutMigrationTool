@@ -43,7 +43,7 @@
             return new SqlPToolState(connectionString, dialect, migrationRunId, runParameters, endpoint, numberOfBatches, status);
         }
 
-        public async Task<IToolState> Prepare(DateTime cutOffTime, string endpointName, IDictionary<string, string> runParameters)
+        public async Task<IToolState> Prepare(DateTimeOffset cutOffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             migrationRunId = Guid.NewGuid().ToString().Replace("-", "");
 
@@ -65,7 +65,7 @@
 
             var startedAtParameter = command.CreateParameter();
             startedAtParameter.ParameterName = "StartedAt";
-            startedAtParameter.Value = DateTime.UtcNow;
+            startedAtParameter.Value = DateTimeOffset.UtcNow;
             command.Parameters.Add(startedAtParameter);
 
             await command.ExecuteNonQueryAsync();
@@ -144,7 +144,7 @@
 
             var completedAtParameter = command.CreateParameter();
             completedAtParameter.ParameterName = "CompletedAt";
-            completedAtParameter.Value = DateTime.UtcNow;
+            completedAtParameter.Value = DateTimeOffset.UtcNow;
             command.Parameters.Add(completedAtParameter);
 
             command.CommandText = dialect.GetScriptToMarkMigrationAsCompleted();
@@ -170,13 +170,13 @@
 
             var completedAtParameter = command.CreateParameter();
             completedAtParameter.ParameterName = "CompletedAt";
-            completedAtParameter.Value = DateTime.UtcNow;
+            completedAtParameter.Value = DateTimeOffset.UtcNow;
             command.Parameters.Add(completedAtParameter);
 
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime migrateTimeoutsWithDeliveryDateLaterThan)
+        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTimeOffset migrateTimeoutsWithDeliveryDateLaterThan)
         {
             await using var connection = dialect.Connect(connectionString);
 
@@ -201,8 +201,8 @@
                     {
                         EndpointName = reader.GetString(0),
                         NrOfTimeouts = reader.GetInt32(1),
-                        LongestTimeout = reader.GetDateTime(2),
-                        ShortestTimeout = reader.GetDateTime(3),
+                        LongestTimeout = reader.GetFieldValue<DateTimeOffset>(2),
+                        ShortestTimeout = reader.GetFieldValue<DateTimeOffset>(3),
                         Destinations = reader.GetString(4).Split(", ", StringSplitOptions.RemoveEmptyEntries)
                     });
                 }
@@ -220,7 +220,7 @@
                     Destination = reader.GetString(1),
                     SagaId = reader.GetGuid(2),
                     State = GetBytes(reader, 3),
-                    Time = reader.GetFieldValue<DateTime>(4),
+                    Time = reader.GetFieldValue<DateTimeOffset>(4),
                     Headers = GetHeaders(reader)
                 };
             }

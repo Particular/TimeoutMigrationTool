@@ -56,8 +56,8 @@ CREATE TABLE [{1}].[{0}] (
             var info = new EndpointInfo
             {
                 EndpointName = ExistingEndpointName,
-                ShortestTimeout = DateTime.UtcNow.AddDays(3),
-                LongestTimeout = DateTime.UtcNow.AddDays(5),
+                ShortestTimeout = DateTimeOffset.UtcNow.AddDays(3),
+                LongestTimeout = DateTimeOffset.UtcNow.AddDays(5),
                 Destinations = new List<string>
                 {
                     ExistingDestination
@@ -85,8 +85,8 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             var info = new EndpointInfo
             {
                 EndpointName = ExistingEndpointName,
-                ShortestTimeout = DateTime.UtcNow.AddDays(3),
-                LongestTimeout = DateTime.UtcNow.AddDays(5),
+                ShortestTimeout = DateTimeOffset.UtcNow.AddDays(3),
+                LongestTimeout = DateTimeOffset.UtcNow.AddDays(5),
                 Destinations = new List<string>
                 {
                     ExistingDestination
@@ -173,7 +173,7 @@ CREATE TABLE [{1}].[{0}] (
                     },
                     Destination = "SomeDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 12, 12, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 12, 12, TimeSpan.Zero)
                 },
                 new TimeoutData
                 {
@@ -184,7 +184,7 @@ CREATE TABLE [{1}].[{0}] (
                     },
                     Destination = "SomeOtherDestination",
                     State = new byte[2],
-                    Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
+                    Time = new DateTimeOffset(2021, 12, 12, 12, 13, 13, TimeSpan.Zero)
                 },
             }, BatchNumber);
 

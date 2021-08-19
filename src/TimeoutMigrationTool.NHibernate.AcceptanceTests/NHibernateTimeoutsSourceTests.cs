@@ -31,7 +31,7 @@
             var endpointName = "Preparing_Creates_A_MigrationsEntity_And_Returns_It";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 10, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             // Act
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
@@ -51,7 +51,7 @@
             var endpointName = "Preparing_Sets_The_Number_Of_Batches_Correctly";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -91,7 +91,7 @@
             var endpointName = "Can_Read_Batch_By_Batch_Number";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
             var expectedDestinations = new List<string>();
 
             using (var testSession = CreateSessionFactory().OpenSession())
@@ -139,7 +139,7 @@
             var endpointName = "Marking_A_Batch_As_Complete_Updates_The_Status_Correctly";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             using var sessionFactory = CreateSessionFactory();
 
@@ -197,7 +197,7 @@
             var endpointName = "ListEndpoints_Loads_All_Endpoints_With_Timeouts";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             using var sessionFactory = CreateSessionFactory();
 
@@ -224,7 +224,7 @@
             await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Act
-            var endpoints = await timeoutsSource.ListEndpoints(DateTime.UtcNow.AddDays(-100));
+            var endpoints = await timeoutsSource.ListEndpoints(DateTimeOffset.UtcNow.AddDays(-100));
 
             // Assert
             Assert.AreEqual(2, endpoints.Count);
@@ -237,7 +237,7 @@
             var endpointName = "Complete_Sets_The_MigrationStatus_Correctly";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -281,7 +281,7 @@
             var endpointName = "Aborting_Returns_StagedTimeouts_Back_To_TimeoutEntity_Table";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             using var sessionFactory = CreateSessionFactory();
 
@@ -326,7 +326,7 @@
             var endpointName = "GetNextBatch_Returns_The_Next_Batch_Not_Migrated";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects
@@ -365,7 +365,7 @@
             var endpointName = "GetNextBatch_Returns_The_Next_Batch_Not_Migrated";
             var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1, DatabaseDialect);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTime.UtcNow;
+            var cutOffDate = DateTimeOffset.UtcNow;
 
             using (var testSession = CreateSessionFactory().OpenSession())
             { // Explicit using scope to ensure dispose before SUT connects

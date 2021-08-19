@@ -7,8 +7,8 @@ namespace Particular.TimeoutMigrationTool
     {
         public string EndpointName { get; set; }
         public int NrOfTimeouts { get; set; }
-        public DateTime LongestTimeout { get; set; }
-        public DateTime ShortestTimeout { get; set; }
+        public DateTimeOffset LongestTimeout { get; set; }
+        public DateTimeOffset ShortestTimeout { get; set; }
         public IList<string> Destinations { get; set; }
     }
 }

@@ -30,7 +30,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             Assert.AreEqual(1, toolState.NumberOfBatches);
         }
@@ -50,7 +50,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
-            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             Assert.AreEqual(4, toolState.NumberOfBatches);
         }
@@ -70,7 +70,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(1);
-            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow.AddDays(10), sourceEndpoint, new Dictionary<string, string>());
 
             Assert.AreEqual(6, toolState.NumberOfBatches);
         }
@@ -89,7 +89,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
+            var endpoints = await timeoutStorage.ListEndpoints(DateTimeOffset.UtcNow.AddYears(-10));
 
             CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint);
             Assert.AreEqual(1, endpoints.Single(e => e.EndpointName == sourceEndpoint).Destinations.Count());
@@ -132,7 +132,7 @@
                 .Done(c => NumberOfTimeouts(sourceEndpoint) == 3)
                 .Run();
 
-            var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(-10));
+            var endpoints = await GetTimeoutStorage().ListEndpoints(DateTimeOffset.UtcNow.AddYears(-10));
 
             CollectionAssert.AreEquivalent(new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" }, endpoints.First().Destinations);
         }
@@ -151,7 +151,7 @@
                 .Done(c => c.NumberOfTimeouts == NumberOfTimeouts(sourceEndpoint))
                 .Run();
 
-            var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(10));
+            var endpoints = await GetTimeoutStorage().ListEndpoints(DateTimeOffset.UtcNow.AddYears(10));
 
             CollectionAssert.IsEmpty(endpoints);
         }
@@ -171,7 +171,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             BatchInfo batch;
 
@@ -201,7 +201,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             var batch = await toolState.TryGetNextBatch();
 
@@ -229,7 +229,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
-            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             var timeoutsStored = 0;
 
@@ -263,7 +263,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM {sourceEndpoint}_TimeoutData");
 
@@ -285,7 +285,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(3);
-            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-10), sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow.AddDays(-10), sourceEndpoint, new Dictionary<string, string>());
 
             var batch1 = await toolState.TryGetNextBatch();
 
@@ -315,7 +315,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage(1);
-            var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             Assert.AreEqual(5, toolState.NumberOfBatches);
         }
@@ -335,7 +335,7 @@
                 .Run();
 
             var timeoutStorage = GetTimeoutStorage();
-            await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
+            await timeoutStorage.Prepare(DateTimeOffset.UtcNow, sourceEndpoint, new Dictionary<string, string>());
 
             Assert.NotNull(await timeoutStorage.TryLoadOngoingMigration());
             await timeoutStorage.Complete();
@@ -369,7 +369,7 @@
                 {
                     for (var x = 0; x < testContext.NumberOfTimeouts; x++)
                     {
-                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
+                        await RequestTimeout(context, DateTime.UtcNow.AddDays(7 + x), new Timeout { Id = message.Id });
                     }
                 }
 

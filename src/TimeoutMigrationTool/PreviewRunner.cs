@@ -17,7 +17,7 @@
 
         public async Task Run()
         {
-            var endpoints = await timeoutsSource.ListEndpoints(DateTime.Parse("2012-01-01"));
+            var endpoints = await timeoutsSource.ListEndpoints(DateTimeOffset.Parse("2012-01-01"));
 
             var endpointProblems = new Dictionary<string, List<string>>();
             if (!endpoints.Any())
@@ -45,7 +45,7 @@
                     endpointProblems[endpoint.EndpointName].AddRange(migrationCheckResult.Problems);
                 }
 
-                if ((endpoint.ShortestTimeout - DateTime.UtcNow) < TimeSpan.FromHours(4))
+                if ((endpoint.ShortestTimeout - DateTimeOffset.UtcNow) < TimeSpan.FromHours(4))
                 {
                     endpointProblems[endpoint.EndpointName].Add($"Shortest timeout is {endpoint.ShortestTimeout} is about to trigger and can trigger to late should the migration take a long time.");
                 }
