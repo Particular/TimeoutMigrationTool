@@ -73,7 +73,7 @@
         ValueTask<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
             var result = new MigrationCheckResult();
-            if ((endpoint.LongestTimeout - DateTimeOffset.UtcNow).TotalSeconds > MaxDelayInSeconds)
+            if ((endpoint.LongestTimeout - DateTime.UtcNow).TotalSeconds > MaxDelayInSeconds)
             {
                 result.Problems.Add($"{endpoint.EndpointName} - has a timeout that has further away date than allowed {MaxDelayInSeconds} seconds (8.5 years).");
             }

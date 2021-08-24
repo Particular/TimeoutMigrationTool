@@ -38,7 +38,7 @@
                 return testName + "-" + endpointBuilder;
             };
 
-            tableNamePrefix = $"Att{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTimeOffset.UtcNow.Ticks}".ToLowerInvariant();
+            tableNamePrefix = $"Att{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
             timeoutTableName = tableNamePrefix + TimeoutTableName;
             timeoutContainerName = tableNamePrefix + "timeoutsstate";
 

@@ -32,7 +32,7 @@ namespace TimeoutMigrationTool.Tests
             return Task.FromResult(existingToolState);
         }
 
-        public Task<IToolState> Prepare(DateTimeOffset maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
+        public Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             ToolStateWasCreated = true;
 
@@ -76,7 +76,7 @@ namespace TimeoutMigrationTool.Tests
             return Task.CompletedTask;
         }
 
-        public Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTimeOffset cutOffTime)
+        public Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
         {
             EndpointsWereListed = true;
             return Task.FromResult<IReadOnlyList<EndpointInfo>>(endpoints);

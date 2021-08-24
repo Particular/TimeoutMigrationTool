@@ -60,7 +60,7 @@
                         var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion, false);
                         var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl);
                         var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
-                        await migrationRunner.Run(DateTimeOffset.UtcNow.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
+                        await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                     }))
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(30));

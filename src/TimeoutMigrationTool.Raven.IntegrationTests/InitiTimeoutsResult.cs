@@ -4,7 +4,7 @@
 
     public class InitiTimeoutsResult
     {
-        public DateTimeOffset ShortestTimeout { get; set; }
-        public DateTimeOffset LongestTimeout { get; set; }
+        public DateTime ShortestTimeout { get; set; }
+        public DateTime LongestTimeout { get; set; }
     }
 }

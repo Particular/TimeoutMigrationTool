@@ -36,7 +36,7 @@
             return ravenToolState.ToToolState(batches);
         }
 
-        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTimeOffset cutoffTime)
+        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutoffTime)
         {
             var nrOfTimeoutsFound = await GuardAgainstTooManyTimeoutsWithoutIndexUsage();
 
@@ -205,7 +205,7 @@
             return nrOfTimeoutsResult.NrOfDocuments;
         }
 
-        public async Task<IToolState> Prepare(DateTimeOffset maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
+        public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             var toolStateDTO = new RavenToolStateDto { RunParameters = runParameters, Endpoint = endpointName, Status = MigrationStatus.Preparing };
 
@@ -215,7 +215,7 @@
 
             toolStateDTO.Batches = RavenToolStateDto.ToBatches(batches);
             toolStateDTO.Status = MigrationStatus.StoragePrepared;
-            toolStateDTO.StartedAt = DateTimeOffset.UtcNow;
+            toolStateDTO.StartedAt = DateTime.UtcNow;
             toolStateDTO.NumberOfBatches = batches.Count();
             toolStateDTO.NumberOfTimeouts = batches.Sum(b => b.NumberOfTimeouts);
 
@@ -257,13 +257,13 @@
             var incompleteBatches = batches.Where(bi => bi.State != BatchState.Completed).ToList();
             await CleanupExistingBatchesAndResetTimeouts(batches, incompleteBatches);
 
-            ravenToolState.CompletedAt = DateTimeOffset.UtcNow;
+            ravenToolState.CompletedAt = DateTime.UtcNow;
             ravenToolState.Status = MigrationStatus.Aborted;
 
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
         }
 
-        internal async Task<List<RavenBatch>> PrepareBatchesAndTimeouts(DateTimeOffset cutoffTime, string endpointName)
+        internal async Task<List<RavenBatch>> PrepareBatchesAndTimeouts(DateTime cutoffTime, string endpointName)
         {
             return useIndex
                 ? await PrepareBatchesWithIndexUsage(cutoffTime, endpointName)
@@ -275,7 +275,7 @@
             var ravenToolState = await ravenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId, (doc, id) => { });
 
             ravenToolState.Status = MigrationStatus.Completed;
-            ravenToolState.CompletedAt = DateTimeOffset.UtcNow;
+            ravenToolState.CompletedAt = DateTime.UtcNow;
 
             await ravenAdapter.ArchiveDocument(GetArchivedToolStateId(ravenToolState.Endpoint), ravenToolState);
         }
@@ -301,7 +301,7 @@
             }
         }
 
-        async Task<List<RavenBatch>> PrepareBatchesWithoutIndexUsage(DateTimeOffset cutoffTime, string endpointName)
+        async Task<List<RavenBatch>> PrepareBatchesWithoutIndexUsage(DateTime cutoffTime, string endpointName)
         {
             var batches = new List<RavenBatch>();
             var batchesExisted = false;
@@ -370,7 +370,7 @@
             return batches;
         }
 
-        async Task<List<RavenBatch>> PrepareBatchesWithIndexUsage(DateTimeOffset cutoffTime, string endpointName)
+        async Task<List<RavenBatch>> PrepareBatchesWithIndexUsage(DateTime cutoffTime, string endpointName)
         {
             var batches = new List<RavenBatch>();
             var batchesExisted = false;
@@ -483,7 +483,7 @@
 
         string GetArchivedToolStateId(string endpointName)
         {
-            return $"{RavenConstants.ArchivedToolStateIdPrefix}{endpointName}-{DateTimeOffset.UtcNow:yyyy-MM-dd hh-mm-ss}";
+            return $"{RavenConstants.ArchivedToolStateIdPrefix}{endpointName}-{DateTime.Now:yyyy-MM-dd hh-mm-ss}";
         }
 
         readonly ILogger logger;

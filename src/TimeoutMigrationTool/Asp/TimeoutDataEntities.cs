@@ -25,7 +25,7 @@
 
         public string StateAddress { get; set; }
 
-        public DateTimeOffset Time { get; set; }
+        public DateTime Time { get; set; }
 
         public string OwningTimeoutManager { get; set; }
 
@@ -41,7 +41,7 @@
                     8 + (2 * nameof(Destination).Length) + Destination.Length +
                     8 + (2 * nameof(SagaId).Length) + SagaId.ToString().Length +
                     8 + (2 * nameof(StateAddress).Length) + StateAddress.Length +
-                    8 + (2 * nameof(Time).Length) + sizeof(DateTimeOffset) + // Time property
+                    8 + (2 * nameof(Time).Length) + sizeof(DateTime) + // Time property
                     8 + (2 * nameof(OwningTimeoutManager).Length) + OwningTimeoutManager.Length +
                     8 + (2 * nameof(Headers).Length) + Headers.Length;
             }
@@ -74,7 +74,7 @@
 
         public string StateAddress { get; set; }
 
-        public DateTimeOffset Time { get; set; }
+        public DateTime Time { get; set; }
 
         public string OwningTimeoutManager { get; set; }
 
@@ -109,7 +109,7 @@
                     8 + (2 * nameof(Destination).Length) + Destination.Length +
                     8 + (2 * nameof(SagaId).Length) + SagaId.ToString().Length +
                     8 + (2 * nameof(StateAddress).Length) + StateAddress.Length +
-                    8 + (2 * nameof(Time).Length) + sizeof(DateTimeOffset) + // Time property
+                    8 + (2 * nameof(Time).Length) + sizeof(DateTime) + // Time property
                     8 + (2 * nameof(OwningTimeoutManager).Length) + OwningTimeoutManager.Length +
                     8 + (2 * nameof(Headers).Length) + Headers.Length +
                     8 + (2 * nameof(BatchState).Length) + sizeof(int);

@@ -13,7 +13,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
         public virtual Guid SagaId { get; set; }
         public virtual byte[] State { get; set; }
         public virtual string Endpoint { get; set; }
-        public virtual DateTimeOffset Time { get; set; }
+        public virtual DateTime Time { get; set; }
         public virtual string Headers { get; set; }
         public virtual int BatchNumber { get; set; }
         public virtual BatchState BatchState { get; set; }

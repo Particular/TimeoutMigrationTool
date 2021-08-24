@@ -75,7 +75,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
             return new NHibernateToolState(GetNextBatch, migration.MigrationRunId, JsonConvert.DeserializeObject<Dictionary<string, string>>(migration.RunParameters), migration.EndpointName, migration.NumberOfBatches, migration.Status);
         }
 
-        public async Task<IToolState> Prepare(DateTimeOffset maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
+        public async Task<IToolState> Prepare(DateTime maxCutoffTime, string endpointName, IDictionary<string, string> runParameters)
         {
             using var session = CreateSessionFactory().OpenSession();
             using var tx = session.BeginTransaction();
@@ -138,7 +138,7 @@ WHERE TE.Time >= :CutOffTime AND TE.Endpoint = :EndpointName;");
                 RunParameters = JsonConvert.SerializeObject(runParameters),
                 NumberOfBatches = maxBatchNumber,
                 CutOffTime = maxCutoffTime,
-                StartedAt = DateTimeOffset.UtcNow
+                StartedAt = DateTime.UtcNow
             };
 
             await session.SaveOrUpdateAsync(migrationRun);
@@ -240,7 +240,7 @@ SET
     Status = :AbortedStatus
 WHERE
     MigrationRunId = :MigrationRunId;");
-            markMigrationEntityAsAbortedHqlQuery.SetParameter("CompletedAt", DateTimeOffset.UtcNow);
+            markMigrationEntityAsAbortedHqlQuery.SetParameter("CompletedAt", DateTime.UtcNow);
             markMigrationEntityAsAbortedHqlQuery.SetParameter("AbortedStatus", MigrationStatus.Aborted);
             markMigrationEntityAsAbortedHqlQuery.SetParameter("MigrationRunId", ((NHibernateToolState)migrationRun).MigrationRunId);
             await markMigrationEntityAsAbortedHqlQuery.ExecuteUpdateAsync();
@@ -248,7 +248,7 @@ WHERE
             await tx.CommitAsync();
         }
 
-        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTimeOffset cutOffTime)
+        public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
         {
             using var session = CreateSessionFactory().OpenStatelessSession();
 
@@ -265,8 +265,8 @@ WHERE
             return timeouts.Select(x => new EndpointInfo
             {
                 EndpointName = x[0].ToString(),
-                LongestTimeout = (DateTimeOffset)x[1],
-                ShortestTimeout = (DateTimeOffset)x[2],
+                LongestTimeout = (DateTime)x[1],
+                ShortestTimeout = (DateTime)x[2],
                 NrOfTimeouts = (int)x[3],
                 Destinations = session.QueryOver<TimeoutEntity>()
                                             .Where(timeout => timeout.Endpoint == x[0].ToString())
@@ -286,7 +286,7 @@ WHERE
                                     .SingleOrDefaultAsync();
 
             migration.Status = MigrationStatus.Completed;
-            migration.CompletedAt = DateTimeOffset.UtcNow;
+            migration.CompletedAt = DateTime.UtcNow;
 
             await session.UpdateAsync(migration);
 

@@ -53,7 +53,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                     Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
                     SagaId = Guid.NewGuid(),
                     OwningTimeoutManager = "A",
-                    Time = i < nrOfTimeouts / 2 ? DateTimeOffset.UtcNow.AddDays(7) : DateTimeOffset.UtcNow.AddDays(14),
+                    Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
                     Headers = new Dictionary<string, string>(),
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
@@ -77,8 +77,8 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
         public async Task<InitiTimeoutsResult> InitTimeouts(int nrOfTimeouts, string endpointName, int startFromId)
         {
             var timeoutsPrefix = "TimeoutDatas";
-            var shortestTimeout = DateTimeOffset.MaxValue;
-            var longestTimeout = DateTimeOffset.MinValue;
+            var shortestTimeout = DateTime.MaxValue;
+            var longestTimeout = DateTime.MinValue;
             var daysToTrigger = random.Next(2, 60); // randomize the Time property
 
             var commands = new List<object>();
@@ -92,7 +92,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
                     Destination = "WeDontCare.ThisShouldBeIgnored.BecauseItsJustForRouting",
                     SagaId = Guid.NewGuid(),
                     OwningTimeoutManager = endpointName,
-                    Time = DateTimeOffset.UtcNow.AddDays(daysToTrigger),
+                    Time = DateTime.Now.AddDays(daysToTrigger),
                     Headers = new Dictionary<string, string>(),
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
@@ -132,11 +132,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
         public async Task<List<RavenBatch>> SetupExistingBatchInfoInDatabase()
         {
             var timeoutStorage = new RavenDbTimeoutsSource(Logger, serverName, DatabaseName, "TimeoutDatas", RavenDbVersion.ThreeDotFive, false);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTimeOffset.UtcNow, EndpointName);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now, EndpointName);
             return batches;
         }
 
-        public RavenToolState SetupToolState(DateTimeOffset cutoffTime)
+        public RavenToolState SetupToolState(DateTime cutoffTime)
         {
             var runParameters = new Dictionary<string, string>
             {

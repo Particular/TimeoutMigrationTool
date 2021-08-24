@@ -76,7 +76,7 @@
             var timeoutsTarget = new SqlTTimeoutsTarget(logger, sqlConnectionString, "dbo");
             var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
-            await migrationRunner.Run(DateTimeOffset.UtcNow.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
+            await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
 
             var context = await Scenario.Define<TargetContext>()
                 .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>

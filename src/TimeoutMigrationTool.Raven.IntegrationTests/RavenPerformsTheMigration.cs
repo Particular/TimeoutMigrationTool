@@ -36,7 +36,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTimeOffset.UtcNow.AddDays(-1), testSuite.EndpointName);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), testSuite.EndpointName);
 
             var batchToVerify = batches.First();
 
@@ -51,7 +51,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
-            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTimeOffset.UtcNow.AddDays(-1), testSuite.EndpointName);
+            var batches = await timeoutStorage.PrepareBatchesAndTimeouts(DateTime.Now.AddDays(-1), testSuite.EndpointName);
 
             var batchToVerify = batches.First();
             Assert.That(batchToVerify.State, Is.EqualTo(BatchState.Pending));
@@ -69,7 +69,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
-            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             var batchToVerify = await toolState.TryGetNextBatch();
 
@@ -91,7 +91,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         {
             var timeoutStorage =
                 new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
-            var toolState = await timeoutStorage.Prepare(DateTimeOffset.UtcNow.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
+            var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(-1), testSuite.EndpointName, new Dictionary<string, string>());
 
             var batchToVerify = await toolState.TryGetNextBatch();
             var timeoutIdToVerify = ((RavenToolState)toolState).Batches.First().TimeoutIds.First();
@@ -109,10 +109,10 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         [Test]
         public async Task WhenCompletingMigrationToolStateIsArchived()
         {
-            var toolState = testSuite.SetupToolState(DateTimeOffset.UtcNow);
+            var toolState = testSuite.SetupToolState(DateTime.Now);
             await testSuite.SaveToolState(toolState);
 
-            var timeStarted = DateTimeOffset.UtcNow;
+            var timeStarted = DateTime.UtcNow;
 
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, false);
             await sut.Complete();

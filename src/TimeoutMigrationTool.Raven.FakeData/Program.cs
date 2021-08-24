@@ -123,7 +123,7 @@
                 Destination = "DestinationEndpoint",
                 SagaId = Guid.NewGuid(),
                 OwningTimeoutManager = "EndpointA",
-                Time = DateTimeOffset.UtcNow.AddDays(daysToTrigger),
+                Time = DateTime.UtcNow.AddDays(daysToTrigger),
                 Headers = new Dictionary<string, string>
                 {
                     { "NServiceBus.MessageId", Guid.NewGuid().ToString() }

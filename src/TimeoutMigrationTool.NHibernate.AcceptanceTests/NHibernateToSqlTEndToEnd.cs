@@ -32,7 +32,7 @@
                         SagaId = Guid.NewGuid(),
                         Headers = "{\"NServiceBus.EnclosedMessageTypes\": \"TimeoutMigrationTool.NHibernate.AcceptanceTests.NHibernateToSqlTEndToEnd+DelayedMessage\"}",
                         State = Encoding.UTF8.GetBytes("{}"),
-                        Time = DateTimeOffset.UtcNow.AddSeconds(15)
+                        Time = DateTime.UtcNow.AddSeconds(15)
                     });
 
                     await testTx.CommitAsync();
@@ -57,7 +57,7 @@
 
                         var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutTarget);
 
-                        await migrationRunner.Run(DateTimeOffset.UtcNow.AddDays(-10),
+                        await migrationRunner.Run(DateTime.Now.AddDays(-10),
                             EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                     }))
                 .Done(c => c.GotTheDelayedMessage)

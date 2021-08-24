@@ -32,7 +32,7 @@
         {
             random = new Random();
 
-            tableNamePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTimeOffset.UtcNow.Ticks}".ToLowerInvariant();
+            tableNamePrefix = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
             containerName = tableNamePrefix;
 
             var account = CloudStorageAccount.Parse(connectionString);
@@ -77,7 +77,7 @@
             var endpointName = nameof(TryLoadOngoingMigration_Should_return_tool_state_when_Migration_Running);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 10, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -183,7 +183,7 @@
             var endpointName = nameof(Preparing_Creates_A_MigrationsEntity_And_Returns_It);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 10, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -207,7 +207,7 @@
             var endpointName = nameof(Preparing_Sets_The_Number_Of_Batches_Correctly);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 2, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -247,7 +247,7 @@
             var endpointName = nameof(Preparing_with_large_entities_Sets_The_Number_Of_Batches_Correctly);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 1024, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -304,7 +304,7 @@
             var endpointName = nameof(Can_Read_Batch_By_Batch_Number);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 1, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
             var expectedDestinations = new List<string>();
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
@@ -354,7 +354,7 @@
             var endpointName = nameof(Marking_A_Batch_As_Complete_Updates_The_Status_Correctly);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 1, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -411,7 +411,7 @@
             var endpointName = nameof(Marking_A_Batch_As_Complete_Updates_The_Status_Correctly);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 1, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -455,7 +455,7 @@
             var endpointName = nameof(Aborting_Returns_StagedTimeouts_Back_To_TimeoutEntity_Table);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 1, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
             var runParameters = new Dictionary<string, string> { { "Test", "TestValue" } };
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -498,7 +498,7 @@
             // Arrange
             var endpointName = nameof(Aborting_Unhides_The_TimeoutEntities);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 1, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -549,7 +549,7 @@
             // Arrange
             var endpointName = nameof(Aborting_Unhides_The_TimeoutEntities);
             var timeoutsSource = new AspTimeoutsSource(connectionString, 1, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -599,7 +599,7 @@
         {
             // Arrange
             var timeoutsSource = new AspTimeoutsSource(connectionString, 10, containerName, fakeEndpointName, fakeEndpointTimeoutTableName, tablePrefix: tableNamePrefix);
-            var cutOffDate = DateTimeOffset.UtcNow;
+            var cutOffDate = DateTime.UtcNow;
 
             var endpointTimeoutTableName = tableClient.GetTableReference($"{tableNamePrefix}{fakeEndpointTimeoutTableName}");
             await endpointTimeoutTableName.CreateIfNotExistsAsync();
@@ -646,8 +646,8 @@
             var singleElement = result[0];
 
             Assert.AreEqual(5, singleElement.NrOfTimeouts);
-            Assert.AreEqual(DateTimeOffset.UtcNow.AddDays(1).Day, singleElement.ShortestTimeout.Day);
-            Assert.AreEqual(DateTimeOffset.UtcNow.AddDays(5).Day, singleElement.LongestTimeout.Day);
+            Assert.AreEqual(DateTime.UtcNow.AddDays(1).Day, singleElement.ShortestTimeout.Day);
+            Assert.AreEqual(DateTime.UtcNow.AddDays(5).Day, singleElement.LongestTimeout.Day);
             CollectionAssert.AreEquivalent(new List<string>
             {
                 "Destination1",

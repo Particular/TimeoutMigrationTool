@@ -35,7 +35,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
         public async Task WhenThereAreNoTimeoutsListEndpointsReturnsAnEmptyList(bool useIndex)
         {
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
-            var endpoints = await sut.ListEndpoints(DateTimeOffset.UtcNow);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.IsEmpty(endpoints);
@@ -49,7 +49,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpointBTimes = await testSuite.InitTimeouts(500, "EndpointB", nrOfTimeouts);
 
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
-            var endpoints = await sut.ListEndpoints(DateTimeOffset.UtcNow);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(2));
@@ -75,7 +75,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.InitTimeouts(50, "EndpointB", nrOfTimeouts);
 
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
-            var endpoints = await sut.ListEndpoints(DateTimeOffset.UtcNow);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(2));
@@ -92,7 +92,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
-            var endpoints = await sut.ListEndpoints(DateTimeOffset.UtcNow);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(1));
@@ -110,7 +110,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             await testSuite.RavenAdapter.UpdateDocument(timeout.Id, timeout);
 
             var sut = new RavenDbTimeoutsSource(testSuite.Logger, testSuite.ServerName, testSuite.DatabaseName, "TimeoutDatas", testSuite.RavenVersion, useIndex);
-            var endpoints = await sut.ListEndpoints(DateTimeOffset.UtcNow);
+            var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.IsNotNull(endpoints);
             Assert.That(endpoints.Count, Is.EqualTo(1));

@@ -1667,14 +1667,14 @@
             return app.Execute(args);
         }
 
-        static DateTimeOffset? GetCutoffTime(CommandOption cutoffTimeOption)
+        static DateTime? GetCutoffTime(CommandOption cutoffTimeOption)
         {
             if (!cutoffTimeOption.HasValue())
             {
                 return null;
             }
 
-            if (DateTimeOffset.TryParse(cutoffTimeOption.Value(), out var cutoffTime))
+            if (DateTime.TryParse(cutoffTimeOption.Value(), out var cutoffTime))
             {
                 return cutoffTime;
             }
@@ -1684,7 +1684,7 @@
         }
 
 
-        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTimeOffset? cutoffTime,
+        static Task RunMigration(ILogger logger, EndpointFilter endpointFilter, DateTime? cutoffTime,
             Dictionary<string, string> runParameters, ITimeoutsSource timeoutsSource,
             ITimeoutsTarget transportTimeoutTargetCreator)
         {
@@ -1692,12 +1692,12 @@
 
             if (cutoffTime.HasValue)
             {
-                runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.Value.ToString());
+                runParameters.Add(ApplicationOptions.CutoffTime, cutoffTime.Value.ToShortTimeString());
                 logger.LogDebug($"Cutoff time: {cutoffTime.Value}");
             }
             else
             {
-                cutoffTime = DateTimeOffset.Parse("2012-01-01");
+                cutoffTime = DateTime.Parse("2012-01-01");
             }
 
 

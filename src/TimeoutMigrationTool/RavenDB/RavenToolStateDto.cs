@@ -9,8 +9,8 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         public List<string> Batches { get; set; } = new List<string>();
         public IDictionary<string, string> RunParameters { get; set; } = new Dictionary<string, string>();
         public MigrationStatus Status { get; set; }
-        public DateTimeOffset StartedAt { get; set; }
-        public DateTimeOffset CompletedAt { get; set; }
+        public DateTime StartedAt { get; set; }
+        public DateTime CompletedAt { get; set; }
         public string Endpoint { get; set; }
         public int NumberOfBatches { get; set; }
         public int NumberOfTimeouts { get; set; }

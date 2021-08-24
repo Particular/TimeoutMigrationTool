@@ -30,7 +30,7 @@
 
             if (verbose)
             {
-                logStatment = $"{DateTimeOffset.UtcNow}: {logLevel} {logStatment}";
+                logStatment = $"{DateTime.UtcNow}: {logLevel} {logStatment}";
             }
 
             Console.WriteLine(logStatment);

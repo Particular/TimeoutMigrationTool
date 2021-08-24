@@ -27,7 +27,7 @@
             stagingDataTable = new DataTable();
             stagingDataTable.Columns.Add("Headers");
             stagingDataTable.Columns.Add("Body", typeof(byte[]));
-            stagingDataTable.Columns.Add("Due", typeof(DateTimeOffset));
+            stagingDataTable.Columns.Add("Due", typeof(DateTime));
         }
 
         public async ValueTask<int> StageBatch(IReadOnlyList<TimeoutData> timeouts, int batchNumber)
