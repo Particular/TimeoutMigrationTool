@@ -2,7 +2,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 {
     using Particular.TimeoutMigrationTool.RavenDB;
 
-    public static class IRavenTestSuiteExtensions
+    public static class RavenTestSuiteExtensions
     {
         public static RavenToolStateDto FromToolState(this IRavenTestSuite suite, RavenToolState toolState)
         {
