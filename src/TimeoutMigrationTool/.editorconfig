@@ -6,7 +6,7 @@ dotnet_diagnostic.CA2007.severity = none
 # CancellationToken
 dotnet_diagnostic.PS0003.severity = suggestion
 dotnet_diagnostic.PS0013.severity = suggestion
-dotnet_diagnostic.PS0018.severity = suggestion
+dotnet_diagnostic.PS0018.severity =silent
 dotnet_diagnostic.CA1068.severity = suggestion
 
 # Justification: https://github.com/Particular/TimeoutMigrationTool/issues/269 tracks the work to comply with datetime guidance
