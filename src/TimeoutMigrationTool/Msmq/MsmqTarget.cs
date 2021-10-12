@@ -6,7 +6,7 @@
     using Microsoft.Data.SqlClient;
     using Microsoft.Extensions.Logging;
 
-    class MsmqTarget : ITimeoutsTarget
+    public class MsmqTarget : ITimeoutsTarget
     {
         ILogger logger;
         SqlConnection connection;

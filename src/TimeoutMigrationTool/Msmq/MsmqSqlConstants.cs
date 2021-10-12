@@ -1,6 +1,6 @@
 ﻿namespace Particular.TimeoutMigrationTool.Msmq
 {
-    static class MsmqSqlConstants
+    public static class MsmqSqlConstants
     {
         public static string DelayedTableName(string endpointName, string suffix = "timeouts")
         {

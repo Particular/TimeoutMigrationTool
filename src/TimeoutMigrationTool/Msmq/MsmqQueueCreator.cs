@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using Microsoft.Data.SqlClient;
 
-    class MsmqQueueCreator
+    public class MsmqQueueCreator
     {
         public static async Task CreateStagingQueue(SqlConnection connection, string tableName, string schema, string databaseName, bool preview = false)
         {
