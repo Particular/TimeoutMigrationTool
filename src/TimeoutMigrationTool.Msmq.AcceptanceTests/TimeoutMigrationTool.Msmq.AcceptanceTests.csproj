@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.4.6" />
+        <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
+        <PackageReference Include="NServiceBus.Persistence.Sql" Version="5.0.0" />
+        <PackageReference Include="NServiceBus.RabbitMQ" Version="6.0.0" />
+        <PackageReference Include="NServiceBus.SqlServer" Version="6.2.0" />
+        <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="9.0.1" />
+        <PackageReference Include="NUnit" Version="3.13.2" />
+        <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\TimeoutMigrationTool\TimeoutMigrationTool.csproj" />
+    </ItemGroup>
+
+</Project>
