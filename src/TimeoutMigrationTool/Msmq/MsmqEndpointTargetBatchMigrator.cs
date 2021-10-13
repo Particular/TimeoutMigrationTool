@@ -41,7 +41,7 @@
 
             foreach (var timeout in timeouts)
             {
-                stagingDataTable.Rows.Add(SerializeHeaders(timeout.Headers), timeout.State, timeout.Time);
+                stagingDataTable.Rows.Add(timeout.Id, timeout.Destination, timeout.State, timeout.Time, SerializeHeaders(timeout.Headers));
             }
 
             await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
