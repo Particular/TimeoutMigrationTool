@@ -155,10 +155,12 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
 
             command.CommandText = string.Format(@"
 CREATE TABLE [{1}].[{0}] (
-    Headers nvarchar(max) NOT NULL,
-    Body varbinary(max),
-    Due datetime NOT NULL,
-    RowVersion bigint IDENTITY(1,1) NOT NULL
+    Id nvarchar(250) not null primary key,
+    Destination nvarchar(200),
+    State varbinary(max),
+    Time datetime,
+    Headers varbinary(max) not null,
+    RetryCount INT NOT NULL default(0)
 );
 ", endpointDelayedTableName, schema);
             await command.ExecuteNonQueryAsync();
@@ -239,7 +241,7 @@ CREATE TABLE [{1}].[{0}] (
             await MsmqQueueCreator.CreateStagingQueue(connection, MsmqSqlConstants.TimeoutMigrationStagingTable, schema, connection.Database, preview: false);
 
             var sql =
-                $"INSERT INTO {schema}.{MsmqSqlConstants.TimeoutMigrationStagingTable} VALUES('headers', NULL, DATEADD(DAY, 1, GETDATE()))";
+                $"INSERT INTO {schema}.{MsmqSqlConstants.TimeoutMigrationStagingTable} VALUES('id', 'destination', NULL, DATEADD(DAY, 1, GETDATE()), CAST('headers' AS VARBINARY(MAX)), 0)";
             await using var command = new SqlCommand(sql, connection)
             {
                 CommandType = CommandType.Text
