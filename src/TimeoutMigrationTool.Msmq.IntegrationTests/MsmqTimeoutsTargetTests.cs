@@ -51,7 +51,7 @@ namespace TimeoutMigrationTool.Msmq.IntegrationTests
 CREATE TABLE [{1}].[{0}] (
     RowVersion bigint IDENTITY(1,1) NOT NULL
 );
-", $"{ExistingEndpointName}.Delayed", schema);
+", $"{MsmqSqlConstants.DelayedTableName(ExistingEndpointName)}", schema);
             await command.ExecuteNonQueryAsync();
 
             var info = new EndpointInfo
@@ -59,14 +59,11 @@ CREATE TABLE [{1}].[{0}] (
                 EndpointName = ExistingEndpointName,
                 ShortestTimeout = DateTime.UtcNow.AddDays(3),
                 LongestTimeout = DateTime.UtcNow.AddDays(5),
-                Destinations = new List<string>
-                {
-                    ExistingDestination
-                }
+                Destinations = new[] { ExistingDestination }
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsTrue(result.CanMigrate);
+            Assert.IsTrue(result.CanMigrate, string.Join("\r", result.Problems));
         }
 
         [Test]
@@ -81,7 +78,7 @@ CREATE TABLE [{1}].[{0}] (
             command.CommandText = string.Format(@"
 IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
   DROP TABLE {0}.{1};
-", $"{ExistingEndpointName}.Delayed", schema);
+", $"{MsmqSqlConstants.DelayedTableName(ExistingEndpointName)}", schema);
             await command.ExecuteNonQueryAsync();
 
             var info = new EndpointInfo
@@ -89,14 +86,11 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
                 EndpointName = ExistingEndpointName,
                 ShortestTimeout = DateTime.UtcNow.AddDays(3),
                 LongestTimeout = DateTime.UtcNow.AddDays(5),
-                Destinations = new List<string>
-                {
-                    ExistingDestination
-                }
+                Destinations = new[] { ExistingDestination }
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.IsFalse(result.CanMigrate, string.Join("\r", result.Problems));
         }
 
         [Test]
@@ -112,6 +106,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Abort(endpointName);
 
+            await connection.OpenAsync(); //Re-open connection closed by SUT
             await using var command = connection.CreateCommand();
             command.CommandText = string.Format(@"
    SELECT COUNT(*)
@@ -134,6 +129,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Complete(endpointName);
 
+            await connection.OpenAsync(); //Re-open connection closed by SUT
             await using var command = connection.CreateCommand();
             command.CommandText = string.Format(@"
    SELECT COUNT(*)
@@ -151,7 +147,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var endpointDelayedTableName = $"{ExistingEndpointName}.Delayed";
+            var endpointDelayedTableName = MsmqSqlConstants.DelayedTableName(ExistingEndpointName);
 
             var sut = new MsmqTarget(new TestLoggingAdapter(), connection, ExistingEndpointName, schema);
 
@@ -167,7 +163,7 @@ CREATE TABLE [{1}].[{0}] (
 ", endpointDelayedTableName, schema);
             await command.ExecuteNonQueryAsync();
 
-            const int BatchNumber = 2;
+            const int batchNumber = 2;
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(ExistingEndpointName);
             await endpointTarget.StageBatch(new List<TimeoutData>
             {
@@ -193,9 +189,9 @@ CREATE TABLE [{1}].[{0}] (
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, BatchNumber);
+            }, batchNumber);
 
-            await endpointTarget.CompleteBatch(BatchNumber);
+            await endpointTarget.CompleteBatch(batchNumber);
 
             var endpointDelayedTableDataTable = new DataTable();
             using var endpointDelayedTableDataAdapter = new SqlDataAdapter(string.Format("SELECT * FROM [{1}].[{0}]", endpointDelayedTableName, schema), connection);
@@ -221,6 +217,7 @@ CREATE TABLE [{1}].[{0}] (
 
             await sut.Complete(ExistingEndpointName);
 
+            await connection.OpenAsync(); //Re-open connection closed by SUT
             var sqlStatement = $"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = '{MsmqSqlConstants.TimeoutMigrationStagingTable}' AND TABLE_CATALOG = '{databaseName}'";
             await using var command = new SqlCommand(sqlStatement, connection)
             {
