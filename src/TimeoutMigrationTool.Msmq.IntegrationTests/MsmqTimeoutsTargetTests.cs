@@ -44,7 +44,7 @@ namespace TimeoutMigrationTool.Msmq.IntegrationTests
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var sut = new MsmqTarget(new TestLoggingAdapter(), connection, ExistingEndpointName, schema);
+            var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, ExistingEndpointName, schema);
 
             await using var command = connection.CreateCommand();
             command.CommandText = string.Format(@"
@@ -72,7 +72,7 @@ CREATE TABLE [{1}].[{0}] (
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var sut = new MsmqTarget(new TestLoggingAdapter(), connection, ExistingEndpointName, schema);
+            var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, ExistingEndpointName, schema);
 
             await using var command = connection.CreateCommand();
             command.CommandText = string.Format(@"
@@ -101,7 +101,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var sut = new MsmqTarget(new TestLoggingAdapter(), connection, endpointName, schema);
+            var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, endpointName, schema);
 
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Abort(endpointName);
@@ -125,7 +125,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var sut = new MsmqTarget(new TestLoggingAdapter(), connection, endpointName, schema);
+            var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, endpointName, schema);
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Complete(endpointName);
 
@@ -149,7 +149,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
 
             var endpointDelayedTableName = MsmqSqlConstants.DelayedTableName(ExistingEndpointName);
 
-            var sut = new MsmqTarget(new TestLoggingAdapter(), connection, ExistingEndpointName, schema);
+            var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, ExistingEndpointName, schema);
 
             await using var command = connection.CreateCommand();
 
@@ -213,7 +213,7 @@ CREATE TABLE [{1}].[{0}] (
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var sut = new MsmqTarget(new TestLoggingAdapter(), connection, ExistingEndpointName, schema);
+            var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, ExistingEndpointName, schema);
 
             await MsmqQueueCreator.CreateStagingQueue(connection, MsmqSqlConstants.TimeoutMigrationStagingTable, schema, connection.Database, preview: false);
 
@@ -236,7 +236,7 @@ CREATE TABLE [{1}].[{0}] (
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var sut = new MsmqTarget(new TestLoggingAdapter(), connection, ExistingEndpointName, schema);
+            var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, ExistingEndpointName, schema);
 
             await MsmqQueueCreator.CreateStagingQueue(connection, MsmqSqlConstants.TimeoutMigrationStagingTable, schema, connection.Database, preview: false);
 
