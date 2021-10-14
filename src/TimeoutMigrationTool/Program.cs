@@ -7,6 +7,7 @@
     using ASQ;
     using McMaster.Extensions.CommandLineUtils;
     using Microsoft.Extensions.Logging;
+    using Msmq;
     using RabbitMq;
     using RavenDB;
     using SqlP;
@@ -173,6 +174,20 @@
                     Description = "The default schema used for the SQL Server transport",
                 };
 
+            var targetMsmqSqlSchemaName =
+                new CommandOption($"-s|--{ApplicationOptions.MsmqSqlTargetSchema}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The default schema used for the SQL Server instance with MSMQ timeout data",
+                };
+
+            var targetMsmqSqlConnectionString =
+                new CommandOption($"-t|--{ApplicationOptions.MsmsqSqlTargetConnectionString}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The connection string for the SQL Server instance with MSMQ timeout data"
+                };
+
             var targetAsqConnectionString =
                 new CommandOption($"-t|--{ApplicationOptions.AsqTargetConnectionString}",
                     CommandOptionType.SingleValue)
@@ -201,22 +216,22 @@
 
                 previewCommand.Description = "Lists endpoints that can be migrated.";
 
-                previewCommand.Command("ravendb", ravenDBCommand =>
+                previewCommand.Command("ravendb", ravenDbCommand =>
                 {
-                    ravenDBCommand.OnExecute(() =>
+                    ravenDbCommand.OnExecute(() =>
                     {
                         Console.WriteLine("Specify a target with the required options.");
-                        ravenDBCommand.ShowHelp();
+                        ravenDbCommand.ShowHelp();
                         return 1;
                     });
 
-                    ravenDBCommand.Options.Add(sourceRavenDbServerUrlOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbDatabaseNameOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbPrefixOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbVersion);
-                    ravenDBCommand.Options.Add(sourceRavenDbForceUseIndexOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbServerUrlOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbDatabaseNameOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbPrefixOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbVersion);
+                    ravenDbCommand.Options.Add(sourceRavenDbForceUseIndexOption);
 
-                    ravenDBCommand.Command("rabbitmq", ravenToRabbitCommand =>
+                    ravenDbCommand.Command("rabbitmq", ravenToRabbitCommand =>
                     {
                         ravenToRabbitCommand.Options.Add(targetRabbitConnectionString);
 
@@ -242,12 +257,12 @@
                         });
                     });
 
-                    ravenDBCommand.Command("sqlt", ravenDBToSqlTCommand =>
+                    ravenDbCommand.Command("sqlt", ravenDbToSqlTCommand =>
                     {
-                        ravenDBToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        ravenDBToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        ravenDbToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDbToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
-                        ravenDBToSqlTCommand.OnExecuteAsync(async ct =>
+                        ravenDbToSqlTCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -270,12 +285,12 @@
                         });
                     });
 
-                    ravenDBCommand.Command("asq", ravenDBToAsqCommand =>
+                    ravenDbCommand.Command("asq", ravenDbToAsqCommand =>
                     {
-                        ravenDBToAsqCommand.Options.Add(targetAsqConnectionString);
-                        ravenDBToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        ravenDbToAsqCommand.Options.Add(targetAsqConnectionString);
+                        ravenDbToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
 
-                        ravenDBToAsqCommand.OnExecuteAsync(async ct =>
+                        ravenDbToAsqCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -351,6 +366,30 @@
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    sqlpCommand.Command("msmq", sqlpToMsmqCommand =>
+                    {
+                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
+                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+
+                        sqlpToMsmqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetMsmqSqlConnectionString.Value();
+                            var schema = targetMsmqSqlSchemaName.Value();
+                            var endpointName = endpointFilterOption.Value();
+
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
+                            var timeoutsTarget = new MsmqTarget(logger, targetConnectionString, endpointName, schema ?? "dbo");
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -433,6 +472,30 @@
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, batchSize, dialect);
                             var timeoutsTarget = new SqlTTimeoutsTarget(logger, targetConnectionString, schema ?? "dbo");
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                    nHibernateCommand.Command("msmq", nHibernateToMsmqCommand =>
+                    {
+                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
+                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+
+                        nHibernateToMsmqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetMsmqSqlConnectionString.Value();
+                            var schema = targetMsmqSqlSchemaName.Value();
+                            var endpointName = endpointFilterOption.Value();
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, batchSize, dialect);
+                            var timeoutsTarget = new MsmqTarget(logger, targetConnectionString, endpointName, schema ?? "dbo");
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -536,6 +599,35 @@
                         });
                     });
 
+                    aspCommand.Command("msmq", aspToMsmqCommand =>
+                    {
+                        aspToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
+                        aspToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+
+                        aspToMsmqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceContainerName = sourceAspContainerName.Value();
+                            var sourcePartitionKeyScope = sourceAspPartitionKeyScope.Value();
+                            var sourceTimeoutTableName = sourceAspTimeoutTableName.Value();
+
+                            var endpointName = endpointFilterOption.Value();
+
+                            var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
+                                sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
+                                partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
+
+                            var targetConnectionString = targetMsmqSqlConnectionString.Value();
+                            var schema = targetMsmqSqlSchemaName.Value();
+
+                            var timeoutsTarget = new MsmqTarget(logger, targetConnectionString, endpointName, schema ?? "dbo");
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
                     aspCommand.Command("asq", aspToAsqCommand =>
                     {
                         aspToAsqCommand.Options.Add(targetAsqConnectionString);
@@ -582,21 +674,21 @@
                 migrateCommand.Options.Add(endpointFilterOption);
                 migrateCommand.Options.Add(cutoffTimeOption);
 
-                migrateCommand.Command("ravendb", ravenDBCommand =>
+                migrateCommand.Command("ravendb", ravenDbCommand =>
                 {
-                    ravenDBCommand.OnExecute(() =>
+                    ravenDbCommand.OnExecute(() =>
                     {
                         Console.WriteLine("Specify a target with the required options.");
-                        ravenDBCommand.ShowHelp();
+                        ravenDbCommand.ShowHelp();
                         return 1;
                     });
 
-                    ravenDBCommand.Options.Add(sourceRavenDbServerUrlOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbDatabaseNameOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbPrefixOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbVersion);
+                    ravenDbCommand.Options.Add(sourceRavenDbServerUrlOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbDatabaseNameOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbPrefixOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbVersion);
 
-                    ravenDBCommand.Command("rabbitmq", ravenDbToRabbitMqCommand =>
+                    ravenDbCommand.Command("rabbitmq", ravenDbToRabbitMqCommand =>
                     {
                         ravenDbToRabbitMqCommand.Options.Add(targetRabbitConnectionString);
 
@@ -633,12 +725,12 @@
                         });
                     });
 
-                    ravenDBCommand.Command("sqlt", ravenDBPToSqlTCommand =>
+                    ravenDbCommand.Command("sqlt", ravenDbPToSqlTCommand =>
                     {
-                        ravenDBPToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        ravenDBPToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        ravenDbPToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDbPToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
-                        ravenDBPToSqlTCommand.OnExecuteAsync(async ct =>
+                        ravenDbPToSqlTCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -672,12 +764,12 @@
                         });
                     });
 
-                    ravenDBCommand.Command("asq", ravenDBPToAsqCommand =>
+                    ravenDbCommand.Command("asq", ravenDbToAsqCommand =>
                     {
-                        ravenDBPToAsqCommand.Options.Add(targetAsqConnectionString);
-                        ravenDBPToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        ravenDbToAsqCommand.Options.Add(targetAsqConnectionString);
+                        ravenDbToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
 
-                        ravenDBPToAsqCommand.OnExecuteAsync(async ct =>
+                        ravenDbToAsqCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -717,9 +809,9 @@
                         });
                     });
 
-                    ravenDBCommand.Command("noop", ravenDBCommandToNoopCommand =>
+                    ravenDbCommand.Command("noop", ravenDbCommandToNoopCommand =>
                     {
-                        ravenDBCommandToNoopCommand.OnExecuteAsync(async ct =>
+                        ravenDbCommandToNoopCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -1213,24 +1305,24 @@
 
                 abortCommand.Description = "Aborts currently ongoing migration and restores unmigrated timeouts.";
 
-                abortCommand.Command("ravendb", ravenDBCommand =>
+                abortCommand.Command("ravendb", ravenDbCommand =>
                 {
-                    ravenDBCommand.OnExecute(() =>
+                    ravenDbCommand.OnExecute(() =>
                     {
                         Console.WriteLine("Specify a target with the required options.");
-                        ravenDBCommand.ShowHelp();
+                        ravenDbCommand.ShowHelp();
                         return 1;
                     });
 
-                    ravenDBCommand.Options.Add(sourceRavenDbServerUrlOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbDatabaseNameOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbPrefixOption);
-                    ravenDBCommand.Options.Add(sourceRavenDbVersion);
+                    ravenDbCommand.Options.Add(sourceRavenDbServerUrlOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbDatabaseNameOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbPrefixOption);
+                    ravenDbCommand.Options.Add(sourceRavenDbVersion);
 
-                    ravenDBCommand.Command("rabbitmq", ravenToRabbitCommand =>
+                    ravenDbCommand.Command("rabbitmq", ravenToRabbitCommand =>
                     {
                         ravenToRabbitCommand.Options.Add(targetRabbitConnectionString);
-                        ravenDBCommand.OnExecuteAsync(async ct =>
+                        ravenDbCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -1252,12 +1344,12 @@
                         });
                     });
 
-                    ravenDBCommand.Command("sqlt", ravenDBToSqlTCommand =>
+                    ravenDbCommand.Command("sqlt", ravenDbToSqlTCommand =>
                     {
-                        ravenDBToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        ravenDBToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        ravenDbToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        ravenDbToSqlTCommand.Options.Add(targetSqlTSchemaName);
 
-                        ravenDBToSqlTCommand.OnExecuteAsync(async ct =>
+                        ravenDbToSqlTCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -1280,12 +1372,12 @@
                         });
                     });
 
-                    ravenDBCommand.Command("asq", ravenDBToAsqCommand =>
+                    ravenDbCommand.Command("asq", ravenDbToAsqCommand =>
                     {
-                        ravenDBToAsqCommand.Options.Add(targetAsqConnectionString);
-                        ravenDBToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        ravenDbToAsqCommand.Options.Add(targetAsqConnectionString);
+                        ravenDbToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
 
-                        ravenDBToAsqCommand.OnExecuteAsync(async ct =>
+                        ravenDbToAsqCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -1308,9 +1400,9 @@
                         });
                     });
 
-                    ravenDBCommand.Command("noop", ravenDBToNoopCommand =>
+                    ravenDbCommand.Command("noop", ravenDbToNoopCommand =>
                     {
-                        ravenDBToNoopCommand.OnExecuteAsync(async ct =>
+                        ravenDbToNoopCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
@@ -1544,11 +1636,11 @@
                     aspCommand.Options.Add(sourceAspPartitionKeyScope);
                     aspCommand.Options.Add(sourceAspTimeoutTableName);
 
-                    aspCommand.Command("rabbitmq", aspToRabbitMQCommand =>
+                    aspCommand.Command("rabbitmq", aspToRabbitMqCommand =>
                     {
-                        aspToRabbitMQCommand.Options.Add(targetRabbitConnectionString);
+                        aspToRabbitMqCommand.Options.Add(targetRabbitConnectionString);
 
-                        aspToRabbitMQCommand.OnExecuteAsync(async ct =>
+                        aspToRabbitMqCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 

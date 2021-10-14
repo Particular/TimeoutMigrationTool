@@ -9,8 +9,10 @@ namespace Particular.TimeoutMigrationTool
         public const string RavenTimeoutPrefix = "prefix";
         public const string CutoffTime = "cutoffTime";
         public const string RabbitMqTargetConnectionString = "target";
+        public const string MsmsqSqlTargetConnectionString = "target";
         public const string SqlTTargetConnectionString = "target";
         public const string SqlTTargetSchema = "schema";
+        public const string MsmqSqlTargetSchema = "schema";
         public const string SqlSourceConnectionString = "source";
         public const string SqlSourceDialect = "dialect";
         public const string AspSourceConnectionString = "source";

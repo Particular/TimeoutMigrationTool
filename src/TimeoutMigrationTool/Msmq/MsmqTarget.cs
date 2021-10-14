@@ -13,11 +13,11 @@
         string schema;
         string endpointDelayedTableName;
 
-        public MsmqTarget(ILogger logger, SqlConnection connection, string endpointName, string schema)
+        public MsmqTarget(ILogger logger, string connectionString, string endpointName, string schema)
         {
             this.logger = logger;
-            this.connection = connection;
             this.schema = schema;
+            connection = new SqlConnection(connectionString);
             endpointDelayedTableName = MsmqSqlConstants.DelayedTableName(endpointName);
         }
 
