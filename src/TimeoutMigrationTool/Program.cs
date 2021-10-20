@@ -852,7 +852,7 @@
 
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
-                    sqlpCommand.Options.Add(sourceAspConnectionString);
+                    sqlpCommand.Options.Add(sourceSqlPConnectionString);
                     sqlpCommand.Options.Add(sourceSqlPDialect);
 
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
@@ -863,7 +863,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
                             var targetConnectionString = targetRabbitConnectionString.Value();
 
@@ -893,7 +893,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
@@ -953,13 +953,55 @@
                         });
                     });
 
+                    sqlpCommand.Command("msmq", sqlpToMsmqCommand =>
+                    {
+                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
+                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+
+                        sqlpToMsmqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+                            var targetConnectionString = targetMsmqSqlConnectionString.Value();
+                            var schema = targetMsmqSqlSchemaName.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.SqlSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.SqlSourceDialect, sourceSqlPDialect.Value());
+                            runParameters.Add(ApplicationOptions.SqlTTargetConnectionString, targetConnectionString);
+
+                            if (allEndpointsOption.HasValue())
+                            {
+                                Console.WriteLine("It is not possible to migrate all endpoints from SQL persistence to MSMQ at once. Please select one endpoint at a time.");
+                                return;
+                            }
+
+                            if (!endpointFilterOption.HasValue())
+                            {
+                                Console.WriteLine("Please specify the endpoint for which the timeouts should be migrated using --endpoint option.");
+                                return;
+                            }
+
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
+                            var timeoutsTarget = new MsmqTarget(logger, targetConnectionString, endpointFilterOption.Value(), schema ?? "dbo");
+
+                            var endpointFilter = EndpointFilter.SpecificEndpoint(endpointFilterOption.Value());
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
+
                     sqlpCommand.Command("noop", sqlpCommandToNoopCommand =>
                     {
                         sqlpCommandToNoopCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
                             var targetConnectionString = targetSqlTConnectionString.Value();
                             var schema = targetSqlTSchemaName.Value();
@@ -1090,6 +1132,50 @@
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource, timeoutsTarget);
+                        });
+                    });
+
+                    nHibernateCommand.Command("msmq", nHibernateToMsmqCommand =>
+                    {
+                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
+                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+
+                        nHibernateToMsmqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetMsmqSqlConnectionString.Value();
+                            var schema = targetMsmqSqlSchemaName.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.NHibernateSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.NHibernateSourceDialect, sourceNHibernateDialect.Value());
+
+                            runParameters.Add(ApplicationOptions.SqlTTargetConnectionString, targetConnectionString);
+
+                            if (allEndpointsOption.HasValue())
+                            {
+                                Console.WriteLine("It is not possible to migrate all endpoints from NHibernate persistence to MSMQ at once. Please select one endpoint at a time.");
+                                return;
+                            }
+
+                            if (!endpointFilterOption.HasValue())
+                            {
+                                Console.WriteLine("Please specify the endpoint for which the timeouts should be migrated using --endpoint option.");
+                                return;
+                            }
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, batchSize, dialect);
+                            var timeoutsTarget = new MsmqTarget(logger, targetConnectionString, endpointFilterOption.Value(), schema ?? "dbo");
+
+                            var endpointFilter = EndpointFilter.SpecificEndpoint(endpointFilterOption.Value());
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
                         });
                     });
 
@@ -1257,6 +1343,59 @@
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
                             await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource, timeoutsTarget);
+                        });
+                    });
+
+                    aspCommand.Command("msmq", nHibernateToMsmqCommand =>
+                    {
+                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
+                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+
+                        nHibernateToMsmqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceContainerName = sourceAspContainerName.Value();
+                            var sourcePartitionKeyScope = sourceAspPartitionKeyScope.Value();
+                            var sourceTimeoutTableName = sourceAspTimeoutTableName.Value();
+
+                            var targetConnectionString = targetMsmqSqlConnectionString.Value();
+                            var schema = targetMsmqSqlSchemaName.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            runParameters.Add(ApplicationOptions.AspSourceConnectionString, sourceConnectionString);
+                            runParameters.Add(ApplicationOptions.AspSourceContainerName, sourceContainerName);
+                            runParameters.Add(ApplicationOptions.AspSourcePartitionKeyScope, sourcePartitionKeyScope);
+                            runParameters.Add(ApplicationOptions.AspTimeoutTableName, sourceTimeoutTableName);
+
+                            runParameters.Add(ApplicationOptions.SqlTTargetConnectionString, targetConnectionString);
+
+                            if (allEndpointsOption.HasValue())
+                            {
+                                Console.WriteLine("It is not possible to migrate all endpoints from ASQ persistence to MSMQ at once. Please select one endpoint at a time.");
+                                return;
+                            }
+
+                            if (!endpointFilterOption.HasValue())
+                            {
+                                Console.WriteLine("Please specify the endpoint for which the timeouts should be migrated using --endpoint option.");
+                                return;
+                            }
+
+                            var endpointName = endpointFilterOption.Value();
+
+                            var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
+                                sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
+                                partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
+
+                            var timeoutsTarget = new MsmqTarget(logger, targetConnectionString, endpointName, schema ?? "dbo");
+
+                            var endpointFilter = EndpointFilter.SpecificEndpoint(endpointName);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
                         });
                     });
 
