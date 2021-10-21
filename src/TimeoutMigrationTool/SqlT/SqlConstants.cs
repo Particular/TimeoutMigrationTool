@@ -10,7 +10,7 @@
         public const string TimeoutMigrationStagingTable = "timeoutmigrationtoolstagingtable";
 
         public static readonly string DelayedMessageStoreExistsText = @"
-   SELECT COUNT(*)
+   SELECT TABLE_NAME
    FROM INFORMATION_SCHEMA.TABLES
    WHERE TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{0}' AND TABLE_CATALOG = '{2}'
         ";
