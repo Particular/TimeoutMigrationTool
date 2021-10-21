@@ -11,14 +11,12 @@
         ILogger logger;
         SqlConnection connection;
         string schema;
-        string endpointDelayedTableName;
 
-        public MsmqTarget(ILogger logger, string connectionString, string endpointName, string schema)
+        public MsmqTarget(ILogger logger, string connectionString, string schema)
         {
             this.logger = logger;
             this.schema = schema;
             connection = new SqlConnection(connectionString);
-            endpointDelayedTableName = MsmqSqlConstants.DelayedTableName(endpointName);
         }
 
         public async ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
@@ -45,6 +43,8 @@
             {
                 migrationCheckResult.Problems.Add($"Attempt to verify whether the timeout migration staging table '{MsmqSqlConstants.TimeoutMigrationStagingTable}' could be created during migration mode failed. The following exception occured: {e.Message}");
             }
+
+            var endpointDelayedTableName = MsmqSqlConstants.DelayedTableName(endpoint.EndpointName);
 
             if (!await MsmqQueueCreator
                 .DoesDelayedDeliveryTableExist(connection, endpointDelayedTableName, schema, databaseName)
