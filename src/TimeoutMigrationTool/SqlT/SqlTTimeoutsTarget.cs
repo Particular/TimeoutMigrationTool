@@ -22,11 +22,11 @@
 
             var endpointDelayedTableName = SqlConstants.DelayedTableName(endpointName);
 
-            var actualEndpointName = await SqlTQueueCreator
+            var actualEndpointDelayedTableName = await SqlTQueueCreator
                 .DoesDelayedDeliveryTableExist(connection, endpointDelayedTableName, schema, connection.Database)
                 .ConfigureAwait(false);
 
-            return new SqlTEndpointTarget(logger, connection, actualEndpointName, schema);
+            return new SqlTEndpointTarget(logger, connection, actualEndpointDelayedTableName, schema);
         }
 
         public async ValueTask Abort(string endpointName)

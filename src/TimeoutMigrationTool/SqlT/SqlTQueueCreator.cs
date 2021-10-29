@@ -75,7 +75,7 @@
             {
                 CommandType = CommandType.Text
             };
-            var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+            using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 var candidate = reader.GetString(0);

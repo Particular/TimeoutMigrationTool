@@ -16,13 +16,13 @@
         readonly DataTable stagingDataTable;
         string endpointDelayedTableName;
 
-        public SqlTEndpointTarget(ILogger logger, SqlConnection connection, string endpointName, string schema)
+        public SqlTEndpointTarget(ILogger logger, SqlConnection connection, string endpointDelayedTableName, string schema)
         {
             this.logger = logger;
             this.schema = schema;
             this.connection = connection;
             databaseName = connection.Database;
-            endpointDelayedTableName = SqlConstants.DelayedTableName(endpointName);
+            this.endpointDelayedTableName = endpointDelayedTableName;
 
             stagingDataTable = new DataTable();
             stagingDataTable.Columns.Add("Headers");
