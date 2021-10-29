@@ -19,7 +19,7 @@
     <ItemGroup>
         <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
         <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="9.0.1" />
-        <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.3" />
+        <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.4" />
         <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.5.0" />
         <PackageReference Include="NServiceBus.RabbitMQ" Version="6.1.0" />
         <PackageReference Include="NUnit" Version="3.13.2" />
