@@ -98,15 +98,13 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
         {
             var endpointName = "FakeEndpoint";
 
-            await using var connection = new SqlConnection(connectionString);
-            await connection.OpenAsync();
-
             var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, schema);
 
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Abort(endpointName);
 
-            await connection.OpenAsync(); //Re-open connection closed by SUT
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
             await using var command = connection.CreateCommand();
             command.CommandText = string.Format(@"
    SELECT COUNT(*)
@@ -122,14 +120,12 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
         public async Task Should_delete_staging_queue_when_completing()
         {
             var endpointName = "FakeEndpoint";
-            await using var connection = new SqlConnection(connectionString);
-            await connection.OpenAsync();
-
             var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, schema);
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Complete(endpointName);
 
-            await connection.OpenAsync(); //Re-open connection closed by SUT
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
             await using var command = connection.CreateCommand();
             command.CommandText = string.Format(@"
    SELECT COUNT(*)
@@ -144,13 +140,12 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
         [Test]
         public async Task Should_migrate_into_delayed_table()
         {
-            await using var connection = new SqlConnection(connectionString);
-            await connection.OpenAsync();
-
             var endpointDelayedTableName = MsmqSqlConstants.DelayedTableName(ExistingEndpointName);
 
             var sut = new MsmqTarget(new TestLoggingAdapter(), connectionString, schema);
 
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
             await using var command = connection.CreateCommand();
 
             command.CommandText = string.Format(@"
@@ -219,7 +214,6 @@ CREATE TABLE [{1}].[{0}] (
 
             await sut.Complete(ExistingEndpointName);
 
-            await connection.OpenAsync(); //Re-open connection closed by SUT
             var sqlStatement = $"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = '{MsmqSqlConstants.TimeoutMigrationStagingTable}' AND TABLE_CATALOG = '{databaseName}'";
             await using var command = new SqlCommand(sqlStatement, connection)
             {
