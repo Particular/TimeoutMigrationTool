@@ -11,8 +11,10 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
         {
             var currentFolder = Directory.GetCurrentDirectory();
 
-            var exePath = currentFolder + @"\..\..\..\..\TimeoutMigrationTool\bin\Debug\netcoreapp3.1\TimeoutMigrationTool.exe";
+            var isDebug = currentFolder.IndexOf(@"\bin\Debug\", StringComparison.InvariantCultureIgnoreCase) != -1;
+            var build = isDebug ? "Debug" : "Release";
 
+            var exePath = currentFolder + $@"\..\..\..\..\TimeoutMigrationTool\bin\{build}\netcoreapp3.1\TimeoutMigrationTool.exe";
             var args = $@"migrate --allEndpoints sqlp  --source ""{connectionString}"" --dialect MsSqlServer msmq --target ""{connectionString}""";
 
             var startInfo = new ProcessStartInfo(exePath, args)
