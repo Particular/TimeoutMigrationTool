@@ -3,12 +3,13 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
 {
     using System;
     using System.Diagnostics;
+    using System.IO;
 
     public class MigrationRunner
     {
         public static void Run(string connectionString)
         {
-            var currentFolder = AppContext.BaseDirectory;
+            var currentFolder = Directory.GetCurrentDirectory();
 
             var isDebug = currentFolder.IndexOf(@"\bin\Debug\", StringComparison.InvariantCultureIgnoreCase) != -1;
             var build = isDebug ? "Debug" : "Release";
