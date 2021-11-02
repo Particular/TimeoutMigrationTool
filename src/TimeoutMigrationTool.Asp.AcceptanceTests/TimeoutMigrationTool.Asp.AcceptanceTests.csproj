@@ -14,7 +14,7 @@
     <ItemGroup>
         <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.5.0" />
         <PackageReference Include="NServiceBus.Persistence.AzureStorage" Version="2.4.2" />
-        <PackageReference Include="NServiceBus.RabbitMQ" Version="6.1.0" />
+        <PackageReference Include="NServiceBus.RabbitMQ" Version="6.1.1" />
         <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="9.0.1" />
         <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
         <PackageReference Include="NServiceBus.SqlServer" Version="6.3.1" />
