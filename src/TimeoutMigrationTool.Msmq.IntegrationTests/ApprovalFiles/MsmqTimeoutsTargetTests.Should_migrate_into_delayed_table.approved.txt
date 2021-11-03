@@ -1,0 +1,8 @@
+[
+  "SomeID",
+  "SomeDestination",
+  "AAA=",
+  "SomeOtherId",
+  "SomeOtherDestination",
+  "AAA="
+]

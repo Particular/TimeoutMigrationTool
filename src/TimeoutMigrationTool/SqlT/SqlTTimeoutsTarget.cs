@@ -20,7 +20,13 @@
             await EnsureConnectionOpen();
             await EnsureMigrationTableExists();
 
-            return new SqlTEndpointTarget(logger, connection, endpointName, schema);
+            var endpointDelayedTableName = SqlConstants.DelayedTableName(endpointName);
+
+            var actualEndpointDelayedTableName = await SqlTQueueCreator
+                .DoesDelayedDeliveryTableExist(connection, endpointDelayedTableName, schema, connection.Database)
+                .ConfigureAwait(false);
+
+            return new SqlTEndpointTarget(logger, connection, actualEndpointDelayedTableName, schema);
         }
 
         public async ValueTask Abort(string endpointName)
@@ -108,9 +114,9 @@
 
             var endpointDelayedTableName = SqlConstants.DelayedTableName(endpoint.EndpointName);
 
-            if (!await SqlTQueueCreator
+            if (await SqlTQueueCreator
                 .DoesDelayedDeliveryTableExist(connection, endpointDelayedTableName, schema, databaseName)
-                .ConfigureAwait(false))
+                .ConfigureAwait(false) == null)
             {
                 migrationCheckResult.Problems.Add($"Could not find delayed queue table with name '{endpointDelayedTableName}' for the endpoint '{endpoint.EndpointName}'");
             }

@@ -1,8 +1,8 @@
-﻿namespace Particular.TimeoutMigrationTool.SqlT
+﻿namespace Particular.TimeoutMigrationTool.Msmq
 {
-    static class SqlConstants
+    public static class MsmqSqlConstants
     {
-        public static string DelayedTableName(string endpointName, string suffix = "Delayed")
+        public static string DelayedTableName(string endpointName, string suffix = "timeouts")
         {
             return $"{endpointName}.{suffix}";
         }
@@ -10,16 +10,19 @@
         public const string TimeoutMigrationStagingTable = "timeoutmigrationtoolstagingtable";
 
         public static readonly string DelayedMessageStoreExistsText = @"
-   SELECT TABLE_NAME
+   SELECT COUNT(*)
    FROM INFORMATION_SCHEMA.TABLES
    WHERE TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{0}' AND TABLE_CATALOG = '{2}'
         ";
 
         public static readonly string MoveFromStagingToDelayedTableText = @"
 DELETE [{4}].[{1}].[{0}]
-OUTPUT DELETED.Headers,
-    DELETED.Body,
-    DELETED.Due
+OUTPUT DELETED.Id,
+    DELETED.Destination,
+    DELETED.State,
+    DELETED.Time,
+    DELETED.Headers,
+    DELETED.RetryCount
 INTO [{4}].[{3}].[{2}];
 SELECT @@ROWCOUNT;
 ";
@@ -54,12 +57,15 @@ BEGIN
     RETURN
 END
 
+
 CREATE TABLE [{2}].[{1}].[{0}] (
-    Headers nvarchar(max) NOT NULL,
-    Body varbinary(max),
-    Due datetime NOT NULL,
-    RowVersion bigint IDENTITY(1,1) NOT NULL
-);
+ 	Id nvarchar(250) not null primary key,
+    Destination nvarchar(200),
+    State varbinary(max),
+    Time datetime,
+    Headers varbinary(max) not null,
+    RetryCount INT NOT NULL default(0)
+)
 
 EXEC sp_releaseapplock @Resource = '{0}_lock'";
 
