@@ -12,14 +12,14 @@
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.5.0" />
+        <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
         <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
         <PackageReference Include="NServiceBus.SqlServer" Version="6.3.2" />
         <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="9.0.1" />
         <PackageReference Include="NUnit" Version="3.13.2" />
         <PackageReference Include="NServiceBus.RabbitMQ" Version="6.1.1" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
     </ItemGroup>
 
     <ItemGroup>
