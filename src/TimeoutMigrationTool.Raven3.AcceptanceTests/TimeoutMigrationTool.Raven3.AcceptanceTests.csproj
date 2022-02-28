@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="GitHubActionsTestLogger" Version="1.2.0" />
         <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
         <PackageReference Include="NServiceBus.RabbitMQ" Version="6.1.1" />
         <PackageReference Include="NServiceBus.RavenDB" Version="5.0.1" />
@@ -15,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\TestHelper\TestHelper.csproj" />
         <ProjectReference Include="..\TimeoutMigrationTool\TimeoutMigrationTool.csproj" />
     </ItemGroup>
 

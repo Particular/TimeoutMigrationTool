@@ -13,9 +13,15 @@
     using NServiceBus.Features;
 
     [TestFixture]
+#if SQLSERVER
+    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString, EnvironmentVariables.RabbitMQ_uri)]
+#endif
+#if ORACLE
+    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString, EnvironmentVariables.RabbitMQ_uri)]
+#endif
     class NHibernateToRabbitMqEndToEnd : NHibernateAcceptanceTests
     {
-        string rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
+        string rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri)}:5672";
 
         [Test]
         public async Task Can_migrate_timeouts()
@@ -52,14 +58,14 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1024, DatabaseDialect);
+                    var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 512, DatabaseDialect);
                     var timeoutsTarget = new RabbitMqTimeoutTarget(logger, rabbitUrl);
                     var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(TimeSpan.FromSeconds(90));
 
             Assert.True(context.GotTheDelayedMessage);
         }

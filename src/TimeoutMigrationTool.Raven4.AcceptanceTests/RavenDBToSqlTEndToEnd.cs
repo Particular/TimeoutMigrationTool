@@ -8,10 +8,12 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Data.SqlClient;
     using Particular.TimeoutMigrationTool.SqlT;
     using SqlP.AcceptanceTests;
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.CommaSeparatedRavenClusterUrls, EnvironmentVariables.SQLServerConnectionString)]
     class RavenDBToSqlTEndToEnd : RavenDBAcceptanceTest
     {
         string sqlConnectionString;
@@ -19,10 +21,8 @@
         [SetUp]
         public async Task Setup()
         {
-            databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-
-            sqlConnectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-
+            sqlConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            databaseName = new SqlConnectionStringBuilder(sqlConnectionString).InitialCatalog;
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
         }
 

@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <DefineConstants>$(DefineConstants);SQLSERVER</DefineConstants>
+        <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -12,6 +13,7 @@
     </ItemGroup>
     
     <ItemGroup>
+        <PackageReference Include="GitHubActionsTestLogger" Version="1.2.0" />
         <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
         <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
         <PackageReference Include="NServiceBus.SqlServer" Version="6.3.3" />
@@ -23,6 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\TestHelper\TestHelper.csproj" />
         <ProjectReference Include="..\TimeoutMigrationTool\TimeoutMigrationTool.csproj" />
     </ItemGroup>
 

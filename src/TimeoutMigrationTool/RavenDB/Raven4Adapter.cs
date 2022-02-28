@@ -278,7 +278,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     {
                         checkForMoreResults = false;
                     }
+#if NETCOREAPP3_1
                     else if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < RavenConstants.DefaultPagingSize)
+#else
+                    else if (pagedTimeouts.Count is 0 or < RavenConstants.DefaultPagingSize)
+#endif
                     {
                         checkForMoreResults = false;
                     }
@@ -321,19 +325,19 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
             while (queryStringIds.Any())
             {
-                try
-                {
-                    var idQry = queryStringIds.First();
-                    uriBuilder.Append($"{idQry}&");
-                    queryStringIds.Remove(idQry);
-                }
-                catch (ArgumentOutOfRangeException)
+                var idQry = queryStringIds.First();
+                var token = $"{idQry}&";
+
+                if (uriBuilder.Length > uriBuilder.MaxCapacity - token.Length)
                 {
                     var uri = uriBuilder.ToString().TrimEnd('&');
                     uris.Add(uri);
                     uriBuilder = new StringBuilder(RavenConstants.MaxUriLength, RavenConstants.MaxUriLength);
                     uriBuilder.Append(url);
                 }
+
+                uriBuilder.Append(token);
+                queryStringIds.Remove(idQry);
             }
 
             uris.Add(uriBuilder.ToString().TrimEnd('&'));

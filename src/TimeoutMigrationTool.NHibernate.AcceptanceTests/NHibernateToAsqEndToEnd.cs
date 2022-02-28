@@ -13,9 +13,15 @@
     using Particular.TimeoutMigrationTool.ASQ;
 
     [TestFixture]
+#if SQLSERVER
+    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString, EnvironmentVariables.AzureStorage_ConnectionString)]
+#endif
+#if ORACLE
+    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString, EnvironmentVariables.AzureStorage_ConnectionString)]
+#endif
     class NHibernateToAsqEndToEnd : NHibernateAcceptanceTests
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true";
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
 
         [Test]
         public async Task Can_migrate_timeouts()
@@ -68,7 +74,7 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1024, DatabaseDialect);
+                    var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 512, DatabaseDialect);
                     var timeoutsTarget = new ASQTarget(asqConnectionString, new DelayedDeliveryTableNameProvider());
 
                     var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);

@@ -10,6 +10,7 @@
     using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
     class SqlPToMsmqEndToEnd : SqlPAcceptanceTest
     {
         [Test]
@@ -32,7 +33,7 @@
                      var delayedMessage = new DelayedMessage();
                      var options = new SendOptions();
 
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
+                     options.DelayDeliveryWith(TimeSpan.FromSeconds(30));
                      options.RouteToThisEndpoint();
 
                      await session.Send(delayedMessage, options);
@@ -42,7 +43,7 @@
                      c.TimeoutSet = true;
                  }))
                  .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(30));
+                 .Run(TimeSpan.FromSeconds(60));
 
             var setupContext = await Scenario.Define<TargetContext>()
                 .WithEndpoint<Endpoint>(b => b.CustomConfig(ec =>
@@ -54,7 +55,7 @@
                     var persistence = ec.UsePersistence<InMemoryPersistence>();
                 }))
                 .Done(c => c.EndpointsStarted)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(TimeSpan.FromSeconds(90));
 
 
             MigrationRunner.Run(connectionString);
@@ -69,7 +70,7 @@
                     var persistence = ec.UsePersistence<InMemoryPersistence>();
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(TimeSpan.FromSeconds(120));
 
             Assert.True(context.GotTheDelayedMessage);
         }

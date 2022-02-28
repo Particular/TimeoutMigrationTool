@@ -2,10 +2,6 @@
 {
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool.ASQ;
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
 
     [TestFixture]
     class DelayedDeliveryTableNameProviderTests

@@ -135,6 +135,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
     }
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.CommaSeparatedRavenClusterUrls)]
     public class Raven4PerformsTheMigration : RavenPerformsTheMigration
     {
         protected override IRavenTestSuite CreateTestSuite()
@@ -144,6 +145,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
     }
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven35Url)]
     public class Raven3PerformsTheMigration : RavenPerformsTheMigration
     {
         protected override IRavenTestSuite CreateTestSuite()

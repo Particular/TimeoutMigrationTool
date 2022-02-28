@@ -6,12 +6,8 @@
 
     public static class MsSqlMicrosoftDataClientHelper
     {
-        const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Initial Catalog=Test;";
-
-        public static SqlConnection Build(string connectionString = null)
+        public static SqlConnection Build(string connectionString)
         {
-            connectionString ??= ConnectionString;
-
             return new SqlConnection(connectionString);
         }
 
@@ -53,45 +49,9 @@
             await command.ExecuteNonQueryAsync();
         }
 
-        public static async Task<T> QueryScalarAsync<T>(string sqlStatement)
-        {
-            using (var connection = Build())
-            {
-                connection.Open();
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = sqlStatement;
-
-                    return (T)await command.ExecuteScalarAsync().ConfigureAwait(false);
-                }
-            }
-        }
-
-        public static T QueryScalar<T>(string sqlStatement)
-        {
-            using (var connection = Build())
-            {
-                connection.Open();
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = sqlStatement;
-
-                    return (T)command.ExecuteScalar();
-                }
-            }
-        }
-
         public static string GetConnectionString()
         {
-            var connection = Environment.GetEnvironmentVariable("SQLServerConnectionString");
-
-            if (string.IsNullOrWhiteSpace(connection))
-            {
-                return ConnectionString;
-            }
-
+            var connection = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
             return connection;
         }
 

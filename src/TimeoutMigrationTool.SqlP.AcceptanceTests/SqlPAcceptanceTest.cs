@@ -33,10 +33,8 @@
                 return testName + "-" + endpointBuilder;
             };
 
-            databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-
-            connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-
+            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }
 

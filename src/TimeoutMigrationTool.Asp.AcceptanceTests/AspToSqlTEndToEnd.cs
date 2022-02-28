@@ -8,23 +8,21 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Data.SqlClient;
     using Particular.TimeoutMigrationTool.SqlT;
     using TimeoutMigrationTool.SqlP.AcceptanceTests;
 
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorage_ConnectionString, EnvironmentVariables.SQLServerConnectionString)]
     class AspToSqlTEndToEnd : AspAcceptanceTest
     {
         string sqlConnectionString;
-        string databaseName;
 
         [SetUp]
         public async Task Setup()
         {
-            databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-
-            sqlConnectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-
+            sqlConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
         }
 

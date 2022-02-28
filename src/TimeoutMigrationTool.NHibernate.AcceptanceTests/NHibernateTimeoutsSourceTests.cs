@@ -9,6 +9,12 @@
     using System.Threading.Tasks;
 
     [TestFixture]
+#if SQLSERVER
+    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
+#endif
+#if ORACLE
+    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString)]
+#endif
     class NHibernateTimeoutsSourceTests : NHibernateAcceptanceTests
     {
         [Test]

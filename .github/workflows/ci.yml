@@ -1,0 +1,222 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+      - release-*
+  pull_request:
+  workflow_dispatch:
+env:
+  DOTNET_NOLOGO: true
+jobs:
+  build:
+    name: ${{ matrix.os-name }}-${{ matrix.engines }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-2019, ubuntu-20.04 ]
+        engines: [
+            AzureStorage,
+            RabbitMQ,
+            RavenDB4,
+            SqlServer,
+            AzureStorage-RabbitMQ,
+            AzureStorage-RavenDB4,
+            AzureStorage-SqlServer,
+            RabbitMQ-RavenDB4,
+            RabbitMQ-SqlServer
+          ]
+        include:
+          - engines: AzureStorage
+            upload-packages: true
+          # Add os-name alias for job name
+          - os: windows-2019
+            os-name: Windows
+          - os: ubuntu-20.04
+            os-name: Linux
+          # Additional permutations
+          - os: [self-hosted, windows, oracle]
+            os-name: Windows
+            engines: AzureStorage-Oracle
+          - os: [self-hosted, windows, oracle]
+            os-name: Windows
+            engines: Oracle
+          - os: [self-hosted, windows, oracle]
+            os-name: Windows
+            engines: Oracle-RabbitMQ
+          - os: windows-2019
+            os-name: Windows
+            engines: RabbitMQ-RavenDB3
+          - os: windows-2019
+            os-name: Windows
+            engines: RavenDB3
+      fail-fast: false
+    steps:
+      - name: Check for secrets
+        env:
+          SECRETS_AVAILABLE: ${{ secrets.SECRETS_AVAILABLE }}
+        shell: pwsh
+        run: exit $(If ($env:SECRETS_AVAILABLE -eq 'true') { 0 } Else { 1 })
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1.9.0
+        with:
+          dotnet-version: 6.0.x
+      - name: Setup .NET Core 3.1 runtime
+        uses: actions/setup-dotnet@v1.9.0
+        with:
+          dotnet-version: 3.1.x
+      - name: Build
+        run: dotnet build src --configuration Release
+      - name: Upload packages
+        if: matrix.upload-packages && runner.os == 'Windows'
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: NuGet packages
+          path: nugets/
+          retention-days: 7
+      - name: Azure login
+        uses: azure/login@v1.4.3
+        with:
+          creds: ${{ secrets.AZURE_ACI_CREDENTIALS }}
+      - name: Setup Azure Storage
+        if: contains(matrix.engines, 'AzureStorage')
+        uses: Particular/setup-azurestorage-action@v1.0.0
+        with:
+          connection-string-name: AzureStorage_ConnectionString
+          tag: TimeoutMigrationTool
+      - name: Setup Oracle
+        if: contains(matrix.engines, 'Oracle')
+        shell: pwsh
+        run: |
+          echo "Adding environment variables for Oracle connection strings"
+          echo "OracleConnectionString=User Id=particular;Password=Welcome1;Data Source=127.0.0.1:1521/nservicebus;Enlist=dynamic" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+      - name: Setup RabbitMQ
+        if: contains(matrix.engines, 'RabbitMQ')
+        id: setup-rabbitmq
+        shell: pwsh
+        run: |
+          $hostInfo = curl -H Metadata:true "169.254.169.254/metadata/instance?api-version=2017-08-01" | ConvertFrom-Json
+          $region = $hostInfo.compute.location
+          $hostname = "psw-tmt-rabbitmq-$(Get-Random)"
+          echo "::set-output name=hostname::$hostname"
+          echo "Creating RabbitMQ container $hostname in $region (This can take a while.)"
+          $jsonResult = az container create --image rabbitmq:3-management --name $hostname --location $region --dns-name-label $hostname --resource-group GitHubActions-RG --cpu 4 --memory 16 --ports 5672 15672 --ip-address public
+          if(!$jsonResult)
+          {
+            Write-Output "Failed to create RabbitMQ container"
+            exit 1;
+          }
+          $details = $jsonResult | ConvertFrom-Json
+          if (!$details.ipAddress) {
+            Write-Output "Failed to create RabbitMQ container $hostname in $region"
+            Write-Output $jsonResult
+            exit 1;
+          }
+          $ip=$details.ipAddress.ip
+          echo "::add-mask::$ip"
+          echo "Tagging container image"
+          $dateTag = "Created=$(Get-Date -Format "yyyy-MM-dd")"
+          $ignore = az tag create --resource-id $details.id --tags Package=TimeoutMigrationTool RunnerOS=${{ runner.os }} $dateTag
+          echo "RabbitMQ_uri=$ip" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          
+          if ( $Env:RUNNER_OS -eq 'Windows') {
+            $maxAttempts = 40
+          }
+          else {
+            $maxAttempts = 10
+          }
+          
+          $uri = "http://" + $ip + ":15672/api/health/checks/virtual-hosts"
+          $tries = 0
+          do
+          {
+            $response = curl $uri -u guest:guest | ConvertFrom-Json
+            $tries++
+            if(!$response.status)
+            {
+              Write-Output "No response, retrying..."
+              Start-Sleep -m 5000
+            }
+          } until (($response.status) -or ($tries -ge $maxAttempts))
+          if($response.status -ne "ok")
+          {
+            Write-Output "Failed to connect after $maxAttempts attempts";
+            exit 1
+          }
+          else {
+            Write-Output "Connected after $tries attempts"
+          }
+      - name: Setup RavenDB3
+        if: contains(matrix.engines, 'RavenDB3')
+        shell: pwsh
+        run: |
+          choco install ravendb3 --version 3.5.3 -y
+          echo "Raven35Url=http://localhost:8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+      - name: Setup RavenDB4
+        if: contains(matrix.engines, 'RavenDB4')
+        id: setup-ravendb4
+        shell: pwsh
+        run: |
+          $hostInfo = curl -H Metadata:true "169.254.169.254/metadata/instance?api-version=2017-08-01" | ConvertFrom-Json
+          $region = $hostInfo.compute.location
+          
+          $hostname = "psw-tmt-ravendb-$(Get-Random)"
+          echo "::set-output name=hostname::$hostname"
+          echo "Creating RavenDB container $hostname in $region (This can take a while.)"
+          $details = az container create --image ravendb/ravendb:4.2-ubuntu-latest  --name $hostname --location $region --dns-name-label $hostname --resource-group GitHubActions-RG --cpu 4 --memory 16 --ports 8080 38888 --ip-address public -e RAVEN_ARGS='--ServerUrl=http://0.0.0.0:8080 --Setup.Mode=None --License.Eula.Accepted=true --Security.UnsecuredAccessAllowed=PublicNetwork' | ConvertFrom-Json
+          $fqdn=$details.ipAddress.fqdn
+          echo "::add-mask::$fqdn"
+
+          echo "Verifying connection..."
+          $tcpClient = New-Object Net.Sockets.TcpClient
+          $timeout = (Get-Date).AddMinutes(6)
+
+          while ($tcpClient.Connected -ne "True") {
+            try {
+                echo "Trying to connect..."
+                $tcpClient.Connect($fqdn, 8080)
+            } catch {
+                if ($timeout -lt (Get-Date)) {
+                  throw "Timed out verifying connection"
+                }
+
+                Start-Sleep -Seconds 2
+            }
+          }
+
+          echo "Connection verified"
+          $tcpClient.Close()
+
+          echo "Tagging container image"
+          $dateTag = "Created=$(Get-Date -Format "yyyy-MM-dd")"
+          $ignore = az tag create --resource-id $details.id --tags Package=TimeoutMigrationTool RunnerOS=${{ runner.os }} $dateTag
+          echo "CommaSeparatedRavenClusterUrls=http://$($fqdn):8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+      - name: Install SQL Server
+        if: contains(matrix.engines, 'SqlServer')
+        uses: Particular/install-sql-server-action@main
+        with:
+          connection-string-env-var: SQLServerConnectionString
+          catalog: nservicebus
+          extra-params: "Encrypt=False;"
+      - name: Run tests
+        uses: Particular/run-tests-action@v1.2.0
+        with:
+          report-warnings: ${{ secrets.TESTS_REPORT_WARNINGS }}
+      - name: Teardown infrastructure
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          if ('${{ matrix.engines }}' -match 'RabbitMQ') {
+            echo "Removing container ${{ steps.setup-rabbitmq.outputs.hostname }}"
+            az container delete --resource-group GitHubActions-RG --name ${{ steps.setup-rabbitmq.outputs.hostname }} --yes
+            echo "Removal complete"
+          }
+          if ('${{ matrix.engines }}' -match 'RavenDB4') {
+            echo "Removing container ${{ steps.setup-ravendb4.outputs.hostname }}"
+            az container delete --resource-group GitHubActions-RG --name ${{ steps.setup-ravendb4.outputs.hostname }} --yes
+            echo "Removal complete"
+          }

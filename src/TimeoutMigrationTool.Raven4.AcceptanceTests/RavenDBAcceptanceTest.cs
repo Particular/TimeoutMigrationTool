@@ -37,9 +37,9 @@
                 return result;
             };
 
-            serverUrl = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls") ?? "http://localhost:8080";
+            serverUrl = Environment.GetEnvironmentVariable(EnvironmentVariables.CommaSeparatedRavenClusterUrls) ?? "http://localhost:8080";
 
-            rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
+            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri) ?? "localhost"}:5672";
 
             databaseName = TestContext.CurrentContext.Test.ID;
 

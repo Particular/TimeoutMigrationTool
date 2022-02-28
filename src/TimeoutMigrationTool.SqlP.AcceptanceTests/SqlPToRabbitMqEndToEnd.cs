@@ -12,12 +12,13 @@
     using System.Threading.Tasks;
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString, EnvironmentVariables.RabbitMQ_uri)]
     class SqlPToRabbitMqEndToEnd : SqlPAcceptanceTest
     {
         [SetUp]
         public void Setup()
         {
-            rabbitUrl = Environment.GetEnvironmentVariable("RabbitMQ_uri") ?? "amqp://guest:guest@localhost:5672";
+            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri) ?? "localhost"}:5672";
         }
 
         [Test]

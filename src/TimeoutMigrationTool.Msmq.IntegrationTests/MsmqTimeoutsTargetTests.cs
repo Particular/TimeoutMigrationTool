@@ -13,6 +13,7 @@ namespace TimeoutMigrationTool.Msmq.IntegrationTests
     using SqlP.AcceptanceTests;
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
     public class MsmqTimeoutsTargetTests
     {
         string databaseName;
@@ -25,10 +26,8 @@ namespace TimeoutMigrationTool.Msmq.IntegrationTests
         [SetUp]
         public async Task SetUp()
         {
-            databaseName = $"IntegrationTests{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-
-            connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-
+            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }
 
