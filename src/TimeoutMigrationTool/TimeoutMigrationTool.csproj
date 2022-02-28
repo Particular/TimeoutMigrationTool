@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -16,16 +16,15 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.10.0" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
         <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
         <PackageReference Include="NHibernate" Version="5.3.11" />
-        <PackageReference Include="RabbitMQ.Client" Version="6.2.4" />
-        <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
-        <PackageReference Include="Azure.Storage.Blobs" Version="12.10.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
         <PackageReference Include="Particular.Packaging" Version="1.4.0" PrivateAssets="All" />
+        <PackageReference Include="RabbitMQ.Client" Version="6.2.4" />
     </ItemGroup>
 
 </Project>
