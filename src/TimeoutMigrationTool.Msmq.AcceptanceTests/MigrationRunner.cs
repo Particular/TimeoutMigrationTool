@@ -14,7 +14,7 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
             var isDebug = currentFolder.IndexOf(@"\bin\Debug\", StringComparison.InvariantCultureIgnoreCase) != -1;
             var build = isDebug ? "Debug" : "Release";
 
-            var exePath = currentFolder + $@"\..\..\..\..\TimeoutMigrationTool\bin\{build}\net6.0\TimeoutMigrationTool.dll";
+            var exePath = currentFolder + $@"\..\TimeoutMigrationTool\bin\{build}\net6.0\TimeoutMigrationTool.dll";
             var args = $@"exec {exePath} migrate --allEndpoints sqlp  --source ""{connectionString}"" --dialect MsSqlServer msmq --target ""{connectionString}""";
 
             var startInfo = new ProcessStartInfo("dotnet", args)
