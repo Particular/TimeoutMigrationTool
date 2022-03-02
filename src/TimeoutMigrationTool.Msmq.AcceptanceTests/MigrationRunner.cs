@@ -23,7 +23,8 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
-            var process = new Process {StartInfo = startInfo};
+
+            var process = new Process { StartInfo = startInfo };
 
             string standardError = null;
             process.ErrorDataReceived += (sender, e) => { standardError += e.Data; };
