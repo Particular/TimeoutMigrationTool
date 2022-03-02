@@ -6,11 +6,6 @@
 
     public static class MsSqlMicrosoftDataClientHelper
     {
-        public static SqlConnection Build(string connectionString)
-        {
-            return new SqlConnection(connectionString);
-        }
-
         public static async Task RemoveDbIfExists(string connectionString = null)
         {
             connectionString ??= GetConnectionString();
@@ -49,11 +44,8 @@
             await command.ExecuteNonQueryAsync();
         }
 
-        public static string GetConnectionString()
-        {
-            var connection = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
-            return connection;
-        }
+        public static string GetConnectionString() =>
+            Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
 
         static async Task DropDatabase(string connectionString, string databaseName)
         {

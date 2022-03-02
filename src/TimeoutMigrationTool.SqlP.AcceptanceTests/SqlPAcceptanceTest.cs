@@ -101,7 +101,7 @@
 
         protected async Task<T> QueryScalarAsync<T>(string sqlStatement)
         {
-            using (var connection = MsSqlMicrosoftDataClientHelper.Build(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
@@ -116,7 +116,7 @@
 
         protected T QueryScalar<T>(string sqlStatement)
         {
-            using (var connection = MsSqlMicrosoftDataClientHelper.Build(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 

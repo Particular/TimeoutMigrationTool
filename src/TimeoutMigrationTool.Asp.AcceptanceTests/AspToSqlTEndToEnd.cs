@@ -8,7 +8,6 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Data.SqlClient;
     using Particular.TimeoutMigrationTool.SqlT;
     using TimeoutMigrationTool.SqlP.AcceptanceTests;
 
