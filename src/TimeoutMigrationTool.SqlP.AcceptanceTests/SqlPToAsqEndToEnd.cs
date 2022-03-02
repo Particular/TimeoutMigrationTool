@@ -15,7 +15,7 @@
     [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString, EnvironmentVariables.AzureStorage_ConnectionString)]
     class SqlPToAsqEndToEnd : SqlPAcceptanceTest
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString) ?? "UseDevelopmentStorage=true";
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
 
         [Test]
         public async Task Can_migrate_timeouts()

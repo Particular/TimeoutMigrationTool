@@ -14,9 +14,9 @@
         {
             await base.SetUp();
 
-            serverUrl = Environment.GetEnvironmentVariable(EnvironmentVariables.Raven35Url) ?? "http://localhost:8383";
+            serverUrl = Environment.GetEnvironmentVariable(EnvironmentVariables.Raven35Url);
 
-            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri) ?? "localhost"}:5672";
+            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri)}:5672";
 
             databaseName = TestContext.CurrentContext.Test.ID;
         }

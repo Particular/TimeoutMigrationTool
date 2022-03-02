@@ -14,7 +14,7 @@
     [EnvironmentSpecificTest(EnvironmentVariables.CommaSeparatedRavenClusterUrls, EnvironmentVariables.AzureStorage_ConnectionString)]
     class RavenDBToAsqEndToEnd : RavenDBAcceptanceTest
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString) ?? "UseDevelopmentStorage=true";
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
 
         [Test]
         public async Task Can_migrate_timeouts()

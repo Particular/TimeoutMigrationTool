@@ -23,7 +23,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [OneTimeSetUp]
         public void TestSuitSetup()
         {
-            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri) ?? "localhost"}:5672";
+            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri)}:5672";
             factory = new ConnectionFactory() { Uri = new Uri(rabbitUrl) };
         }
 
