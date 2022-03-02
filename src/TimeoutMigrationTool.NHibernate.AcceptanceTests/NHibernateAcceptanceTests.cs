@@ -20,7 +20,7 @@
         [SetUp]
         public async Task SetUp()
         {
-            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             await RecreateDbIfNotExists(connectionString);
         }
 

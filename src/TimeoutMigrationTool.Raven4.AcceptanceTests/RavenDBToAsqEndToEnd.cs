@@ -11,10 +11,10 @@
     using Particular.TimeoutMigrationTool.ASQ;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.CommaSeparatedRavenClusterUrls, EnvironmentVariables.AzureStorage_ConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven4Url, EnvironmentVariables.AzureStorageConnectionString)]
     class RavenDBToAsqEndToEnd : RavenDBAcceptanceTest
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
 
         [Test]
         public async Task Can_migrate_timeouts()

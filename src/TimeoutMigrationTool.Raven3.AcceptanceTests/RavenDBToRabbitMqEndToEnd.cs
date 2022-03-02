@@ -11,7 +11,7 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.RabbitMQHost, EnvironmentVariables.Raven35Url)]
+    [EnvironmentSpecificTest(EnvironmentVariables.RabbitMqHost, EnvironmentVariables.Raven3Url)]
     class RavenDBToRabbitMqEndToEnd : RavenDBAcceptanceTest
     {
         [Test]

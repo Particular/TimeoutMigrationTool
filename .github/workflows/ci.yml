@@ -86,7 +86,7 @@ jobs:
         if: contains(matrix.engines, 'AzureStorage')
         uses: Particular/setup-azurestorage-action@v1.0.0
         with:
-          connection-string-name: AzureStorage_ConnectionString
+          connection-string-name: AzureStorageConnectionString
           tag: TimeoutMigrationTool
       - name: Setup Oracle
         if: contains(matrix.engines, 'Oracle')
@@ -121,7 +121,7 @@ jobs:
           echo "Tagging container image"
           $dateTag = "Created=$(Get-Date -Format "yyyy-MM-dd")"
           $ignore = az tag create --resource-id $details.id --tags Package=TimeoutMigrationTool RunnerOS=${{ runner.os }} $dateTag
-          echo "RabbitMQHost=$ip" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          echo "RabbitMqHost=$ip" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
           
           if ( $Env:RUNNER_OS -eq 'Windows') {
             $maxAttempts = 40
@@ -155,7 +155,7 @@ jobs:
         shell: pwsh
         run: |
           choco install ravendb3 --version 3.5.3 -y
-          echo "Raven35Url=http://localhost:8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          echo "Raven3Url=http://localhost:8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
       - name: Setup RavenDB4
         if: contains(matrix.engines, 'RavenDB4')
         id: setup-ravendb4
@@ -194,12 +194,12 @@ jobs:
           echo "Tagging container image"
           $dateTag = "Created=$(Get-Date -Format "yyyy-MM-dd")"
           $ignore = az tag create --resource-id $details.id --tags Package=TimeoutMigrationTool RunnerOS=${{ runner.os }} $dateTag
-          echo "CommaSeparatedRavenClusterUrls=http://$($fqdn):8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          echo "Raven4Url=http://$($fqdn):8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
       - name: Install SQL Server
         if: contains(matrix.engines, 'SqlServer')
         uses: Particular/install-sql-server-action@main
         with:
-          connection-string-env-var: SQLServerConnectionString
+          connection-string-env-var: SqlServerConnectionString
           catalog: nservicebus
           extra-params: "Encrypt=False;"
       - name: Run tests

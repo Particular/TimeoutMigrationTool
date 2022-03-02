@@ -10,7 +10,7 @@
     using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     class SqlPToMsmqEndToEnd : SqlPAcceptanceTest
     {
         [Test]

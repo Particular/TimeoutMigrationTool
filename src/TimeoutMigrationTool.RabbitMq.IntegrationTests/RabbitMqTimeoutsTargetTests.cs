@@ -9,7 +9,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
     using RabbitMQ.Client;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.RabbitMQHost)]
+    [EnvironmentSpecificTest(EnvironmentVariables.RabbitMqHost)]
     public class RabbitMqTimeoutsTargetTests
     {
         string rabbitUrl;
@@ -23,7 +23,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [OneTimeSetUp]
         public void TestSuitSetup()
         {
-            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQHost)}:5672";
+            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqHost)}:5672";
             factory = new ConnectionFactory() { Uri = new Uri(rabbitUrl) };
         }
 

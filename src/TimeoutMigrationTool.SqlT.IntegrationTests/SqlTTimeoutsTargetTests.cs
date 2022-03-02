@@ -13,7 +13,7 @@ namespace TimeoutMigrationTool.SqlT.IntegrationTests
     using SqlP.AcceptanceTests;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     public class SqlTTimeoutsTargetTests
     {
         string databaseName;
@@ -26,7 +26,7 @@ namespace TimeoutMigrationTool.SqlT.IntegrationTests
         [SetUp]
         public async Task SetUp()
         {
-            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }

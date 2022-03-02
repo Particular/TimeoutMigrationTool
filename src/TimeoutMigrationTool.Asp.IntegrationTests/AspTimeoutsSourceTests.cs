@@ -15,10 +15,10 @@
     using Particular.TimeoutMigrationTool.Asp;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorage_ConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString)]
     public class AspTimeoutsSourceTests
     {
-        static readonly string connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
+        static readonly string connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
         string tableNamePrefix;
         CloudTableClient tableClient;
         BlobContainerClient blobContainerClient;

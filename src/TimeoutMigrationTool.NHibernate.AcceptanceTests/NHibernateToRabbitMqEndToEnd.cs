@@ -14,14 +14,14 @@
 
     [TestFixture]
 #if SQLSERVER
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString, EnvironmentVariables.RabbitMQHost)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString, EnvironmentVariables.RabbitMqHost)]
 #endif
 #if ORACLE
-    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString, EnvironmentVariables.RabbitMQHost)]
+    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString, EnvironmentVariables.RabbitMqHost)]
 #endif
     class NHibernateToRabbitMqEndToEnd : NHibernateAcceptanceTests
     {
-        string rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQHost)}:5672";
+        string rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqHost)}:5672";
 
         [Test]
         public async Task Can_migrate_timeouts()

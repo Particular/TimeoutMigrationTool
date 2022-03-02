@@ -10,7 +10,7 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     public abstract class SqlPAcceptanceTest
     {
         [SetUp]
@@ -32,7 +32,7 @@
 
                 return testName + "-" + endpointBuilder;
             };
-            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }

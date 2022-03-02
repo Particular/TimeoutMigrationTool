@@ -149,7 +149,7 @@
     }
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.Raven35Url)]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven3Url)]
     public class Raven3AdapterTests : RavenAdapterTests
     {
         protected override IRavenTestSuite CreateTestSuite()
@@ -189,7 +189,7 @@
     }
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.CommaSeparatedRavenClusterUrls)]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven4Url)]
     public class Raven4AdapterTests : RavenAdapterTests
     {
         protected override IRavenTestSuite CreateTestSuite()

@@ -2,25 +2,25 @@
 
 public static class EnvironmentVariables
 {
-    public const string AzureStorage_ConnectionString = "AzureStorage_ConnectionString";
+    public const string AzureStorageConnectionString = "AzureStorageConnectionString";
 
-    public const string CommaSeparatedRavenClusterUrls = "CommaSeparatedRavenClusterUrls";
+    public const string Raven4Url = "Raven4Url";
 
     public const string OracleConnectionString = "OracleConnectionString";
 
-    public const string RabbitMQHost = "RabbitMQHost";
+    public const string RabbitMqHost = "RabbitMqHost";
 
-    public const string Raven35Url = "Raven35Url";
+    public const string Raven3Url = "Raven3Url";
 
-    public const string SQLServerConnectionString = "SQLServerConnectionString";
+    public const string SqlServerConnectionString = "SqlServerConnectionString";
 
     public static IReadOnlyList<string> Names { get; } = new List<string>
         {
-            AzureStorage_ConnectionString,
-            CommaSeparatedRavenClusterUrls,
+            AzureStorageConnectionString,
+            Raven4Url,
             OracleConnectionString,
-            RabbitMQHost,
-            Raven35Url,
-            SQLServerConnectionString,
+            RabbitMqHost,
+            Raven3Url,
+            SqlServerConnectionString,
         };
 }

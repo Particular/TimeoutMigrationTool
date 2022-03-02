@@ -10,7 +10,7 @@
 
     [TestFixture]
 #if SQLSERVER
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
 #endif
 #if ORACLE
     [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString)]

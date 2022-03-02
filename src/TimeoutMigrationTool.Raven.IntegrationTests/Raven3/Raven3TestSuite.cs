@@ -256,7 +256,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven3
             return HttpClient.DeleteAsync(killDb);
         }
 
-        public string serverName = (Environment.GetEnvironmentVariable(EnvironmentVariables.Raven35Url)).TrimEnd('/');
+        public string serverName = (Environment.GetEnvironmentVariable(EnvironmentVariables.Raven3Url)).TrimEnd('/');
         protected static readonly HttpClient HttpClient = new HttpClient();
 
         public async Task CreateLegacyTimeoutManagerIndex(bool waitForIndexToBeUpToDate)

@@ -55,7 +55,7 @@
 
         public static string GetConnectionString()
         {
-            var connection = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            var connection = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             return connection;
         }
 

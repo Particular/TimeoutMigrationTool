@@ -12,7 +12,7 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     class SqlPToSqlTEndToEnd : SqlPAcceptanceTest
     {
         [Test]

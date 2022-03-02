@@ -14,7 +14,7 @@
 
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorage_ConnectionString, EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString, EnvironmentVariables.SqlServerConnectionString)]
     class AspToSqlTEndToEnd : AspAcceptanceTest
     {
         string sqlConnectionString;
@@ -22,7 +22,7 @@
         [SetUp]
         public async Task Setup()
         {
-            sqlConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            sqlConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
         }
 

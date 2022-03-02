@@ -12,13 +12,13 @@
 
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorage_ConnectionString, EnvironmentVariables.RabbitMQHost)]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString, EnvironmentVariables.RabbitMqHost)]
     class AspToRabbitMqEndToEnd : AspAcceptanceTest
     {
         [SetUp]
         public void Setup()
         {
-            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQHost)}:5672";
+            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqHost)}:5672";
         }
 
         [Test]

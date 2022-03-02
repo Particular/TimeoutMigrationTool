@@ -14,14 +14,14 @@
 
     [TestFixture]
 #if SQLSERVER
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString, EnvironmentVariables.AzureStorage_ConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString, EnvironmentVariables.AzureStorageConnectionString)]
 #endif
 #if ORACLE
-    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString, EnvironmentVariables.AzureStorage_ConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString, EnvironmentVariables.AzureStorageConnectionString)]
 #endif
     class NHibernateToAsqEndToEnd : NHibernateAcceptanceTests
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
 
         [Test]
         public async Task Can_migrate_timeouts()

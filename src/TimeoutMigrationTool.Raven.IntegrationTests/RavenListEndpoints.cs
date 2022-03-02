@@ -120,7 +120,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
     }
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.CommaSeparatedRavenClusterUrls)]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven4Url)]
     public class Raven4ListsEndpoints : RavenListEndpoints
     {
         protected override IRavenTestSuite CreateTestSuite()
@@ -130,7 +130,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
     }
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.Raven35Url)]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven3Url)]
     public class Raven3ListsEndpoints : RavenListEndpoints
     {
         protected override IRavenTestSuite CreateTestSuite()

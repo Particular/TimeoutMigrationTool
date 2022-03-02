@@ -11,11 +11,11 @@
     using Particular.TimeoutMigrationTool.ASQ;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorage_ConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString)]
 
     class AspToAsqMqEndToEnd : AspAcceptanceTest
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
 
         [Test]
         public async Task Can_migrate_timeouts()

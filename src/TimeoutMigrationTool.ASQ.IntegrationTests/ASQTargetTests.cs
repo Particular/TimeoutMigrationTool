@@ -10,10 +10,10 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorage_ConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString)]
     class ASQTargetTests
     {
-        string connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorage_ConnectionString);
+        string connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
         CloudTableClient tableClient;
         string endpointName;
 

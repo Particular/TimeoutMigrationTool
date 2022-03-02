@@ -13,7 +13,7 @@
     using Particular.TimeoutMigrationTool.SqlT;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     class NHibernateToSqlTEndToEnd : NHibernateAcceptanceTests
     {
         [Test]

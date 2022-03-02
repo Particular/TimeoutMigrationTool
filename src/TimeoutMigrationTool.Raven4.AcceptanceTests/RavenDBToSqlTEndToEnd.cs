@@ -13,7 +13,7 @@
     using SqlP.AcceptanceTests;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.CommaSeparatedRavenClusterUrls, EnvironmentVariables.SQLServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven4Url, EnvironmentVariables.SqlServerConnectionString)]
     class RavenDBToSqlTEndToEnd : RavenDBAcceptanceTest
     {
         string sqlConnectionString;
@@ -21,7 +21,7 @@
         [SetUp]
         public async Task Setup()
         {
-            sqlConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+            sqlConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             databaseName = new SqlConnectionStringBuilder(sqlConnectionString).InitialCatalog;
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
         }
