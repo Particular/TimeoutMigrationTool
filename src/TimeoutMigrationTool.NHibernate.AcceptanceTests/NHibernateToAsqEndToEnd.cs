@@ -53,7 +53,6 @@
                 // delivery is needed
                 .WithEndpoint<NHibernateSource>(b => b.CustomConfig(ec =>
                 {
-                    Console.WriteLine("NHibernateSource ASQConnectionString: " + asqConnectionString);
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
                     transportConfig.DisablePublishing();
@@ -64,7 +63,6 @@
                 }))
                 .WithEndpoint<AsqTarget>(b => b.CustomConfig(ec =>
                 {
-                    Console.WriteLine("AsqTarget ASQConnectionString: " + asqConnectionString);
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
                     transportConfig.DisablePublishing();
@@ -78,7 +76,6 @@
                     var logger = new TestLoggingAdapter(c);
                     var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 512, DatabaseDialect);
                     var timeoutsTarget = new ASQTarget(asqConnectionString, new DelayedDeliveryTableNameProvider());
-                    Console.WriteLine("Migrating from NHibernateSource connectionString: " + connectionString + " to AsqTarget : " + asqConnectionString);
                     var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());

@@ -24,7 +24,6 @@
 
         internal ISessionFactory CreateSessionFactory()
         {
-            Console.WriteLine("Connection string in SessionFactory: " + connectionString);
             var cfg = new global::NHibernate.Cfg.Configuration().DataBaseIntegration(x =>
             {
                 x.ConnectionString = connectionString;

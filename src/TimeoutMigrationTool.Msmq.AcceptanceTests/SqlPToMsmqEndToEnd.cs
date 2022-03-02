@@ -19,7 +19,6 @@
             await Scenario.Define<SourceContext>()
                  .WithEndpoint<EndpointBeforeMigration>(b => b.CustomConfig(ec =>
                  {
-                     Console.WriteLine("EndpointBeforeMigration connectionString: " + connectionString);
                      var persistence = ec.UsePersistence<SqlPersistence>();
                      persistence.SubscriptionSettings().DisableCache();
                      persistence.SqlDialect<SqlDialect.MsSqlServer>();
@@ -49,7 +48,6 @@
             var setupContext = await Scenario.Define<TargetContext>()
                 .WithEndpoint<Endpoint>(b => b.CustomConfig(ec =>
                 {
-                    Console.WriteLine("MsmqEndpoint connectionString: " + connectionString);
                     var transport = ec.UseTransport<MsmqTransport>();
                     transport.NativeDelayedDelivery(new SqlServerDelayedMessageStore(connectionString));
 
@@ -65,7 +63,6 @@
             var context = await Scenario.Define<TargetContext>()
                 .WithEndpoint<Endpoint>(b => b.CustomConfig(ec =>
                 {
-                    Console.WriteLine("MsmqEndpoint after migration connectionString: " + connectionString);
                     var transport = ec.UseTransport<MsmqTransport>();
                     transport.NativeDelayedDelivery(new SqlServerDelayedMessageStore(connectionString));
 
