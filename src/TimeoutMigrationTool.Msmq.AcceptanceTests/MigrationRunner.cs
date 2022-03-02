@@ -23,17 +23,16 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
-            Console.WriteLine($"Begin the migration with parameters: {args}");
-            var process = new Process { StartInfo = startInfo };
-            string eOut = null;
-            process.ErrorDataReceived += new DataReceivedEventHandler((sender, e) =>
-                { eOut += e.Data; });
+            var process = new Process {StartInfo = startInfo};
+
+            string standardError = null;
+            process.ErrorDataReceived += (sender, e) => { standardError += e.Data; };
+
             process.Start();
             process.BeginErrorReadLine();
             Console.WriteLine(process.StandardOutput.ReadToEnd());
-
             process.WaitForExit(60000);
-            Console.WriteLine($"\nError stream: {eOut}");
+            Console.WriteLine($"{Environment.NewLine}Standard error:{Environment.NewLine}{standardError}{Environment.NewLine}");
         }
     }
 }
