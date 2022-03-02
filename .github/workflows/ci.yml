@@ -121,7 +121,7 @@ jobs:
           echo "Tagging container image"
           $dateTag = "Created=$(Get-Date -Format "yyyy-MM-dd")"
           $ignore = az tag create --resource-id $details.id --tags Package=TimeoutMigrationTool RunnerOS=${{ runner.os }} $dateTag
-          echo "RabbitMQ_uri=$ip" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          echo "RabbitMQHost=$ip" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
           
           if ( $Env:RUNNER_OS -eq 'Windows') {
             $maxAttempts = 40

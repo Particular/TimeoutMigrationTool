@@ -16,7 +16,7 @@
 
             serverUrl = Environment.GetEnvironmentVariable(EnvironmentVariables.Raven35Url);
 
-            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQ_uri)}:5672";
+            rabbitUrl = $"amqp://guest:guest@{Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMQHost)}:5672";
 
             databaseName = TestContext.CurrentContext.Test.ID;
         }

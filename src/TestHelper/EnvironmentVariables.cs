@@ -8,7 +8,7 @@ public static class EnvironmentVariables
 
     public const string OracleConnectionString = "OracleConnectionString";
 
-    public const string RabbitMQ_uri = "RabbitMQ_uri";
+    public const string RabbitMQHost = "RabbitMQHost";
 
     public const string Raven35Url = "Raven35Url";
 
@@ -19,7 +19,7 @@ public static class EnvironmentVariables
             AzureStorage_ConnectionString,
             CommaSeparatedRavenClusterUrls,
             OracleConnectionString,
-            RabbitMQ_uri,
+            RabbitMQHost,
             Raven35Url,
             SQLServerConnectionString,
         };
