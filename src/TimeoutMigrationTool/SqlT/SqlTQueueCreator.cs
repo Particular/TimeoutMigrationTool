@@ -81,7 +81,11 @@
                 var candidate = reader.GetString(0);
 
                 //Return only table names that differ by having dots (.) in place of underscores in the table name returned from the source.
+#if NETCOREAPP3_1
                 if (underscorePositions.All(i => candidate[i] == '_' || candidate[i] == '.'))
+#else
+                if (underscorePositions.All(i => candidate[i] is '_' or '.'))
+#endif
                 {
                     return candidate;
                 }

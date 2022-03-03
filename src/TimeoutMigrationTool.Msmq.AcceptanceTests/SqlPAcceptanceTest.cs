@@ -10,6 +10,7 @@
     using System.Threading.Tasks;
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     public abstract class SqlPAcceptanceTest
     {
         [SetUp]
@@ -31,11 +32,8 @@
 
                 return testName + "-" + endpointBuilder;
             };
-
-            databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-
-            connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-
+            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
+            databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(connectionString);
         }
 
@@ -102,7 +100,7 @@
 
         protected async Task<T> QueryScalarAsync<T>(string sqlStatement)
         {
-            using (var connection = MsSqlMicrosoftDataClientHelper.Build(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
@@ -117,7 +115,7 @@
 
         protected T QueryScalar<T>(string sqlStatement)
         {
-            using (var connection = MsSqlMicrosoftDataClientHelper.Build(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 

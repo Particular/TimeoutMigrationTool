@@ -217,7 +217,11 @@ namespace Particular.TimeoutMigrationTool.RavenDB
                     {
                         checkForMoreResults = false;
                     }
+#if NETCOREAPP3_1
                     else if (pagedTimeouts.Count == 0 || pagedTimeouts.Count < RavenConstants.DefaultPagingSize)
+#else
+                    else if (pagedTimeouts.Count is 0 or < RavenConstants.DefaultPagingSize)
+#endif
                     {
                         checkForMoreResults = false;
                     }

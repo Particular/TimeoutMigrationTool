@@ -19,7 +19,7 @@
             }
 
             byte[] hashedName;
-            using (var sha1 = new SHA1Managed())
+            using (var sha1 = SHA1.Create())
             {
                 sha1.Initialize();
                 hashedName = sha1.ComputeHash(Encoding.UTF8.GetBytes(endpointName));

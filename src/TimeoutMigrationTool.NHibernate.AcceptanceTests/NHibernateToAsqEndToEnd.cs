@@ -13,11 +13,18 @@
     using Particular.TimeoutMigrationTool.ASQ;
 
     [TestFixture]
+#if SQLSERVER
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString, EnvironmentVariables.AzureStorageConnectionString)]
+#endif
+#if ORACLE
+    [EnvironmentSpecificTest(EnvironmentVariables.OracleConnectionString, EnvironmentVariables.AzureStorageConnectionString)]
+#endif
     class NHibernateToAsqEndToEnd : NHibernateAcceptanceTests
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true";
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
 
         [Test]
+        [Explicit("In CI this test exceeds the hardcoded 60 second timeout in the acceptance test framework for 'Executing given and whens'.")]
         public async Task Can_migrate_timeouts()
         {
             var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(NHibernateSource));
@@ -68,9 +75,8 @@
                 .When(async (_, c) =>
                 {
                     var logger = new TestLoggingAdapter(c);
-                    var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 1024, DatabaseDialect);
+                    var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 512, DatabaseDialect);
                     var timeoutsTarget = new ASQTarget(asqConnectionString, new DelayedDeliveryTableNameProvider());
-
                     var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());

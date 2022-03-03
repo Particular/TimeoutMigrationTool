@@ -25,7 +25,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
         {
             get
             {
-                var ravenUrls = Environment.GetEnvironmentVariable("CommaSeparatedRavenClusterUrls");
+                var ravenUrls = Environment.GetEnvironmentVariable(EnvironmentVariables.Raven4Url);
 
                 if (string.IsNullOrEmpty(ravenUrls))
                 {

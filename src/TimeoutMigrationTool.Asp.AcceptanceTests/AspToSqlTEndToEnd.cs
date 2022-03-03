@@ -13,18 +13,15 @@
 
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString, EnvironmentVariables.SqlServerConnectionString)]
     class AspToSqlTEndToEnd : AspAcceptanceTest
     {
         string sqlConnectionString;
-        string databaseName;
 
         [SetUp]
         public async Task Setup()
         {
-            databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-
-            sqlConnectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-
+            sqlConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             await MsSqlMicrosoftDataClientHelper.RecreateDbIfNotExists(sqlConnectionString);
         }
 

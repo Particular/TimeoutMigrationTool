@@ -20,9 +20,7 @@
         [SetUp]
         public async Task SetUp()
         {
-            var databaseName = $"Att{TestContext.CurrentContext.Test.ID.Replace("-", "")}";
-            connectionString = $@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog={databaseName};Integrated Security=True;";
-
+            connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.SqlServerConnectionString);
             await RecreateDbIfNotExists(connectionString);
         }
 

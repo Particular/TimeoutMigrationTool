@@ -10,9 +10,10 @@
     using System.Threading.Tasks;
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString)]
     class ASQTargetTests
     {
-        string connectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true;";
+        string connectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
         CloudTableClient tableClient;
         string endpointName;
 
@@ -64,7 +65,7 @@
 
             // Assert
             Assert.IsFalse(ableToMigrate.CanMigrate);
-            Assert.AreEqual("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message 'No such host is known.'", ableToMigrate.Problems[0]);
+            Assert.That(ableToMigrate.Problems[0], Does.StartWith("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message '"));
         }
 
         [Test]

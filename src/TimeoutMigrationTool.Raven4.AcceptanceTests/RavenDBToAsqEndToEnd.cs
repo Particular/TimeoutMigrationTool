@@ -11,9 +11,10 @@
     using Particular.TimeoutMigrationTool.ASQ;
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven4Url, EnvironmentVariables.AzureStorageConnectionString)]
     class RavenDBToAsqEndToEnd : RavenDBAcceptanceTest
     {
-        string asqConnectionString = Environment.GetEnvironmentVariable("AzureStorage_ConnectionString") ?? "UseDevelopmentStorage=true";
+        string asqConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariables.AzureStorageConnectionString);
 
         [Test]
         public async Task Can_migrate_timeouts()

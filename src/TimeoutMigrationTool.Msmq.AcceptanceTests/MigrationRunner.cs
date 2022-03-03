@@ -14,21 +14,26 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
             var isDebug = currentFolder.IndexOf(@"\bin\Debug\", StringComparison.InvariantCultureIgnoreCase) != -1;
             var build = isDebug ? "Debug" : "Release";
 
-            var exePath = currentFolder + $@"\..\..\..\..\TimeoutMigrationTool\bin\{build}\netcoreapp3.1\TimeoutMigrationTool.exe";
-            var args = $@"migrate --allEndpoints sqlp  --source ""{connectionString}"" --dialect MsSqlServer msmq --target ""{connectionString}""";
+            var exePath = currentFolder + $@"\..\TimeoutMigrationTool\bin\{build}\net6.0\TimeoutMigrationTool.dll";
+            var args = $@"exec {exePath} migrate --allEndpoints sqlp  --source ""{connectionString}"" --dialect MsSqlServer msmq --target ""{connectionString}""";
 
-            var startInfo = new ProcessStartInfo(exePath, args)
+            var startInfo = new ProcessStartInfo("dotnet", args)
             {
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
-            var process = Process.Start(startInfo);
 
+            var process = new Process { StartInfo = startInfo };
+
+            string standardError = null;
+            process.ErrorDataReceived += (sender, e) => { standardError += e.Data; };
+
+            process.Start();
+            process.BeginErrorReadLine();
             Console.WriteLine(process.StandardOutput.ReadToEnd());
-
-            process.WaitForExit(30000);
-
+            process.WaitForExit(60000);
+            Console.WriteLine($"{Environment.NewLine}Standard error:{Environment.NewLine}{standardError}{Environment.NewLine}");
         }
     }
 }

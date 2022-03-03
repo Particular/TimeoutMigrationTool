@@ -186,6 +186,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
     }
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven3Url)]
     public class Raven3PreparesTheMigration : RavenPreparesTheMigration
     {
         protected override IRavenTestSuite CreateTestSuite()
@@ -195,6 +196,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
     }
 
     [TestFixture]
+    [EnvironmentSpecificTest(EnvironmentVariables.Raven4Url)]
     public class Raven4PreparesTheMigration : RavenPreparesTheMigration
     {
         protected override IRavenTestSuite CreateTestSuite()
