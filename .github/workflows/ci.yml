@@ -203,7 +203,7 @@ jobs:
           catalog: nservicebus
           extra-params: "Encrypt=False;"
       - name: Run tests
-        uses: Particular/run-tests-action@v1.2.0
+        uses: Particular/run-tests-action@v1.3.0
         with:
           report-warnings: ${{ secrets.TESTS_REPORT_WARNINGS }}
       - name: Teardown infrastructure
