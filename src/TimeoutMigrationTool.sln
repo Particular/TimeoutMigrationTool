@@ -15,6 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Rabbit
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7131BBF7-0AD2-4852-BE1F-6E8D0C03DCE9}"
 	ProjectSection(SolutionItems) = preProject
+		Custom.Build.props = Custom.Build.props
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -53,7 +54,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutMigrationTool.Msmq.A
 		{CDA5A2B6-D547-4104-8BD1-5DC1CF17BEB8} = {CDA5A2B6-D547-4104-8BD1-5DC1CF17BEB8}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHelper", "TestHelper\TestHelper.csproj", "{D494CDD1-06C1-4DC0-B2C8-7C7F1DA6E15C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestHelper", "TestHelper\TestHelper.csproj", "{D494CDD1-06C1-4DC0-B2C8-7C7F1DA6E15C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
