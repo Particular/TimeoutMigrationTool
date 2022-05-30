@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="GitHubActionsTestLogger" Version="1.2.0" />
+        <PackageReference Include="GitHubActionsTestLogger" Version="2.0.0" />
         <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
         <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="9.0.1" />
         <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.50" />
