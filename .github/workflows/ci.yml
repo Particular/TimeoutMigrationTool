@@ -20,9 +20,12 @@ jobs:
             RabbitMQ,
             RavenDB4,
             SqlServer,
+            Oracle,
+            Oracle-RabbitMQ,
             AzureStorage-RabbitMQ,
             AzureStorage-RavenDB4,
             AzureStorage-SqlServer,
+            AzureStorage-Oracle,
             RabbitMQ-RavenDB4,
             RabbitMQ-SqlServer
           ]
@@ -35,15 +38,6 @@ jobs:
           - os: ubuntu-20.04
             os-name: Linux
           # Additional permutations
-          - os: [self-hosted, windows, oracle]
-            os-name: Windows
-            engines: AzureStorage-Oracle
-          - os: [self-hosted, windows, oracle]
-            os-name: Windows
-            engines: Oracle
-          - os: [self-hosted, windows, oracle]
-            os-name: Windows
-            engines: Oracle-RabbitMQ
           - os: windows-2019
             os-name: Windows
             engines: RabbitMQ-RavenDB3
