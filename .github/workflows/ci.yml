@@ -25,7 +25,7 @@ jobs:
             AzureStorage-RabbitMQ,
             AzureStorage-RavenDB4,
             AzureStorage-SqlServer,
-            RabbitMQ-Oracle,
+            Oracle-RabbitMQ,
             RabbitMQ-RavenDB4,
             RabbitMQ-SqlServer
           ]
