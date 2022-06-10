@@ -82,9 +82,9 @@ jobs:
         with:
           connection-string-name: AzureStorageConnectionString
           tag: TimeoutMigrationTool
-      - name: Install Oracle
+      - name: Setup Oracle
         if: contains(matrix.engines, 'Oracle')
-        uses: Particular/setup-oracle-action@a10e77929e10c7309a674e9dcf1597673027229a
+        uses: Particular/setup-oracle-action@5313bfedf343f13fe32c4f3fb8083361a23f632b
         with:
           connection-string-name: OracleConnectionString
           tag: TimeoutMigrationTool
