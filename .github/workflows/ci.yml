@@ -17,15 +17,15 @@ jobs:
         os: [ windows-2019, ubuntu-20.04 ]
         engines: [
             AzureStorage,
+            Oracle,
             RabbitMQ,
             RavenDB4,
             SqlServer,
-            Oracle,
-            Oracle-RabbitMQ,
+            AzureStorage-Oracle,
             AzureStorage-RabbitMQ,
             AzureStorage-RavenDB4,
             AzureStorage-SqlServer,
-            AzureStorage-Oracle,
+            RabbitMQ-Oracle,
             RabbitMQ-RavenDB4,
             RabbitMQ-SqlServer
           ]
