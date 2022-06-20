@@ -17,12 +17,15 @@ jobs:
         os: [ windows-2019, ubuntu-20.04 ]
         engines: [
             AzureStorage,
+            Oracle,
             RabbitMQ,
             RavenDB4,
             SqlServer,
+            AzureStorage-Oracle,
             AzureStorage-RabbitMQ,
             AzureStorage-RavenDB4,
             AzureStorage-SqlServer,
+            Oracle-RabbitMQ,
             RabbitMQ-RavenDB4,
             RabbitMQ-SqlServer
           ]
@@ -35,15 +38,6 @@ jobs:
           - os: ubuntu-20.04
             os-name: Linux
           # Additional permutations
-          - os: [self-hosted, windows, oracle]
-            os-name: Windows
-            engines: AzureStorage-Oracle
-          - os: [self-hosted, windows, oracle]
-            os-name: Windows
-            engines: Oracle
-          - os: [self-hosted, windows, oracle]
-            os-name: Windows
-            engines: Oracle-RabbitMQ
           - os: windows-2019
             os-name: Windows
             engines: RabbitMQ-RavenDB3
@@ -90,10 +84,10 @@ jobs:
           tag: TimeoutMigrationTool
       - name: Setup Oracle
         if: contains(matrix.engines, 'Oracle')
-        shell: pwsh
-        run: |
-          echo "Adding environment variables for Oracle connection strings"
-          echo "OracleConnectionString=User Id=particular;Password=Welcome1;Data Source=127.0.0.1:1521/nservicebus;Enlist=dynamic" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+        uses: Particular/setup-oracle-action@v1.0.0
+        with:
+          connection-string-name: OracleConnectionString
+          tag: TimeoutMigrationTool
       - name: Setup RabbitMQ
         if: contains(matrix.engines, 'RabbitMQ')
         uses: Particular/setup-rabbitmq-action@v1.1.0
