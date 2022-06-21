@@ -84,7 +84,7 @@ jobs:
           tag: TimeoutMigrationTool
       - name: Setup Oracle
         if: contains(matrix.engines, 'Oracle')
-        uses: Particular/setup-oracle-action@v1.0.0
+        uses: Particular/setup-oracle-action@v1.0.1
         with:
           connection-string-name: OracleConnectionString
           tag: TimeoutMigrationTool
