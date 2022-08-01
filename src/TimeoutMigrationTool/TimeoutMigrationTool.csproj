@@ -16,14 +16,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Storage.Blobs" Version="12.12.0" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
         <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
         <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
         <PackageReference Include="NHibernate" Version="5.3.12" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-        <PackageReference Include="Particular.Packaging" Version="2.1.0" PrivateAssets="All" />
+        <PackageReference Include="Particular.Packaging" Version="2.2.0" PrivateAssets="All" />
         <PackageReference Include="RabbitMQ.Client" Version="6.2.4" />
     </ItemGroup>
 
