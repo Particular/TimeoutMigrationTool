@@ -105,10 +105,10 @@ jobs:
         id: setup-ravendb
         uses: Particular/setup-ravendb-action@3f7caf796203bd4c5eb7bc479d371b02e2c9f0c6
         with:
-            single-connection-string-name: RavenSingleNodeUrl
-            cluster-connection-string-name: CommaSeparatedRavenClusterUrls
+            single-connection-string-name: Raven4Url
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
-            ravendb-mode: Both
+            ravendb-mode: Single
+            ravendb-version: 4.2
             tag: TimeoutMigrationTool
       - name: Install SQL Server
         if: contains(matrix.engines, 'SqlServer')
