@@ -102,44 +102,14 @@ jobs:
           choco install ravendb3 --version 3.5.3 -y
           echo "Raven3Url=http://localhost:8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
       - name: Setup RavenDB4
-        if: contains(matrix.engines, 'RavenDB4')
-        id: setup-ravendb4
-        shell: pwsh
-        run: |
-          $hostInfo = curl -H Metadata:true "169.254.169.254/metadata/instance?api-version=2017-08-01" | ConvertFrom-Json
-          $region = $hostInfo.compute.location
-          
-          $hostname = "psw-tmt-ravendb-$(Get-Random)"
-          echo "::set-output name=hostname::$hostname"
-          echo "Creating RavenDB container $hostname in $region (This can take a while.)"
-          $details = az container create --image ravendb/ravendb:4.2-ubuntu-latest  --name $hostname --location $region --dns-name-label $hostname --resource-group GitHubActions-RG --cpu 4 --memory 16 --ports 8080 38888 --ip-address public -e RAVEN_ARGS='--ServerUrl=http://0.0.0.0:8080 --Setup.Mode=None --License.Eula.Accepted=true --Security.UnsecuredAccessAllowed=PublicNetwork' | ConvertFrom-Json
-          $fqdn=$details.ipAddress.fqdn
-          echo "::add-mask::$fqdn"
-
-          echo "Verifying connection..."
-          $tcpClient = New-Object Net.Sockets.TcpClient
-          $timeout = (Get-Date).AddMinutes(6)
-
-          while ($tcpClient.Connected -ne "True") {
-            try {
-                echo "Trying to connect..."
-                $tcpClient.Connect($fqdn, 8080)
-            } catch {
-                if ($timeout -lt (Get-Date)) {
-                  throw "Timed out verifying connection"
-                }
-
-                Start-Sleep -Seconds 2
-            }
-          }
-
-          echo "Connection verified"
-          $tcpClient.Close()
-
-          echo "Tagging container image"
-          $dateTag = "Created=$(Get-Date -Format "yyyy-MM-dd")"
-          $ignore = az tag create --resource-id $details.id --tags Package=TimeoutMigrationTool RunnerOS=${{ runner.os }} $dateTag
-          echo "Raven4Url=http://$($fqdn):8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+        id: setup-ravendb
+        uses: Particular/setup-ravendb-action@v1.0.0
+        with:
+            single-connection-string-name: Raven4Url
+            ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
+            ravendb-mode: Single
+            ravendb-version: 4.2
+            tag: TimeoutMigrationTool
       - name: Install SQL Server
         if: contains(matrix.engines, 'SqlServer')
         uses: Particular/install-sql-server-action@main
@@ -151,12 +121,3 @@ jobs:
         uses: Particular/run-tests-action@v1.3.0
         with:
           report-warnings: ${{ secrets.TESTS_REPORT_WARNINGS }}
-      - name: Teardown infrastructure
-        if: ${{ always() }}
-        shell: pwsh
-        run: |
-          if ('${{ matrix.engines }}' -match 'RavenDB4') {
-            echo "Removing container ${{ steps.setup-ravendb4.outputs.hostname }}"
-            az container delete --resource-group GitHubActions-RG --name ${{ steps.setup-ravendb4.outputs.hostname }} --yes
-            echo "Removal complete"
-          }
