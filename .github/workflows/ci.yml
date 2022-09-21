@@ -103,7 +103,7 @@ jobs:
           echo "Raven3Url=http://localhost:8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
       - name: Setup RavenDB4
         id: setup-ravendb
-        uses: Particular/setup-ravendb-action@v1.0.0
+        uses: Particular/setup-ravendb-action@v1.1.0
         with:
             single-connection-string-name: Raven4Url
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
