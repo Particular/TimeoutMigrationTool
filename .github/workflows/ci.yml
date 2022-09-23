@@ -102,6 +102,7 @@ jobs:
           choco install ravendb3 --version 3.5.3 -y
           echo "Raven3Url=http://localhost:8080" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
       - name: Setup RavenDB4
+        if: contains(matrix.engines, 'RavenDB4')
         id: setup-ravendb
         uses: Particular/setup-ravendb-action@v1.1.0
         with:
