@@ -1,10 +1,10 @@
 ﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
+    using System;
+    using System.Threading.Tasks;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Customization;
     using NServiceBus.AcceptanceTesting.Support;
-    using System;
-    using System.Threading.Tasks;
 
     public class DefaultServer : IEndpointSetupTemplate
     {
@@ -22,7 +22,7 @@
 
             var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
 
-            transport.UseConventionalRoutingTopology();
+            transport.UseConventionalRoutingTopology(QueueType.Quorum);
 
             endpointConfiguration.RegisterComponentsAndInheritanceHierarchy(runDescriptor);
 

@@ -1,14 +1,14 @@
 ﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
     using NServiceBus.Persistence.Sql;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
 
     [TestFixture]
     [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
@@ -365,7 +365,7 @@
                 {
                     for (var x = 0; x < TestContext.NumberOfTimeouts; x++)
                     {
-                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout { Id = message.Id });
+                        await RequestTimeout(context, DateTime.Now.AddDays(7 + x), new Timeout());
                     }
                 }
 
@@ -389,7 +389,6 @@
 
         public class Timeout
         {
-            public Guid Id { get; set; }
         }
 
         public class StartSagaMessage : ICommand
