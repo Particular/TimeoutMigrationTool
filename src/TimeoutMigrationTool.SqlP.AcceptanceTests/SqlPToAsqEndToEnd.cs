@@ -33,7 +33,7 @@
 
                     transportConfig.DelayedDelivery().DisableTimeoutManager();
 
-                    ec.UseSerialization<NewtonsoftSerializer>();
+                    ec.UseSerialization<NewtonsoftJsonSerializer>();
                 })).Run(TimeSpan.FromSeconds(10));
 
             // Sending a delayed delivery message using TimeoutManager
@@ -47,7 +47,7 @@
                     persistence.ConnectionBuilder(
                         connectionBuilder: () => new SqlConnection(connectionString));
 
-                    ec.UseSerialization<NewtonsoftSerializer>();
+                    ec.UseSerialization<NewtonsoftJsonSerializer>();
                 })
                 .When(async (session, c) =>
                 {
@@ -79,7 +79,7 @@
 
                     transportConfig.DelayedDelivery().DisableTimeoutManager();
 
-                    ec.UseSerialization<NewtonsoftSerializer>();
+                    ec.UseSerialization<NewtonsoftJsonSerializer>();
                 }))
                 // Start the reporting endpoint to receieve and process the delayed message
                 .WithEndpoint<AsqTarget>(b => b.CustomConfig(ec =>
@@ -90,7 +90,7 @@
 
                     transportConfig.DelayedDelivery().DisableTimeoutManager();
 
-                    ec.UseSerialization<NewtonsoftSerializer>();
+                    ec.UseSerialization<NewtonsoftJsonSerializer>();
                 })
                 .When(async (_, c) =>
                 {

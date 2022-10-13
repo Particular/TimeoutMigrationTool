@@ -11,7 +11,7 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
+    //[EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     class SqlTimeoutSourceTests : SqlPAcceptanceTest
     {
         static string sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint));
@@ -376,8 +376,7 @@
 
                 protected override void ConfigureHowToFindSaga(SagaPropertyMapper<TestSaga> mapper)
                 {
-                    mapper.ConfigureMapping<StartSagaMessage>(a => a.Id).ToSaga(s => s.Id);
-                    mapper.ConfigureMapping<Timeout>(a => a.Id).ToSaga(s => s.Id);
+                    mapper.MapSaga(s => s.CorrelationProperty).ToMessage<StartSagaMessage>(m => m.Id);
                 }
             }
         }
@@ -385,6 +384,7 @@
         public class TestSaga : ContainSagaData
         {
             public override Guid Id { get; set; }
+            public Guid CorrelationProperty { get; set; }
         }
 
         public class Timeout

@@ -54,7 +54,7 @@
                     ec.UseTransport<RabbitMQTransport>()
                     .ConnectionString(rabbitUrl);
 
-                    ec.UseSerialization<NewtonsoftSerializer>();
+                    ec.UseSerialization<NewtonsoftJsonSerializer>();
                 })
                 .When(async (_, c) =>
                 {

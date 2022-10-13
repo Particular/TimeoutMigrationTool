@@ -37,7 +37,7 @@
             endpointConfig.AuditProcessedMessagesTo("audit");
             endpointConfig.UseTransport<AzureStorageQueueTransport>().ConnectionString("UseDevelopmentStorage=true;");
             endpointConfig.EnableInstallers();
-            endpointConfig.UseSerialization<NewtonsoftSerializer>();
+            endpointConfig.UseSerialization<NewtonsoftJsonSerializer>();
             endpointConfig.DisableFeature<TimeoutManager>();
             endpointConfig.DisableFeature<MessageDrivenSubscriptions>();
         }
