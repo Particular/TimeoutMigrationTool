@@ -11,7 +11,7 @@
     using System.Threading.Tasks;
 
     [TestFixture]
-    //[EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
+    [EnvironmentSpecificTest(EnvironmentVariables.SqlServerConnectionString)]
     class SqlTimeoutSourceTests : SqlPAcceptanceTest
     {
         static string sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlPEndpoint));
