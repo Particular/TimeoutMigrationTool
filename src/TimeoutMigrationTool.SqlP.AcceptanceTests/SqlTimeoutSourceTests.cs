@@ -356,7 +356,7 @@
                 EndpointSetup<LegacyTimeoutManagerEndpoint>();
             }
 
-            [SqlSaga(correlationProperty: nameof(TestSaga.Id))]
+            [SqlSaga(correlationProperty: nameof(TestSaga.CorrelationProperty))]
             public class TimeoutSaga : Saga<TestSaga>, IAmStartedByMessages<StartSagaMessage>, IHandleTimeouts<Timeout>
             {
                 public Context TestContext { get; set; }
