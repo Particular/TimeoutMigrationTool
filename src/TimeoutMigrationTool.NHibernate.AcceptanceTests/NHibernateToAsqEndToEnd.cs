@@ -60,7 +60,7 @@
 
                     transportConfig.DelayedDelivery().DisableTimeoutManager();
 
-                    ec.UseSerialization<NewtonsoftSerializer>();
+                    ec.UseSerialization<NewtonsoftJsonSerializer>();
                 }))
                 .WithEndpoint<AsqTarget>(b => b.CustomConfig(ec =>
                 {
@@ -70,7 +70,7 @@
 
                     transportConfig.DelayedDelivery().DisableTimeoutManager();
 
-                    ec.UseSerialization<NewtonsoftSerializer>();
+                    ec.UseSerialization<NewtonsoftJsonSerializer>();
                 })
                 .When(async (_, c) =>
                 {

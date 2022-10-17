@@ -4,7 +4,7 @@
         <TargetFrameworks>net472</TargetFrameworks>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="NServiceBus.Persistence.Sql" Version="5.0.0" />
+        <PackageReference Include="NServiceBus.Persistence.Sql" Version="6.6.0" />
         <PackageReference Include="NServiceBus.Transport.Msmq" Version="1.2.1" />
     </ItemGroup>
 </Project>

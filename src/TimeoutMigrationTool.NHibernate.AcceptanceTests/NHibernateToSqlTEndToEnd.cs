@@ -48,7 +48,7 @@
 
                         transportConfig.ConnectionString(connectionString);
 
-                        ec.UseSerialization<NewtonsoftSerializer>();
+                        ec.UseSerialization<NewtonsoftJsonSerializer>();
                     })
                     .When(async (_, c) =>
                     {
