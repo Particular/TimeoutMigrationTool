@@ -8,11 +8,11 @@
     using McMaster.Extensions.CommandLineUtils;
     using Microsoft.Extensions.Logging;
     using Msmq;
+    using NHibernate;
+    using NoOp;
     using RabbitMq;
     using RavenDB;
     using SqlP;
-    using NHibernate;
-    using NoOp;
     using SqlT;
 
     // usage:
@@ -225,15 +225,15 @@
                         return 1;
                     });
 
-                    ravenDbCommand.Options.Add(sourceRavenDbServerUrlOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbDatabaseNameOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbPrefixOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbVersion);
-                    ravenDbCommand.Options.Add(sourceRavenDbForceUseIndexOption);
+                    ravenDbCommand.AddOption(sourceRavenDbServerUrlOption);
+                    ravenDbCommand.AddOption(sourceRavenDbDatabaseNameOption);
+                    ravenDbCommand.AddOption(sourceRavenDbPrefixOption);
+                    ravenDbCommand.AddOption(sourceRavenDbVersion);
+                    ravenDbCommand.AddOption(sourceRavenDbForceUseIndexOption);
 
                     ravenDbCommand.Command("rabbitmq", ravenToRabbitCommand =>
                     {
-                        ravenToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        ravenToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         ravenToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -259,8 +259,8 @@
 
                     ravenDbCommand.Command("sqlt", ravenDbToSqlTCommand =>
                     {
-                        ravenDbToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        ravenDbToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        ravenDbToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        ravenDbToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         ravenDbToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -287,8 +287,8 @@
 
                     ravenDbCommand.Command("msmq", ravenDbToMsmqCommand =>
                     {
-                        ravenDbToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        ravenDbToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        ravenDbToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        ravenDbToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         ravenDbToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -315,8 +315,8 @@
 
                     ravenDbCommand.Command("asq", ravenDbToAsqCommand =>
                     {
-                        ravenDbToAsqCommand.Options.Add(targetAsqConnectionString);
-                        ravenDbToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        ravenDbToAsqCommand.AddOption(targetAsqConnectionString);
+                        ravenDbToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         ravenDbToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -353,12 +353,12 @@
 
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
-                    sqlpCommand.Options.Add(sourceAspConnectionString);
-                    sqlpCommand.Options.Add(sourceSqlPDialect);
+                    sqlpCommand.AddOption(sourceAspConnectionString);
+                    sqlpCommand.AddOption(sourceSqlPDialect);
 
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
                     {
-                        sqlPToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        sqlPToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         sqlPToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -379,8 +379,8 @@
 
                     sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
                     {
-                        sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        sqlpToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        sqlpToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        sqlpToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         sqlpToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -402,8 +402,8 @@
 
                     sqlpCommand.Command("msmq", sqlpToMsmqCommand =>
                     {
-                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        sqlpToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        sqlpToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         sqlpToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -425,8 +425,8 @@
 
                     sqlpCommand.Command("asq", sqlpToAsqCommand =>
                     {
-                        sqlpToAsqCommand.Options.Add(targetAsqConnectionString);
-                        sqlpToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        sqlpToAsqCommand.AddOption(targetAsqConnectionString);
+                        sqlpToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         sqlpToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -458,12 +458,12 @@
 
                     sourceNHibernateDialect.Validators.Add(new NHibernateDialectValidator());
 
-                    nHibernateCommand.Options.Add(sourceNHibernateConnectionString);
-                    nHibernateCommand.Options.Add(sourceNHibernateDialect);
+                    nHibernateCommand.AddOption(sourceNHibernateConnectionString);
+                    nHibernateCommand.AddOption(sourceNHibernateDialect);
 
                     nHibernateCommand.Command("rabbitmq", nHibernateToRabbitCommand =>
                     {
-                        nHibernateToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        nHibernateToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         nHibernateToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -484,8 +484,8 @@
 
                     nHibernateCommand.Command("sqlt", nHibernateToSqlTCommand =>
                     {
-                        nHibernateToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        nHibernateToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        nHibernateToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        nHibernateToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         nHibernateToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -507,8 +507,8 @@
 
                     nHibernateCommand.Command("msmq", nHibernateToMsmqCommand =>
                     {
-                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        nHibernateToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        nHibernateToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         nHibernateToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -530,8 +530,8 @@
 
                     nHibernateCommand.Command("asq", nHibernateToAsqCommand =>
                     {
-                        nHibernateToAsqCommand.Options.Add(targetAsqConnectionString);
-                        nHibernateToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        nHibernateToAsqCommand.AddOption(targetAsqConnectionString);
+                        nHibernateToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         nHibernateToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -561,15 +561,15 @@
                         return 1;
                     });
 
-                    aspCommand.Options.Add(endpointFilterOption);
-                    aspCommand.Options.Add(sourceAspConnectionString);
-                    aspCommand.Options.Add(sourceAspContainerName);
-                    aspCommand.Options.Add(sourceAspPartitionKeyScope);
-                    aspCommand.Options.Add(sourceAspTimeoutTableName);
+                    aspCommand.AddOption(endpointFilterOption);
+                    aspCommand.AddOption(sourceAspConnectionString);
+                    aspCommand.AddOption(sourceAspContainerName);
+                    aspCommand.AddOption(sourceAspPartitionKeyScope);
+                    aspCommand.AddOption(sourceAspTimeoutTableName);
 
                     aspCommand.Command("rabbitmq", aspToRabbitCommand =>
                     {
-                        aspToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        aspToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         aspToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -596,8 +596,8 @@
 
                     aspCommand.Command("sqlt", aspToSqlTCommand =>
                     {
-                        aspToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        aspToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        aspToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        aspToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         aspToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -627,8 +627,8 @@
 
                     aspCommand.Command("msmq", aspToMsmqCommand =>
                     {
-                        aspToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        aspToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        aspToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        aspToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         aspToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -656,8 +656,8 @@
 
                     aspCommand.Command("asq", aspToAsqCommand =>
                     {
-                        aspToAsqCommand.Options.Add(targetAsqConnectionString);
-                        aspToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        aspToAsqCommand.AddOption(targetAsqConnectionString);
+                        aspToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         aspToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -696,9 +696,9 @@
 
                 migrateCommand.Description = "Performs migration of selected endpoint(s).";
 
-                migrateCommand.Options.Add(allEndpointsOption);
-                migrateCommand.Options.Add(endpointFilterOption);
-                migrateCommand.Options.Add(cutoffTimeOption);
+                migrateCommand.AddOption(allEndpointsOption);
+                migrateCommand.AddOption(endpointFilterOption);
+                migrateCommand.AddOption(cutoffTimeOption);
 
                 migrateCommand.Command("ravendb", ravenDbCommand =>
                 {
@@ -709,14 +709,14 @@
                         return 1;
                     });
 
-                    ravenDbCommand.Options.Add(sourceRavenDbServerUrlOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbDatabaseNameOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbPrefixOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbVersion);
+                    ravenDbCommand.AddOption(sourceRavenDbServerUrlOption);
+                    ravenDbCommand.AddOption(sourceRavenDbDatabaseNameOption);
+                    ravenDbCommand.AddOption(sourceRavenDbPrefixOption);
+                    ravenDbCommand.AddOption(sourceRavenDbVersion);
 
                     ravenDbCommand.Command("rabbitmq", ravenDbToRabbitMqCommand =>
                     {
-                        ravenDbToRabbitMqCommand.Options.Add(targetRabbitConnectionString);
+                        ravenDbToRabbitMqCommand.AddOption(targetRabbitConnectionString);
 
                         ravenDbToRabbitMqCommand.OnExecuteAsync(async ct =>
                         {
@@ -753,8 +753,8 @@
 
                     ravenDbCommand.Command("sqlt", ravenDbPToSqlTCommand =>
                     {
-                        ravenDbPToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        ravenDbPToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        ravenDbPToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        ravenDbPToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         ravenDbPToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -792,8 +792,8 @@
 
                     ravenDbCommand.Command("asq", ravenDbToAsqCommand =>
                     {
-                        ravenDbToAsqCommand.Options.Add(targetAsqConnectionString);
-                        ravenDbToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        ravenDbToAsqCommand.AddOption(targetAsqConnectionString);
+                        ravenDbToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         ravenDbToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -837,8 +837,8 @@
 
                     ravenDbCommand.Command("msmq", ravenDbToMsmqCommand =>
                     {
-                        ravenDbToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        ravenDbToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        ravenDbToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        ravenDbToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         ravenDbToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -918,12 +918,12 @@
 
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
-                    sqlpCommand.Options.Add(sourceSqlPConnectionString);
-                    sqlpCommand.Options.Add(sourceSqlPDialect);
+                    sqlpCommand.AddOption(sourceSqlPConnectionString);
+                    sqlpCommand.AddOption(sourceSqlPDialect);
 
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
                     {
-                        sqlPToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        sqlPToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         sqlPToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -952,8 +952,8 @@
 
                     sqlpCommand.Command("sqlt", sqlPToSqlTCommand =>
                     {
-                        sqlPToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        sqlPToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        sqlPToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        sqlPToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         sqlPToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -984,8 +984,8 @@
 
                     sqlpCommand.Command("asq", sqlPToAsqCommand =>
                     {
-                        sqlPToAsqCommand.Options.Add(targetAsqConnectionString);
-                        sqlPToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        sqlPToAsqCommand.AddOption(targetAsqConnectionString);
+                        sqlPToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         sqlPToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1021,8 +1021,8 @@
 
                     sqlpCommand.Command("msmq", sqlpToMsmqCommand =>
                     {
-                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        sqlpToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        sqlpToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         sqlpToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1089,12 +1089,12 @@
 
                     sourceNHibernateDialect.Validators.Add(new NHibernateDialectValidator());
 
-                    nHibernateCommand.Options.Add(sourceNHibernateConnectionString);
-                    nHibernateCommand.Options.Add(sourceNHibernateDialect);
+                    nHibernateCommand.AddOption(sourceNHibernateConnectionString);
+                    nHibernateCommand.AddOption(sourceNHibernateDialect);
 
                     nHibernateCommand.Command("rabbitmq", nHibernateToRabbitCommand =>
                     {
-                        nHibernateToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        nHibernateToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         nHibernateToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1123,8 +1123,8 @@
 
                     nHibernateCommand.Command("sqlt", nHibernateToSqlTCommand =>
                     {
-                        nHibernateToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        nHibernateToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        nHibernateToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        nHibernateToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         nHibernateToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1155,8 +1155,8 @@
 
                     nHibernateCommand.Command("asq", nHibernateToAsqCommand =>
                     {
-                        nHibernateToAsqCommand.Options.Add(targetAsqConnectionString);
-                        nHibernateToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        nHibernateToAsqCommand.AddOption(targetAsqConnectionString);
+                        nHibernateToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         nHibernateToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1193,8 +1193,8 @@
 
                     nHibernateCommand.Command("msmq", nHibernateToMsmqCommand =>
                     {
-                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        nHibernateToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        nHibernateToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         nHibernateToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1259,15 +1259,15 @@
                         return 1;
                     });
 
-                    aspCommand.Options.Add(endpointFilterOption);
-                    aspCommand.Options.Add(sourceAspConnectionString);
-                    aspCommand.Options.Add(sourceAspContainerName);
-                    aspCommand.Options.Add(sourceAspPartitionKeyScope);
-                    aspCommand.Options.Add(sourceAspTimeoutTableName);
+                    aspCommand.AddOption(endpointFilterOption);
+                    aspCommand.AddOption(sourceAspConnectionString);
+                    aspCommand.AddOption(sourceAspContainerName);
+                    aspCommand.AddOption(sourceAspPartitionKeyScope);
+                    aspCommand.AddOption(sourceAspTimeoutTableName);
 
                     aspCommand.Command("rabbitmq", aspToRabbitCommand =>
                     {
-                        aspToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        aspToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         aspToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1305,8 +1305,8 @@
 
                     aspCommand.Command("sqlt", aspToSqlTCommand =>
                     {
-                        aspToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        aspToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        aspToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        aspToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         aspToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1347,8 +1347,8 @@
 
                     aspCommand.Command("asq", aspToAsqCommand =>
                     {
-                        aspToAsqCommand.Options.Add(targetAsqConnectionString);
-                        aspToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        aspToAsqCommand.AddOption(targetAsqConnectionString);
+                        aspToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         aspToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1393,8 +1393,8 @@
 
                     aspCommand.Command("msmq", nHibernateToMsmqCommand =>
                     {
-                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        nHibernateToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        nHibernateToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        nHibernateToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         nHibernateToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1487,14 +1487,14 @@
                         return 1;
                     });
 
-                    ravenDbCommand.Options.Add(sourceRavenDbServerUrlOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbDatabaseNameOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbPrefixOption);
-                    ravenDbCommand.Options.Add(sourceRavenDbVersion);
+                    ravenDbCommand.AddOption(sourceRavenDbServerUrlOption);
+                    ravenDbCommand.AddOption(sourceRavenDbDatabaseNameOption);
+                    ravenDbCommand.AddOption(sourceRavenDbPrefixOption);
+                    ravenDbCommand.AddOption(sourceRavenDbVersion);
 
                     ravenDbCommand.Command("rabbitmq", ravenToRabbitCommand =>
                     {
-                        ravenToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        ravenToRabbitCommand.AddOption(targetRabbitConnectionString);
                         ravenDbCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
@@ -1519,8 +1519,8 @@
 
                     ravenDbCommand.Command("sqlt", ravenDbToSqlTCommand =>
                     {
-                        ravenDbToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        ravenDbToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        ravenDbToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        ravenDbToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         ravenDbToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1547,8 +1547,8 @@
 
                     ravenDbCommand.Command("asq", ravenDbToAsqCommand =>
                     {
-                        ravenDbToAsqCommand.Options.Add(targetAsqConnectionString);
-                        ravenDbToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        ravenDbToAsqCommand.AddOption(targetAsqConnectionString);
+                        ravenDbToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         ravenDbToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1575,8 +1575,8 @@
 
                     ravenDbCommand.Command("msmq", ravenDbToMsmqCommand =>
                     {
-                        ravenDbToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        ravenDbToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        ravenDbToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        ravenDbToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         ravenDbToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1635,12 +1635,12 @@
 
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
-                    sqlpCommand.Options.Add(sourceAspConnectionString);
-                    sqlpCommand.Options.Add(sourceSqlPDialect);
+                    sqlpCommand.AddOption(sourceAspConnectionString);
+                    sqlpCommand.AddOption(sourceSqlPDialect);
 
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
                     {
-                        sqlPToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        sqlPToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         sqlPToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1661,8 +1661,8 @@
 
                     sqlpCommand.Command("sqlt", sqlpToSqlTCommand =>
                     {
-                        sqlpToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        sqlpToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        sqlpToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        sqlpToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         sqlpToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1684,8 +1684,8 @@
 
                     sqlpCommand.Command("asq", sqlpToAsqCommand =>
                     {
-                        sqlpToAsqCommand.Options.Add(targetAsqConnectionString);
-                        sqlpToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        sqlpToAsqCommand.AddOption(targetAsqConnectionString);
+                        sqlpToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         sqlpToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1707,8 +1707,8 @@
 
                     sqlpCommand.Command("msmq", sqlpToMsmqCommand =>
                     {
-                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        sqlpToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        sqlpToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        sqlpToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         sqlpToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1757,12 +1757,12 @@
 
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
-                    nhbCommand.Options.Add(sourceNHibernateConnectionString);
-                    nhbCommand.Options.Add(sourceNHibernateDialect);
+                    nhbCommand.AddOption(sourceNHibernateConnectionString);
+                    nhbCommand.AddOption(sourceNHibernateDialect);
 
                     nhbCommand.Command("rabbitmq", nhbToRabbitCommand =>
                     {
-                        nhbToRabbitCommand.Options.Add(targetRabbitConnectionString);
+                        nhbToRabbitCommand.AddOption(targetRabbitConnectionString);
 
                         nhbToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1783,8 +1783,8 @@
 
                     nhbCommand.Command("sqlt", nHibernateToSqlTCommand =>
                     {
-                        nHibernateToSqlTCommand.Options.Add(targetSqlTConnectionString);
-                        nHibernateToSqlTCommand.Options.Add(targetSqlTSchemaName);
+                        nHibernateToSqlTCommand.AddOption(targetSqlTConnectionString);
+                        nHibernateToSqlTCommand.AddOption(targetSqlTSchemaName);
 
                         nHibernateToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1806,8 +1806,8 @@
 
                     nhbCommand.Command("asq", nHibernateToAsqCommand =>
                     {
-                        nHibernateToAsqCommand.Options.Add(targetAsqConnectionString);
-                        nHibernateToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        nHibernateToAsqCommand.AddOption(targetAsqConnectionString);
+                        nHibernateToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         nHibernateToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1829,8 +1829,8 @@
 
                     nhbCommand.Command("msmq", nhibernateToMsmqCommand =>
                     {
-                        nhibernateToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        nhibernateToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        nhibernateToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        nhibernateToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         nhibernateToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1877,15 +1877,15 @@
                         return 1;
                     });
 
-                    aspCommand.Options.Add(endpointFilterOption);
-                    aspCommand.Options.Add(sourceAspConnectionString);
-                    aspCommand.Options.Add(sourceAspContainerName);
-                    aspCommand.Options.Add(sourceAspPartitionKeyScope);
-                    aspCommand.Options.Add(sourceAspTimeoutTableName);
+                    aspCommand.AddOption(endpointFilterOption);
+                    aspCommand.AddOption(sourceAspConnectionString);
+                    aspCommand.AddOption(sourceAspContainerName);
+                    aspCommand.AddOption(sourceAspPartitionKeyScope);
+                    aspCommand.AddOption(sourceAspTimeoutTableName);
 
                     aspCommand.Command("rabbitmq", aspToRabbitMqCommand =>
                     {
-                        aspToRabbitMqCommand.Options.Add(targetRabbitConnectionString);
+                        aspToRabbitMqCommand.AddOption(targetRabbitConnectionString);
 
                         aspToRabbitMqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1912,7 +1912,7 @@
 
                     aspCommand.Command("sqlt", aspToSqlTCommand =>
                     {
-                        aspToSqlTCommand.Options.Add(targetSqlTConnectionString);
+                        aspToSqlTCommand.AddOption(targetSqlTConnectionString);
 
                         aspToSqlTCommand.OnExecuteAsync(async ct =>
                         {
@@ -1940,8 +1940,8 @@
 
                     aspCommand.Command("asq", aspToAsqCommand =>
                     {
-                        aspToAsqCommand.Options.Add(targetAsqConnectionString);
-                        aspToAsqCommand.Options.Add(targetAsqDelayedDeliveryTableName);
+                        aspToAsqCommand.AddOption(targetAsqConnectionString);
+                        aspToAsqCommand.AddOption(targetAsqDelayedDeliveryTableName);
 
                         aspToAsqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1969,8 +1969,8 @@
 
                     aspCommand.Command("msmq", aspToMsmqCommand =>
                     {
-                        aspToMsmqCommand.Options.Add(targetMsmqSqlConnectionString);
-                        aspToMsmqCommand.Options.Add(targetMsmqSqlSchemaName);
+                        aspToMsmqCommand.AddOption(targetMsmqSqlConnectionString);
+                        aspToMsmqCommand.AddOption(targetMsmqSqlSchemaName);
 
                         aspToMsmqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1998,7 +1998,7 @@
 
                     aspCommand.Command("noop", aspToNoopCommand =>
                     {
-                        aspToNoopCommand.Options.Add(targetSqlTConnectionString);
+                        aspToNoopCommand.AddOption(targetSqlTConnectionString);
 
                         aspToNoopCommand.OnExecuteAsync(async ct =>
                         {
