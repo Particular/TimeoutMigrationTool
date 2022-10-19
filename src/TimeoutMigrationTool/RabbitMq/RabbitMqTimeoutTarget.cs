@@ -95,7 +95,7 @@
 
                     try
                     {
-                        channel.ExchangeDeclarePassive("nsb.delay-delivery");
+                        channel.ExchangeDeclarePassive(delayDeliveryExchangeV2);
                     }
                     catch (Exception)
                     {
@@ -106,11 +106,11 @@
 
                     if (CheckIfEndpointIsUsingConventionalRoutingTopology(destination))
                     {
-                        channel.ExchangeBind(destination, "nsb.delay-delivery", $"#.{destination}");
+                        channel.ExchangeBind(destination, delayDeliveryExchangeV2, $"#.{destination}");
                     }
                     else
                     {
-                        channel.QueueBind(destination, "nsb.delay-delivery", $"#.{destination}");
+                        channel.QueueBind(destination, delayDeliveryExchangeV2, $"#.{destination}");
                     }
                 }
             }
@@ -156,6 +156,7 @@
         readonly RabbitBatchWriter batchWriter;
 
         const int maxNumberOfBitsToUse = 28;
+        const string delayDeliveryExchangeV2 = "nsb.v2.delay-delivery";
 
         public const int MaxDelayInSeconds = (1 << maxNumberOfBitsToUse) - 1;
         public const int MaxLevel = maxNumberOfBitsToUse - 1;
