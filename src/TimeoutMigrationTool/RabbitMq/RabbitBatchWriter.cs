@@ -162,6 +162,6 @@
 
         readonly ILogger logger;
         readonly string rabbitConnectionString;
-        static string LevelName(int level) => $"nsb.delay-level-{level:D2}";
+        static string LevelName(int level) => $"nsb.v2.delay-level-{level:D2}";
     }
 }

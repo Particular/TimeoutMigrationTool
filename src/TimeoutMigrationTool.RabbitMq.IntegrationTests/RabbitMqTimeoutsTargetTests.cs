@@ -42,8 +42,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             model.QueueDeclare(EndpointWithShortTimeout, true, false, false, null);
 
             model.ExchangeDeclare(DelayDeliveryExchange, "topic", true, false, null);
-            model.ExchangeDeclare("nsb.delay-level-00", "topic", true, false, null);
-            model.ExchangeBind(DelayDeliveryExchange, "nsb.delay-level-00", "*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.0.#");
+            model.ExchangeDeclare("nsb.v2.delay-level-00", "topic", true, false, null);
+            model.ExchangeBind(DelayDeliveryExchange, "nsb.v2.delay-level-00", "*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.0.#");
         }
 
         [TearDown]
