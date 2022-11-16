@@ -22,7 +22,7 @@
         <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.4.0" />
         <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="10.0.4" />
         <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.80" />
-        <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
+        <PackageReference Include="NServiceBus.AcceptanceTesting" Version="8.0.0" />
         <PackageReference Include="NServiceBus.RabbitMQ" Version="6.1.1" />
         <PackageReference Include="NUnit" Version="3.13.3" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.3.0" />
