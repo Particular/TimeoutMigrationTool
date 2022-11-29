@@ -109,7 +109,7 @@ jobs:
             single-connection-string-name: Raven4Url
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
             ravendb-mode: Single
-            ravendb-version: 4.2
+            ravendb-version: 4.2-ubuntu-latest
             tag: TimeoutMigrationTool
       - name: Install SQL Server
         if: contains(matrix.engines, 'SqlServer')
