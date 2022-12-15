@@ -80,19 +80,19 @@ jobs:
           creds: ${{ secrets.AZURE_ACI_CREDENTIALS }}
       - name: Setup Azure Storage
         if: contains(matrix.engines, 'AzureStorage')
-        uses: Particular/setup-azurestorage-action@v1.0.0
+        uses: Particular/setup-azurestorage-action@v1.1.0
         with:
           connection-string-name: AzureStorageConnectionString
           tag: TimeoutMigrationTool
       - name: Setup Oracle
         if: contains(matrix.engines, 'Oracle')
-        uses: Particular/setup-oracle-action@v1.2.0
+        uses: Particular/setup-oracle-action@v1.3.0
         with:
           connection-string-name: OracleConnectionString
           tag: TimeoutMigrationTool
       - name: Setup RabbitMQ
         if: contains(matrix.engines, 'RabbitMQ')
-        uses: Particular/setup-rabbitmq-action@v1.2.0
+        uses: Particular/setup-rabbitmq-action@v1.3.0
         with:
           connection-string-name: RabbitMqConnectionString
           host-env-var-name: RabbitMqHost
@@ -106,7 +106,7 @@ jobs:
       - name: Setup RavenDB4
         if: contains(matrix.engines, 'RavenDB4')
         id: setup-ravendb
-        uses: Particular/setup-ravendb-action@v1.3.1
+        uses: Particular/setup-ravendb-action@v1.4.0
         with:
             single-connection-string-name: Raven4Url
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
@@ -121,6 +121,6 @@ jobs:
           catalog: nservicebus
           extra-params: "Encrypt=False;"
       - name: Run tests
-        uses: Particular/run-tests-action@v1.3.0
+        uses: Particular/run-tests-action@v1.4.0
         with:
           report-warnings: ${{ secrets.TESTS_REPORT_WARNINGS }}
