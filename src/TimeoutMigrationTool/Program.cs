@@ -353,7 +353,7 @@
 
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
-                    sqlpCommand.AddOption(sourceAspConnectionString);
+                    sqlpCommand.AddOption(sourceSqlPConnectionString);
                     sqlpCommand.AddOption(sourceSqlPDialect);
 
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
@@ -364,7 +364,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
@@ -386,7 +386,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetSqlTConnectionString.Value();
@@ -409,7 +409,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetMsmqSqlConnectionString.Value();
@@ -1635,7 +1635,7 @@
 
                     sourceSqlPDialect.Validators.Add(new SqlDialectValidator());
 
-                    sqlpCommand.AddOption(sourceAspConnectionString);
+                    sqlpCommand.AddOption(sourceSqlPConnectionString);
                     sqlpCommand.AddOption(sourceSqlPDialect);
 
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
@@ -1646,7 +1646,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
@@ -1668,7 +1668,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetSqlTConnectionString.Value();
@@ -1734,7 +1734,7 @@
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
 
-                            var sourceConnectionString = sourceAspConnectionString.Value();
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
