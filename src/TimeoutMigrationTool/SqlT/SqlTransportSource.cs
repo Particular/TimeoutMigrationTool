@@ -4,15 +4,11 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Data.Common;
-    using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
-    using global::NHibernate.Dialect;
     using Microsoft.Data.SqlClient;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Particular.TimeoutMigrationTool.SqlP;
-    using RabbitMQ.Client;
 
     class SqlTransportSource : ITimeoutsSource
     {
@@ -27,7 +23,7 @@
         {
             this.logger = logger;
             this.batchSize = batchSize;
-            this.connection = new SqlConnection(connectionString);
+            connection = new SqlConnection(connectionString);
         }
 
         public async Task Abort()
@@ -70,6 +66,7 @@
             command.CommandText = SqlConstants.MarkMigrationAsCompleted;
 
             await command.ExecuteNonQueryAsync();
+            logger.LogInformation("Migration Completed");
         }
         public async Task<IReadOnlyList<EndpointInfo>> ListEndpoints(DateTime cutOffTime)
         {
@@ -235,10 +232,10 @@
                 throw new Exception("Multiple uncompleted migrations found");
             }
 
-            return new SqlTToolState(this.connection, migrationRunId, runParameters, endpoint, numberOfBatches, status);
+            return new SqlTToolState(connection, migrationRunId, runParameters, endpoint, numberOfBatches, status);
         }
 
-        private async ValueTask EnsureConnectionOpen()
+        async ValueTask EnsureConnectionOpen()
         {
             if (connection.State != ConnectionState.Open)
             {

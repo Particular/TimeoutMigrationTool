@@ -24,12 +24,7 @@ namespace Particular.TimeoutMigrationTool.ASB
             try
             {
                 await EnsureQueueExists(AsbConstants.MigrationQueue);
-              //  await EnsureQueueExists(endpoint.EndpointName);
                 var result = await _azureServiceBusEndpoint.GetQueueAsync(endpoint.EndpointName);
-                //if (result.Status == EntityStatus.Active)
-                //{
-                //    return migrationsResult;
-                //}
             }
             catch (Exception)
             {
