@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using ASB;
     using Asp;
     using ASQ;
     using McMaster.Extensions.CommandLineUtils;
@@ -72,6 +73,13 @@
                     Description = "The sql dialect to use",
                     Inherited = true
                 };
+
+            var sourceSqlsConnectionString = new CommandOption($"-s|--{ApplicationOptions.SqlSourceConnectionString}",
+                CommandOptionType.SingleValue)
+            {
+                Description = "Connection string for source storage",
+                Inherited = true
+            };
 
             var sourceNHibernateConnectionString = new CommandOption($"--{ApplicationOptions.NHibernateSourceConnectionString}",
                 CommandOptionType.SingleValue)
@@ -202,6 +210,12 @@
                     Description = "The name of the delayed delivery table for ASQ. Only necessary if the default was overidden in the endpoint configuration."
                 };
 
+            var targetAsbConnectionString =
+                new CommandOption($"-t|--{ApplicationOptions.AsbTargetConnectionString}",
+                    CommandOptionType.SingleValue)
+                {
+                    Description = "The connection string to the Azure Service Bus"
+                };
             var runParameters = new Dictionary<string, string>();
 
             var batchSize = 1024;
@@ -216,6 +230,38 @@
 
                 previewCommand.Description = "Lists endpoints that can be migrated.";
 
+                previewCommand.Command("sqls", sqlsCommand =>
+                {
+                    sqlsCommand.OnExecute(() =>
+                    {
+                        Console.WriteLine("Specify a target with the required options.");
+                        sqlsCommand.ShowHelp();
+                        return 1;
+                    });
+
+                    sqlsCommand.AddOption(sourceSqlsConnectionString);
+
+                    sqlsCommand.Command("Asb", sqlsToAsbCommand =>
+                    {
+                        sqlsToAsbCommand.AddOption(targetAsbConnectionString);
+
+                        sqlsToAsbCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlsConnectionString.Value();
+
+                            var targetConnectionString = targetAsbConnectionString.Value();
+
+                            var timeoutsSource = new SqlTransportSource(logger, sourceConnectionString, 100);
+                            var timeoutsTarget = new AsbTarget(new AzureServiceBusEndpoint(targetConnectionString, logger), logger);
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                });
                 previewCommand.Command("ravendb", ravenDbCommand =>
                 {
                     ravenDbCommand.OnExecute(() =>
@@ -445,6 +491,28 @@
                             await runner.Run();
                         });
                     });
+
+
+                    sqlpCommand.Command("asb", sqlpToAsqCommand =>
+                    {
+                        sqlpToAsqCommand.AddOption(targetAsbConnectionString);
+
+                        sqlpToAsqCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetAsbConnectionString.Value();
+
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutsTarget = new AsbTarget(new AzureServiceBusEndpoint(targetConnectionString, logger), logger);
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
                 });
 
                 previewCommand.Command("nhb", nHibernateCommand =>
@@ -550,6 +618,27 @@
                             await runner.Run();
                         });
                     });
+                    nHibernateCommand.Command("asb", nHibernateToAsbCommand =>
+                    {
+                        nHibernateToAsbCommand.AddOption(targetAsbConnectionString);
+
+                        nHibernateToAsbCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetAsbConnectionString.Value();
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsTarget = new AsbTarget(new AzureServiceBusEndpoint(targetConnectionString, logger), logger);
+
+                            var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
                 });
 
                 previewCommand.Command("asp", aspCommand =>
@@ -1050,7 +1139,6 @@
                                 timeoutsTarget);
                         });
                     });
-
                     sqlpCommand.Command("noop", sqlpCommandToNoopCommand =>
                     {
                         sqlpCommandToNoopCommand.OnExecuteAsync(async ct =>
@@ -1069,6 +1157,30 @@
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 5 * batchSize);
                             var timeoutsTarget = new NoOpTarget();
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
+
+                    sqlpCommand.Command("asb", sqlToAsbCommand =>
+                    {
+                        sqlToAsbCommand.AddOption(targetAsbConnectionString);
+
+                        sqlToAsbCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlPConnectionString.Value();
+                            var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
+
+                            var targetConnectionString = targetAsbConnectionString.Value();
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, 1024);
+                            var timeoutsTarget = new AsbTarget(new AzureServiceBusEndpoint(targetConnectionString, logger), logger);
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -1224,6 +1336,30 @@
                         });
                     });
 
+                    nHibernateCommand.Command("asb", nHibernateToAsbCommand =>
+                    {
+                        nHibernateToAsbCommand.AddOption(targetAsbConnectionString);
+
+                        nHibernateToAsbCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceNHibernateConnectionString.Value();
+                            var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
+
+                            var targetConnectionString = targetAsbConnectionString.Value();
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, 1024, dialect);
+                            var timeoutsTarget = new AsbTarget(new AzureServiceBusEndpoint(targetConnectionString, logger), logger);
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
+
                     nHibernateCommand.Command("noop", nHibernateToNoopCommand =>
                     {
                         nHibernateToNoopCommand.OnExecuteAsync(async ct =>
@@ -1248,6 +1384,62 @@
                                 timeoutsTarget);
                         });
                     });
+                });
+
+                migrateCommand.Command("sqls", sqlsCommand =>
+                {
+                    sqlsCommand.OnExecute(() =>
+                    {
+                        Console.WriteLine("Specify a target with the required options.");
+                        sqlsCommand.ShowHelp();
+                        return 1;
+                    });
+
+                    sqlsCommand.AddOption(sourceSqlsConnectionString);
+
+                    sqlsCommand.Command("Asb", sqlsToAsbCommand =>
+                    {
+                        sqlsToAsbCommand.AddOption(targetAsbConnectionString);
+
+                        sqlsToAsbCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlsConnectionString.Value();
+
+                            var targetConnectionString = targetAsbConnectionString.Value();
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            var timeoutsSource = new SqlTransportSource(logger, sourceConnectionString, 100);
+                            var timeoutsTarget = new AsbTarget(new AzureServiceBusEndpoint(targetConnectionString, logger), logger);
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
+                    sqlsCommand.Command("noop", aspToNoopCommand =>
+                    {
+                        aspToNoopCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlsConnectionString.Value();
+
+                            var targetConnectionString = targetAsbConnectionString.Value();
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            var timeoutsSource = new SqlTransportSource(logger, sourceConnectionString, 100);
+                            var timeoutsTarget = new NoOpTarget();
+
+                            var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
+
+                            await RunMigration(logger, endpointFilter, cutoffTime, runParameters, timeoutsSource,
+                                timeoutsTarget);
+                        });
+                    });
+
                 });
 
                 migrateCommand.Command("asp", aspCommand =>

@@ -7,6 +7,7 @@ namespace Particular.TimeoutMigrationTool
         public const string RavenVersion = "ravenVersion";
         public const string ForceUseIndex = "forceUseIndex";
         public const string RavenTimeoutPrefix = "prefix";
+
         public const string CutoffTime = "cutoffTime";
         public const string RabbitMqTargetConnectionString = "target";
         public const string MsmqSqlTargetConnectionString = "target";
@@ -26,5 +27,6 @@ namespace Particular.TimeoutMigrationTool
         public const string NHibernateSourceDialect = "dialect";
         public const string AsqTargetConnectionString = "target";
         public const string AsqDelayedDeliveryTableName = "delayedtablename";
+        public const string AsbTargetConnectionString = "target";
     }
 }
