@@ -2213,6 +2213,37 @@
                         });
                     });
                 });
+
+                abortCommand.Command("sqls", sqlsCommand =>
+                {
+                    sqlsCommand.OnExecute(() =>
+                    {
+                        Console.WriteLine("Specify a target with the required options.");
+                        sqlsCommand.ShowHelp();
+                        return 1;
+                    });
+                    sqlsCommand.AddOption(sourceSqlsConnectionString);
+
+                    sqlsCommand.Command("noop", sqlsToNoopCommand =>
+                    {
+
+                        sqlsToNoopCommand.OnExecuteAsync(async ct =>
+                        {
+                            var logger = new ConsoleLogger(verboseOption.HasValue());
+
+                            var sourceConnectionString = sourceSqlsConnectionString.Value();
+
+                            var cutoffTime = GetCutoffTime(cutoffTimeOption);
+
+                            var timeoutsSource = new SqlTransportSource(logger, sourceConnectionString, 100);
+                            var timeoutsTarget = new NoOpTarget();
+
+                            var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
+                            await runner.Run();
+                        });
+                    });
+
+                });
             });
 
             app.HelpOption(true);

@@ -124,11 +124,10 @@ EXEC sp_releaseapplock @Resource = '{0}_lock'";
             return $@"
 BEGIN TRANSACTION
     DELETE [{migrationTableName}]
-        OUTPUT DELETED.Id,
-            DELETED.Destination,
+        OUTPUT 
+            DELETED.Headers,
             DELETED.State,
-            DELETED.Time,
-            DELETED.Headers
+            DELETED.Time
     INTO [{endpointName}.Delayed]
     WHERE [{migrationTableName}].Status <> 2;
 
