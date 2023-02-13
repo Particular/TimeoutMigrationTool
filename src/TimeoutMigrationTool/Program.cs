@@ -160,6 +160,13 @@
                     Description = "The connection string for the target transport"
                 };
 
+            var targetRabbitUseV1DelayInfrastructure =
+                new CommandOption($"--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}",
+                    CommandOptionType.NoValue)
+                {
+                    Description = "Use Version 1 of the RabbitMQ Delay Infrastructure",
+                };
+
             var targetSqlTConnectionString =
                 new CommandOption($"-t|--{ApplicationOptions.SqlTTargetConnectionString}",
                     CommandOptionType.SingleValue)
@@ -234,6 +241,7 @@
                     ravenDbCommand.Command("rabbitmq", ravenToRabbitCommand =>
                     {
                         ravenToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        ravenToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         ravenToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -243,6 +251,7 @@
                             var databaseName = sourceRavenDbDatabaseNameOption.Value();
                             var prefix = sourceRavenDbPrefixOption.Value();
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
                             var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
                                 ? RavenDbVersion.ThreeDotFive
                                 : RavenDbVersion.Four;
@@ -250,7 +259,7 @@
 
                             var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, forceUseIndex);
-                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var transportAdapter = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
                             var runner = new PreviewRunner(logger, timeoutStorage, transportAdapter);
 
                             await runner.Run();
@@ -359,6 +368,7 @@
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
                     {
                         sqlPToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        sqlPToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         sqlPToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -368,9 +378,10 @@
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, batchSize);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -464,6 +475,7 @@
                     nHibernateCommand.Command("rabbitmq", nHibernateToRabbitCommand =>
                     {
                         nHibernateToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        nHibernateToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         nHibernateToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -473,9 +485,10 @@
                             var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, batchSize, dialect);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -570,6 +583,7 @@
                     aspCommand.Command("rabbitmq", aspToRabbitCommand =>
                     {
                         aspToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        aspToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         aspToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -583,11 +597,12 @@
                             var endpointName = endpointFilterOption.Value();
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
                                 sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
                                 partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var runner = new PreviewRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -717,6 +732,7 @@
                     ravenDbCommand.Command("rabbitmq", ravenDbToRabbitMqCommand =>
                     {
                         ravenDbToRabbitMqCommand.AddOption(targetRabbitConnectionString);
+                        ravenDbToRabbitMqCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         ravenDbToRabbitMqCommand.OnExecuteAsync(async ct =>
                         {
@@ -726,6 +742,7 @@
                             var databaseName = sourceRavenDbDatabaseNameOption.Value();
                             var prefix = sourceRavenDbPrefixOption.Value();
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
                             var ravenVersion = sourceRavenDbVersion.Value() == "3.5"
                                 ? RavenDbVersion.ThreeDotFive
                                 : RavenDbVersion.Four;
@@ -742,7 +759,7 @@
                             runParameters.Add(ApplicationOptions.RavenVersion, ravenVersion.ToString());
 
                             var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix, ravenVersion, forceUseIndex);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -924,6 +941,7 @@
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
                     {
                         sqlPToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        sqlPToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         sqlPToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -932,6 +950,7 @@
                             var sourceConnectionString = sourceSqlPConnectionString.Value();
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
@@ -941,7 +960,7 @@
                             runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
 
                             var timeoutsSource = new SqlTimeoutsSource(sourceConnectionString, dialect, batchSize);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -1095,6 +1114,7 @@
                     nHibernateCommand.Command("rabbitmq", nHibernateToRabbitCommand =>
                     {
                         nHibernateToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        nHibernateToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         nHibernateToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1103,6 +1123,7 @@
                             var sourceConnectionString = sourceNHibernateConnectionString.Value();
                             var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
@@ -1112,7 +1133,7 @@
                             runParameters.Add(ApplicationOptions.RabbitMqTargetConnectionString, targetConnectionString);
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, batchSize, dialect);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -1268,6 +1289,7 @@
                     aspCommand.Command("rabbitmq", aspToRabbitCommand =>
                     {
                         aspToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        aspToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         aspToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1278,6 +1300,7 @@
                             var sourcePartitionKeyScope = sourceAspPartitionKeyScope.Value();
                             var sourceTimeoutTableName = sourceAspTimeoutTableName.Value();
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var cutoffTime = GetCutoffTime(cutoffTimeOption);
 
@@ -1294,7 +1317,7 @@
                             var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
                                 sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
                                 partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var endpointFilter = ParseEndpointFilter(allEndpointsOption, endpointFilterOption);
 
@@ -1495,6 +1518,8 @@
                     ravenDbCommand.Command("rabbitmq", ravenToRabbitCommand =>
                     {
                         ravenToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        ravenToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
+
                         ravenDbCommand.OnExecuteAsync(async ct =>
                         {
                             var logger = new ConsoleLogger(verboseOption.HasValue());
@@ -1507,10 +1532,11 @@
                                 : RavenDbVersion.Four;
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var timeoutStorage = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, prefix,
                                 ravenVersion, false);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
                             await runner.Run();
@@ -1641,6 +1667,7 @@
                     sqlpCommand.Command("rabbitmq", sqlPToRabbitCommand =>
                     {
                         sqlPToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        sqlPToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         sqlPToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1650,9 +1677,10 @@
                             var dialect = SqlDialect.Parse(sourceSqlPDialect.Value());
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var timeoutStorage = new SqlTimeoutsSource(sourceConnectionString, dialect, batchSize);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var runner = new AbortRunner(logger, timeoutStorage, timeoutsTarget);
                             await runner.Run();
@@ -1763,6 +1791,7 @@
                     nhbCommand.Command("rabbitmq", nhbToRabbitCommand =>
                     {
                         nhbToRabbitCommand.AddOption(targetRabbitConnectionString);
+                        nhbToRabbitCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         nhbToRabbitCommand.OnExecuteAsync(async ct =>
                         {
@@ -1772,9 +1801,10 @@
                             var dialect = DatabaseDialect.Parse(sourceNHibernateDialect.Value());
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var timeoutsSource = new NHibernateTimeoutsSource(sourceConnectionString, batchSize, dialect);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();
@@ -1886,6 +1916,7 @@
                     aspCommand.Command("rabbitmq", aspToRabbitMqCommand =>
                     {
                         aspToRabbitMqCommand.AddOption(targetRabbitConnectionString);
+                        aspToRabbitMqCommand.AddOption(targetRabbitUseV1DelayInfrastructure);
 
                         aspToRabbitMqCommand.OnExecuteAsync(async ct =>
                         {
@@ -1897,13 +1928,14 @@
                             var sourceTimeoutTableName = sourceAspTimeoutTableName.Value();
 
                             var targetConnectionString = targetRabbitConnectionString.Value();
+                            var targetUseVersion1DelayInfrastructure = targetRabbitUseV1DelayInfrastructure.HasValue();
 
                             var endpointName = endpointFilterOption.Value();
 
                             var timeoutsSource = new AspTimeoutsSource(sourceConnectionString, batchSize,
                                 sourceContainerName ?? "timeoutstate", endpointName, sourceTimeoutTableName,
                                 partitionKeyScope: sourcePartitionKeyScope ?? AspConstants.PartitionKeyScope);
-                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString);
+                            var timeoutsTarget = new RabbitMqTimeoutTarget(logger, targetConnectionString, targetUseVersion1DelayInfrastructure);
 
                             var runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
                             await runner.Run();

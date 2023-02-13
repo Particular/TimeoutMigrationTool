@@ -22,7 +22,7 @@
 
             var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
 
-            transport.UseConventionalRoutingTopology();
+            transport.UseConventionalRoutingTopology(QueueType.Classic);
 
             endpointConfiguration.RegisterComponentsAndInheritanceHierarchy(runDescriptor);
 

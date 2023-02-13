@@ -59,7 +59,7 @@
                     {
                         var logger = new TestLoggingAdapter(c);
                         var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion, false);
-                        var timeoutsTarget = new RabbitMqTimeoutTarget(logger, rabbitUrl);
+                        var timeoutsTarget = new RabbitMqTimeoutTarget(logger, rabbitUrl, false);
                         var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
                         await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());

@@ -26,5 +26,6 @@ namespace Particular.TimeoutMigrationTool
         public const string NHibernateSourceDialect = "dialect";
         public const string AsqTargetConnectionString = "target";
         public const string AsqDelayedDeliveryTableName = "delayedtablename";
+        public const string UseRabbitDelayInfrastructureVersion1 = "useV1";
     }
 }

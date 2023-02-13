@@ -60,7 +60,7 @@
                 {
                     var logger = new TestLoggingAdapter(c);
                     var timeoutStorage = CreateTimeoutStorage(sourceEndpoint);
-                    var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl);
+                    var transportAdapter = new RabbitMqTimeoutTarget(logger, rabbitUrl, false);
                     var migrationRunner = new MigrationRunner(logger, timeoutStorage, transportAdapter);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());

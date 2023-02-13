@@ -8,11 +8,15 @@
 
     public class RabbitMqTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTargetBatchMigrator
     {
-        public RabbitMqTimeoutTarget(ILogger logger, string targetConnectionString)
+        public RabbitMqTimeoutTarget(ILogger logger, string targetConnectionString, bool useV1)
         {
             this.logger = logger;
             this.targetConnectionString = targetConnectionString;
-            batchWriter = new RabbitBatchWriter(logger, targetConnectionString);
+            v1Exchange = "nsb.delay-delivery";
+            v2Exchange = "nsb.v2.delay-delivery";
+            this.useV1 = useV1;
+            exchange = useV1 ? v1Exchange : v2Exchange;
+            batchWriter = new RabbitBatchWriter(logger, targetConnectionString, useV1);
             factory = new ConnectionFactory { Uri = new Uri(targetConnectionString) };
         }
 
@@ -95,22 +99,59 @@
 
                     try
                     {
-                        channel.ExchangeDeclarePassive("nsb.delay-delivery");
+                        channel.ExchangeDeclarePassive(v1Exchange);
+                        v1ExchangeExists = true;
                     }
                     catch (Exception)
                     {
-                        result.Problems.Add("The delivery infrastructure on rabbit broker does not exist. It means that the endpoint is running old version of Rabbit Transport package.");
+                        v1ExchangeExists = false;
+                    }
+
+                    try
+                    {
+                        channel.ExchangeDeclarePassive(v2Exchange);
+                        v2ExchangeExists = true;
+                    }
+                    catch (Exception)
+                    {
+                        v2ExchangeExists = false;
+                    }
+
+                    if (useV1 && !v1ExchangeExists) //trying to use v1 delay infrastructure
+                    {
+                        if (v2ExchangeExists)
+                        {
+                            result.Problems.Add($"The v1 delay infrastructure on RabbitMQ broker does not exist. The v2 delay infrastructure on the broker does exist. Try not using the --{ApplicationOptions.UseRabbitDelayInfrastructureVersion1} flag.");
+                        }
+                        else
+                        {
+                            result.Problems.Add("The v1 delay infrastructure on RabbitMQ broker does not exist. It means that the endpoint is running old version of RabbitMQ Transport package.");
+                        }
+
                         return new ValueTask<MigrationCheckResult>(result);
                     }
 
+                    if (useV1 == false && !v2ExchangeExists) //trying to use v2 delay infrastructure
+                    {
+                        if (v1ExchangeExists)
+                        {
+                            result.Problems.Add($"The v2 delay infrastructure on RabbitMQ broker does not exist, but the v1 delay infrastructure does. If you want to use the v1 delay infrastructure use the --{ApplicationOptions.UseRabbitDelayInfrastructureVersion1} flag. ");
+                        }
+                        else
+                        {
+                            result.Problems.Add("The v2 delay infrastructure on RabbitMQ broker does not exist. It means that the endpoint is running old version of RabbitMQ Transport package.");
+                        }
+
+                        return new ValueTask<MigrationCheckResult>(result);
+                    }
 
                     if (CheckIfEndpointIsUsingConventionalRoutingTopology(destination))
                     {
-                        channel.ExchangeBind(destination, "nsb.delay-delivery", $"#.{destination}");
+                        channel.ExchangeBind(destination, exchange, $"#.{destination}");
                     }
                     else
                     {
-                        channel.QueueBind(destination, "nsb.delay-delivery", $"#.{destination}");
+                        channel.QueueBind(destination, exchange, $"#.{destination}");
                     }
                 }
             }
@@ -154,6 +195,12 @@
 
         readonly ILogger logger;
         readonly RabbitBatchWriter batchWriter;
+        readonly string exchange;
+        readonly string v1Exchange;
+        readonly string v2Exchange;
+        bool v2ExchangeExists;
+        bool v1ExchangeExists;
+        bool useV1;
 
         const int maxNumberOfBitsToUse = 28;
 
