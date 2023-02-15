@@ -12,8 +12,6 @@
         {
             this.logger = logger;
             this.targetConnectionString = targetConnectionString;
-            v1Exchange = "nsb.delay-delivery";
-            v2Exchange = "nsb.v2.delay-delivery";
             this.useV1 = useV1;
             exchange = useV1 ? v1Exchange : v2Exchange;
             batchWriter = new RabbitBatchWriter(logger, targetConnectionString, useV1);
@@ -85,6 +83,9 @@
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
+                bool v1ExchangeExists;
+                bool v2ExchangeExists;
+
                 foreach (var destination in endpoint.Destinations)
                 {
                     try
@@ -190,17 +191,15 @@
             QueueCreator.DeleteStagingInfrastructure(channel);
         }
 
-        string targetConnectionString;
-        ConnectionFactory factory;
-
         readonly ILogger logger;
-        readonly RabbitBatchWriter batchWriter;
+        readonly string targetConnectionString;
+        readonly bool useV1;
         readonly string exchange;
-        readonly string v1Exchange;
-        readonly string v2Exchange;
-        bool v2ExchangeExists;
-        bool v1ExchangeExists;
-        bool useV1;
+        readonly RabbitBatchWriter batchWriter;
+        readonly ConnectionFactory factory;
+
+        const string v1Exchange = "nsb.delay-delivery";
+        const string v2Exchange = "nsb.v2.delay-delivery";
 
         const int maxNumberOfBitsToUse = 28;
 
