@@ -1,37 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <DefineConstants>$(DefineConstants);ORACLE</DefineConstants>
-        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-        <IsPackable>false</IsPackable>
-    </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);ORACLE</DefineConstants>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\ConfigureExtensions.cs" Link="ConfigureExtensions.cs" />
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\EndpointCustomizationConfigurationExtensions.cs" Link="EndpointCustomizationConfigurationExtensions.cs" />
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\LegacyTimeoutManagerEndpoint.cs" Link="LegacyTimeoutManagerEndpoint.cs" />
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateTimeoutsSourceTests.cs" Link="NHibernateTimeoutsSourceTests.cs" />
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateToAsqEndToEnd.cs" Link="NHibernateToAsqEndToEnd.cs" />
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateToRabbitMqEndToEnd.cs" Link="NHibernateToRabbitMqEndToEnd.cs" />
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\DefaultServer.cs" Link="DefaultServer.cs" />
-        <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\TestLoggingAdapter.cs" Link="TestLoggingAdapter.cs" />
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\ConfigureExtensions.cs" Link="ConfigureExtensions.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\EndpointCustomizationConfigurationExtensions.cs" Link="EndpointCustomizationConfigurationExtensions.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\LegacyTimeoutManagerEndpoint.cs" Link="LegacyTimeoutManagerEndpoint.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateTimeoutsSourceTests.cs" Link="NHibernateTimeoutsSourceTests.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateToAsqEndToEnd.cs" Link="NHibernateToAsqEndToEnd.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\NHibernateToRabbitMqEndToEnd.cs" Link="NHibernateToRabbitMqEndToEnd.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\DefaultServer.cs" Link="DefaultServer.cs" />
+    <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\TestLoggingAdapter.cs" Link="TestLoggingAdapter.cs" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="GitHubActionsTestLogger" Version="2.0.1" />
-        <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.4.0" />
-        <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="10.0.4" />
-        <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.80" />
-        <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
-        <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.4" />
-        <PackageReference Include="NUnit" Version="3.13.3" />
-        <PackageReference Include="NUnit3TestAdapter" Version="4.3.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="GitHubActionsTestLogger" Version="2.0.1" />
+    <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.4.0" />
+    <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="10.0.4" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.80" />
+    <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
+    <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.4" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\TestHelper\TestHelper.csproj" />
-        <ProjectReference Include="..\TimeoutMigrationTool\TimeoutMigrationTool.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TestHelper\TestHelper.csproj" />
+    <ProjectReference Include="..\TimeoutMigrationTool\TimeoutMigrationTool.csproj" />
+  </ItemGroup>
 
 </Project>
