@@ -164,7 +164,7 @@
                 new CommandOption($"--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}",
                     CommandOptionType.NoValue)
                 {
-                    Description = "Use Version 1 of the RabbitMQ Delay Infrastructure",
+                    Description = "Use version 1 of the RabbitMQ transport delay infrastructure",
                 };
 
             var targetSqlTConnectionString =

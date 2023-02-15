@@ -122,11 +122,11 @@
                     {
                         if (v2ExchangeExists)
                         {
-                            result.Problems.Add($"The v1 delay infrastructure on RabbitMQ broker does not exist. The v2 delay infrastructure on the broker does exist. Try not using the --{ApplicationOptions.UseRabbitDelayInfrastructureVersion1} flag.");
+                            result.Problems.Add($"The v1 delay infrastructure does not exist on the RabbitMQ broker, but the v2 delay infrastructure does exist. Remove the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v2 delay infrastructure.");
                         }
                         else
                         {
-                            result.Problems.Add("The v1 delay infrastructure on RabbitMQ broker does not exist. It means that the endpoint is running old version of RabbitMQ Transport package.");
+                            result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
                         }
 
                         return new ValueTask<MigrationCheckResult>(result);
@@ -136,11 +136,11 @@
                     {
                         if (v1ExchangeExists)
                         {
-                            result.Problems.Add($"The v2 delay infrastructure on RabbitMQ broker does not exist, but the v1 delay infrastructure does. If you want to use the v1 delay infrastructure use the --{ApplicationOptions.UseRabbitDelayInfrastructureVersion1} flag. ");
+                            result.Problems.Add($"The v2 delay infrastructure does not exist on the RabbitMQ broker, but the v1 delay infrastructure does exist. Add the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v1 delay infrastructure.");
                         }
                         else
                         {
-                            result.Problems.Add("The v2 delay infrastructure on RabbitMQ broker does not exist. It means that the endpoint is running old version of RabbitMQ Transport package.");
+                            result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
                         }
 
                         return new ValueTask<MigrationCheckResult>(result);
