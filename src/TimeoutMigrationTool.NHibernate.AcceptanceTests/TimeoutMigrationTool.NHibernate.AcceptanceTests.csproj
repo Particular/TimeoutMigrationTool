@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <DefineConstants>$(DefineConstants);SQLSERVER</DefineConstants>
-        <TargetFrameworks>netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -11,7 +11,7 @@
             <Link>MsSqlMicrosoftDataClientHelper.cs</Link>
         </Compile>
     </ItemGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="GitHubActionsTestLogger" Version="2.0.1" />
         <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
