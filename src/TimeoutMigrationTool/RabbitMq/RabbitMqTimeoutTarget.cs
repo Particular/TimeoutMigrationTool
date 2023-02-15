@@ -75,105 +75,96 @@
         ValueTask<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
             var result = new MigrationCheckResult();
+
             if ((endpoint.LongestTimeout - DateTime.UtcNow).TotalSeconds > MaxDelayInSeconds)
             {
                 result.Problems.Add($"{endpoint.EndpointName} - has a timeout that has further away date than allowed {MaxDelayInSeconds} seconds (8.5 years).");
             }
 
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            using var connection = factory.CreateConnection();
+
+            var v1ExchangeExists = CheckIfExchangeExists(connection, v1Exchange);
+            var v2ExchangeExists = CheckIfExchangeExists(connection, v2Exchange);
+
+            if (useV1 && !v1ExchangeExists) //trying to use v1 delay infrastructure
             {
-                bool v1ExchangeExists;
-                bool v2ExchangeExists;
-
-                foreach (var destination in endpoint.Destinations)
+                if (v2ExchangeExists)
                 {
-                    try
-                    {
-                        channel.QueueDeclarePassive(destination);
-                    }
-                    catch (Exception)
-                    {
-                        result.Problems.Add($"There is no queue for destination {destination}.");
-                        continue;
-                    }
+                    result.Problems.Add($"The v1 delay infrastructure does not exist on the RabbitMQ broker, but the v2 delay infrastructure does exist. Remove the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v2 delay infrastructure.");
+                }
+                else
+                {
+                    result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
+                }
 
-                    try
-                    {
-                        channel.ExchangeDeclarePassive(v1Exchange);
-                        v1ExchangeExists = true;
-                    }
-                    catch (Exception)
-                    {
-                        v1ExchangeExists = false;
-                    }
+                return new ValueTask<MigrationCheckResult>(result);
+            }
+            else if (useV1 == false && !v2ExchangeExists) //trying to use v2 delay infrastructure
+            {
+                if (v1ExchangeExists)
+                {
+                    result.Problems.Add($"The v2 delay infrastructure does not exist on the RabbitMQ broker, but the v1 delay infrastructure does exist. Add the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v1 delay infrastructure.");
+                }
+                else
+                {
+                    result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
+                }
 
-                    try
-                    {
-                        channel.ExchangeDeclarePassive(v2Exchange);
-                        v2ExchangeExists = true;
-                    }
-                    catch (Exception)
-                    {
-                        v2ExchangeExists = false;
-                    }
+                return new ValueTask<MigrationCheckResult>(result);
+            }
 
-                    if (useV1 && !v1ExchangeExists) //trying to use v1 delay infrastructure
-                    {
-                        if (v2ExchangeExists)
-                        {
-                            result.Problems.Add($"The v1 delay infrastructure does not exist on the RabbitMQ broker, but the v2 delay infrastructure does exist. Remove the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v2 delay infrastructure.");
-                        }
-                        else
-                        {
-                            result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
-                        }
+            foreach (var destination in endpoint.Destinations)
+            {
+                var destinationExists = CheckIfQueueExists(connection, destination);
 
-                        return new ValueTask<MigrationCheckResult>(result);
-                    }
+                if (destinationExists == false)
+                {
+                    result.Problems.Add($"There is no queue for destination '{destination}'.");
+                    continue;
+                }
 
-                    if (useV1 == false && !v2ExchangeExists) //trying to use v2 delay infrastructure
-                    {
-                        if (v1ExchangeExists)
-                        {
-                            result.Problems.Add($"The v2 delay infrastructure does not exist on the RabbitMQ broker, but the v1 delay infrastructure does exist. Add the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v1 delay infrastructure.");
-                        }
-                        else
-                        {
-                            result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
-                        }
+                using var channel = connection.CreateModel();
 
-                        return new ValueTask<MigrationCheckResult>(result);
-                    }
-
-                    if (CheckIfEndpointIsUsingConventionalRoutingTopology(destination))
-                    {
-                        channel.ExchangeBind(destination, exchange, $"#.{destination}");
-                    }
-                    else
-                    {
-                        channel.QueueBind(destination, exchange, $"#.{destination}");
-                    }
+                if (CheckIfExchangeExists(connection, destination))
+                {
+                    channel.ExchangeBind(destination, exchange, $"#.{destination}");
+                }
+                else
+                {
+                    channel.QueueBind(destination, exchange, $"#.{destination}");
                 }
             }
 
             return new ValueTask<MigrationCheckResult>(result);
         }
 
-        bool CheckIfEndpointIsUsingConventionalRoutingTopology(string destination)
+        bool CheckIfExchangeExists(IConnection connection, string exchange)
         {
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            using var channel = connection.CreateModel();
+
+            try
             {
-                try
-                {
-                    channel.ExchangeDeclarePassive(destination);
-                    return true;
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
+                channel.ExchangeDeclarePassive(exchange);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        bool CheckIfQueueExists(IConnection connection, string queue)
+        {
+            using var channel = connection.CreateModel();
+
+            try
+            {
+                channel.QueueDeclarePassive(queue);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
