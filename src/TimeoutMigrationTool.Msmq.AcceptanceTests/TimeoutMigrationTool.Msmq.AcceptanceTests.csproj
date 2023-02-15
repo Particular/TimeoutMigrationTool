@@ -2,24 +2,23 @@
 
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TestHelper\TestHelper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="GitHubActionsTestLogger" Version="2.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.6.0" />
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.4.0" />
     <PackageReference Include="NServiceBus.Persistence.Sql" Version="6.6.0" />
     <PackageReference Include="NServiceBus.Transport.Msmq" Version="1.2.1" />
-
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.3.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
-    <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\TestHelper\TestHelper.csproj" />
   </ItemGroup>
 
 </Project>
