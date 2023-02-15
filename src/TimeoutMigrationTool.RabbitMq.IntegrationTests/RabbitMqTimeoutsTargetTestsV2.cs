@@ -10,7 +10,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
     [TestFixture]
     [EnvironmentSpecificTest(EnvironmentVariables.RabbitMqHost)]
-    public class RabbitMqTimeoutsTargetTests
+    public class RabbitMqTimeoutsTargetTestsV2
     {
         string rabbitUrl;
         ConnectionFactory factory;
@@ -18,7 +18,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         string ExistingEndpointNameUsingDirect = "ExistingEndpointNameDirect";
         string NonExistingEndpointName = "NonExistingEndpointName";
         string EndpointWithShortTimeout = "EndpointWithShortTimeout";
-        string DelayDeliveryExchange = "nsb.delay-delivery";
+        string DelayDeliveryExchange = "nsb.v2.delay-delivery";
 
         [OneTimeSetUp]
         public void TestSuitSetup()
@@ -42,8 +42,8 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             model.QueueDeclare(EndpointWithShortTimeout, true, false, false, null);
 
             model.ExchangeDeclare(DelayDeliveryExchange, "topic", true, false, null);
-            model.ExchangeDeclare("nsb.delay-level-00", "topic", true, false, null);
-            model.ExchangeBind(DelayDeliveryExchange, "nsb.delay-level-00", "*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.0.#");
+            model.ExchangeDeclare("nsb.v2.delay-level-00", "topic", true, false, null);
+            model.ExchangeBind(DelayDeliveryExchange, "nsb.v2.delay-level-00", "*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.0.#");
         }
 
         [TearDown]
@@ -61,7 +61,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [Test]
         public async Task AbleToMigrate_ExistingDestination_ReturnsNoProblems()
         {
-            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl, false);
 
             var info = new EndpointInfo
             {
@@ -81,7 +81,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [Test]
         public async Task AbleToMigrate_DelayedDeliveryDoesNotExist_ReturnsProblems()
         {
-            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl, false);
             DeleteDelayDelivery();
 
             var info = new EndpointInfo
@@ -109,7 +109,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [Test]
         public async Task AbleToMigrate_NonExistingDestination_ReturnsProblems()
         {
-            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl, false);
 
             var info = new EndpointInfo
             {
@@ -126,7 +126,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [Test]
         public async Task AbleToMigrate_TimeoutHigherThan9Years_ReturnsProblems()
         {
-            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl, false);
 
             var info = new EndpointInfo
             {
@@ -145,7 +145,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         {
             const int BatchNumber = 33;
 
-            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl, false);
 
             var info = new EndpointInfo
             {
@@ -187,7 +187,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [Test]
         public async Task Should_delete_staging_queue_when_aborting()
         {
-            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl, false);
             var endpointName = "FakeEndpoint";
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Abort(endpointName);
@@ -201,7 +201,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
         [Test]
         public async Task Should_delete_staging_queue_when_completing()
         {
-            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl);
+            var sut = new RabbitMqTimeoutTarget(new TestLoggingAdapter(), rabbitUrl, false);
             var endpointName = "FakeEndpoint";
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(endpointName);
             await sut.Complete(endpointName);

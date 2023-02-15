@@ -60,7 +60,7 @@
                 {
                     var logger = new TestLoggingAdapter(c);
                     var timeoutsSource = new NHibernateTimeoutsSource(connectionString, 512, DatabaseDialect);
-                    var timeoutsTarget = new RabbitMqTimeoutTarget(logger, rabbitUrl);
+                    var timeoutsTarget = new RabbitMqTimeoutTarget(logger, rabbitUrl, false);
                     var migrationRunner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());

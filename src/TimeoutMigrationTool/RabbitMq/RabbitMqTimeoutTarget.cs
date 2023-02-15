@@ -8,11 +8,13 @@
 
     public class RabbitMqTimeoutTarget : ITimeoutsTarget, ITimeoutsTarget.IEndpointTargetBatchMigrator
     {
-        public RabbitMqTimeoutTarget(ILogger logger, string targetConnectionString)
+        public RabbitMqTimeoutTarget(ILogger logger, string targetConnectionString, bool useV1)
         {
             this.logger = logger;
             this.targetConnectionString = targetConnectionString;
-            batchWriter = new RabbitBatchWriter(logger, targetConnectionString);
+            this.useV1 = useV1;
+            exchange = useV1 ? v1Exchange : v2Exchange;
+            batchWriter = new RabbitBatchWriter(logger, targetConnectionString, useV1);
             factory = new ConnectionFactory { Uri = new Uri(targetConnectionString) };
         }
 
@@ -73,65 +75,96 @@
         ValueTask<MigrationCheckResult> VerifyEndpointIsReadyForNativeTimeouts(EndpointInfo endpoint)
         {
             var result = new MigrationCheckResult();
+
             if ((endpoint.LongestTimeout - DateTime.UtcNow).TotalSeconds > MaxDelayInSeconds)
             {
                 result.Problems.Add($"{endpoint.EndpointName} - has a timeout that has further away date than allowed {MaxDelayInSeconds} seconds (8.5 years).");
             }
 
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            using var connection = factory.CreateConnection();
+
+            var v1ExchangeExists = CheckIfExchangeExists(connection, v1Exchange);
+            var v2ExchangeExists = CheckIfExchangeExists(connection, v2Exchange);
+
+            if (useV1 && !v1ExchangeExists) //trying to use v1 delay infrastructure
             {
-                foreach (var destination in endpoint.Destinations)
+                if (v2ExchangeExists)
                 {
-                    try
-                    {
-                        channel.QueueDeclarePassive(destination);
-                    }
-                    catch (Exception)
-                    {
-                        result.Problems.Add($"There is no queue for destination {destination}.");
-                        continue;
-                    }
+                    result.Problems.Add($"The v1 delay infrastructure does not exist on the RabbitMQ broker, but the v2 delay infrastructure does exist. Remove the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v2 delay infrastructure.");
+                }
+                else
+                {
+                    result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
+                }
 
-                    try
-                    {
-                        channel.ExchangeDeclarePassive("nsb.delay-delivery");
-                    }
-                    catch (Exception)
-                    {
-                        result.Problems.Add("The delivery infrastructure on rabbit broker does not exist. It means that the endpoint is running old version of Rabbit Transport package.");
-                        return new ValueTask<MigrationCheckResult>(result);
-                    }
+                return new ValueTask<MigrationCheckResult>(result);
+            }
+            else if (useV1 == false && !v2ExchangeExists) //trying to use v2 delay infrastructure
+            {
+                if (v1ExchangeExists)
+                {
+                    result.Problems.Add($"The v2 delay infrastructure does not exist on the RabbitMQ broker, but the v1 delay infrastructure does exist. Add the '--{ApplicationOptions.UseRabbitDelayInfrastructureVersion1}' option to use the v1 delay infrastructure.");
+                }
+                else
+                {
+                    result.Problems.Add("No delay infrastructure found on the RabbitMQ broker. Create the delay infrastructure before running this tool.");
+                }
 
+                return new ValueTask<MigrationCheckResult>(result);
+            }
 
-                    if (CheckIfEndpointIsUsingConventionalRoutingTopology(destination))
-                    {
-                        channel.ExchangeBind(destination, "nsb.delay-delivery", $"#.{destination}");
-                    }
-                    else
-                    {
-                        channel.QueueBind(destination, "nsb.delay-delivery", $"#.{destination}");
-                    }
+            foreach (var destination in endpoint.Destinations)
+            {
+                var destinationExists = CheckIfQueueExists(connection, destination);
+
+                if (destinationExists == false)
+                {
+                    result.Problems.Add($"There is no queue for destination '{destination}'.");
+                    continue;
+                }
+
+                using var channel = connection.CreateModel();
+
+                if (CheckIfExchangeExists(connection, destination))
+                {
+                    channel.ExchangeBind(destination, exchange, $"#.{destination}");
+                }
+                else
+                {
+                    channel.QueueBind(destination, exchange, $"#.{destination}");
                 }
             }
 
             return new ValueTask<MigrationCheckResult>(result);
         }
 
-        bool CheckIfEndpointIsUsingConventionalRoutingTopology(string destination)
+        bool CheckIfExchangeExists(IConnection connection, string exchange)
         {
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            using var channel = connection.CreateModel();
+
+            try
             {
-                try
-                {
-                    channel.ExchangeDeclarePassive(destination);
-                    return true;
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
+                channel.ExchangeDeclarePassive(exchange);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        bool CheckIfQueueExists(IConnection connection, string queue)
+        {
+            using var channel = connection.CreateModel();
+
+            try
+            {
+                channel.QueueDeclarePassive(queue);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -149,11 +182,15 @@
             QueueCreator.DeleteStagingInfrastructure(channel);
         }
 
-        string targetConnectionString;
-        ConnectionFactory factory;
-
         readonly ILogger logger;
+        readonly string targetConnectionString;
+        readonly bool useV1;
+        readonly string exchange;
         readonly RabbitBatchWriter batchWriter;
+        readonly ConnectionFactory factory;
+
+        const string v1Exchange = "nsb.delay-delivery";
+        const string v2Exchange = "nsb.v2.delay-delivery";
 
         const int maxNumberOfBitsToUse = 28;
 

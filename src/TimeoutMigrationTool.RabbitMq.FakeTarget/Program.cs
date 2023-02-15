@@ -34,7 +34,7 @@
         {
             endpointConfig.SendFailedMessagesTo("error");
             endpointConfig.AuditProcessedMessagesTo("audit");
-            endpointConfig.UseTransport<RabbitMQTransport>().UseConventionalRoutingTopology()
+            endpointConfig.UseTransport<RabbitMQTransport>().UseConventionalRoutingTopology(QueueType.Classic)
                 .ConnectionString("host=localhost;username=guest;password=guest");
             endpointConfig.EnableInstallers();
         }

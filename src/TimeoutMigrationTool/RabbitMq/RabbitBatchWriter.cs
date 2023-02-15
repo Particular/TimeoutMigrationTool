@@ -11,10 +11,11 @@
 
     public class RabbitBatchWriter
     {
-        public RabbitBatchWriter(ILogger logger, string rabbitConnectionString)
+        public RabbitBatchWriter(ILogger logger, string rabbitConnectionString, bool useV1)
         {
             this.logger = logger;
             this.rabbitConnectionString = rabbitConnectionString;
+            this.versionString = useV1 ? "." : $".v2.";
         }
 
         public Task<int> WriteTimeoutsToStagingQueue(IReadOnlyList<TimeoutData> timeouts, string stageExchangeName)
@@ -162,6 +163,8 @@
 
         readonly ILogger logger;
         readonly string rabbitConnectionString;
-        static string LevelName(int level) => $"nsb.delay-level-{level:D2}";
+        readonly string versionString;
+
+        string LevelName(int level) => $"nsb{versionString}delay-level-{level:D2}";
     }
 }
