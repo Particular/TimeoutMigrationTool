@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.4" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.4" />
+  </ItemGroup>
 
 </Project>

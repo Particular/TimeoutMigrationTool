@@ -1,10 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFrameworks>net472</TargetFrameworks>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="NServiceBus.Persistence.Sql" Version="6.6.0" />
-        <PackageReference Include="NServiceBus.Transport.Msmq" Version="1.2.1" />
-    </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NServiceBus.Persistence.Sql" Version="6.6.2" />
+    <PackageReference Include="NServiceBus.Transport.Msmq" Version="1.2.1" />
+  </ItemGroup>
+
 </Project>

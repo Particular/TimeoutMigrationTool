@@ -1,11 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>net48;net6.0;net7.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.13.3" />
   </ItemGroup>
+
+  <!-- Workaround to prevent VS test discovery error -->
+  <ItemGroup>
+    <ProjectCapability Remove="TestContainer" />
+  </ItemGroup>
+  <!-- End Workaround -->
 
 </Project>
