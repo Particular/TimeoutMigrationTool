@@ -4,17 +4,16 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
     using System;
     using System.Diagnostics;
     using System.IO;
+    using NUnit.Framework;
 
     public class MigrationRunner
     {
         public static void Run(string connectionString)
         {
-            var currentFolder = Directory.GetCurrentDirectory();
-
-            var isDebug = currentFolder.IndexOf(@"\bin\Debug\", StringComparison.InvariantCultureIgnoreCase) != -1;
+            var isDebug = TestContext.CurrentContext.TestDirectory.IndexOf(@"\bin\Debug\", StringComparison.OrdinalIgnoreCase) != -1;
             var build = isDebug ? "Debug" : "Release";
 
-            var exePath = currentFolder + $@"\..\TimeoutMigrationTool\bin\{build}\net6.0\TimeoutMigrationTool.dll";
+            var exePath = Path.GetFullPath(TestContext.CurrentContext.TestDirectory + $@"\..\..\..\..\TimeoutMigrationTool\bin\{build}\net6.0\TimeoutMigrationTool.dll");
             var args = $@"exec {exePath} migrate --allEndpoints sqlp  --source ""{connectionString}"" --dialect MsSqlServer msmq --target ""{connectionString}""";
 
             var startInfo = new ProcessStartInfo("dotnet", args)
@@ -31,9 +30,18 @@ namespace TimeoutMigrationTool.Msmq.AcceptanceTests
 
             process.Start();
             process.BeginErrorReadLine();
-            Console.WriteLine(process.StandardOutput.ReadToEnd());
+            var standardOutput = process.StandardOutput.ReadToEnd();
             process.WaitForExit(60000);
-            Console.WriteLine($"{Environment.NewLine}Standard error:{Environment.NewLine}{standardError}{Environment.NewLine}");
+
+            if (!string.IsNullOrEmpty(standardOutput))
+            {
+                Console.WriteLine($"{Environment.NewLine}Standard output:{Environment.NewLine}{standardOutput}{Environment.NewLine}");
+            }
+
+            if (!string.IsNullOrEmpty(standardError))
+            {
+                throw new Exception(standardError);
+            }
         }
     }
 }
