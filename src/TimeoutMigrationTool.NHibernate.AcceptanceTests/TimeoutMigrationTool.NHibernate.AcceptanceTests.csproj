@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
@@ -21,7 +21,7 @@
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.4.0" />
     <PackageReference Include="NServiceBus.SqlServer" Version="6.3.4" />
     <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="10.0.4" />
-    <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.4" />
+    <PackageReference Include="NServiceBus.RabbitMQ" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>
