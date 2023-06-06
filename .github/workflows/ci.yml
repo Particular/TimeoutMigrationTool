@@ -117,6 +117,6 @@ jobs:
           catalog: nservicebus
           extra-params: "Encrypt=False;"
       - name: Run tests
-        uses: Particular/run-tests-action@v1.5.1
+        uses: Particular/run-tests-action@v1.6.0
         with:
           report-warnings: ${{ secrets.TESTS_REPORT_WARNINGS }}
