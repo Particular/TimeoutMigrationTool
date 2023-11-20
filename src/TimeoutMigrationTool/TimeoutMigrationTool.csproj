@@ -24,7 +24,7 @@
     <PackageReference Include="NHibernate" Version="5.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Particular.Packaging" Version="3.0.0" PrivateAssets="All" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.7.0" />
   </ItemGroup>
 
 </Project>
