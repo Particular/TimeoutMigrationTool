@@ -25,6 +25,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Particular.Packaging" Version="3.0.0" PrivateAssets="All" />
     <PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.35.0" />
   </ItemGroup>
 
 </Project>
