@@ -52,11 +52,11 @@ jobs:
         shell: pwsh
         run: exit $(If ($env:SECRETS_AVAILABLE -eq 'true') { 0 } Else { 1 })
       - name: Checkout
-        uses: actions/checkout@v3.6.0
+        uses: actions/checkout@v4.1.1
         with:
           fetch-depth: 0
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3.2.0
+        uses: actions/setup-dotnet@v4.0.0
         with:
           dotnet-version: |
             7.0.x
@@ -65,13 +65,13 @@ jobs:
         run: dotnet build src --configuration Release
       - name: Upload packages
         if: matrix.upload-packages && runner.os == 'Windows'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.1.0
         with:
           name: NuGet packages
           path: nugets/
           retention-days: 7
       - name: Azure login
-        uses: azure/login@v1.4.6
+        uses: azure/login@v1.6.0
         with:
           creds: ${{ secrets.AZURE_ACI_CREDENTIALS }}
       - name: Setup Azure Storage
@@ -102,7 +102,7 @@ jobs:
       - name: Setup RavenDB4
         if: contains(matrix.engines, 'RavenDB4')
         id: setup-ravendb
-        uses: Particular/setup-ravendb-action@v1.4.0
+        uses: Particular/setup-ravendb-action@v1.5.0
         with:
             single-connection-string-name: Raven4Url
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
