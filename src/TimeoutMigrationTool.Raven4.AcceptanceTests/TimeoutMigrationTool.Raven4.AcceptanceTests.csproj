@@ -21,7 +21,7 @@
     <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.4" />
     <PackageReference Include="NServiceBus.RavenDB" Version="6.5.1" />
     <PackageReference Include="NServiceBus.SqlServer" Version="6.3.4" />
-    <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="10.0.4" />
+    <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="11.0.1" />
   </ItemGroup>
 
   <ItemGroup>
