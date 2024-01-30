@@ -17,7 +17,6 @@ namespace Particular.TimeoutMigrationTool.RabbitMq
             {
                 Uri = new Uri(targetConnectionString),
                 DispatchConsumersAsync = true,
-                UseBackgroundThreadsForIO = true,
                 ConsumerDispatchConcurrency = MaxConcurrency
             };
             prefetchMultiplier = 10;
