@@ -1,15 +1,15 @@
 ﻿namespace TimeoutMigrationTool.Asp.AcceptanceTests
 {
-    using Azure.Storage.Blobs;
-    using Microsoft.Azure.Cosmos.Table;
-    using Particular.TimeoutMigrationTool.Asp;
-    using NServiceBus;
-    using NUnit.Framework;
     using System;
     using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Storage.Blobs;
+    using Microsoft.Azure.Cosmos.Table;
+    using NServiceBus;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool.Asp;
     using static Microsoft.Azure.Cosmos.Table.TableQuery;
 
     [TestFixture]
@@ -35,7 +35,10 @@
 
                 testName = testName.Replace("_", "");
 
-                return testName + "-" + endpointBuilder;
+                // A staging table from one framework run that is deleted will cause another attempt to create it to result in Conflict exception
+                // for several seconds after the delete occurs, causing a problem for other target framework test runs unless the endpoint
+                // names are different
+                return $"{testName}-{endpointBuilder}-net{Environment.Version.Major}";
             };
 
             tableNamePrefix = $"Att{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}{DateTime.UtcNow.Ticks}".ToLowerInvariant();
