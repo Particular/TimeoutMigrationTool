@@ -1,16 +1,16 @@
 ﻿namespace TimeoutMigrationTool.Raven4.AcceptanceTests
 {
-    using NUnit.Framework;
-    using Raven.Client.Documents;
-    using Raven.Client.ServerWide;
-    using Raven.Client.ServerWide.Operations;
     using System;
     using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using NUnit.Framework;
     using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
+    using Raven.Client.Documents;
+    using Raven.Client.ServerWide;
+    using Raven.Client.ServerWide.Operations;
 
     public abstract class RavenDBAcceptanceTest
     {
@@ -32,9 +32,10 @@
 
                 testName = testName.Replace("_", "");
 
-                var result = testName + "." + endpointBuilder;
-                result = result.Replace('.', '-');
-                return result;
+                // A staging table from one framework run that is deleted will cause another attempt to create it to result in Conflict exception
+                // for several seconds after the delete occurs, causing a problem for other target framework test runs unless the endpoint
+                // names are different
+                return $"{testName}-{endpointBuilder}-net{Environment.Version.Major}";
             };
 
             serverUrl = Environment.GetEnvironmentVariable(EnvironmentVariables.Raven4Url);
