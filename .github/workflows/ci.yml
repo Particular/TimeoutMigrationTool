@@ -116,7 +116,7 @@ jobs:
             tag: TimeoutMigrationTool
       - name: Install SQL Server
         if: contains(matrix.engines, 'SqlServer')
-        uses: Particular/install-sql-server-action@main
+        uses: Particular/install-sql-server-action@v1.2.0
         with:
           connection-string-env-var: SqlServerConnectionString
           catalog: nservicebus
