@@ -83,17 +83,21 @@ jobs:
           tag: TimeoutMigrationTool
       - name: Setup Oracle
         if: contains(matrix.engines, 'Oracle')
-        uses: Particular/setup-oracle-action@v1.4.0
+        uses: Particular/setup-oracle-action@v1.5.0
         with:
           connection-string-name: OracleConnectionString
           tag: TimeoutMigrationTool
+          registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Setup RabbitMQ
         if: contains(matrix.engines, 'RabbitMQ')
-        uses: Particular/setup-rabbitmq-action@v1.5.0
+        uses: Particular/setup-rabbitmq-action@v1.7.0
         with:
           connection-string-name: RabbitMqConnectionString
           host-env-var-name: RabbitMqHost
           tag: TimeoutMigrationTool
+          registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Setup RavenDB3
         if: contains(matrix.engines, 'RavenDB3')
         shell: pwsh
