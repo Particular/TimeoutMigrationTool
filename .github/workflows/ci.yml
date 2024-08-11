@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-2019, ubuntu-20.04 ]
+        os: [ windows-2022, ubuntu-22.04 ]
         engines: [
             AzureStorage,
             Oracle,
@@ -33,15 +33,15 @@ jobs:
           - engines: AzureStorage
             upload-packages: true
           # Add os-name alias for job name
-          - os: windows-2019
+          - os: windows-2022
             os-name: Windows
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             os-name: Linux
           # Additional permutations
-          - os: windows-2019
+          - os: windows-2022
             os-name: Windows
             engines: RabbitMQ-RavenDB3
-          - os: windows-2019
+          - os: windows-2022
             os-name: Windows
             engines: RavenDB3
       fail-fast: false
