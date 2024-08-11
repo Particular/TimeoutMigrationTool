@@ -107,13 +107,15 @@ jobs:
       - name: Setup RavenDB4
         if: contains(matrix.engines, 'RavenDB4')
         id: setup-ravendb
-        uses: Particular/setup-ravendb-action@v1.6.0
+        uses: Particular/setup-ravendb-action@15befcc8879b5176339e5f85504a1f1032484025
         with:
             single-connection-string-name: Raven4Url
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
             ravendb-mode: Single
             ravendb-version: 4.2-ubuntu-latest
             tag: TimeoutMigrationTool
+            registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+            registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Install SQL Server
         if: contains(matrix.engines, 'SqlServer')
         uses: Particular/install-sql-server-action@v1.2.0
