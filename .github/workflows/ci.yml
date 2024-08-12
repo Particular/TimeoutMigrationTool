@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-2019, ubuntu-20.04 ]
+        os: [ windows-2022, ubuntu-22.04 ]
         engines: [
             AzureStorage,
             Oracle,
@@ -33,15 +33,15 @@ jobs:
           - engines: AzureStorage
             upload-packages: true
           # Add os-name alias for job name
-          - os: windows-2019
+          - os: windows-2022
             os-name: Windows
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             os-name: Linux
           # Additional permutations
-          - os: windows-2019
+          - os: windows-2022
             os-name: Windows
             engines: RabbitMQ-RavenDB3
-          - os: windows-2019
+          - os: windows-2022
             os-name: Windows
             engines: RavenDB3
       fail-fast: false
@@ -56,7 +56,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4.0.0
+        uses: actions/setup-dotnet@v4.0.1
         with:
           dotnet-version: |
             7.0.x
@@ -65,7 +65,7 @@ jobs:
         run: dotnet build src --configuration Release
       - name: Upload packages
         if: matrix.upload-packages && runner.os == 'Windows'
-        uses: actions/upload-artifact@v4.3.3
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: NuGet packages
           path: nugets/
@@ -83,17 +83,21 @@ jobs:
           tag: TimeoutMigrationTool
       - name: Setup Oracle
         if: contains(matrix.engines, 'Oracle')
-        uses: Particular/setup-oracle-action@v1.4.0
+        uses: Particular/setup-oracle-action@v1.5.0
         with:
           connection-string-name: OracleConnectionString
           tag: TimeoutMigrationTool
+          registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Setup RabbitMQ
         if: contains(matrix.engines, 'RabbitMQ')
-        uses: Particular/setup-rabbitmq-action@v1.5.0
+        uses: Particular/setup-rabbitmq-action@v1.7.0
         with:
           connection-string-name: RabbitMqConnectionString
           host-env-var-name: RabbitMqHost
           tag: TimeoutMigrationTool
+          registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Setup RavenDB3
         if: contains(matrix.engines, 'RavenDB3')
         shell: pwsh
@@ -103,16 +107,18 @@ jobs:
       - name: Setup RavenDB4
         if: contains(matrix.engines, 'RavenDB4')
         id: setup-ravendb
-        uses: Particular/setup-ravendb-action@v1.6.0
+        uses: Particular/setup-ravendb-action@v1.7.0
         with:
             single-connection-string-name: Raven4Url
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
             ravendb-mode: Single
             ravendb-version: 4.2-ubuntu-latest
             tag: TimeoutMigrationTool
+            registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+            registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Install SQL Server
         if: contains(matrix.engines, 'SqlServer')
-        uses: Particular/install-sql-server-action@main
+        uses: Particular/install-sql-server-action@v1.2.0
         with:
           connection-string-env-var: SqlServerConnectionString
           catalog: nservicebus
