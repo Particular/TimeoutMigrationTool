@@ -93,7 +93,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.False);
         }
 
         [Test]

@@ -134,7 +134,7 @@
             var currentMigration = await timeoutsSource.CheckIfAMigrationIsInProgress();
 
             // Assert
-            Assert.IsFalse(currentMigration);
+            Assert.That(currentMigration, Is.False);
         }
 
         [Test]
@@ -541,7 +541,7 @@
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
             Assert.IsNull(currentAfterAborting);
 
-            Assert.IsFalse(await timeoutsSource.CheckIfAMigrationIsInProgress());
+            Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
         }
 
         [Test]
@@ -592,7 +592,7 @@
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
             Assert.IsNull(currentAfterAborting);
 
-            Assert.IsFalse(await timeoutsSource.CheckIfAMigrationIsInProgress());
+            Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
         }
 
         [Test]
