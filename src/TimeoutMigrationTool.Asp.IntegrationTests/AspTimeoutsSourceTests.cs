@@ -502,7 +502,7 @@
             var query = new TableQuery<TimeoutDataEntity>()
                 .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
             var timeouts = await endpointTimeoutTableName.ExecuteQuerySegmentedAsync(query, null);
-            Assert.That(timeouts.Results.Count, Is.EqualTo(3));
+            Assert.That(timeouts.Results, Has.Count.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
             Assert.That(currentAfterAborting, Is.Null);
@@ -551,7 +551,7 @@
             var query = new TableQuery<TimeoutDataEntity>()
                 .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
             var timeouts = await endpointTimeoutTableName.ExecuteQuerySegmentedAsync(query, null);
-            Assert.That(timeouts.Results.Count, Is.EqualTo(3));
+            Assert.That(timeouts.Results, Has.Count.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
             Assert.Multiple(async () =>
@@ -605,7 +605,7 @@
             var query = new TableQuery<TimeoutDataEntity>()
                 .Where(TableQuery.GenerateFilterCondition("OwningTimeoutManager", QueryComparisons.Equal, endpointName));
             var timeouts = await endpointTimeoutTableName.ExecuteQuerySegmentedAsync(query, null);
-            Assert.That(timeouts.Results.Count, Is.EqualTo(3));
+            Assert.That(timeouts.Results, Has.Count.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
             Assert.Multiple(async () =>
@@ -663,7 +663,7 @@
 
             var result = await timeoutsSource.ListEndpoints(cutOffDate);
 
-            Assert.That(result.Count, Is.EqualTo(1));
+            Assert.That(result, Has.Count.EqualTo(1));
 
             var singleElement = result[0];
 
