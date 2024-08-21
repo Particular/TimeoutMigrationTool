@@ -198,7 +198,7 @@ CREATE TABLE [{1}].[{0}] (
             migrationTableDataAdapter.Fill(migrationTableDataTable);
 
             Approver.Verify(endpointDelayedTableDataTable.Rows.OfType<DataRow>().SelectMany(r => r.ItemArray.Take(3)));
-            Assert.IsEmpty(migrationTableDataTable.Rows);
+            Assert.That(migrationTableDataTable.Rows, Is.Empty);
         }
 
         [Test]
