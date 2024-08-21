@@ -673,14 +673,14 @@
                 Assert.That(singleElement.ShortestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(1).Day));
                 Assert.That(singleElement.LongestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(5).Day));
             });
-            CollectionAssert.AreEquivalent(new List<string>
+            Assert.That(singleElement.Destinations, Is.EquivalentTo(new List<string>
             {
                 "Destination1",
                 "Destination2",
                 "Destination3",
                 "Destination4",
                 "Destination5",
-            }, singleElement.Destinations);
+            }));
             Assert.That(singleElement.EndpointName, Is.EqualTo(fakeEndpointName));
         }
     }
