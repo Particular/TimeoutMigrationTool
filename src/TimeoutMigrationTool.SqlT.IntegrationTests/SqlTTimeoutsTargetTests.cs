@@ -64,7 +64,7 @@ CREATE TABLE [{1}].[{0}] (
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsTrue(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.True);
         }
 
         [Test]
