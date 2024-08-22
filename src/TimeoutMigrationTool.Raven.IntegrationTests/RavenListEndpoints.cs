@@ -38,7 +38,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.That(endpoints, Is.Not.Null);
-            Assert.IsEmpty(endpoints);
+            Assert.That(endpoints, Is.Empty);
         }
 
         [TestCase(true)]

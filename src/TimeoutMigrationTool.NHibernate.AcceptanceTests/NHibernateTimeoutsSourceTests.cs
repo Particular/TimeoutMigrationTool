@@ -133,7 +133,7 @@
 
             // Assert
             // If all the batches were loaded correctly, the destinations would have been removed from the list.
-            Assert.IsEmpty(expectedDestinations);
+            Assert.That(expectedDestinations, Is.Empty);
         }
 
         [Test]
