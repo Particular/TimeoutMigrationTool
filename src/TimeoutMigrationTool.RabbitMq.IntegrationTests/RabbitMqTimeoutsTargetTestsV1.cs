@@ -180,7 +180,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             using var channel = connection.CreateModel();
             var result = channel.BasicGet(ExistingEndpointNameUsingConventional, true);
 
-            Assert.NotNull(result);
+            Assert.That(result, Is.Not.Null);
             Assert.That(result.MessageCount, Is.EqualTo(0));
         }
 

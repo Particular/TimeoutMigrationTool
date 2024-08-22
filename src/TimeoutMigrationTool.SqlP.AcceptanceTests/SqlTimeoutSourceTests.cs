@@ -338,7 +338,7 @@
             var timeoutStorage = GetTimeoutStorage();
             await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.NotNull(await timeoutStorage.TryLoadOngoingMigration());
+            Assert.That(await timeoutStorage.TryLoadOngoingMigration(), Is.Not.Null);
             await timeoutStorage.Complete();
 
             Assert.That(await timeoutStorage.TryLoadOngoingMigration(), Is.Null);
