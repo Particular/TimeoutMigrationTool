@@ -89,7 +89,7 @@
             var currentMigration = await timeoutsSource.TryLoadOngoingMigration();
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
             Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
             Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
@@ -116,7 +116,7 @@
             var currentMigration = await timeoutsSource.TryLoadOngoingMigration();
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
             Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
             Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
@@ -193,7 +193,7 @@
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
             Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
             Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
@@ -233,7 +233,7 @@
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
             Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
             Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
@@ -290,7 +290,7 @@
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
             Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
             Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));

@@ -43,7 +43,7 @@
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
             Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
             Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
@@ -83,7 +83,7 @@
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
             Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
             Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
@@ -359,7 +359,7 @@
             var firstBatch = await toolState.TryGetNextBatch();
 
             // Assert
-            Assert.IsNotNull(firstBatch);
+            Assert.That(firstBatch, Is.Not.Null);
             Assert.That(firstBatch.State, Is.EqualTo(BatchState.Pending));
             Assert.That(firstBatch.NumberOfTimeouts, Is.EqualTo(1));
         }
