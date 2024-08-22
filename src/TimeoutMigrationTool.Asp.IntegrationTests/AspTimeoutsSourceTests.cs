@@ -402,7 +402,7 @@
 
             var timeoutDataEntities = await migrationTableName.ExecuteQuerySegmentedAsync(query, null);
 
-            Assert.True(timeoutDataEntities.All(t => t.BatchState == batchState), $"Expected all TimeoutEntity rows to have the batch state set to {batchState}");
+            Assert.That(timeoutDataEntities.All(t => t.BatchState == batchState), Is.True, $"Expected all TimeoutEntity rows to have the batch state set to {batchState}");
         }
 
         [Test]

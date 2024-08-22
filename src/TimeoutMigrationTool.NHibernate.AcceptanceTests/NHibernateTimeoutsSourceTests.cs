@@ -193,7 +193,7 @@
                 .ListAsync();
 
 
-            Assert.True(timeouts.All(t => t.BatchState == batchState), $"Expected all StagedTimeoutEntity rows to have the batch state set to {batchState}");
+            Assert.That(timeouts.All(t => t.BatchState == batchState), Is.True, $"Expected all StagedTimeoutEntity rows to have the batch state set to {batchState}");
         }
 
         [Test]
