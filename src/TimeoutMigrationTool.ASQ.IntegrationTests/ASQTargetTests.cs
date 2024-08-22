@@ -391,7 +391,6 @@
             var stageResult = await result.StageBatch(timeouts, 1);
 
             // Assert
-            Assert.That(stageResult, Is.Not.Null);
             Assert.That(stageResult, Is.EqualTo(timeouts.Count));
         }
 
@@ -436,7 +435,6 @@
             var completeResult = await result.CompleteBatch(1);
 
             // Assert
-            Assert.That(completeResult, Is.Not.Null);
             Assert.That(completeResult, Is.EqualTo(timeouts.Count));
         }
 

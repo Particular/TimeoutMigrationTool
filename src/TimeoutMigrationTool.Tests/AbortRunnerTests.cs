@@ -32,6 +32,9 @@ namespace TimeoutMigrationTool.Tests
             timeoutsSource.SetupEndpoints(endpoints);
         }
 
+        [TearDown]
+        public async Task TearDown() => await timeoutsTarget.DisposeAsync();
+
         [Test]
         public void WhenAbortingAndTimeoutStorageFoundNothingToAbortThrowsException()
         {
