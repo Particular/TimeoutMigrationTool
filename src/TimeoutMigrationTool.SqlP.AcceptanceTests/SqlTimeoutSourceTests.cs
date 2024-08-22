@@ -92,7 +92,7 @@
             var timeoutStorage = GetTimeoutStorage();
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
-            CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint);
+            Assert.That(endpoints.Select(e => e.EndpointName), Has.Member(sourceEndpoint));
             Assert.That(endpoints.Single(e => e.EndpointName == sourceEndpoint).Destinations.Count(), Is.EqualTo(1));
         }
 
@@ -135,7 +135,7 @@
 
             var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(-10));
 
-            CollectionAssert.AreEquivalent(new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" }, endpoints.First().Destinations);
+            Assert.That(endpoints.First().Destinations, Is.EquivalentTo(new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" }));
         }
 
         [Test]
@@ -154,7 +154,7 @@
 
             var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(10));
 
-            CollectionAssert.IsEmpty(endpoints);
+            Assert.That(endpoints, Is.Empty);
         }
 
         [Test]
