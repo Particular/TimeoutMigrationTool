@@ -103,7 +103,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
                 timeoutIdToVerify,
                 (timeoutData, id) => { timeoutData.Id = id; });
 
-            Assert.That(updatedTimeout.OwningTimeoutManager.StartsWith(RavenConstants.MigrationDonePrefix), Is.True);
+            Assert.That(updatedTimeout.OwningTimeoutManager, Does.StartWith(RavenConstants.MigrationDonePrefix));
         }
 
         [Test]
