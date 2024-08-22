@@ -96,7 +96,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.False);
         }
 
         void DeleteDelayDelivery()
@@ -120,7 +120,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.False);
         }
 
         [Test]
@@ -137,7 +137,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.False);
         }
 
         [Test]

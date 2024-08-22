@@ -45,7 +45,7 @@
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
             // Assert
-            Assert.IsFalse(ableToMigrate.CanMigrate);
+            Assert.That(ableToMigrate.CanMigrate, Is.False);
             Assert.AreEqual("Target delayed delivery table TimeoutTableThatDoesNotExist does not exist.", ableToMigrate.Problems[0]);
         }
 
@@ -64,7 +64,7 @@
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
             // Assert
-            Assert.IsFalse(ableToMigrate.CanMigrate);
+            Assert.That(ableToMigrate.CanMigrate, Is.False);
             Assert.That(ableToMigrate.Problems[0], Does.StartWith("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message '"));
         }
 
@@ -250,7 +250,7 @@
             // Assert
             var stagingTableExists = await DoesTableExist(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.IsFalse(stagingTableExists);
+            Assert.That(stagingTableExists, Is.False);
         }
 
         [Test]
@@ -343,7 +343,7 @@
             // Assert
             var stagingTableExists = await DoesTableExist(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.IsFalse(stagingTableExists);
+            Assert.That(stagingTableExists, Is.False);
         }
 
         [Test]
