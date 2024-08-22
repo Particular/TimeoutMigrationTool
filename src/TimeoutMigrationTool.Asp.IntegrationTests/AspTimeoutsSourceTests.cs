@@ -68,7 +68,7 @@
             var currentMigration = await timeoutsSource.TryLoadOngoingMigration();
 
             // Assert
-            Assert.IsNull(currentMigration);
+            Assert.That(currentMigration, Is.Null);
         }
 
         [Test]
@@ -446,7 +446,7 @@
 
             // Assert
             var loadedMigrationAfterCompletion = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.IsNull(loadedMigrationAfterCompletion);
+            Assert.That(loadedMigrationAfterCompletion, Is.Null);
         }
 
         [Test]
@@ -490,7 +490,7 @@
             Assert.That(timeouts.Results.Count, Is.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.IsNull(currentAfterAborting);
+            Assert.That(currentAfterAborting, Is.Null);
         }
 
         [Test]
@@ -539,7 +539,7 @@
             Assert.That(timeouts.Results.Count, Is.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.IsNull(currentAfterAborting);
+            Assert.That(currentAfterAborting, Is.Null);
 
             Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
         }
@@ -590,7 +590,7 @@
             Assert.That(timeouts.Results.Count, Is.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.IsNull(currentAfterAborting);
+            Assert.That(currentAfterAborting, Is.Null);
 
             Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
         }

@@ -119,7 +119,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var updatedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId);
 
-            Assert.IsNull(updatedToolState);
+            Assert.That(updatedToolState, Is.Null);
 
             var batches = await testSuite.RavenAdapter.GetDocuments<RavenBatch>(info => true, RavenConstants.BatchPrefix);
             Assert.That(batches.Count, Is.EqualTo(0));

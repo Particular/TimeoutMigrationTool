@@ -184,7 +184,7 @@
 
             var loadedState = await timeoutStorage.TryLoadOngoingMigration();
 
-            Assert.IsNull(await loadedState.TryGetNextBatch());
+            Assert.That(await loadedState.TryGetNextBatch(), Is.Null);
         }
 
         [Test]
