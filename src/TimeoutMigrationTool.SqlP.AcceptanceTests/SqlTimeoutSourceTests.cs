@@ -341,7 +341,7 @@
             Assert.NotNull(await timeoutStorage.TryLoadOngoingMigration());
             await timeoutStorage.Complete();
 
-            Assert.Null(await timeoutStorage.TryLoadOngoingMigration());
+            Assert.That(await timeoutStorage.TryLoadOngoingMigration(), Is.Null);
         }
 
         public class Context : ScenarioContext
