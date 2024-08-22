@@ -29,7 +29,7 @@
             var delayedDeliveryTableName = delayedDeliveryTableNameGenerator.GetDelayedDeliveryTableName("EndpointName");
 
             // Assert
-            Assert.AreEqual("overriden delayed delivery table name", delayedDeliveryTableName);
+            Assert.That(delayedDeliveryTableName, Is.EqualTo("overriden delayed delivery table name"));
         }
     }
 }

@@ -174,14 +174,14 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
             var numPumped = await sut.CompleteBatch(BatchNumber);
 
-            Assert.AreEqual(1, numPumped);
+            Assert.That(numPumped, Is.EqualTo(1));
 
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
             var result = channel.BasicGet(ExistingEndpointNameUsingConventional, true);
 
             Assert.NotNull(result);
-            Assert.AreEqual(0, result.MessageCount);
+            Assert.That(result.MessageCount, Is.EqualTo(0));
         }
 
         [Test]

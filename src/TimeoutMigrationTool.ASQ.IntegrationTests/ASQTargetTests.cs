@@ -46,7 +46,7 @@
 
             // Assert
             Assert.That(ableToMigrate.CanMigrate, Is.False);
-            Assert.AreEqual("Target delayed delivery table TimeoutTableThatDoesNotExist does not exist.", ableToMigrate.Problems[0]);
+            Assert.That(ableToMigrate.Problems[0], Is.EqualTo("Target delayed delivery table TimeoutTableThatDoesNotExist does not exist."));
         }
 
         [Test]
@@ -136,8 +136,8 @@
             // Assert
             var recordsInTable = await ReadTimeoutsFromTable(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.AreEqual(2, recordsInTable.Count);
-            Assert.AreEqual(2, numberStaged);
+            Assert.That(recordsInTable.Count, Is.EqualTo(2));
+            Assert.That(numberStaged, Is.EqualTo(2));
         }
 
         [Test]
@@ -183,8 +183,8 @@
             // Assert
             var recordsInTimeoutTable = await ReadTimeoutsFromTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            Assert.AreEqual(2, recordsInTimeoutTable.Count);
-            Assert.AreEqual(2, numberCompleted);
+            Assert.That(recordsInTimeoutTable.Count, Is.EqualTo(2));
+            Assert.That(numberCompleted, Is.EqualTo(2));
         }
 
         [Test]
@@ -230,7 +230,7 @@
             // Assert
             var recordsInStagingTable = await ReadTimeoutsFromTable(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.AreEqual(0, recordsInStagingTable.Count);
+            Assert.That(recordsInStagingTable.Count, Is.EqualTo(0));
         }
 
         [Test]
@@ -380,7 +380,7 @@
 
             // Assert
             Assert.IsNotNull(stageResult);
-            Assert.AreEqual(timeouts.Count, stageResult);
+            Assert.That(stageResult, Is.EqualTo(timeouts.Count));
         }
 
         [Test]
@@ -425,7 +425,7 @@
 
             // Assert
             Assert.IsNotNull(completeResult);
-            Assert.AreEqual(timeouts.Count, completeResult);
+            Assert.That(completeResult, Is.EqualTo(timeouts.Count));
         }
 
         async Task DeleteTable(string tableName)

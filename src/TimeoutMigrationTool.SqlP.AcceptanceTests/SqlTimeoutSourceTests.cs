@@ -33,7 +33,7 @@
             var timeoutStorage = GetTimeoutStorage();
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(1, toolState.NumberOfBatches);
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(1));
         }
 
         [Test]
@@ -53,7 +53,7 @@
             var timeoutStorage = GetTimeoutStorage(3);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(4, toolState.NumberOfBatches);
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(4));
         }
 
         [Test]
@@ -73,7 +73,7 @@
             var timeoutStorage = GetTimeoutStorage(1);
             var toolState = await timeoutStorage.Prepare(DateTime.Now.AddDays(10), sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(6, toolState.NumberOfBatches);
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(6));
         }
 
         [Test]
@@ -93,7 +93,7 @@
             var endpoints = await timeoutStorage.ListEndpoints(DateTime.Now.AddYears(-10));
 
             CollectionAssert.Contains(endpoints.Select(e => e.EndpointName), sourceEndpoint);
-            Assert.AreEqual(1, endpoints.Single(e => e.EndpointName == sourceEndpoint).Destinations.Count());
+            Assert.That(endpoints.Single(e => e.EndpointName == sourceEndpoint).Destinations.Count(), Is.EqualTo(1));
         }
 
         [Test]
@@ -212,7 +212,7 @@
 
             var stagedBatch = await loadedState.TryGetNextBatch();
 
-            Assert.AreEqual(BatchState.Staged, stagedBatch.State);
+            Assert.That(stagedBatch.State, Is.EqualTo(BatchState.Staged));
         }
 
         [Test]
@@ -240,13 +240,13 @@
             {
                 var timeouts = await timeoutStorage.ReadBatch(batch.Number);
 
-                Assert.AreEqual(batch.NumberOfTimeouts, timeouts.Count());
+                Assert.That(timeouts.Count(), Is.EqualTo(batch.NumberOfTimeouts));
                 timeoutsStored += batch.NumberOfTimeouts;
 
                 await timeoutStorage.MarkBatchAsCompleted(batch.Number);
             }
 
-            Assert.AreEqual(10, timeoutsStored);
+            Assert.That(timeoutsStored, Is.EqualTo(10));
         }
 
         [Test]
@@ -268,7 +268,7 @@
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM [{sourceEndpoint}_TimeoutData]");
 
-            Assert.AreEqual(0, numberOfTimeouts);
+            Assert.That(numberOfTimeouts, Is.EqualTo(0));
         }
 
         [Test]
@@ -296,9 +296,9 @@
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM [{sourceEndpoint}_TimeoutData]");
 
-            Assert.AreEqual(10 - batch1.NumberOfTimeouts, numberOfTimeouts);
+            Assert.That(numberOfTimeouts, Is.EqualTo(10 - batch1.NumberOfTimeouts));
 
-            Assert.AreEqual(1, await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutsMigration_State WHERE Status = 3"), "Status should be set to aborted");
+            Assert.That(await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutsMigration_State WHERE Status = 3"), Is.EqualTo(1), "Status should be set to aborted");
         }
 
         [Test]
@@ -318,7 +318,7 @@
             var timeoutStorage = GetTimeoutStorage(1);
             var toolState = await timeoutStorage.Prepare(DateTime.Now, sourceEndpoint, new Dictionary<string, string>());
 
-            Assert.AreEqual(5, toolState.NumberOfBatches);
+            Assert.That(toolState.NumberOfBatches, Is.EqualTo(5));
         }
 
         [Test]
