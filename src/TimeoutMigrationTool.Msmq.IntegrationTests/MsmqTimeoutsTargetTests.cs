@@ -62,7 +62,7 @@ CREATE TABLE [{1}].[{0}] (
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsTrue(result.CanMigrate, string.Join("\r", result.Problems));
+            Assert.That(result.CanMigrate, Is.True, string.Join("\r", result.Problems));
         }
 
         [Test]
@@ -89,7 +89,7 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate, string.Join("\r", result.Problems));
+            Assert.That(result.CanMigrate, Is.False, string.Join("\r", result.Problems));
         }
 
         [Test]
@@ -198,7 +198,7 @@ CREATE TABLE [{1}].[{0}] (
             migrationTableDataAdapter.Fill(migrationTableDataTable);
 
             Approver.Verify(endpointDelayedTableDataTable.Rows.OfType<DataRow>().SelectMany(r => r.ItemArray.Take(3)));
-            Assert.IsEmpty(migrationTableDataTable.Rows);
+            Assert.That(migrationTableDataTable.Rows, Is.Empty);
         }
 
         [Test]

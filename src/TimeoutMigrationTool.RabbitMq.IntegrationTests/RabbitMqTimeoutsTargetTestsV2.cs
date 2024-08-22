@@ -75,7 +75,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsTrue(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.True);
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.False);
         }
 
         void DeleteDelayDelivery()
@@ -120,7 +120,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.False);
         }
 
         [Test]
@@ -137,7 +137,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsFalse(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.False);
         }
 
         [Test]
@@ -156,7 +156,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
 
             var migrateResult = await sut.AbleToMigrate(info);
-            Assert.IsTrue(migrateResult.CanMigrate);
+            Assert.That(migrateResult.CanMigrate, Is.True);
 
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(ExistingEndpointNameUsingConventional);
 
@@ -174,14 +174,14 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
 
             var numPumped = await sut.CompleteBatch(BatchNumber);
 
-            Assert.AreEqual(1, numPumped);
+            Assert.That(numPumped, Is.EqualTo(1));
 
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
             var result = channel.BasicGet(ExistingEndpointNameUsingConventional, true);
 
-            Assert.NotNull(result);
-            Assert.AreEqual(0, result.MessageCount);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.MessageCount, Is.EqualTo(0));
         }
 
         [Test]

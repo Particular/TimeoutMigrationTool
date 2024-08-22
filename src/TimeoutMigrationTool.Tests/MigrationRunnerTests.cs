@@ -31,6 +31,9 @@ namespace TimeoutMigrationTool.Tests
             timeoutsSource.SetupEndpoints(endpoints);
         }
 
+        [TearDown]
+        public async Task TearDown() => await timeoutsTarget.DisposeAsync();
+
         [Test]
         public async Task WhenRunningWithoutToolState()
         {
@@ -40,15 +43,18 @@ namespace TimeoutMigrationTool.Tests
 
             await runner.Run(DateTime.Now, EndpointFilter.IncludeAll, new Dictionary<string, string>());
 
-            Assert.That(timeoutsSource.EndpointsWereListed);
-            Assert.That(timeoutsSource.ToolStateWasCreated);
-            Assert.That(timeoutsTarget.EndpointWasVerified);
-            Assert.That(timeoutsSource.BatchWasRead);
-            Assert.That(timeoutsTarget.BatchWasStaged);
-            Assert.That(timeoutsSource.BatchWasCompleted);
-            Assert.That(timeoutsSource.ToolStateMovedToCompleted);
-            Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
-            Assert.That(timeoutsTarget.MigrationWasCompleted);
+            Assert.Multiple(() =>
+            {
+                Assert.That(timeoutsSource.EndpointsWereListed);
+                Assert.That(timeoutsSource.ToolStateWasCreated);
+                Assert.That(timeoutsTarget.EndpointWasVerified);
+                Assert.That(timeoutsSource.BatchWasRead);
+                Assert.That(timeoutsTarget.BatchWasStaged);
+                Assert.That(timeoutsSource.BatchWasCompleted);
+                Assert.That(timeoutsSource.ToolStateMovedToCompleted);
+                Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
+                Assert.That(timeoutsTarget.MigrationWasCompleted);
+            });
         }
 
         [Test]
@@ -72,15 +78,18 @@ namespace TimeoutMigrationTool.Tests
                 });
             });
 
-            Assert.That(timeoutsSource.EndpointsWereListed, Is.False);
-            Assert.That(timeoutsSource.ToolStateWasCreated, Is.False);
-            Assert.That(timeoutsTarget.EndpointWasVerified, Is.False);
-            Assert.That(timeoutsSource.BatchWasRead, Is.False);
-            Assert.That(timeoutsTarget.BatchWasStaged, Is.False);
-            Assert.That(timeoutsSource.BatchWasCompleted, Is.False);
-            Assert.That(timeoutsSource.ToolStateMovedToCompleted, Is.False);
-            Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
-            Assert.That(timeoutsTarget.MigrationWasCompleted, Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(timeoutsSource.EndpointsWereListed, Is.False);
+                Assert.That(timeoutsSource.ToolStateWasCreated, Is.False);
+                Assert.That(timeoutsTarget.EndpointWasVerified, Is.False);
+                Assert.That(timeoutsSource.BatchWasRead, Is.False);
+                Assert.That(timeoutsTarget.BatchWasStaged, Is.False);
+                Assert.That(timeoutsSource.BatchWasCompleted, Is.False);
+                Assert.That(timeoutsSource.ToolStateMovedToCompleted, Is.False);
+                Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
+                Assert.That(timeoutsTarget.MigrationWasCompleted, Is.False);
+            });
         }
 
         [Test]
@@ -99,15 +108,18 @@ namespace TimeoutMigrationTool.Tests
 
             await runner.Run(DateTime.Now, EndpointFilter.SpecificEndpoint(testEndpoint), new Dictionary<string, string>());
 
-            Assert.That(timeoutsSource.EndpointsWereListed, Is.False);
-            Assert.That(timeoutsSource.ToolStateWasCreated, Is.False);
-            Assert.That(timeoutsTarget.EndpointWasVerified, Is.False);
-            Assert.That(timeoutsSource.BatchWasRead);
-            Assert.That(timeoutsTarget.BatchWasStaged);
-            Assert.That(timeoutsSource.BatchWasCompleted);
-            Assert.That(timeoutsSource.ToolStateMovedToCompleted);
-            Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
-            Assert.That(timeoutsTarget.MigrationWasCompleted);
+            Assert.Multiple(() =>
+            {
+                Assert.That(timeoutsSource.EndpointsWereListed, Is.False);
+                Assert.That(timeoutsSource.ToolStateWasCreated, Is.False);
+                Assert.That(timeoutsTarget.EndpointWasVerified, Is.False);
+                Assert.That(timeoutsSource.BatchWasRead);
+                Assert.That(timeoutsTarget.BatchWasStaged);
+                Assert.That(timeoutsSource.BatchWasCompleted);
+                Assert.That(timeoutsSource.ToolStateMovedToCompleted);
+                Assert.That(timeoutsSource.MigrationWasAborted, Is.False);
+                Assert.That(timeoutsTarget.MigrationWasCompleted);
+            });
         }
 
         [Test]

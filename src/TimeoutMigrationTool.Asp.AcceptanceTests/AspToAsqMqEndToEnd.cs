@@ -85,7 +85,7 @@
                 .Done(c => c.GotTheDelayedMessage)
                 .Run(TimeSpan.FromSeconds(30));
 
-            Assert.True(context.GotTheDelayedMessage);
+            Assert.That(context.GotTheDelayedMessage, Is.True);
         }
 
         public class SourceContext : ScenarioContext

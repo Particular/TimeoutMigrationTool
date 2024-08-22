@@ -13,8 +13,11 @@
         {
             var result = RabbitBatchWriter.CalculateRoutingKey(delayInSeconds, address, out var startingDelayLevel);
 
-            Assert.That(result, Is.EqualTo(expectedRoutingKey));
-            Assert.That(startingDelayLevel, Is.EqualTo(expectedStartingDelayLevel));
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.EqualTo(expectedRoutingKey));
+                Assert.That(startingDelayLevel, Is.EqualTo(expectedStartingDelayLevel));
+            });
         }
 
         [Test]
@@ -22,8 +25,11 @@
         {
             var result = RabbitBatchWriter.CalculateRoutingKey(-123, "some-address", out var startingDelayLevel);
 
-            Assert.That(result, Is.EqualTo("0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.some-address"));
-            Assert.That(startingDelayLevel, Is.EqualTo(0));
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.EqualTo("0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.some-address"));
+                Assert.That(startingDelayLevel, Is.EqualTo(0));
+            });
         }
     }
 }

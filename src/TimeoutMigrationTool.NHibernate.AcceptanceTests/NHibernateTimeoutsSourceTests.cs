@@ -27,7 +27,7 @@
             var currentMigration = await timeoutsSource.TryLoadOngoingMigration();
 
             // Assert
-            Assert.IsNull(currentMigration);
+            Assert.That(currentMigration, Is.Null);
         }
 
         [Test]
@@ -43,11 +43,14 @@
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.AreEqual(endpointName, currentMigration.EndpointName);
-            Assert.AreEqual(runParameters, currentMigration.RunParameters);
-            Assert.AreEqual(0, currentMigration.NumberOfBatches);
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -83,11 +86,14 @@
             var currentMigration = await timeoutsSource.Prepare(cutOffDate, endpointName, runParameters);
 
             // Assert
-            Assert.IsNotNull(currentMigration);
+            Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.AreEqual(endpointName, currentMigration.EndpointName);
-            Assert.AreEqual(runParameters, currentMigration.RunParameters);
-            Assert.AreEqual(2, currentMigration.NumberOfBatches);
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(2));
+            });
         }
 
         [Test]
@@ -133,7 +139,7 @@
 
             // Assert
             // If all the batches were loaded correctly, the destinations would have been removed from the list.
-            Assert.IsEmpty(expectedDestinations);
+            Assert.That(expectedDestinations, Is.Empty);
         }
 
         [Test]
@@ -193,7 +199,7 @@
                 .ListAsync();
 
 
-            Assert.True(timeouts.All(t => t.BatchState == batchState), $"Expected all StagedTimeoutEntity rows to have the batch state set to {batchState}");
+            Assert.That(timeouts.All(t => t.BatchState == batchState), Is.True, $"Expected all StagedTimeoutEntity rows to have the batch state set to {batchState}");
         }
 
         [Test]
@@ -233,8 +239,8 @@
             var endpoints = await timeoutsSource.ListEndpoints(DateTime.UtcNow.AddDays(-100));
 
             // Assert
-            Assert.AreEqual(2, endpoints.Count);
-            Assert.AreEqual(new[] { $"{endpointName}0", $"{endpointName}1" }, endpoints.Select(endpoint => endpoint.EndpointName).ToArray());
+            Assert.That(endpoints, Has.Count.EqualTo(2));
+            Assert.That(endpoints.Select(endpoint => endpoint.EndpointName).ToArray(), Is.EqualTo(new[] { $"{endpointName}0", $"{endpointName}1" }));
         }
 
         [Test]
@@ -277,7 +283,7 @@
 
             // Assert
             var loadedMigrationAfterCompletion = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.IsNull(loadedMigrationAfterCompletion);
+            Assert.That(loadedMigrationAfterCompletion, Is.Null);
         }
 
         [Test]
@@ -319,10 +325,10 @@
             // Assert
             using var validateSession = sessionFactory.OpenSession();
             var timeouts = await validateSession.QueryOver<TimeoutEntity>().ListAsync();
-            Assert.AreEqual(2, timeouts.Count);
+            Assert.That(timeouts, Has.Count.EqualTo(2));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.IsNull(currentAfterAborting);
+            Assert.That(currentAfterAborting, Is.Null);
         }
 
         [Test]
@@ -359,9 +365,12 @@
             var firstBatch = await toolState.TryGetNextBatch();
 
             // Assert
-            Assert.IsNotNull(firstBatch);
-            Assert.AreEqual(BatchState.Pending, firstBatch.State);
-            Assert.AreEqual(1, firstBatch.NumberOfTimeouts);
+            Assert.That(firstBatch, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstBatch.State, Is.EqualTo(BatchState.Pending));
+                Assert.That(firstBatch.NumberOfTimeouts, Is.EqualTo(1));
+            });
         }
 
         [Test]
@@ -403,7 +412,7 @@
             var firstBatch = await toolState.TryGetNextBatch();
 
             // Assert
-            Assert.IsNull(firstBatch);
+            Assert.That(firstBatch, Is.Null);
         }
     }
 }

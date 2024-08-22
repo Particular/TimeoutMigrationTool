@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.3.0" />
   </ItemGroup>
 
   <!-- Workaround to prevent VS test discovery error -->

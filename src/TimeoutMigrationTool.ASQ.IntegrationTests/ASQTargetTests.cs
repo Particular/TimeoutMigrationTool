@@ -44,9 +44,12 @@
             // Act
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
-            // Assert
-            Assert.IsFalse(ableToMigrate.CanMigrate);
-            Assert.AreEqual("Target delayed delivery table TimeoutTableThatDoesNotExist does not exist.", ableToMigrate.Problems[0]);
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(ableToMigrate.CanMigrate, Is.False);
+                Assert.That(ableToMigrate.Problems[0], Is.EqualTo("Target delayed delivery table TimeoutTableThatDoesNotExist does not exist."));
+            });
         }
 
         [Test]
@@ -63,9 +66,12 @@
             // Act
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
-            // Assert
-            Assert.IsFalse(ableToMigrate.CanMigrate);
-            Assert.That(ableToMigrate.Problems[0], Does.StartWith("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message '"));
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(ableToMigrate.CanMigrate, Is.False);
+                Assert.That(ableToMigrate.Problems[0], Does.StartWith("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message '"));
+            });
         }
 
         [Test]
@@ -80,7 +86,7 @@
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
             // Assert
-            Assert.IsTrue(ableToMigrate.CanMigrate);
+            Assert.That(ableToMigrate.CanMigrate, Is.True);
         }
 
         [Test]
@@ -94,7 +100,7 @@
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             // Assert
-            Assert.IsTrue(await DoesTableExist(nameProvider.GetStagingTableName(endpointName)).ConfigureAwait(true));
+            Assert.That(await DoesTableExist(nameProvider.GetStagingTableName(endpointName)).ConfigureAwait(true), Is.True);
         }
 
         [Test]
@@ -136,8 +142,11 @@
             // Assert
             var recordsInTable = await ReadTimeoutsFromTable(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.AreEqual(2, recordsInTable.Count);
-            Assert.AreEqual(2, numberStaged);
+            Assert.Multiple(() =>
+            {
+                Assert.That(recordsInTable, Has.Count.EqualTo(2));
+                Assert.That(numberStaged, Is.EqualTo(2));
+            });
         }
 
         [Test]
@@ -183,8 +192,11 @@
             // Assert
             var recordsInTimeoutTable = await ReadTimeoutsFromTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            Assert.AreEqual(2, recordsInTimeoutTable.Count);
-            Assert.AreEqual(2, numberCompleted);
+            Assert.Multiple(() =>
+            {
+                Assert.That(recordsInTimeoutTable, Has.Count.EqualTo(2));
+                Assert.That(numberCompleted, Is.EqualTo(2));
+            });
         }
 
         [Test]
@@ -230,7 +242,7 @@
             // Assert
             var recordsInStagingTable = await ReadTimeoutsFromTable(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.AreEqual(0, recordsInStagingTable.Count);
+            Assert.That(recordsInStagingTable.Count, Is.EqualTo(0));
         }
 
         [Test]
@@ -250,7 +262,7 @@
             // Assert
             var stagingTableExists = await DoesTableExist(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.IsFalse(stagingTableExists);
+            Assert.That(stagingTableExists, Is.False);
         }
 
         [Test]
@@ -343,7 +355,7 @@
             // Assert
             var stagingTableExists = await DoesTableExist(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.IsFalse(stagingTableExists);
+            Assert.That(stagingTableExists, Is.False);
         }
 
         [Test]
@@ -379,8 +391,7 @@
             var stageResult = await result.StageBatch(timeouts, 1);
 
             // Assert
-            Assert.IsNotNull(stageResult);
-            Assert.AreEqual(timeouts.Count, stageResult);
+            Assert.That(stageResult, Is.EqualTo(timeouts.Count));
         }
 
         [Test]
@@ -424,8 +435,7 @@
             var completeResult = await result.CompleteBatch(1);
 
             // Assert
-            Assert.IsNotNull(completeResult);
-            Assert.AreEqual(timeouts.Count, completeResult);
+            Assert.That(completeResult, Is.EqualTo(timeouts.Count));
         }
 
         async Task DeleteTable(string tableName)

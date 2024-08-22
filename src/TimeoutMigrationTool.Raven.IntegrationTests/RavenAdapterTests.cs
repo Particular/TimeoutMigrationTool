@@ -38,8 +38,11 @@
 
             var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeoutIds, (doc, id) => doc.Id = id);
 
-            Assert.That(timeouts.Count, Is.EqualTo(5));
-            Assert.That(string.IsNullOrEmpty(timeouts.First().Id), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(timeouts, Has.Count.EqualTo(5));
+                Assert.That(string.IsNullOrEmpty(timeouts.First().Id), Is.False);
+            });
         }
 
         [Test]
@@ -56,7 +59,7 @@
 
             var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeoutIds, (doc, id) => doc.Id = id);
 
-            Assert.That(timeouts.Count, Is.EqualTo(500));
+            Assert.That(timeouts, Has.Count.EqualTo(500));
         }
 
         [Test]
@@ -65,7 +68,7 @@
             var nrOfTimeouts = 250;
             await testSuite.InitTimeouts(nrOfTimeouts);
             var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(x => x.Time >= DateTime.Now.AddDays(-1), "TimeoutDatas", (doc, id) => doc.Id = id);
-            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts));
+            Assert.That(timeouts, Has.Count.EqualTo(nrOfTimeouts));
         }
 
         [Test]
@@ -81,7 +84,7 @@
                 Assert.That(timeout.Id, Is.Not.Null);
             }
 
-            Assert.That(timeouts.Count, Is.EqualTo(125));
+            Assert.That(timeouts, Has.Count.EqualTo(125));
         }
 
         [Test]
@@ -91,7 +94,7 @@
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", 0, (doc, id) => doc.Id = id, 5);
-            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts));
+            Assert.That(timeouts, Has.Count.EqualTo(nrOfTimeouts));
         }
 
         [Test]
@@ -102,7 +105,7 @@
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", 0, (doc, id) => doc.Id = id, nrOfPages);
-            Assert.That(timeouts.Count, Is.EqualTo(RavenConstants.DefaultPagingSize * nrOfPages));
+            Assert.That(timeouts, Has.Count.EqualTo(RavenConstants.DefaultPagingSize * nrOfPages));
         }
 
         [Test]
@@ -113,7 +116,7 @@
 
             var startFrom = 125;
             var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", startFrom, (doc, id) => doc.Id = id);
-            Assert.That(timeouts.Count, Is.EqualTo(nrOfTimeouts - startFrom));
+            Assert.That(timeouts, Has.Count.EqualTo(nrOfTimeouts - startFrom));
         }
 
         [Test]
@@ -123,7 +126,7 @@
             await testSuite.InitTimeouts(nrOfTimeouts);
 
             var timeouts = await testSuite.RavenAdapter.GetPagedDocuments<TimeoutData>("TimeoutDatas", 0, (doc, id) => doc.Id = id, 1);
-            Assert.That(timeouts.Count, Is.EqualTo(RavenConstants.DefaultPagingSize));
+            Assert.That(timeouts, Has.Count.EqualTo(RavenConstants.DefaultPagingSize));
         }
 
         [Test]
@@ -144,7 +147,7 @@
 
             var result = await testSuite.RavenAdapter.GetDocumentsByIndex<TimeoutData>(0, TimeSpan.Zero, (doc, id) => doc.Id = id);
 
-            Assert.That(result.Documents.Count, Is.EqualTo(500));
+            Assert.That(result.Documents, Has.Count.EqualTo(500));
         }
     }
 
@@ -177,8 +180,11 @@
 
             var resultsPage2 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>(RavenConstants.DefaultPagingSize, TimeSpan.Zero, (doc, id) => doc.Id = id);
 
-            Assert.That(resultsPage1.Documents.Count, Is.EqualTo(1024));
-            Assert.That(resultsPage2.Documents.Count, Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
+            Assert.Multiple(() =>
+            {
+                Assert.That(resultsPage1.Documents, Has.Count.EqualTo(1024));
+                Assert.That(resultsPage2.Documents, Has.Count.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
+            });
             var timeoutIds = resultsPage1.Documents.Select(x => x.Id).ToList();
             timeoutIds.AddRange(resultsPage2.Documents.Select(x => x.Id));
             var uniqueTimeoutIds = timeoutIds.Distinct();
