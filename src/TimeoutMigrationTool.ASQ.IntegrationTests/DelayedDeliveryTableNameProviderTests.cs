@@ -16,7 +16,7 @@
             var delayedDeliveryTableName = delayedDeliveryTableNameGenerator.GetDelayedDeliveryTableName("EndpointName");
 
             // Assert
-            Assert.IsTrue(delayedDeliveryTableName.StartsWith("delays"));
+            Assert.That(delayedDeliveryTableName.StartsWith("delays"), Is.True);
         }
 
         [Test]

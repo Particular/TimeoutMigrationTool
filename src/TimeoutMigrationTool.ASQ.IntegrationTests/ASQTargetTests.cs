@@ -80,7 +80,7 @@
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
             // Assert
-            Assert.IsTrue(ableToMigrate.CanMigrate);
+            Assert.That(ableToMigrate.CanMigrate, Is.True);
         }
 
         [Test]
@@ -94,7 +94,7 @@
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             // Assert
-            Assert.IsTrue(await DoesTableExist(nameProvider.GetStagingTableName(endpointName)).ConfigureAwait(true));
+            Assert.That(await DoesTableExist(nameProvider.GetStagingTableName(endpointName)).ConfigureAwait(true), Is.True);
         }
 
         [Test]

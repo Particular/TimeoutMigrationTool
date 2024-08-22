@@ -154,7 +154,7 @@
             var currentMigration = await timeoutsSource.CheckIfAMigrationIsInProgress();
 
             // Assert
-            Assert.IsTrue(currentMigration);
+            Assert.That(currentMigration, Is.True);
         }
 
         [Test]
@@ -174,7 +174,7 @@
             var currentMigration = await timeoutsSource.CheckIfAMigrationIsInProgress();
 
             // Assert
-            Assert.IsTrue(currentMigration);
+            Assert.That(currentMigration, Is.True);
         }
 
         [Test]

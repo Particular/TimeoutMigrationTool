@@ -75,7 +75,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
             var result = await sut.AbleToMigrate(info);
 
-            Assert.IsTrue(result.CanMigrate);
+            Assert.That(result.CanMigrate, Is.True);
         }
 
         [Test]
@@ -156,7 +156,7 @@ namespace TimeoutMigrationTool.RabbitMq.IntegrationTests
             };
 
             var migrateResult = await sut.AbleToMigrate(info);
-            Assert.IsTrue(migrateResult.CanMigrate);
+            Assert.That(migrateResult.CanMigrate, Is.True);
 
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(ExistingEndpointNameUsingConventional);
 
