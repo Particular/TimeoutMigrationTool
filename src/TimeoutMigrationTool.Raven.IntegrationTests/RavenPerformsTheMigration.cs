@@ -129,7 +129,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var archivedToolStates = await testSuite.RavenAdapter.GetDocuments<RavenToolStateDto>(_ => true, RavenConstants.ArchivedToolStateIdPrefix);
 
-            Assert.That(archivedToolStates.Count, Is.EqualTo(1));
+            Assert.That(archivedToolStates, Has.Count.EqualTo(1));
 
             var archivedToolState = archivedToolStates.Single();
             Assert.Multiple(() =>

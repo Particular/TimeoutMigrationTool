@@ -144,7 +144,7 @@
 
             Assert.Multiple(() =>
             {
-                Assert.That(recordsInTable.Count, Is.EqualTo(2));
+                Assert.That(recordsInTable, Has.Count.EqualTo(2));
                 Assert.That(numberStaged, Is.EqualTo(2));
             });
         }
@@ -194,7 +194,7 @@
 
             Assert.Multiple(() =>
             {
-                Assert.That(recordsInTimeoutTable.Count, Is.EqualTo(2));
+                Assert.That(recordsInTimeoutTable, Has.Count.EqualTo(2));
                 Assert.That(numberCompleted, Is.EqualTo(2));
             });
         }

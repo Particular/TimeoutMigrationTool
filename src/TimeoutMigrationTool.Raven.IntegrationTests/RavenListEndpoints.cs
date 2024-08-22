@@ -52,7 +52,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.That(endpoints, Is.Not.Null);
-            Assert.That(endpoints.Count, Is.EqualTo(2));
+            Assert.That(endpoints, Has.Count.EqualTo(2));
 
             var endpointA = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointA");
             Assert.That(endpointA, Is.Not.Null);
@@ -84,7 +84,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.That(endpoints, Is.Not.Null);
-            Assert.That(endpoints.Count, Is.EqualTo(2));
+            Assert.That(endpoints, Has.Count.EqualTo(2));
         }
 
         [TestCase(true)]
@@ -101,7 +101,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.That(endpoints, Is.Not.Null);
-            Assert.That(endpoints.Count, Is.EqualTo(1));
+            Assert.That(endpoints, Has.Count.EqualTo(1));
             Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(49));
         }
 
@@ -119,7 +119,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             var endpoints = await sut.ListEndpoints(DateTime.Now);
 
             Assert.That(endpoints, Is.Not.Null);
-            Assert.That(endpoints.Count, Is.EqualTo(1));
+            Assert.That(endpoints, Has.Count.EqualTo(1));
             Assert.Multiple(() =>
             {
                 Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(50));

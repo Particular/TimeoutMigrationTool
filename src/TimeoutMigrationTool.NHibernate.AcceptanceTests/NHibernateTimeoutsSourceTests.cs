@@ -239,7 +239,7 @@
             var endpoints = await timeoutsSource.ListEndpoints(DateTime.UtcNow.AddDays(-100));
 
             // Assert
-            Assert.That(endpoints.Count, Is.EqualTo(2));
+            Assert.That(endpoints, Has.Count.EqualTo(2));
             Assert.That(endpoints.Select(endpoint => endpoint.EndpointName).ToArray(), Is.EqualTo(new[] { $"{endpointName}0", $"{endpointName}1" }));
         }
 
@@ -325,7 +325,7 @@
             // Assert
             using var validateSession = sessionFactory.OpenSession();
             var timeouts = await validateSession.QueryOver<TimeoutEntity>().ListAsync();
-            Assert.That(timeouts.Count, Is.EqualTo(2));
+            Assert.That(timeouts, Has.Count.EqualTo(2));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
             Assert.That(currentAfterAborting, Is.Null);
