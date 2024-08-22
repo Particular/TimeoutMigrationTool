@@ -91,10 +91,13 @@
             // Assert
             Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
-            Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
-            Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
-            Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
+                Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            });
         }
 
         [Test]
@@ -118,10 +121,13 @@
             // Assert
             Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
-            Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
-            Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
-            Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.Preparing));
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
+                Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.Preparing));
+            });
         }
 
         [Test]
@@ -195,10 +201,13 @@
             // Assert
             Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
-            Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
-            Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
-            Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
+                Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            });
         }
 
         [Test]
@@ -235,10 +244,13 @@
             // Assert
             Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
-            Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
-            Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(2));
-            Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(2));
+                Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            });
         }
 
         [Test]
@@ -292,10 +304,13 @@
             // Assert
             Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
-            Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
-            Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(1));
-            Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(1));
+                Assert.That(currentMigration.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+            });
         }
 
         [Test]
@@ -539,9 +554,12 @@
             Assert.That(timeouts.Results.Count, Is.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.That(currentAfterAborting, Is.Null);
+            Assert.Multiple(async () =>
+            {
+                Assert.That(currentAfterAborting, Is.Null);
 
-            Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
+                Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
+            });
         }
 
         [Test]
@@ -590,9 +608,12 @@
             Assert.That(timeouts.Results.Count, Is.EqualTo(3));
 
             var currentAfterAborting = await timeoutsSource.TryLoadOngoingMigration();
-            Assert.That(currentAfterAborting, Is.Null);
+            Assert.Multiple(async () =>
+            {
+                Assert.That(currentAfterAborting, Is.Null);
 
-            Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
+                Assert.That(await timeoutsSource.CheckIfAMigrationIsInProgress(), Is.False);
+            });
         }
 
         [Test]
@@ -646,9 +667,12 @@
 
             var singleElement = result[0];
 
-            Assert.That(singleElement.NrOfTimeouts, Is.EqualTo(5));
-            Assert.That(singleElement.ShortestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(1).Day));
-            Assert.That(singleElement.LongestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(5).Day));
+            Assert.Multiple(() =>
+            {
+                Assert.That(singleElement.NrOfTimeouts, Is.EqualTo(5));
+                Assert.That(singleElement.ShortestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(1).Day));
+                Assert.That(singleElement.LongestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(5).Day));
+            });
             CollectionAssert.AreEquivalent(new List<string>
             {
                 "Destination1",

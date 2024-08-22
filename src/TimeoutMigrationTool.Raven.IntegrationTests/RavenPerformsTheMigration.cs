@@ -81,8 +81,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             toolState = await sut.TryLoadOngoingMigration();
             var currentBatch = await toolState.TryGetNextBatch();
 
-            Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));
-            Assert.That(currentBatch, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(updatedBatch.State, Is.EqualTo(BatchState.Completed));
+                Assert.That(currentBatch, Is.Not.Null);
+            });
             Assert.That(currentBatch.Number, Is.EqualTo(batchToVerify.Number + 1));
         }
 
@@ -129,8 +132,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             Assert.That(archivedToolStates.Count, Is.EqualTo(1));
 
             var archivedToolState = archivedToolStates.Single();
-            Assert.That(archivedToolState.Status, Is.EqualTo(MigrationStatus.Completed));
-            Assert.That(archivedToolState.CompletedAt, Is.GreaterThan(timeStarted));
+            Assert.Multiple(() =>
+            {
+                Assert.That(archivedToolState.Status, Is.EqualTo(MigrationStatus.Completed));
+                Assert.That(archivedToolState.CompletedAt, Is.GreaterThan(timeStarted));
+            });
         }
     }
 

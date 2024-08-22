@@ -296,9 +296,12 @@
 
             var numberOfTimeouts = await QueryScalarAsync<int>($"SELECT COUNT(*) FROM [{sourceEndpoint}_TimeoutData]");
 
-            Assert.That(numberOfTimeouts, Is.EqualTo(10 - batch1.NumberOfTimeouts));
+            Assert.Multiple(async () =>
+            {
+                Assert.That(numberOfTimeouts, Is.EqualTo(10 - batch1.NumberOfTimeouts));
 
-            Assert.That(await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutsMigration_State WHERE Status = 3"), Is.EqualTo(1), "Status should be set to aborted");
+                Assert.That(await QueryScalarAsync<int>($"SELECT COUNT(*) FROM TimeoutsMigration_State WHERE Status = 3"), Is.EqualTo(1), "Status should be set to aborted");
+            });
         }
 
         [Test]

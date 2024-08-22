@@ -56,15 +56,21 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             var endpointA = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointA");
             Assert.That(endpointA, Is.Not.Null);
-            Assert.That(endpointA.NrOfTimeouts, Is.EqualTo(nrOfTimeouts));
-            Assert.That(endpointA.ShortestTimeout, Is.EqualTo(endpointATimes.ShortestTimeout));
-            Assert.That(endpointA.LongestTimeout, Is.EqualTo(endpointATimes.LongestTimeout));
+            Assert.Multiple(() =>
+            {
+                Assert.That(endpointA.NrOfTimeouts, Is.EqualTo(nrOfTimeouts));
+                Assert.That(endpointA.ShortestTimeout, Is.EqualTo(endpointATimes.ShortestTimeout));
+                Assert.That(endpointA.LongestTimeout, Is.EqualTo(endpointATimes.LongestTimeout));
+            });
 
             var endpointB = endpoints.FirstOrDefault(x => x.EndpointName == "EndpointB");
             Assert.That(endpointB, Is.Not.Null);
-            Assert.That(endpointB.NrOfTimeouts, Is.EqualTo(500));
-            Assert.That(endpointB.ShortestTimeout, Is.EqualTo(endpointBTimes.ShortestTimeout));
-            Assert.That(endpointB.LongestTimeout, Is.EqualTo(endpointBTimes.LongestTimeout));
+            Assert.Multiple(() =>
+            {
+                Assert.That(endpointB.NrOfTimeouts, Is.EqualTo(500));
+                Assert.That(endpointB.ShortestTimeout, Is.EqualTo(endpointBTimes.ShortestTimeout));
+                Assert.That(endpointB.LongestTimeout, Is.EqualTo(endpointBTimes.LongestTimeout));
+            });
         }
 
         [TestCase(true)]
@@ -114,8 +120,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             Assert.That(endpoints, Is.Not.Null);
             Assert.That(endpoints.Count, Is.EqualTo(1));
-            Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(50));
-            Assert.That(endpoints.First().EndpointName, Is.EqualTo(testSuite.EndpointName));
+            Assert.Multiple(() =>
+            {
+                Assert.That(endpoints.First().NrOfTimeouts, Is.EqualTo(50));
+                Assert.That(endpoints.First().EndpointName, Is.EqualTo(testSuite.EndpointName));
+            });
         }
     }
 

@@ -44,9 +44,12 @@
             // Act
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
-            // Assert
-            Assert.That(ableToMigrate.CanMigrate, Is.False);
-            Assert.That(ableToMigrate.Problems[0], Is.EqualTo("Target delayed delivery table TimeoutTableThatDoesNotExist does not exist."));
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(ableToMigrate.CanMigrate, Is.False);
+                Assert.That(ableToMigrate.Problems[0], Is.EqualTo("Target delayed delivery table TimeoutTableThatDoesNotExist does not exist."));
+            });
         }
 
         [Test]
@@ -63,9 +66,12 @@
             // Act
             var ableToMigrate = await timeoutTarget.AbleToMigrate(new EndpointInfo { EndpointName = endpointName });
 
-            // Assert
-            Assert.That(ableToMigrate.CanMigrate, Is.False);
-            Assert.That(ableToMigrate.Problems[0], Does.StartWith("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message '"));
+            Assert.Multiple(() =>
+            {
+                // Assert
+                Assert.That(ableToMigrate.CanMigrate, Is.False);
+                Assert.That(ableToMigrate.Problems[0], Does.StartWith("Unable to connect to the storage instance on account 'fakename'. Verify the connection string. Exception message '"));
+            });
         }
 
         [Test]
@@ -136,8 +142,11 @@
             // Assert
             var recordsInTable = await ReadTimeoutsFromTable(nameProvider.GetStagingTableName(endpointName));
 
-            Assert.That(recordsInTable.Count, Is.EqualTo(2));
-            Assert.That(numberStaged, Is.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(recordsInTable.Count, Is.EqualTo(2));
+                Assert.That(numberStaged, Is.EqualTo(2));
+            });
         }
 
         [Test]
@@ -183,8 +192,11 @@
             // Assert
             var recordsInTimeoutTable = await ReadTimeoutsFromTable(nameProvider.GetDelayedDeliveryTableName(endpointName));
 
-            Assert.That(recordsInTimeoutTable.Count, Is.EqualTo(2));
-            Assert.That(numberCompleted, Is.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(recordsInTimeoutTable.Count, Is.EqualTo(2));
+                Assert.That(numberCompleted, Is.EqualTo(2));
+            });
         }
 
         [Test]

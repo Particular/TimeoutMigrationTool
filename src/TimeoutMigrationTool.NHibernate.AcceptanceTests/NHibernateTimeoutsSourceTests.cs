@@ -45,9 +45,12 @@
             // Assert
             Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
-            Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
-            Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(0));
+            });
         }
 
         [Test]
@@ -85,9 +88,12 @@
             // Assert
             Assert.That(currentMigration, Is.Not.Null);
 
-            Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
-            Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
-            Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(currentMigration.EndpointName, Is.EqualTo(endpointName));
+                Assert.That(currentMigration.RunParameters, Is.EqualTo(runParameters));
+                Assert.That(currentMigration.NumberOfBatches, Is.EqualTo(2));
+            });
         }
 
         [Test]
@@ -360,8 +366,11 @@
 
             // Assert
             Assert.That(firstBatch, Is.Not.Null);
-            Assert.That(firstBatch.State, Is.EqualTo(BatchState.Pending));
-            Assert.That(firstBatch.NumberOfTimeouts, Is.EqualTo(1));
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstBatch.State, Is.EqualTo(BatchState.Pending));
+                Assert.That(firstBatch.NumberOfTimeouts, Is.EqualTo(1));
+            });
         }
 
         [Test]

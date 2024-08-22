@@ -52,8 +52,11 @@ namespace TimeoutMigrationTool.Tests
 
             await runner.Run();
 
-            Assert.That(timeoutsSource.MigrationWasAborted, Is.True);
-            Assert.That(timeoutsTarget.MigrationWasAborted, Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(timeoutsSource.MigrationWasAborted, Is.True);
+                Assert.That(timeoutsTarget.MigrationWasAborted, Is.True);
+            });
         }
 
         static List<BatchInfo> GetBatches()

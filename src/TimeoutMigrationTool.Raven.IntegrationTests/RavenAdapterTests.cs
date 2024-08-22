@@ -38,8 +38,11 @@
 
             var timeouts = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(timeoutIds, (doc, id) => doc.Id = id);
 
-            Assert.That(timeouts.Count, Is.EqualTo(5));
-            Assert.That(string.IsNullOrEmpty(timeouts.First().Id), Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(timeouts.Count, Is.EqualTo(5));
+                Assert.That(string.IsNullOrEmpty(timeouts.First().Id), Is.False);
+            });
         }
 
         [Test]
@@ -177,8 +180,11 @@
 
             var resultsPage2 = await ravenAdapter.GetDocumentsByIndex<TimeoutData>(RavenConstants.DefaultPagingSize, TimeSpan.Zero, (doc, id) => doc.Id = id);
 
-            Assert.That(resultsPage1.Documents.Count, Is.EqualTo(1024));
-            Assert.That(resultsPage2.Documents.Count, Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
+            Assert.Multiple(() =>
+            {
+                Assert.That(resultsPage1.Documents.Count, Is.EqualTo(1024));
+                Assert.That(resultsPage2.Documents.Count, Is.EqualTo(nrOfTimeouts - RavenConstants.DefaultPagingSize));
+            });
             var timeoutIds = resultsPage1.Documents.Select(x => x.Id).ToList();
             timeoutIds.AddRange(resultsPage2.Documents.Select(x => x.Id));
             var uniqueTimeoutIds = timeoutIds.Distinct();

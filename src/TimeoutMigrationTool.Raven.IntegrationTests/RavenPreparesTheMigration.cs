@@ -73,8 +73,11 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
 
             Assert.ThrowsAsync<Exception>(async () => { await timeoutStorage.Prepare(cutoffTime, "someOtherEndpoint", new Dictionary<string, string>()); });
             var timeoutsFromSecondBatch = await testSuite.RavenAdapter.GetDocuments<TimeoutData>(data => Convert.ToInt32(data.Id.Replace("TimeoutDatas/", "")) >= nrOfTimeouts, "TimeoutDatas", (doc, id) => doc.Id = id);
-            Assert.That(timeoutsFromSecondBatch.Count(), Is.EqualTo(secondBatchNrOfTimeouts));
-            Assert.That(timeoutsFromSecondBatch.All(x => !x.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix)), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(timeoutsFromSecondBatch.Count(), Is.EqualTo(secondBatchNrOfTimeouts));
+                Assert.That(timeoutsFromSecondBatch.All(x => !x.OwningTimeoutManager.StartsWith(RavenConstants.MigrationOngoingPrefix)), Is.True);
+            });
         }
 
         [Test]
@@ -107,10 +110,13 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
             var storedToolState = await testSuite.RavenAdapter.GetDocument<RavenToolStateDto>(RavenConstants.ToolStateId);
 
-            Assert.That(storedToolState.NumberOfTimeouts, Is.EqualTo(nrOfTimeouts));
-            Assert.That(storedToolState.NumberOfBatches, Is.EqualTo(2));
-            Assert.That(storedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
-            Assert.That(storedToolState.StartedAt, Is.GreaterThan(startTime));
+            Assert.Multiple(() =>
+            {
+                Assert.That(storedToolState.NumberOfTimeouts, Is.EqualTo(nrOfTimeouts));
+                Assert.That(storedToolState.NumberOfBatches, Is.EqualTo(2));
+                Assert.That(storedToolState.Status, Is.EqualTo(MigrationStatus.StoragePrepared));
+                Assert.That(storedToolState.StartedAt, Is.GreaterThan(startTime));
+            });
 
             var firstBatch = await toolState.TryGetNextBatch();
             var batchData = await timeoutStorage.ReadBatch(firstBatch.Number);
@@ -176,10 +182,13 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests
             Assert.That(toolState.NumberOfBatches, Is.EqualTo(2));
             var firstBatch = await timeoutStorage.ReadBatch(1);
             var secondBatch = await timeoutStorage.ReadBatch(2);
-            Assert.That(firstBatch.Count(), Is.EqualTo(10));
-            Assert.That(secondBatch.Count(), Is.EqualTo(secondBatchNrOfTimeouts));
-            Assert.That(secondBatch.All(t => Convert.ToInt32(t.Id.Replace("TimeoutDatas/", "")) >= 10));
-            Assert.That(firstBatch.All(t => Convert.ToInt32(t.Id.Replace("TimeoutDatas/", "")) < 10));
+            Assert.Multiple(() =>
+            {
+                Assert.That(firstBatch.Count(), Is.EqualTo(10));
+                Assert.That(secondBatch.Count(), Is.EqualTo(secondBatchNrOfTimeouts));
+                Assert.That(secondBatch.All(t => Convert.ToInt32(t.Id.Replace("TimeoutDatas/", "")) >= 10));
+                Assert.That(firstBatch.All(t => Convert.ToInt32(t.Id.Replace("TimeoutDatas/", "")) < 10));
+            });
         }
 
         int nrOfTimeouts = 1500;
