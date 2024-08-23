@@ -22,7 +22,7 @@
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.4.0" />
     <PackageReference Include="NServiceBus.Persistence.Sql" Version="6.6.5" />
     <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.5" />
-    <PackageReference Include="NServiceBus.SqlServer" Version="6.3.8" />
+    <PackageReference Include="NServiceBus.SqlServer" Version="7.0.6" />
     <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="10.0.5" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
