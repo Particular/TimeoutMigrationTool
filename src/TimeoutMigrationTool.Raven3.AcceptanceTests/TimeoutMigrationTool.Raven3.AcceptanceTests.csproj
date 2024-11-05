@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="NServiceBus.AcceptanceTesting" Version="7.8.4" />
-    <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.5" />
+    <PackageReference Include="NServiceBus.RabbitMQ" Version="8.0.5" />
     <PackageReference Include="NServiceBus.RavenDB" Version="5.0.1" />
   </ItemGroup>
 
