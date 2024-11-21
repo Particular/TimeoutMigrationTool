@@ -19,14 +19,14 @@ namespace TimeoutMigrationTool.Tests
 
             runner = new MigrationRunner(logger, timeoutsSource, timeoutsTarget);
 
-            endpoints = new List<EndpointInfo>
-            {
+            endpoints =
+            [
                 new EndpointInfo
                 {
                     EndpointName = "Sales",
                     NrOfTimeouts = 500
                 }
-            };
+            ];
             testEndpoint = endpoints.First().EndpointName;
             timeoutsSource.SetupEndpoints(endpoints);
         }
@@ -67,7 +67,7 @@ namespace TimeoutMigrationTool.Tests
                 RunParameters = new Dictionary<string, string> { { "somekey", "somevalue" } }
             };
             timeoutsSource.SetupToolStateToReturn(toolState);
-            timeoutsSource.SetupEndpoints(new List<EndpointInfo>());
+            timeoutsSource.SetupEndpoints([]);
 
             Assert.ThrowsAsync<Exception>(async () =>
             {

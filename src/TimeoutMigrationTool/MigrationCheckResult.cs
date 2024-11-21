@@ -5,7 +5,7 @@
 
     public class MigrationCheckResult
     {
-        public List<string> Problems { get; set; } = new List<string>();
+        public List<string> Problems { get; set; } = [];
 
         public bool CanMigrate => !Problems.Any();
     }

@@ -36,7 +36,7 @@
                 logger.LogInformation($"\t-Longest timeout: {endpoint.LongestTimeout}");
                 logger.LogInformation($"\t-Timeout destinations: {string.Join(",", endpoint.Destinations)}");
 
-                endpointProblems[endpoint.EndpointName] = new List<string>();
+                endpointProblems[endpoint.EndpointName] = [];
 
                 var migrationCheckResult = await timeoutsTarget.AbleToMigrate(endpoint);
 

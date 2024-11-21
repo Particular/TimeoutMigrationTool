@@ -14,13 +14,13 @@ public static class EnvironmentVariables
 
     public const string SqlServerConnectionString = "SqlServerConnectionString";
 
-    public static IReadOnlyList<string> Names { get; } = new List<string>
-        {
+    public static IReadOnlyList<string> Names { get; } =
+        [
             AzureStorageConnectionString,
             Raven4Url,
             OracleConnectionString,
             RabbitMqHost,
             Raven3Url,
             SqlServerConnectionString,
-        };
+        ];
 }

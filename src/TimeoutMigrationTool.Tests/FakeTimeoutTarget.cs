@@ -8,8 +8,8 @@ namespace TimeoutMigrationTool.Tests
     {
         List<string> problemsToReturn;
         public bool BatchWasStaged { get; private set; }
-        public List<TimeoutData> TimeoutsStaged { get; } = new List<TimeoutData>();
-        public List<int> BatchesCompleted { get; } = new List<int>();
+        public List<TimeoutData> TimeoutsStaged { get; } = [];
+        public List<int> BatchesCompleted { get; } = [];
         public bool EndpointWasVerified { get; private set; } = false;
 
         public bool MigrationWasAborted { get; private set; }
@@ -32,7 +32,7 @@ namespace TimeoutMigrationTool.Tests
         public ValueTask<MigrationCheckResult> AbleToMigrate(EndpointInfo endpoint)
         {
             EndpointWasVerified = true;
-            var problems = problemsToReturn ?? new List<string>();
+            var problems = problemsToReturn ?? [];
 
             var result = new MigrationCheckResult
             {

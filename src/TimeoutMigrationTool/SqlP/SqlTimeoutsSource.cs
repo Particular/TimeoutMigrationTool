@@ -90,7 +90,7 @@
             List<TimeoutData> results = null;
             if (reader.HasRows)
             {
-                results = new List<TimeoutData>();
+                results = [];
                 await foreach (var timeoutDataRow in ReadTimeoutDataRows(reader))
                 {
                     results.Add(timeoutDataRow);

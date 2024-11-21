@@ -3,7 +3,6 @@ namespace Particular.TimeoutMigrationTool.RavenDB
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using global::NHibernate.Mapping;
 
     public class RavenToolState : IToolState
     {
@@ -12,7 +11,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
             RunParameters = runParameters;
             EndpointName = endpointName;
             Status = migrationStatus;
-            Batches = new List<RavenBatch>();
+            Batches = [];
         }
 
         public RavenToolState(IDictionary<string, string> runParameters, string endpointName, IEnumerable<RavenBatch> batches, MigrationStatus migrationStatus) : this(runParameters, endpointName, migrationStatus)

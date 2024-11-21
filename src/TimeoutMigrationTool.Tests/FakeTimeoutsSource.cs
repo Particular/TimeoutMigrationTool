@@ -9,9 +9,9 @@ namespace TimeoutMigrationTool.Tests
     public class FakeTimeoutsSource : ITimeoutsSource
     {
         IToolState existingToolState;
-        List<BatchInfo> preparedBatches = new List<BatchInfo>();
-        List<EndpointInfo> endpoints = new List<EndpointInfo>();
-        List<BatchInfo> readBatchResults = new List<BatchInfo>();
+        List<BatchInfo> preparedBatches = [];
+        List<EndpointInfo> endpoints = [];
+        List<BatchInfo> readBatchResults = [];
         public bool BatchWasRead { get; private set; }
         public bool BatchWasCompleted { get; private set; }
         public bool BatchWasStaged { get; private set; }

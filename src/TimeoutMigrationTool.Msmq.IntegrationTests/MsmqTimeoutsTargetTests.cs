@@ -161,8 +161,8 @@ CREATE TABLE [{1}].[{0}] (
 
             const int batchNumber = 2;
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(ExistingEndpointName);
-            await endpointTarget.StageBatch(new List<TimeoutData>
-            {
+            await endpointTarget.StageBatch(
+            [
                 new TimeoutData
                 {
                     Id = "SomeID",
@@ -185,7 +185,7 @@ CREATE TABLE [{1}].[{0}] (
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, batchNumber);
+            ], batchNumber);
 
             await endpointTarget.CompleteBatch(batchNumber);
 
