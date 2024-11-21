@@ -1,13 +1,13 @@
 ﻿namespace TimeoutMigrationTool.ASQ.IntegrationTests
 {
-    using Microsoft.Azure.Cosmos.Table;
-    using NUnit.Framework;
-    using Particular.TimeoutMigrationTool;
-    using Particular.TimeoutMigrationTool.ASQ;
     using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Cosmos.Table;
+    using NUnit.Framework;
+    using Particular.TimeoutMigrationTool;
+    using Particular.TimeoutMigrationTool.ASQ;
 
     [TestFixture]
     [EnvironmentSpecificTest(EnvironmentVariables.AzureStorageConnectionString)]
@@ -113,8 +113,8 @@
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
             // Act
-            var numberStaged = await migrator.StageBatch(new List<TimeoutData>
-            {
+            var numberStaged = await migrator.StageBatch(
+            [
                 new TimeoutData
                 {
                     Id = "SomeID",
@@ -137,7 +137,7 @@
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, 1);
+            ], 1);
 
             // Assert
             var recordsInTable = await ReadTimeoutsFromTable(nameProvider.GetStagingTableName(endpointName));
@@ -160,8 +160,8 @@
             var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
-            await migrator.StageBatch(new List<TimeoutData>
-            {
+            await migrator.StageBatch(
+            [
                 new TimeoutData
                 {
                     Id = "SomeID",
@@ -184,7 +184,7 @@
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, 1);
+            ], 1);
 
             // Act
             var numberCompleted = await migrator.CompleteBatch(1);
@@ -210,8 +210,8 @@
             var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
-            await migrator.StageBatch(new List<TimeoutData>
-            {
+            await migrator.StageBatch(
+            [
                 new TimeoutData
                 {
                     Id = "SomeID",
@@ -234,7 +234,7 @@
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, 1);
+            ], 1);
 
             // Act
             await migrator.CompleteBatch(1);
@@ -276,8 +276,8 @@
             var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
-            var numberStaged = await migrator.StageBatch(new List<TimeoutData>
-            {
+            var numberStaged = await migrator.StageBatch(
+            [
                 new TimeoutData
                 {
                     Id = "SomeID",
@@ -300,7 +300,7 @@
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, 1);
+            ], 1);
 
             // Assert
             Assert.ThrowsAsync<Exception>(async () =>
@@ -321,8 +321,8 @@
             var timeoutTarget = new ASQTarget(connectionString, nameProvider);
             await using var migrator = await timeoutTarget.PrepareTargetEndpointBatchMigrator(endpointName);
 
-            await migrator.StageBatch(new List<TimeoutData>
-            {
+            await migrator.StageBatch(
+            [
                 new TimeoutData
                 {
                     Id = "SomeID",
@@ -345,7 +345,7 @@
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, 1);
+            ], 1);
 
             await migrator.CompleteBatch(1);
 

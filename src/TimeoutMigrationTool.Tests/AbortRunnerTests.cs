@@ -20,14 +20,14 @@ namespace TimeoutMigrationTool.Tests
 
             runner = new AbortRunner(logger, timeoutsSource, timeoutsTarget);
 
-            endpoints = new List<EndpointInfo>
-            {
+            endpoints =
+            [
                 new EndpointInfo
                 {
                     EndpointName = "Sales",
                     NrOfTimeouts = 500
                 }
-            };
+            ];
             testEndpoint = endpoints.First().EndpointName;
             timeoutsSource.SetupEndpoints(endpoints);
         }

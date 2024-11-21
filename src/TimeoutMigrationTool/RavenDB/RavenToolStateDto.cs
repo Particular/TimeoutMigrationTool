@@ -6,7 +6,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
 
     public class RavenToolStateDto
     {
-        public List<string> Batches { get; set; } = new List<string>();
+        public List<string> Batches { get; set; } = [];
         public IDictionary<string, string> RunParameters { get; set; } = new Dictionary<string, string>();
         public MigrationStatus Status { get; set; }
         public DateTime StartedAt { get; set; }

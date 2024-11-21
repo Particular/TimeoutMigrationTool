@@ -531,7 +531,7 @@
                     TableOperators.And,
                     GenerateFilterCondition(nameof(TimeoutDataEntity.OwningTimeoutManager), QueryComparisons.Equal, endpointNameToBelisted)));
 
-            query.SelectColumns = new List<string> { nameof(DynamicTableEntity.PartitionKey), nameof(TimeoutDataEntity.Destination) };
+            query.SelectColumns = [nameof(DynamicTableEntity.PartitionKey), nameof(TimeoutDataEntity.Destination)];
 
             TableContinuationToken token = null;
             var numberOfTimeouts = 0;
@@ -575,8 +575,8 @@
                 }
             } while (token != null && !queryCancellationToken.IsCancellationRequested);
 
-            return new List<EndpointInfo>
-            {
+            return
+            [
                 new EndpointInfo
                 {
                     Destinations = destinations.ToList(),
@@ -585,7 +585,7 @@
                     ShortestTimeout = minDateTime,
                     NrOfTimeouts = numberOfTimeouts
                 }
-            };
+            ];
         }
 
         public async Task Abort()
@@ -618,7 +618,7 @@
                     GenerateFilterCondition(nameof(PartialTimeoutDataEntityWithOwningTimeoutManager.OwningTimeoutManager), QueryComparisons.Equal,
                         toolState.UniqueHiddenEndpointName)));
 
-            query.SelectColumns = new List<string> { nameof(PartialTimeoutDataEntityWithOwningTimeoutManager.OwningTimeoutManager) };
+            query.SelectColumns = [nameof(PartialTimeoutDataEntityWithOwningTimeoutManager.OwningTimeoutManager)];
             TableContinuationToken token = null;
             CancellationToken queryCancellationToken = CancellationToken.None;
 

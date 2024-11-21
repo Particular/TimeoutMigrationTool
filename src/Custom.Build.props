@@ -5,4 +5,9 @@
     <MinVerAutoIncrement>minor</MinVerAutoIncrement>
   </PropertyGroup>
 
+  <!-- Workaround to avoid NETSDK1206 warning from deprecated Cosmos packages -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
+  </ItemGroup>
+
 </Project>

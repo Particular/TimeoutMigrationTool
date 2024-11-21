@@ -309,7 +309,7 @@ namespace Particular.TimeoutMigrationTool.RavenDB
         {
             if (!ids.Any())
             {
-                return new List<T>();
+                return [];
             }
 
             if (ids.Any(id => string.IsNullOrEmpty(id)))

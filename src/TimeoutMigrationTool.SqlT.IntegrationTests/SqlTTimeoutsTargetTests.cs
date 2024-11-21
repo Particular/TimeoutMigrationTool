@@ -57,10 +57,10 @@ CREATE TABLE [{1}].[{0}] (
                 EndpointName = ExistingEndpointName,
                 ShortestTimeout = DateTime.UtcNow.AddDays(3),
                 LongestTimeout = DateTime.UtcNow.AddDays(5),
-                Destinations = new List<string>
-                {
+                Destinations =
+                [
                     ExistingDestination
-                }
+                ]
             };
             var result = await sut.AbleToMigrate(info);
 
@@ -86,10 +86,10 @@ IF OBJECT_ID('{0}.{1}', 'u') IS NOT NULL
                 EndpointName = ExistingEndpointName,
                 ShortestTimeout = DateTime.UtcNow.AddDays(3),
                 LongestTimeout = DateTime.UtcNow.AddDays(5),
-                Destinations = new List<string>
-                {
+                Destinations =
+                [
                     ExistingDestination
-                }
+                ]
             };
             var result = await sut.AbleToMigrate(info);
 
@@ -161,8 +161,8 @@ CREATE TABLE [{1}].[{0}] (
 
             const int BatchNumber = 2;
             await using var endpointTarget = await sut.PrepareTargetEndpointBatchMigrator(ExistingEndpointName);
-            await endpointTarget.StageBatch(new List<TimeoutData>
-            {
+            await endpointTarget.StageBatch(
+            [
                 new TimeoutData
                 {
                     Id = "SomeID",
@@ -185,7 +185,7 @@ CREATE TABLE [{1}].[{0}] (
                     State = new byte[2],
                     Time = new DateTime(2021, 12, 12, 12, 13, 13, DateTimeKind.Utc)
                 },
-            }, BatchNumber);
+            ], BatchNumber);
 
             await endpointTarget.CompleteBatch(BatchNumber);
 

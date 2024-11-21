@@ -82,7 +82,7 @@
 
         void Fill(IBasicProperties properties, TimeoutData timeout, TimeSpan delay)
         {
-            var messageHeaders = timeout.Headers ?? new Dictionary<string, string>();
+            var messageHeaders = timeout.Headers ?? [];
 
             if (messageHeaders.TryGetValue("NServiceBus.MessageId", out var originalMessageId) && !string.IsNullOrEmpty(originalMessageId))
             {

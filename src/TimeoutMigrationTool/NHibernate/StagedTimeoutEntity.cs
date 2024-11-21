@@ -34,7 +34,7 @@ namespace Particular.TimeoutMigrationTool.NHibernate
 
         static Dictionary<string, string> ConvertStringToDictionary(string data)
         {
-            return string.IsNullOrEmpty(data) ? new Dictionary<string, string>() : DeSerialize<Dictionary<string, string>>(data);
+            return string.IsNullOrEmpty(data) ? [] : DeSerialize<Dictionary<string, string>>(data);
         }
 
         static T DeSerialize<T>(string data)

@@ -70,7 +70,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     SagaId = Guid.NewGuid(),
                     OwningTimeoutManager = "A",
                     Time = i < nrOfTimeouts / 2 ? DateTime.Now.AddDays(7) : DateTime.Now.AddDays(14),
-                    Headers = new Dictionary<string, string>(),
+                    Headers = [],
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
 
@@ -114,7 +114,7 @@ namespace TimeoutMigrationTool.Raven.IntegrationTests.Raven4
                     SagaId = Guid.NewGuid(),
                     OwningTimeoutManager = endpointName,
                     Time = DateTime.Now.AddDays(daysToTrigger),
-                    Headers = new Dictionary<string, string>(),
+                    Headers = [],
                     State = Encoding.ASCII.GetBytes("This is my state")
                 };
 
