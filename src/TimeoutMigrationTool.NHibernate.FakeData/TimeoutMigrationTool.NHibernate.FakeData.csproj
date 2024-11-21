@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NServiceBus.NHibernate" Version="8.6.3" />
-    <PackageReference Include="NServiceBus.Transport.Msmq" Version="1.2.4" />
+    <PackageReference Include="NServiceBus.NHibernate" Version="8.6.4" />
+    <PackageReference Include="NServiceBus.Transport.Msmq" Version="1.2.5" />
   </ItemGroup>
 
 </Project>

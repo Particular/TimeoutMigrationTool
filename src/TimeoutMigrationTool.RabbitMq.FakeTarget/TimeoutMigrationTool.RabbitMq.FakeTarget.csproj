@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.5" />
+    <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.7" />
   </ItemGroup>
 
 </Project>
