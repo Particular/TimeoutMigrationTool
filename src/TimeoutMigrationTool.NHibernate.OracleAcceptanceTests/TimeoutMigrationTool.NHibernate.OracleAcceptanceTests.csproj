@@ -24,6 +24,10 @@
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
   </ItemGroup>
 
+  <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
+    <PackageReference Include="System.Drawing.Common" Version="4.7.3" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\ConfigureExtensions.cs" />
     <Compile Include="..\TimeoutMigrationTool.NHibernate.AcceptanceTests\EndpointCustomizationConfigurationExtensions.cs" />

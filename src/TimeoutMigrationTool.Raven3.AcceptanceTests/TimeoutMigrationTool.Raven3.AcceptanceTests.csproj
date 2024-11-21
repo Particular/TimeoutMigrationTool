@@ -21,4 +21,8 @@
     <PackageReference Include="NServiceBus.RavenDB" Version="5.0.1" />
   </ItemGroup>
 
+  <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
+    <PackageReference Include="System.ServiceModel.Primitives " Version="8.1.0" />
+  </ItemGroup>
+
 </Project>
