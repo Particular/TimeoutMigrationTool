@@ -89,7 +89,7 @@ jobs:
           registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Setup RabbitMQ
         if: contains(matrix.engines, 'RabbitMQ')
-        uses: Particular/setup-rabbitmq-action@v1.7.0
+        uses: Particular/setup-rabbitmq-action@v1.7.1
         with:
           connection-string-name: RabbitMqConnectionString
           host-env-var-name: RabbitMqHost
