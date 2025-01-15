@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
-    <PackageReference Include="System.Drawing.Common" Version="4.7.3" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
