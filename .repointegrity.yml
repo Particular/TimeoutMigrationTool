@@ -1,0 +1,5 @@
+ignore:
+  # Microsoft.Azure.Cosmos.Table is deprecated as legacy
+  # See https://github.com/Particular/TimeoutMigrationTool/issues/200
+  - test: ShouldNotReferenceDeprecatedPackages
+    path: '*'
