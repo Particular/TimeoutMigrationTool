@@ -32,7 +32,7 @@
         /// </summary>
         ValueTask Complete(string endpointName);
 
-        public interface IEndpointTargetBatchMigrator : IAsyncDisposable
+        interface IEndpointTargetBatchMigrator : IAsyncDisposable
         {
             /// <summary>
             /// Adds the provided set of timeouts to the staging queue for timeouts
