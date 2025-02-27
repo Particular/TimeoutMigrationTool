@@ -13,6 +13,7 @@
     <ToolCommandName>migrate-timeouts</ToolCommandName>
     <PackAsTool>true</PackAsTool>
     <RootNamespace>Particular.TimeoutMigrationTool</RootNamespace>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
