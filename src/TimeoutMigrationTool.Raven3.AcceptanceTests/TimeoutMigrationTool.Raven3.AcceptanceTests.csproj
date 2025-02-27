@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
-    <PackageReference Include="System.ServiceModel.Primitives " Version="8.1.0" />
+    <PackageReference Include="System.ServiceModel.Primitives " Version="8.1.1" />
   </ItemGroup>
 
 </Project>
