@@ -26,7 +26,7 @@
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Particular.Packaging" Version="4.2.2" PrivateAssets="All" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.1" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
