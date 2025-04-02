@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net48;net8.0</TargetFrameworks>
@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.14.0" />
-    <PackageReference Include="NUnit.Analyzers" Version="4.6.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.7.0" />
   </ItemGroup>
 
   <!-- Workaround to prevent VS test discovery error -->
