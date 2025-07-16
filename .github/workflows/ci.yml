@@ -36,15 +36,15 @@ jobs:
           - engines: AzureStorage
             upload-packages: true
           # Add os-name alias for job name
-          - os: windows-2022
+          - os: windows-latest
             os-name: Windows
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             os-name: Linux
           # Additional permutations
-          - os: windows-2022
+          - os: windows-latest
             os-name: Windows
             engines: RabbitMQ-RavenDB3
-          - os: windows-2022
+          - os: windows-latest
             os-name: Windows
             engines: RavenDB3
       fail-fast: false
