@@ -21,7 +21,7 @@
     <PackageReference Include="NServiceBus.Persistence.AzureStorage" Version="2.4.2" />
     <PackageReference Include="NServiceBus.RabbitMQ" Version="7.0.7" />
     <PackageReference Include="NServiceBus.SqlServer" Version="6.3.8" />
-    <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="10.0.6" />
+    <PackageReference Include="NServiceBus.Transport.AzureStorageQueues" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup Label="Direct references to transitive dependencies to avoid versions with CVE">
