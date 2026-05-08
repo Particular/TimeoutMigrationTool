@@ -1,9 +1,11 @@
-﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
+namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Customization;
     using NServiceBus.AcceptanceTesting.Support;
+    using NUnit.Framework;
     using System;
+    using System.IO;
     using System.Threading.Tasks;
     using TimeoutMigrationTool.Msmq.AcceptanceTests;
 
@@ -21,7 +23,11 @@
 
             endpointConfiguration.EnableInstallers();
 
-            endpointConfiguration.UseTransport(new AcceptanceTestingTransport());
+            var storageDir = Path.Combine(SqlPAcceptanceTest.StorageRootDir, TestContext.CurrentContext.Test.ID);
+            endpointConfiguration.UseTransport(new AcceptanceTestingTransport(enableNativeDelayedDelivery: false)
+            {
+                StorageLocation = storageDir
+            });
 
             endpointConfiguration.RegisterComponentsAndInheritanceHierarchy(runDescriptor);
 

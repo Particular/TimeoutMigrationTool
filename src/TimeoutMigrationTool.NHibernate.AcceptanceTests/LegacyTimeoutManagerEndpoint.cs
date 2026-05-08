@@ -1,9 +1,11 @@
-﻿namespace TimeoutMigrationTool.NHibernate.AcceptanceTests
+namespace TimeoutMigrationTool.NHibernate.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting.Customization;
     using NServiceBus.AcceptanceTesting.Support;
+    using NUnit.Framework;
     using System;
+    using System.IO;
     using System.Threading.Tasks;
 
     public class LegacyTimeoutManagerEndpoint : IEndpointSetupTemplate
@@ -20,7 +22,11 @@
 
             endpointConfiguration.EnableInstallers();
 
-            endpointConfiguration.UseTransport(new AcceptanceTestingTransport());
+            var storageDir = Path.Combine(NHibernateAcceptanceTests.StorageRootDir, TestContext.CurrentContext.Test.ID);
+            endpointConfiguration.UseTransport(new AcceptanceTestingTransport(enableNativeDelayedDelivery: false)
+            {
+                StorageLocation = storageDir
+            });
 
             endpointConfiguration.RegisterComponentsAndInheritanceHierarchy(runDescriptor);
 
