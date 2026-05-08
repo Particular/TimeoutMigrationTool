@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.NHibernate.AcceptanceTests
+namespace TimeoutMigrationTool.NHibernate.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
@@ -56,9 +56,7 @@
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
-                    transportConfig.DisablePublishing();
-
-                    transportConfig.DelayedDelivery().DisableTimeoutManager();
+                    transportConfig.Routing().DisablePublishing();
 
                     ec.UseSerialization<NewtonsoftJsonSerializer>();
                 }))
@@ -66,9 +64,7 @@
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
-                    transportConfig.DisablePublishing();
-
-                    transportConfig.DelayedDelivery().DisableTimeoutManager();
+                    transportConfig.Routing().DisablePublishing();
 
                     ec.UseSerialization<NewtonsoftJsonSerializer>();
                 })
@@ -82,7 +78,7 @@
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(90));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }

@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.Raven4.AcceptanceTests
+namespace TimeoutMigrationTool.Raven4.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
@@ -58,7 +58,7 @@
                         c.TimeoutSet = true;
                     }))
                 .Done(c => c.TimeoutSet)
-                .Run(TimeSpan.FromSeconds(15));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
 
             var setupContext = await Scenario.Define<TargetContext>()
                 .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>
@@ -69,7 +69,7 @@
                             .ConnectionString(sqlConnectionString);
                     }))
                 .Done(c => c.EndpointsStarted)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             var logger = new TestLoggingAdapter(setupContext);
             var timeoutsSource = new RavenDbTimeoutsSource(logger, serverUrl, databaseName, ravenTimeoutPrefix, ravenVersion, false);
@@ -87,7 +87,7 @@
                         .ConnectionString(sqlConnectionString);
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }

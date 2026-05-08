@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
+namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
     using Microsoft.Data.SqlClient;
     using NServiceBus;
@@ -55,7 +55,7 @@
                      c.TimeoutSet = true;
                  }))
                  .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(30));
+                 .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             var context = await Scenario.Define<TargetContext>()
                 .WithEndpoint<RabbitMqTarget>(b => b.CustomConfig(ec =>
@@ -73,7 +73,7 @@
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }

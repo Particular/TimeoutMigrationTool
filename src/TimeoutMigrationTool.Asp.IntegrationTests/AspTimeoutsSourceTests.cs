@@ -673,7 +673,7 @@
                 Assert.That(singleElement.ShortestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(1).Day));
                 Assert.That(singleElement.LongestTimeout.Day, Is.EqualTo(DateTime.UtcNow.AddDays(5).Day));
             });
-            Assert.That(singleElement.Destinations, Is.EquivalentTo(new List<string>
+            Assert.That(singleElement.Destinations, Is.EquivalentTo(new[]
             {
                 "Destination1",
                 "Destination2",

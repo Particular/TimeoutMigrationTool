@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.Raven4.AcceptanceTests
+namespace TimeoutMigrationTool.Raven4.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
@@ -50,7 +50,7 @@
                         c.TimeoutSet = true;
                     }))
                 .Done(c => c.TimeoutSet)
-                .Run(TimeSpan.FromSeconds(15));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
 
             var context = await Scenario.Define<TargetContext>()
                 // Create the legacy endpoint to forward the delayed message to the native delayed delivery endpoint
@@ -58,18 +58,14 @@
                 .WithEndpoint<RavenDBSource>(b => b.CustomConfig(ec =>
                 {
                     var transport = ec.UseTransport<AzureStorageQueueTransport>().ConnectionString(asqConnectionString);
-                    transport.DisablePublishing();
-
-                    transport.DelayedDelivery().DisableTimeoutManager();
+                    transport.Routing().DisablePublishing();
 
                     ec.UseSerialization<NewtonsoftJsonSerializer>();
                 }))
                 .WithEndpoint<AsqTarget>(b => b.CustomConfig(ec =>
                     {
                         var transport = ec.UseTransport<AzureStorageQueueTransport>().ConnectionString(asqConnectionString);
-                        transport.DisablePublishing();
-
-                        transport.DelayedDelivery().DisableTimeoutManager();
+                        transport.Routing().DisablePublishing();
 
                         ec.UseSerialization<NewtonsoftJsonSerializer>();
                     })
@@ -83,7 +79,7 @@
                         await migrationRunner.Run(DateTime.Now.AddDays(-1), EndpointFilter.SpecificEndpoint(sourceEndpoint), new Dictionary<string, string>());
                     }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }

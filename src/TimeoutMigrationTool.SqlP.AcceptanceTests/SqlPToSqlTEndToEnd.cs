@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
+namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
     using Microsoft.Data.SqlClient;
     using NServiceBus;
@@ -48,7 +48,7 @@
                      c.TimeoutSet = true;
                  }))
                  .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(30));
+                 .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             var setupContext = await Scenario.Define<TargetContext>()
                 .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>
@@ -59,7 +59,7 @@
                     .ConnectionString(connectionString);
                 }))
                 .Done(c => c.EndpointsStarted)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             var logger = new TestLoggingAdapter(setupContext);
             var timeoutSource = new SqlTimeoutsSource(connectionString, new MsSqlServer(), 1024);
@@ -77,7 +77,7 @@
                     .ConnectionString(connectionString);
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(90));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }

@@ -5,10 +5,11 @@
     using NServiceBus.AcceptanceTesting.Support;
     using System;
     using System.Threading.Tasks;
+    using TimeoutMigrationTool.Msmq.AcceptanceTests;
 
     public class DefaultServer : IEndpointSetupTemplate
     {
-        public virtual Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointCustomizationConfiguration, Action<EndpointConfiguration> configurationBuilderCustomization)
+        public virtual async Task<EndpointConfiguration> GetConfiguration(RunDescriptor runDescriptor, EndpointCustomizationConfiguration endpointCustomizationConfiguration, Func<EndpointConfiguration, Task> configurationBuilderCustomization)
         {
             var endpointConfiguration = new EndpointConfiguration(endpointCustomizationConfiguration.EndpointName);
 
@@ -21,13 +22,13 @@
             endpointConfiguration.EnableInstallers();
             endpointConfiguration.SendFailedMessagesTo("error");
 
-            var transport = endpointConfiguration.UseTransport<MsmqTransport>();
+            endpointConfiguration.UseTransport(new MsmqTransport());
 
             endpointConfiguration.RegisterComponentsAndInheritanceHierarchy(runDescriptor);
 
-            configurationBuilderCustomization(endpointConfiguration);
+            await configurationBuilderCustomization(endpointConfiguration);
 
-            return Task.FromResult(endpointConfiguration);
+            return endpointConfiguration;
         }
     }
 }

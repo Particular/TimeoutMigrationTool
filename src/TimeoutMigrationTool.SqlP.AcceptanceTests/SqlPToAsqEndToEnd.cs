@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
+namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
     using Microsoft.Data.SqlClient;
     using NServiceBus;
@@ -29,12 +29,10 @@
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
-                    transportConfig.DisablePublishing();
-
-                    transportConfig.DelayedDelivery().DisableTimeoutManager();
+                    transportConfig.Routing().DisablePublishing();
 
                     ec.UseSerialization<NewtonsoftJsonSerializer>();
-                })).Run(TimeSpan.FromSeconds(10));
+                })).Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
 
             // Sending a delayed delivery message using TimeoutManager
             await Scenario.Define<SourceContext>()
@@ -65,7 +63,7 @@
                     c.TimeoutSet = true;
                 }))
                 .Done(c => c.TimeoutSet)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             var context = await Scenario.Define<TargetContext>()
                 // Create the sales endpoint to forward the delayed message to the reporting endpoint
@@ -75,9 +73,7 @@
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
-                    transportConfig.DisablePublishing();
-
-                    transportConfig.DelayedDelivery().DisableTimeoutManager();
+                    transportConfig.Routing().DisablePublishing();
 
                     ec.UseSerialization<NewtonsoftJsonSerializer>();
                 }))
@@ -86,9 +82,7 @@
                 {
                     var transportConfig = ec.UseTransport<AzureStorageQueueTransport>();
                     transportConfig.ConnectionString(asqConnectionString);
-                    transportConfig.DisablePublishing();
-
-                    transportConfig.DelayedDelivery().DisableTimeoutManager();
+                    transportConfig.Routing().DisablePublishing();
 
                     ec.UseSerialization<NewtonsoftJsonSerializer>();
                 })
@@ -102,7 +96,7 @@
                     await migrationRunner.Run(DateTime.Now.AddDays(-10), EndpointFilter.SpecificEndpoint(salesEndpoint), new Dictionary<string, string>());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }

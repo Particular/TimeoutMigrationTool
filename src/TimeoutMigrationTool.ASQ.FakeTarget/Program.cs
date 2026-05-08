@@ -36,11 +36,10 @@
             endpointConfig.SendFailedMessagesTo("error");
             endpointConfig.AuditProcessedMessagesTo("audit");
             var transport = endpointConfig.UseTransport<AzureStorageQueueTransport>();
-            transport.DisablePublishing();
+            transport.Routing().DisablePublishing();
             transport.ConnectionString("UseDevelopmentStorage=true;");
             endpointConfig.EnableInstallers();
             endpointConfig.UseSerialization<NewtonsoftJsonSerializer>();
-            endpointConfig.DisableFeature<TimeoutManager>();
         }
     }
 }

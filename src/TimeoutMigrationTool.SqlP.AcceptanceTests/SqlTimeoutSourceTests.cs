@@ -135,7 +135,7 @@
 
             var endpoints = await GetTimeoutStorage().ListEndpoints(DateTime.Now.AddYears(-10));
 
-            Assert.That(endpoints.First().Destinations, Is.EquivalentTo(new List<string> { "FirstDestination", "SecondDestination", "ThirdDestination" }));
+            Assert.That(endpoints.First().Destinations, Is.EquivalentTo(new[] { "FirstDestination", "SecondDestination", "ThirdDestination" }));
         }
 
         [Test]

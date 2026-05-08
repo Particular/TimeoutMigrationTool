@@ -1,10 +1,10 @@
-﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
+namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
     using NServiceBus;
     using NServiceBus.AcceptanceTesting;
     using NUnit.Framework;
     using System;
-    using System.Data.SqlClient;
+    using Microsoft.Data.SqlClient;
     using System.Threading.Tasks;
     using Msmq.AcceptanceTests;
     using Conventions = NServiceBus.AcceptanceTesting.Customization.Conventions;
@@ -43,19 +43,15 @@
                      c.TimeoutSet = true;
                  }))
                  .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(60));
+                 .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(60)).Token);
 
             var setupContext = await Scenario.Define<TargetContext>()
                 .WithEndpoint<Endpoint>(b => b.CustomConfig(ec =>
                 {
-                    var transport = ec.UseTransport<MsmqTransport>();
-                    transport.NativeDelayedDelivery(new SqlServerDelayedMessageStore(connectionString));
-
-                    //To ensure we don't pick up the timeout via the timeout manager
-                    var persistence = ec.UsePersistence<InMemoryPersistence>();
+                    ec.UseTransport(new MsmqTransport());
                 }))
                 .Done(c => c.EndpointsStarted)
-                .Run(TimeSpan.FromSeconds(90));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90)).Token);
 
 
             MigrationRunner.Run(connectionString);
@@ -63,14 +59,10 @@
             var context = await Scenario.Define<TargetContext>()
                 .WithEndpoint<Endpoint>(b => b.CustomConfig(ec =>
                 {
-                    var transport = ec.UseTransport<MsmqTransport>();
-                    transport.NativeDelayedDelivery(new SqlServerDelayedMessageStore(connectionString));
-
-                    //To ensure we don't pick up the timeout via the timeout manager
-                    var persistence = ec.UsePersistence<InMemoryPersistence>();
+                    ec.UseTransport(new MsmqTransport());
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(120));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(120)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }

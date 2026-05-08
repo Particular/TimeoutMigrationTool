@@ -1,14 +1,14 @@
 ﻿namespace TimeoutMigrationTool.SqlP.AcceptanceTests
 {
     using System;
-    using System.Data.SqlClient;
+    using Microsoft.Data.SqlClient;
     using System.Threading.Tasks;
 
     public static class MsSqlMicrosoftDataClientHelper
     {
         public static async Task RemoveDbIfExists(string connectionString = null)
         {
-            connectionString = connectionString ?? GetConnectionString();
+            connectionString ??= GetConnectionString();
 
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
             var databaseName = connectionStringBuilder.InitialCatalog;
@@ -18,7 +18,7 @@
 
         public static async Task RecreateDbIfNotExists(string connectionString = null)
         {
-            connectionString = connectionString ?? GetConnectionString();
+            connectionString ??= GetConnectionString();
 
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
             var databaseName = connectionStringBuilder.InitialCatalog;

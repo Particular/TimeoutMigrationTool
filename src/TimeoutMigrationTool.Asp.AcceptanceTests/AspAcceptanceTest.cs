@@ -1,13 +1,15 @@
 ﻿namespace TimeoutMigrationTool.Asp.AcceptanceTests
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using Microsoft.Azure.Cosmos.Table;
-    using NServiceBus;
+    using Newtonsoft.Json;
     using NUnit.Framework;
     using Particular.TimeoutMigrationTool.Asp;
     using static Microsoft.Azure.Cosmos.Table.TableQuery;
@@ -72,24 +74,38 @@
             await blobServiceClient.DeleteBlobContainerAsync(timeoutContainerName);
         }
 
-        protected void SetupPersistence(EndpointConfiguration endpointConfiguration)
-        {
-            var persistence = endpointConfiguration.UsePersistence<AzureStoragePersistence>();
-            persistence.ConnectionString(connectionString);
-
-            var timeoutPersistence = endpointConfiguration.UsePersistence<AzureStoragePersistence, StorageType.Timeouts>();
-#pragma warning disable 618
-            timeoutPersistence.CreateSchema(true);
-            timeoutPersistence.TimeoutDataTableName(timeoutTableName);
-            timeoutPersistence.TimeoutStateContainerName(timeoutContainerName);
-            timeoutPersistence.PartitionKeyScope(PartitionKeyScope);
-#pragma warning restore 618
-        }
-
         protected AspTimeoutsSource CreateTimeoutStorage(string endpointNameToBeListed, int batchSize = 1024)
         {
             var storage = new AspTimeoutsSource(connectionString, batchSize, timeoutContainerName, endpointNameToBeListed, TimeoutTableName, tablePrefix: tableNamePrefix, partitionKeyScope: PartitionKeyScope);
             return storage;
+        }
+
+        protected async Task StoreLegacyTimeout(string sourceEndpoint, string targetEndpoint, Type messageType)
+        {
+            var timeoutId = Guid.NewGuid().ToString("N");
+            var timeoutTime = DateTime.UtcNow.AddSeconds(5);
+            var stateAddress = $"{timeoutId}.state";
+            var body = Encoding.UTF8.GetBytes("{}");
+
+            var blobContainerClient = blobServiceClient.GetBlobContainerClient(timeoutContainerName);
+            await blobContainerClient.UploadBlobAsync(stateAddress, new BinaryData(body));
+
+            var timeout = new TimeoutDataEntity(timeoutTime.ToString(PartitionKeyScope), timeoutId)
+            {
+                Destination = targetEndpoint,
+                SagaId = Guid.NewGuid(),
+                StateAddress = stateAddress,
+                Time = timeoutTime,
+                OwningTimeoutManager = sourceEndpoint,
+                Headers = JsonConvert.SerializeObject(new Dictionary<string, string>
+                {
+                    { "NServiceBus.ContentType", "application/json" },
+                    { "NServiceBus.EnclosedMessageTypes", messageType.AssemblyQualifiedName },
+                    { "NServiceBus.MessageId", timeoutId }
+                })
+            };
+
+            await timeoutTable.ExecuteAsync(TableOperation.Insert(timeout));
         }
 
         protected async Task WaitUntilTheTimeoutsAreSavedInAsp(string endpoint, int numberOfEntriesThatShouldBeThere)

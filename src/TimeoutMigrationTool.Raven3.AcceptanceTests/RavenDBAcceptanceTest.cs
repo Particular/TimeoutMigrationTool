@@ -5,7 +5,7 @@
     using Raven.Client.Document;
     using System;
     using System.Threading.Tasks;
-    using NServiceBus.Timeout.Core;
+    using Particular.TimeoutMigrationTool;
     using Particular.TimeoutMigrationTool.RavenDB;
 
     public abstract class RavenDBAcceptanceTest : NServiceBusAcceptanceTest

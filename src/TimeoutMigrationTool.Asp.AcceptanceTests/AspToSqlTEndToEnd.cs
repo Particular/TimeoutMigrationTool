@@ -1,4 +1,4 @@
-﻿namespace TimeoutMigrationTool.Asp.AcceptanceTests
+namespace TimeoutMigrationTool.Asp.AcceptanceTests
 {
     using NServiceBus.Features;
     using NServiceBus;
@@ -37,27 +37,7 @@
             var sourceEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(AspSource));
             var targetEndpoint = NServiceBus.AcceptanceTesting.Customization.Conventions.EndpointNamingConvention(typeof(SqlTTarget));
 
-            await Scenario.Define<SourceContext>()
-                 .WithEndpoint<AspSource>(b => b.CustomConfig(ec =>
-                 {
-                     SetupPersistence(ec);
-                 })
-                 .When(async (session, c) =>
-                 {
-                     var delayedMessage = new DelayedMessage();
-                     var options = new SendOptions();
-
-                     options.DelayDeliveryWith(TimeSpan.FromSeconds(15));
-                     options.SetDestination(targetEndpoint);
-
-                     await session.Send(delayedMessage, options);
-
-                     await WaitUntilTheTimeoutsAreSavedInAsp(sourceEndpoint, 2);
-
-                     c.TimeoutSet = true;
-                 }))
-                 .Done(c => c.TimeoutSet)
-                 .Run(TimeSpan.FromSeconds(30));
+            await StoreLegacyTimeout(sourceEndpoint, targetEndpoint, typeof(DelayedMessage));
 
             var setupContext = await Scenario.Define<TargetContext>()
                 .WithEndpoint<SqlTTarget>(b => b.CustomConfig(ec =>
@@ -68,7 +48,7 @@
                         .ConnectionString(sqlConnectionString);
                 }))
                 .Done(c => c.EndpointsStarted)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             var logger = new TestLoggingAdapter(setupContext);
             var timeoutStorage = CreateTimeoutStorage(sourceEndpoint);
@@ -86,7 +66,7 @@
                         .ConnectionString(sqlConnectionString);
                 }))
                 .Done(c => c.GotTheDelayedMessage)
-                .Run(TimeSpan.FromSeconds(30));
+                .Run(new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(30)).Token);
 
             Assert.That(context.GotTheDelayedMessage, Is.True);
         }
