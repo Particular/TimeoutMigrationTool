@@ -23,7 +23,13 @@ namespace TimeoutMigrationTool.Raven4.AcceptanceTests
 
             types = types.Union(endpointConfiguration.TypesToInclude);
 
-            return types.ToList();
+            return types.Where(t => !IsExcluded(endpointConfiguration, t)).ToList();
+        }
+
+        static bool IsExcluded(EndpointCustomizationConfiguration endpointConfiguration, Type type)
+        {
+            var typesToExclude = endpointConfiguration.GetType().GetProperty("TypesToExclude")?.GetValue(endpointConfiguration) as IEnumerable<Type>;
+            return typesToExclude?.Contains(type) ?? false;
         }
 
         static IEnumerable<Type> GetNestedTypeRecursive(Type rootType, Type builderType)
