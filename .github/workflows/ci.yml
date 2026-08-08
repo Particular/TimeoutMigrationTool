@@ -122,6 +122,7 @@ jobs:
         with:
           connection-string-env-var: SqlServerConnectionString
           catalog: nservicebus
+          enable-distributed-transactions: true
           extra-params: "Encrypt=False;"
       - name: Run tests
         uses: Particular/run-tests-action@v1.7.0
