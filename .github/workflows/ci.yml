@@ -113,7 +113,6 @@ jobs:
             ravendb-license: ${{ secrets.RAVENDB_LICENSE }}
             ravendb-mode: Single
             ravendb-version: 4.2-ubuntu-latest
-            tag: TimeoutMigrationTool
             registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
             registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Install SQL Server
