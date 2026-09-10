@@ -132,6 +132,6 @@ jobs:
             path: nugets/
             retention-days: 7 
         - name: Run tests
-          uses: Particular/run-tests-action@v1.8.0
+          uses: Particular/run-tests-action@v1.9.0
           with:
             report-warnings: ${{ secrets.TESTS_REPORT_WARNINGS }}
