@@ -126,7 +126,7 @@ jobs:
       - parallel:
         - name: Upload packages
           if: matrix.upload-packages && runner.os == 'Windows'
-          uses: actions/upload-artifact@v7.0.1
+          uses: actions/upload-artifact@v7.0.2
           with:
             name: NuGet packages
             path: nugets/
