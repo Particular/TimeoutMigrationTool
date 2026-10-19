@@ -11,7 +11,7 @@
     using Particular.TimeoutMigrationTool.NHibernate;
     using System.Threading.Tasks;
 
-    class NHibernateAcceptanceTests
+    abstract class NHibernateAcceptanceTests
     {
         internal string connectionString;
 

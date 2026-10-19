@@ -11,7 +11,7 @@
     using System.IO;
     using System.Threading.Tasks;
 
-    class NHibernateAcceptanceTests
+    abstract class NHibernateAcceptanceTests
     {
         public NHibernateAcceptanceTests()
         {
